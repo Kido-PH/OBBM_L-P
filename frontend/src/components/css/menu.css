@@ -1,7 +1,5 @@
 @charset "UTF-8";
-body {
-        background-color: hsl(38, 44%, 96%);
-      }
+
         .menu-container {
             display: flex;
             justify-content: space-between;
