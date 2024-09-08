@@ -1,32 +1,32 @@
 import React from "react";
-import "./css/mainStyle.css";
-import "./css/customStyle.css";
-import heroBannerBg from "./images/hero-banner-bg.png";
-import steak from "./images/steak.png";
-import promo1 from "./images/promo-1.png";
-import promo2 from "./images/promo-2.png";
-import promo3 from "./images/promo-3.png";
-import promo4 from "./images/promo-4.png";
-import promo5 from "./images/promo-5.png";
-import aboutBanner from "./images/about-banner.jpg";
-import foodMenu1 from "./images/food-menu-1.png";
-import foodMenu2 from "./images/food-menu-2.png";
-import foodMenu3 from "./images/food-menu-3.png";
-import foodMenu4 from "./images/food-menu-4.png";
-import foodMenu5 from "./images/food-menu-5.png";
-import foodMenu6 from "./images/food-menu-6.png";
-import flowerImage from "./images/flower-1.jpg";
-import avatar1 from "./images/avatar-1.jpg";
-import avatar2 from "./images/avatar-2.jpg";
-import avatar3 from "./images/avatar-3.jpg";
-import weddingStage from "./images/wedding-stage.jpg";
-import flowerCrown from "./images/flower-crown.jpg";
-import event2 from "./images/event-2.jpg";
-import turkey from "./images/turkey.jpeg";
-import blog1 from './images/blog-1.jpg';
-import blog2 from './images/blog-2.jpg';
-import blog3 from './images/blog-3.jpg';
-import ctabanner from './images/hero-banner-bg.png';
+import "../assets/css/mainStyle.css";
+import "../assets/css/customStyle.css";
+import heroBannerBg from "../assets/images/hero-banner-bg.png";
+import steak from "../assets/images/steak.png";
+import promo1 from "../assets/images/promo-1.png";
+import promo2 from "../assets/images/promo-2.png";
+import promo3 from "../assets/images/promo-3.png";
+import promo4 from "../assets/images/promo-4.png";
+import promo5 from "../assets/images/promo-5.png";
+import aboutBanner from "../assets/images/about-banner.jpg";
+import foodMenu1 from "../assets/images/food-menu-1.png";
+import foodMenu2 from "../assets/images/food-menu-2.png";
+import foodMenu3 from "../assets/images/food-menu-3.png";
+import foodMenu4 from "../assets/images/food-menu-4.png";
+import foodMenu5 from "../assets/images/food-menu-5.png";
+import foodMenu6 from "../assets/images/food-menu-6.png";
+import flowerImage from "../assets/images/flower-1.jpg";
+import avatar1 from "../assets/images/avatar-1.jpg";
+import avatar2 from "../assets/images/avatar-2.jpg";
+import avatar3 from "../assets/images/avatar-3.jpg";
+import weddingStage from "../assets/images/wedding-stage.jpg";
+import flowerCrown from "../assets/images/flower-crown.jpg";
+import event2 from "../assets/images/event-2.jpg";
+import turkey from "../assets/images/turkey.jpeg";
+import blog1 from '../assets/images/blog-1.jpg';
+import blog2 from '../assets/images/blog-2.jpg';
+import blog3 from '../assets/images/blog-3.jpg';
+import ctabanner from '../assets/images/hero-banner-bg.png';
 
 const blogPosts = [
   {
@@ -344,42 +344,42 @@ const Content = () => {
             </div>
           </section>
 
-          <section class="section food-menu" id="food-menu">
-            <div class="container">
-              <p class="section-subtitle">Popular Dishes</p>
+          <section className="section food-menu" id="food-menu">
+            <div className="container">
+              <p className="section-subtitle">Popular Dishes</p>
 
-              <h2 class="h2 section-title">
-                Our Delicious <span class="span">Foods</span>
+              <h2 className="h2 section-title">
+                Our Delicious <span className="span">Foods</span>
               </h2>
 
-              <p class="section-text">
+              <p className="section-text">
                 Food is any substance consumed to provide nutritional support
                 for an organism.
               </p>
 
-              <ul class="fiter-list">
+              <ul className="fiter-list">
                 <li>
-                  <button class="filter-btn active">All</button>
+                  <button className="filter-btn active">All</button>
                 </li>
 
                 <li>
-                  <button class="filter-btn">Appetizer</button>
+                  <button className="filter-btn">Appetizer</button>
                 </li>
 
                 <li>
-                  <button class="filter-btn">Main dishes</button>
+                  <button className="filter-btn">Main dishes</button>
                 </li>
 
                 <li>
-                  <button class="filter-btn">Desserts</button>
+                  <button className="filter-btn">Desserts</button>
                 </li>
 
                 <li>
-                  <button class="filter-btn">Drinks</button>
+                  <button className="filter-btn">Drinks</button>
                 </li>
 
                 <li>
-                  <button class="filter-btn">Others</button>
+                  <button className="filter-btn">Others</button>
                 </li>
               </ul>
 
@@ -438,32 +438,32 @@ const Content = () => {
           </section>
 
           <section
-            class="section section-divider white cta "
+            className="section section-divider white cta "
             >
-            <div class="container">
-              <div class="cta-content">
-                <h2 class="h2 section-title">
+            <div className="container">
+              <div className="cta-content">
+                <h2 className="h2 section-title">
                   Crafted Cocktails: Taste the{" "}
-                  <span class="span">Difference</span>
+                  <span className="span">Difference</span>
                 </h2>
 
-                <p class="section-text">
+                <p className="section-text">
                   At OBBM, our professional bartenders expertly craft bespoke
                   drinks to elevate your event experience. From classic
                   cocktails to innovative concoctions, we ensure every sip is
                   unforgettable
                 </p>
 
-                <button class="btn btn-hover">Order Now</button>
+                <button className="btn btn-hover">Order Now</button>
               </div>
-              <figure class="cta-banner">
+              <figure className="cta-banner">
                 <img
                   src={ctabanner}
                   width="700"
                   height="637"
                   loading="lazy"
                   alt="Burger"
-                  class="w-100 cta-img"
+                  className="w-100 cta-img"
                 />
               </figure>
             </div>

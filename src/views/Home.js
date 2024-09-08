@@ -1,17 +1,11 @@
 // src/components/Home.js
 import React from 'react';
-import Content from './components/Content';
-
-import Header from './components/Home-header';
-
-import Footer from './components/Home-footer';
+import Content from '../components/Home-Content';
 
 const Home = () => {
   return (
     <React.Fragment>
-      <Header />
       <Content />
-      <Footer />
     </React.Fragment>
   );
 };

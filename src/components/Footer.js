@@ -1,6 +1,12 @@
 import React from 'react';
-import './css/mainStyle.css';
-import './css/customStyle.css';
+import { FaFacebook, FaTwitter, FaInstagram, FaPinterest } from 'react-icons/fa'; // Import các icon từ react-icons
+
+import '../assets/css/mainStyle.css';
+import '../assets/css/customStyle.css';
+
+import BackToTopButton from './Back-to-top-btn';
+
+
 
 const Footer = () => {
   return (
@@ -9,40 +15,40 @@ const Footer = () => {
         className="footer-top"
       >
         <div className="container">
-          <div className="footer-brand">
-            <a href="" className="logo">OBBM<span className="span">.</span></a>
+        <div className="footer-brand">
+      <a href="" className="logo">OBBM<span className="span">.</span></a>
 
-            <p className="footer-text">
-              Financial experts support or help you to find out which way you
-              can raise your funds more.
-            </p>
+      <p className="footer-text">
+        Financial experts support or help you to find out which way you
+        can raise your funds more.
+      </p>
 
-            <ul className="social-list">
-              <li>
-                <a href="#" className="social-link">
-                  <ion-icon name="logo-facebook"></ion-icon>
-                </a>
-              </li>
+      <ul className="social-list">
+        <li>
+          <a href="#" className="social-link">
+            <FaFacebook /> {/* Icon Facebook */}
+          </a>
+        </li>
 
-              <li>
-                <a href="#" className="social-link">
-                  <ion-icon name="logo-twitter"></ion-icon>
-                </a>
-              </li>
+        <li>
+          <a href="#" className="social-link">
+            <FaTwitter /> {/* Icon Twitter */}
+          </a>
+        </li>
 
-              <li>
-                <a href="#" className="social-link">
-                  <ion-icon name="logo-instagram"></ion-icon>
-                </a>
-              </li>
+        <li>
+          <a href="#" className="social-link">
+            <FaInstagram /> {/* Icon Instagram */}
+          </a>
+        </li>
 
-              <li>
-                <a href="#" className="social-link">
-                  <ion-icon name="logo-pinterest"></ion-icon>
-                </a>
-              </li>
-            </ul>
-          </div>
+        <li>
+          <a href="#" className="social-link">
+            <FaPinterest /> {/* Icon Pinterest */}
+          </a>
+        </li>
+      </ul>
+    </div>
 
           <ul className="footer-list">
             <li>
@@ -147,6 +153,8 @@ const Footer = () => {
           </p>
         </div>
       </div>
+
+      <BackToTopButton />
     </footer>
   );
 };

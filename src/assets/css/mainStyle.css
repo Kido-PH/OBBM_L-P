@@ -2,19 +2,6 @@
 /*-----------------------------------*\
   #style.css
 \*-----------------------------------*/
-
-/**
- * copyright 2022 codewithsadee
- */
-
-
-
-
-
-/*-----------------------------------*\
-  #CUSTOM PROPERTY
-\*-----------------------------------*/
-
 :root {
 
   /**
@@ -346,7 +333,7 @@ body.active { overflow: hidden; }
   --color: var(--white);
   --btn-color: var(--champagne-pink);
 
-  position: absolute;
+  position: fixed;
   top: 0;
   left: 0;
   width: 100%;
@@ -367,7 +354,7 @@ body.active { overflow: hidden; }
   --btn-color: var(--rich-black-fogra-29);
 
   position: fixed;
-  top: -100px;
+  top: -88px;
   background-color: var(--white);
   background-image: none; /* Bỏ hình nền khi có lớp active */
   box-shadow: var(--shadow-1);
@@ -1288,41 +1275,6 @@ textarea.input-field {
 
 .copyright-link:is(:hover, :focus) { text-decoration: underline; }
 
-
-
-
-
-/*-----------------------------------*\
-  #BACK TO TOP
-\*-----------------------------------*/
-
-.back-top-btn {
-  position: fixed;
-  bottom: 10px;
-  right: 20px;
-  background-color: var(--deep-saffron);
-  color: var(--white);
-  padding: 15px;
-  border-radius: 50%;
-  box-shadow: var(--shadow-1);
-  z-index: 2;
-  opacity: 0;
-  visibility: hidden;
-  transition: var(--transition-1);
-}
-
-.back-top-btn.active {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(-10px);
-}
-
-.back-top-btn:is(:hover, :focus) { background-color: var(--rich-black-fogra-29); }
-
-
-
-
-
 /*-----------------------------------*\
   #MEDIA QUERIES
 \*-----------------------------------*/
@@ -1344,10 +1296,6 @@ textarea.input-field {
   }
   
 }
-
-
-
-
 
 /**
  * responsive for larger than 550px screen
@@ -1421,7 +1369,7 @@ textarea.input-field {
     position: absolute;
     top: calc(50% + 86px);
     transform: translateY(-50%);
-    right: 50px;
+    right: 0px;
     max-width: 40%;
     aspect-ratio: 1 / 0.9;
   }
@@ -1717,11 +1665,6 @@ textarea.input-field {
    * BACK TO TOP
    */
 
-  .back-top-btn {
-    bottom: 20px;
-    right: 30px;
-  }
-
 }
 
 
@@ -1790,4 +1733,31 @@ textarea.input-field {
 
   .footer-top .container { grid-template-columns: 1.4fr 1fr 1fr 1.6fr; }
 
+}
+
+/* src/components/BackToTopButton.css */
+.back-to-top-button {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: hsl(28, 100%, 58%);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  padding: 10px;
+  font-size: 20px;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, box-shadow 0.3s;
+  z-index: 1000;
+  visibility: hidden; /* Mặc định không hiển thị */
+}
+
+.back-to-top-button.visible {
+  visibility: visible; /* Hiển thị khi cần thiết */
+}
+
+.back-to-top-button:hover {
+  background-color: hsl(25, 100%, 48%);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
