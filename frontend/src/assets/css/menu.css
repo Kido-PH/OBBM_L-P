@@ -1,108 +1,221 @@
-@charset "UTF-8";
-body {
-        background-color: hsl(38, 44%, 96%);
-      }
-        .menu-container {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px;
-        }
-        .menu {
-            flex: 1;
-            margin: 0 10px;
-            padding: 10px;
-            border-radius: 5px; /* Optional: Rounded corners for better aesthetics */
-            box-shadow:  0 1px 2px hsla(0, 0%, 0%, 0.2);
-        }
-        .menu h3 {
-            border-bottom: 2px solid hsl(32, 100%, 59%);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .menu-section {
-            margin-bottom: 20px;
-            position: relative;
-        }
-        .menu-section button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            border: none;
-            background: transparent;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: hsl(32, 100%, 59%);
-        }
-        .dish-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .dish-item img {
-            width: 100px;
-            height: auto;
-            margin-right: 10px;
-        }
-        .dish-item .details {
-            flex: 1;
-        }
-        .dish-item .price {
-            font-weight: bold;
-        }
-        .modal-body .dish-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .modal-body .dish-item .name {
-            flex: 1;
-            text-align: left;
-        }
-        .modal-body .dish-item .price {
-            flex: 1;
-            text-align: right;
-        }
-        .modal-body .dish-item::before {
-            content: '...';
-            flex: 0 1 auto;
-            text-align: center;
-        }
-        .small-menus {
-            display: flex;
-            flex-direction: column;
-            margin-top: 30px;
-            
-            
+.menu-container {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 100px;
+  }
+  
+  .menu-left {
+    display: flex;
+    flex: 3; 
+  }
+  
+  .menu-right {
+    flex: 2;
+  }
+  
+  .your-menu,
+  .menu-suggest {
+    flex: 1; 
+  }
+  
+  .your-menu,
+  .menu-suggest,
+  .available-menu {
+    margin-bottom: 20px;
+  }
+  
+  .menu-your-menu {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dee2e6;
+    margin-left: 80px;
+    width: 458px;
+  }
+  
+  .menu-menu-suggest {
+    background-color: #f8f9fa;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    border: 1px solid #dee2e6;
+    margin-left: 40px;
+    margin-right: 15px;
+    width: 458px;
+  }
+  
+  .menu-your-menu {
+      position: relative;
+    }
+    
+    .menu-your-menu-section {
+      margin-bottom: 20px;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    
+    .add-btn {
+      border: 2px solid #000;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #fff;
+      cursor: pointer;
+    }
+    
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+    }
+  
+    .menu-suggest-footer {
+      display: flex;
+      justify-content: center; 
+      padding: 10px 0;
+    }
+  
+  .add-btn {
+    background: transparent;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: hsl(32, 100%, 59%);
+  }
+  .dish-item {
+      display: flex;
+      flex: 0 0 50%; /* Chiếm 50% chiều rộng của container */
+      justify-content: space-between; 
+      align-items: center;
+    }
+    
+    .add-btn {
+      border: 2px solid hsl(32, 100%, 59%); 
+      border-radius: 50%;
+      width: 40px; 
+      height: 40px; 
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: hsl(32, 100%, 59%); 
+      color: #fff; 
+      font-size: 18px;
+      cursor: pointer;
+      outline: none;
+    }
+    
+    .add-btn:hover {
+      background-color: hsl(32, 100%, 50%);; 
+    }
+    
+    .add-btn:focus {
+      outline: none; 
+    }
+    
+  
+  /* YOUR MENU */
+  
+  .menu-your-menu-section {
+    margin-bottom: 20px;
+  }
+  
+  .menu-your-menu h3 {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+  
+  .menu-your-menu-section h4 {
+    font-size: 20px;
+    margin-bottom: 10px;
+  }
+  
+  .dish-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  
+  .dish-item img {
+    max-width: 80px;
+    margin-right: 10px;
+    padding-right: 10px;
+  }
+  
+  .details {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .name {
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+  
+  .price {
+    color: #888;
+  }
+  
+  .menu-your-menu-footer {
+    display: flex;
+    justify-content: center;
+  }
+  
+  .btn {
+    background-color: hsl(32, 100%, 59%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  
+  .btn:hover {
+    background-color: hsl(32, 100%, 50%);
+  }
+  .title-menu-suggest,
+  .title-your-menu {
+    text-align: center;
+  }
+  
+  /* MENU SUGGEST */
+  
+    .menu-menu-suggest h3 {
+      font-size: 24px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    
+    .menu-suggest-section h4 {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+  
+  /* AVAILABLE MENU */
+  .small-menus {
+    display: flex;
+    flex-direction: column;
+    margin-top: 30px;
     margin-left: 20px;
     width: 280px;
-
-        }
-        .small-menu {
-          background-color: #fff;
-            margin-bottom: 10px; /* Space between small menus */
-            padding: 10px;
-            border-radius: 5px; /* Optional: Rounded corners for better aesthetics */
-            box-shadow:  0 1px 2px hsla(0, 0%, 0%, 0.2);
-        }
-        .small-menu h4 {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid hsl(32, 100%, 59%);
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-        .color-btn {
-            background-color: hsl(32, 100%, 59%);
-            color: white;
-        }
-        .menu-footer {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .container {
-    margin-bottom: 60px; /* Margin bên ngoài là 150px và căn giữa tự động */
-}
+    gap: 10px;
+  }
+  .small-menu {
+    background-color: #fff;
+    margin-bottom: 10px; /* Space between small menus */
+    padding: 10px;
+    border-radius: 5px; /* Optional: Rounded corners for better aesthetics */
+    box-shadow: 0 1px 2px hsla(0, 0%, 0%, 0.2);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  
+  
