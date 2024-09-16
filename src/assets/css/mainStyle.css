@@ -138,7 +138,7 @@ html {
 body {
   background-color: var(--white);
   color: var(--sonic-silver);
-  font-size: 1.6rem;
+  font-size: 1.6rem !important;
   line-height: 1.6;
   overflow-x: hidden;
 }
@@ -190,21 +190,21 @@ body.active { overflow: hidden; }
 .h3 { font-size: var(--fs-2); }
 
 .h4 { font-size: var(--fs-3); }
-.btn {  
-  background-color: var(--bg-color, var(--deep-saffron));
-  color: var(--white);
-  font-family: var(--ff-rubik);
-  font-size: var(--fs-4);
-  font-weight: var(--fw-500);
+ .btn {  
+  background-color: var(--bg-color, var(--deep-saffron)) !important;
+  color: var(--white) !important;
+  font-family: var(--ff-rubik) !important;
+  font-size: var(--fs-4) !important;
+  font-weight: var(--fw-500) !important;
   height: var(--height, 45px);
-  padding-inline: var(--padding-inline, 35px);
-  transition: var(--transition-1);
+  padding-inline: var(--padding-inline, 35px) !important;
+  transition: var(--transition-1) !important;
 }
 
 .btn-hover {
-  position: relative;
-  overflow: hidden;
-  z-index: 1;
+  position: relative !important;
+  overflow: hidden !important;
+  z-index: 1 !important;
 }
 
 .btn-hover::after {
