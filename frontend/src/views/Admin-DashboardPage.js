@@ -15,6 +15,7 @@ import {
   StarOutlined,
   BarChartOutlined,
   BellOutlined,
+  SisternodeOutlined,
 } from "@ant-design/icons";
 import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { Avatar, Col, Layout, Menu, Row, theme } from "antd";
@@ -141,9 +142,15 @@ function DashboardPage() {
             },
             {
               key: "11",
+              icon: <SisternodeOutlined />,
+              label: "Access Control",
+              onClick: () => navigate("/admin/AccessControl"),
+            },
+            {
+              key: "12",
               icon: <LogoutOutlined />,
               label: "Logout",
-            },
+            },  
           ]}
         />
       </Sider>

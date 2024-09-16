@@ -22,6 +22,7 @@ import LocationManager from "./views/Admin-Location";
 import AccountManager from "./views/Admin-Account";
 import InvoiceManager from "./views/Admin-Invoices";
 import AdminAnalytics from "./views/Admin-Analytics";
+import AccessControl from "./views/Admin-AccessControl";
 const LayoutWithHeaderFooter = () => (
   <>
     <Header />
@@ -49,6 +50,7 @@ const App = () => {
           <Route path="ManageAccounts" element={<AccountManager />} />
           <Route path="ManageInvoice" element={<InvoiceManager />} />
           <Route path="DashboardAnalytics" element={<AdminAnalytics />} />
+          <Route path="AccessControl" element={<AccessControl />} />
         </Route>
       </Routes>
       <ToastContainer

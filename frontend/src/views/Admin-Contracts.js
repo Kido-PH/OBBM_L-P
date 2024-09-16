@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -51,7 +52,7 @@ const ManageContracts = () => {
   // Hiển thị modal chỉnh sửa
   const handleShowModal = (contract) => {
     setFormData(contract);
-    setCurrentContract(contract);
+    // setCurrentContract(contract);
     setShowModal(true);
   };
 
