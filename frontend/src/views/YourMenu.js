@@ -32,15 +32,19 @@ const YourMenu = ({ menuItems, onAddItem }) => {
             </button>
           </div>
           <div className="row">
-            {menuItems[section].map((item, index) => (
-              <div key={index} className="col-md-6 dish-item">
-                <img src={item.image} alt={item.name} className="img-fluid" />
-                <div className="details">
-                  <div className="name">{item.name}</div>
-                  <div className="price">{item.price}</div>
+            {Array.isArray(menuItems[section]) ? (
+              menuItems[section].map((item, index) => (
+                <div key={index} className="col-md-6 dish-item">
+                  <img src={item.image} alt={item.name} className="img-fluid" />
+                  <div className="details">
+                    <div className="name">{item.name}</div>
+                    <div className="price">{item.price}</div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p>No items available</p>
+            )}
           </div>
           {modalData && (
             <Modal 

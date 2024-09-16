@@ -11,7 +11,7 @@ const MenuSuggest = ({ menuData, onChooseMenu }) => {
 
   const handleChooseMenu = () => {
     if (onChooseMenu) {
-      onChooseMenu(currentMenu);
+      onChooseMenu(currentMenu); // Truyền dữ liệu cho Menu component
     }
   };
 
@@ -24,12 +24,14 @@ const MenuSuggest = ({ menuData, onChooseMenu }) => {
       ) : (
         Object.keys(currentMenu).map(section => (
           <div key={section} className="menu-suggest-section">
+            {/* Nếu không muốn hiển thị tiêu đề của các phần menu, hãy loại bỏ dòng này */}
             <h4>{section}</h4>
             <div className="row">
-              {currentMenu[section].map((item, index) => (
+              {Array.isArray(currentMenu[section]) && currentMenu[section].map((item, index) => (
                 <div key={index} className="col-md-6 dish-item">
                   <img src={item.image} alt={item.name} className="img-fluid" />
                   <div className="details">
+                    {/* Nếu không muốn hiển thị tên món ăn, hãy loại bỏ hoặc comment dòng này */}
                     <div className="name">{item.name}</div>
                     <div className="price">{item.price}</div>
                   </div>

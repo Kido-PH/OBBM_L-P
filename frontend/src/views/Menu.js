@@ -11,12 +11,15 @@ const Menu = () => {
     Appetizer: [],
     "Main dishes": [],
     Dessert: [],
+    Drinks: [],
   });
 
+  // Cập nhật yourMenuItems khi người dùng chọn menu từ MenuSuggest
   const handleSelectMenu = (menuData) => {
     setMenuSuggestData(menuData);
   };
 
+  // Chuyển dữ liệu từ MenuSuggest sang YourMenu
   const handleChooseMenu = () => {
     setYourMenuItems(prevItems => ({
       ...prevItems,
