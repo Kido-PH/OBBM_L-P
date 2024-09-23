@@ -1,16 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import jsQR from 'jsqr';
 import '../assets/css/customStyle.css';
 import '../assets/css/mainStyle.css';
 
 const AccountSection = () => {
+  const [imageSrc, setImageSrc] = useState(null);
+
   useEffect(() => {
     const fileInput = document.getElementById('avatar-upload');
     if (fileInput) {
       fileInput.addEventListener('change', handleFile);
     }
 
-    // Cleanup function to remove the event listener
     return () => {
       if (fileInput) {
         fileInput.removeEventListener('change', handleFile);
@@ -18,9 +19,45 @@ const AccountSection = () => {
     };
   }, []);
 
+  const handleFile = (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function (event) {
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const qrCodeImage = context.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(qrCodeImage.data, qrCodeImage.width, qrCodeImage.height);
+        if (code) {
+          document.getElementById('result').innerText = `Thông tin từ mã QR: ${code.data}`;
+          
+          const userInfo = code.data.split('||')[1].split('|');
+          const [fullname, birthdate, gender, address] = userInfo;
+          document.getElementById('fullname').value = fullname;
+
+          const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(2, 4)}-${birthdate.slice(0, 2)}`;
+          document.getElementById('birthdate').value = formattedBirthdate;
+          document.getElementById('address').value = address;
+
+          const genderSelect = document.getElementById('gender');
+          genderSelect.value = gender === "Nam" ? "Male" : gender === "Nữ" ? "Female" : "Other";
+        } else {
+          document.getElementById('result').innerText = 'Không tìm thấy mã QR.';
+        }
+      };
+      img.src = event.target.result;
+      setImageSrc(event.target.result); // Set the image source
+    };
+    reader.readAsDataURL(file);
+  };
+
   return (
-    <main style={{marginTop:'50px'}}>
-      
+    <main style={{ marginTop: '50px' }}>
       <section
         className="section section-divider white account-section"
         id="blog"
@@ -133,11 +170,12 @@ const AccountSection = () => {
                   <option value="Other">Other</option>
                 </select>
 
-                <div className="input-wrapper" style={{marginTop: '7px'}}>
+                <div className="input-wrapper" style={{ marginTop: '7px' }}>
                   <div className="upload-wrapper">
-                    <label style={{paddingTop: '10px', paddingBottom: '10px',borderRadius: '3px'}}
+                    <label
+                      style={{ paddingTop: '10px', paddingBottom: '10px', borderRadius: '3px' }}
                       htmlFor="avatar-upload"
-                      className="custom-file-upload btn btn-secondary "
+                      className="custom-file-upload btn btn-secondary"
                     >
                       ID card image
                     </label>
@@ -150,15 +188,21 @@ const AccountSection = () => {
                     />
                   </div>
 
-                  <div className="file-info">
-                    <div id="file-name" className="file-name"></div>
-                    <div id="file-size" className="file-size"></div>
-                  </div>
+                   {/* New Image Preview */}
+              {imageSrc && (
+                <img
+                  src={imageSrc}
+                  alt="Selected"
+                  style={{ maxWidth: '300px', marginTop: '10px' }}
+                />
+              )}
 
                   <canvas id="canvas" style={{ display: 'none' }}></canvas>
                   <div id="result" className="mt-3" style={{ display: 'none' }}></div>
                 </div>
               </div>
+
+             
 
               <div style={{ textAlign: 'center' }}>
                 <button
@@ -177,7 +221,7 @@ const AccountSection = () => {
             <a
               href="/login"
               className="d-flex align-items-center me-5 mb-2 btn btn-hover"
-              style={{ marginLeft: '505px',width: '160px', fontSize:'14px', paddingTop:'10px ',paddingLeft: '47px', paddingRight: '47px', marginTop:'10px ',borderRadius:'3px ' }}
+              style={{ marginLeft: '505px', width: '160px', fontSize: '14px', paddingTop: '10px', paddingLeft: '47px', paddingRight: '47px', marginTop: '10px', borderRadius: '3px' }}
             >
               <i className="bi bi-door-open me-3"></i>
               Đăng xuất
@@ -190,56 +234,3 @@ const AccountSection = () => {
 };
 
 export default AccountSection;
-
-function handleFile(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function(event) {
-        const img = new Image();
-        img.onload = function() {
-            const canvas = document.getElementById('canvas');
-            const context = canvas.getContext('2d');
-            canvas.width = img.width;
-            canvas.height = img.height;
-            context.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-            const qrCodeImage = context.getImageData(0, 0, canvas.width, canvas.height);
-            const code = jsQR(qrCodeImage.data, qrCodeImage.width, qrCodeImage.height);
-            if (code) {
-                document.getElementById('result').innerText = `Thông tin từ mã QR: ${code.data}`;
-                
-                // Split the QR code data based on the expected delimiter (e.g., "||")
-                const userInfo = code.data.split('||')[1].split('|');
-
-                // Extracting data from the split array
-                const [fullname, birthdate, gender, address] = userInfo;
-
-                // Set the values to the form fields
-                document.getElementById('fullname').value = fullname;
-                
-                // Convert birthdate from DDMMYYYY to YYYY-MM-DD format (if needed)
-                const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(2, 4)}-${birthdate.slice(0, 2)}`;
-                document.getElementById('birthdate').value = formattedBirthdate;
-
-                // Set the address
-                document.getElementById('address').value = address;
-
-                // Set the gender
-                const genderSelect = document.getElementById('gender');
-                if (gender === "Nam") {
-                    genderSelect.value = "Male";
-                } else if (gender === "Nữ") {
-                    genderSelect.value = "Female";
-                } else {
-                    genderSelect.value = "Other";
-                }
-            } else {
-                document.getElementById('result').innerText = 'Không tìm thấy mã QR.';
-            }
-        };
-        img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-
-    document.getElementById('file-name').innerText = file.name;
-}
