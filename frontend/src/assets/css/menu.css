@@ -1,108 +1,299 @@
-@charset "UTF-8";
-body {
-        background-color: hsl(38, 44%, 96%);
-      }
-        .menu-container {
-            display: flex;
-            justify-content: space-between;
-            margin: 20px;
-        }
-        .menu {
-            flex: 1;
-            margin: 0 10px;
-            padding: 10px;
-            border-radius: 5px; /* Optional: Rounded corners for better aesthetics */
-            box-shadow:  0 1px 2px hsla(0, 0%, 0%, 0.2);
-        }
-        .menu h3 {
-            border-bottom: 2px solid hsl(32, 100%, 59%);
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .menu-section {
-            margin-bottom: 20px;
-            position: relative;
-        }
-        .menu-section button {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            border: none;
-            background: transparent;
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: hsl(32, 100%, 59%);
-        }
-        .dish-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        .dish-item img {
-            width: 100px;
-            height: auto;
-            margin-right: 10px;
-        }
-        .dish-item .details {
-            flex: 1;
-        }
-        .dish-item .price {
-            font-weight: bold;
-        }
-        .modal-body .dish-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .modal-body .dish-item .name {
-            flex: 1;
-            text-align: left;
-        }
-        .modal-body .dish-item .price {
-            flex: 1;
-            text-align: right;
-        }
-        .modal-body .dish-item::before {
-            content: '...';
-            flex: 0 1 auto;
-            text-align: center;
-        }
-        .small-menus {
-            display: flex;
-            flex-direction: column;
-            margin-top: 30px;
-            
-            
-    margin-left: 20px;
-    width: 280px;
-
-        }
-        .small-menu {
-          background-color: #fff;
-            margin-bottom: 10px; /* Space between small menus */
-            padding: 10px;
-            border-radius: 5px; /* Optional: Rounded corners for better aesthetics */
-            box-shadow:  0 1px 2px hsla(0, 0%, 0%, 0.2);
-        }
-        .small-menu h4 {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 2px solid hsl(32, 100%, 59%);
-            padding-bottom: 10px;
-            margin-bottom: 10px;
-        }
-        .color-btn {
-            background-color: hsl(32, 100%, 59%);
-            color: white;
-        }
-        .menu-footer {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-        .container {
-    margin-bottom: 60px; /* Margin bên ngoài là 150px và căn giữa tự động */
+.menu-container {
+  display: flex;
+  width: 100%;
+  height: 100%; /* Full viewport height */
+  margin-top: 100px;
 }
+
+.menu-left {
+  width: 60%;
+  background-color: #f9f9f9; /* Màu nền sáng hơn */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu-list {
+  display: flex; /* Sử dụng flexbox */
+  flex-wrap: wrap; /* Cho phép các phần tử gói lại */
+  justify-content: space-between; /* Căn giữa các mục */
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #eee;
+  width: calc(50% - 10px); /* Để có khoảng cách giữa các món ăn */
+  margin-bottom: 10px; /* Khoảng cách giữa các món ăn */
+}
+
+.menu-item:last-child {
+  border-bottom: none; /* Không hiển thị border cho món ăn cuối cùng */
+}
+
+/* Hình ảnh món ăn */
+.menu-item-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+/* Chi tiết món ăn */
+.menu-item-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item-name {
+  font-weight: bold;
+}
+
+.menu-item-price {
+  color: #888;
+  font-size: 0.9em;
+}
+
+
+.tabs {
+  display: flex;
+  justify-content: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.tab {
+  padding: 10px 20px;
+  cursor: pointer;
+  background-color: #e0e0e0;
+  border: none;
+  border-radius: 5px;
+  transition: background-color 0.3s, transform 0.2s;
+}
+
+.tab.active {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.tab:hover {
+  background-color: #0056b3;
+  color: #fff;
+  transform: translateY(-2px); /* Hiệu ứng nâng lên khi hover */
+}
+
+.tab-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.card-container {
+  display: flex;
+  justify-content: center; /* Center items */
+  align-items: center;
+  gap: 10px; /* Khoảng cách giữa các thẻ */
+}
+
+.card {
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 10px; /* Bo tròn hơn */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  background-color: #fff; /* Nền trắng cho thẻ */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.card:hover {
+  transform: translateY(-5px); /* Hiệu ứng nâng lên khi hover */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2); /* Tăng độ shadow */
+}
+
+.main-card {
+  flex: 1;
+}
+
+.smaller-card {
+  flex: 0.4;
+  opacity: 0.7; /* Giảm độ nổi bật cho thẻ nhỏ */
+}
+
+.menu-right {
+  width: 40%;
+  background-color: #dcdcdc; /* Màu nền tùy chọn */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.menu-section {
+  background-color: #fff; /* Màu nền của mỗi phần */
+  padding: 10px;
+  border-radius: 5px;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 5px;
+}
+
+.menu-section h3 {
+  margin: 0;
+  padding-bottom: 5px;
+  border-bottom: 1px solid #ddd;
+}
+
+.add-icon {
+  cursor: pointer;
+  font-size: 24px;
+  color: #007bff; /* Màu của dấu "+" */
+  transition: color 0.3s;
+}
+
+.add-icon:hover {
+  color: #0056b3; /* Màu khi hover */
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column; /* Cột cho danh sách món ăn */
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  box-sizing: border-box;
+  border-bottom: 1px solid #eee;
+}
+
+.menu-item:last-child {
+  border-bottom: none;
+}
+
+.menu-item-image {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 5px;
+  margin-right: 10px;
+}
+
+.menu-item-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-item-name {
+  font-weight: bold;
+}
+
+.menu-item-price {
+  color: #888;
+  font-size: 0.9em;
+}
+
+/* Định dạng cho nút Xem menu và Tạo menu */
+.menu-buttons {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.menu-button {
+  padding: 10px 20px;
+  margin: 0 10px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.view-button {
+  background-color: #007bff;
+  color: #fff;
+}
+
+.create-button {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.view-button:hover {
+  background-color: #0056b3;
+}
+
+.create-button:hover {
+  background-color: #218838;
+}
+
+.menu-container {
+  display: flex;
+}
+
+.menu-left {
+  width: 70%;
+}
+
+.menu-right {
+  width: 30%;
+  padding-left: 20px;
+}
+
+.cards-wrapper {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card {
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 8px;
+  box-shadow: 2px 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.main-card {
+  width: 30%; /* Kích thước của card chính */
+}
+
+.small-card {
+  width: 15%; /* Kích thước của các card nhỏ */
+  opacity: 0.6; /* Để card nhỏ mờ hơn một chút */
+}
+
+.small-card:hover {
+  opacity: 1;
+  cursor: pointer;
+}
+
+.menu-list {
+  display: flex;
+  flex-wrap: wrap; /* Cho phép các món ăn quấn */
+  gap: 10px; /* Khoảng cách giữa các món ăn */
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.menu-item {
+  display: flex; /* Để căn chỉnh hình ảnh và thông tin */
+  align-items: center; /* Căn giữa theo chiều dọc */
+  box-sizing: border-box; /* Đảm bảo padding và border không làm thay đổi kích thước */
+  width: 40%;
+}
+
