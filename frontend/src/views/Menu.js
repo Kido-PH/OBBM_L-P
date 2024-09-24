@@ -99,11 +99,9 @@ const Menu = () => {
 
   // Các loại tiệc mẫu
   const partyTypes = [
-    "Tiệc sinh nhật",
-    "Tiệc cưới",
-    "Tiệc thôi nôi",
-    "Tiệc kỷ niệm",
-    "Tiệc công ty",
+    "Birhdays",
+    "Wedding",
+    "Anniversary",
   ];
 
   useEffect(() => {
@@ -132,7 +130,7 @@ const Menu = () => {
           <button
             className={`tab btn-save-form ${activeTab === "tab2" ? "active" : ""}`}
             onClick={() => setActiveTab("tab2")}>
-            Chat gợi ý
+            Chat Suggestion
           </button>
         </div>
 
@@ -173,12 +171,12 @@ const Menu = () => {
                     <div key={idx}>
                       <h4>
                         {section === "khaiVi"
-                          ? "Khai vị"
+                          ? "Appetizer"
                           : section === "monChinh"
-                          ? "Món chính"
+                          ? "Main course"
                           : section === "trangMieng"
-                          ? "Tráng miệng"
-                          : "Thức uống"}
+                          ? "Dessert"
+                          : "Drinks"}
                       </h4>
                       <ul className="menu-list">
                         {cardsContent[currentCardIndex].content[section].map(
@@ -208,7 +206,7 @@ const Menu = () => {
 
               {/* Card nhỏ bên phải */}
               <div className="card small-card">
-                <h4>{cardsContent[(currentCardIndex + 1) % 3].title}</h4>
+                <h4 className="small-card-h4">{cardsContent[(currentCardIndex + 1) % 3].title}</h4>
                 <ul className="menu-list">
                   {Object.keys(
                     cardsContent[(currentCardIndex + 1) % 3].content
@@ -285,12 +283,12 @@ const Menu = () => {
           <div className="menu-section" key={index}>
             <h3>
               {section === "khaiVi"
-                ? "Khai vị"
+                ? "Appetizer"
                 : section === "monChinh"
-                ? "Món chính"
+                ? "Main course"
                 : section === "trangMieng"
-                ? "Tráng miệng"
-                : "Thức uống"}
+                ? "Dessert"
+                : "Drinks"}
              
              <button onClick={toggleListFood} className="add-button">+</button> {/* Dấu + */}
             </h3>

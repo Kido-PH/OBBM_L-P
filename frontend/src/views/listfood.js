@@ -5,7 +5,7 @@ import steak from "../assets/images/steak.png";
 // Dữ liệu món ăn
 const foodCategories = [
   {
-    category: "Khai Vị",
+    category: "Appetizer",
     items: [
       { name: "Gỏi cuốn", price: "20,000 VND", image: steak },
       { name: "Chả giò", price: "25,000 VND", image: steak },
@@ -87,12 +87,12 @@ const ListFood = ({ show }) => {
         <div className="action-buttons">
          
           <div className="action-buttons">
-            <button className="filter-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">Lọc</button>
-            <button className="sort-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">Sắp xếp</button>
+            <button className="filter-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">Filter</button>
+            <button className="sort-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">Arrange</button>
           </div>
           <input
             type="text"
-            placeholder="Tìm kiếm món ăn..."
+            placeholder="Find dishes..."
             value={searchTerm}
             onChange={handleSearchChange}
             className="search-input"
