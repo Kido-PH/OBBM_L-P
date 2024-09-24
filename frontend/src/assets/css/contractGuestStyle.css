@@ -1,0 +1,60 @@
+a {
+  text-decoration: none !important;
+}
+
+.header.active {
+  position: fixed;
+  top: -95px !important;
+}
+
+.contractForm .btn-secondary {
+  background-color: rgb(105, 112, 116) !important;
+}
+
+.paymentCard .btn-secondary {
+  background-color: rgb(105, 112, 116) !important;
+}
+
+.btn-vnp {
+  background-color: #2e80c9 !important;
+  padding-inline: 10px !important;
+  align-content: center;
+  justify-content: center;
+}
+
+.btn-modal-search{
+    height: fit-content;
+    padding-inline: 5px !important;
+}
+
+.contractForm .btn {
+}
+
+.header {
+  --color: var(--white);
+  --btn-color: var(--champagne-pink);
+
+  width: 100%;
+  padding-block: 20px;
+  border-block-end: 1px solid var(--champagne-pink_20);
+  background: url("../images/wedding-1-small.jpg") no-repeat center center/cover; /* Đặt hình nền cho header */
+  z-index: 4;
+}
+
+.header.active {
+}
+.section-divider::before,
+.section-divider::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 15px;
+  background-repeat: repeat no-repeat;
+  background-position: bottom;
+}
+
+.section-divider.white::after { background-image: url("../images/shape-white.png"); }
+
+.section-divider.gray::after { background-image: url("../images/shape-grey.png"); }

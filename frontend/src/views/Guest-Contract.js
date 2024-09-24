@@ -2,9 +2,9 @@ import React, { useContext } from "react";
 import { Stepper, StepLabel, Step, Box } from "@mui/material";
 import { multiStepContext } from "../StepContext";
 
-import FirstStep from "../components/ContractCreateStep1";
-import SecondStep from "../components/ContractCreateStep2";
-// import ThirdStep from "../components/ContractCreateStep3";
+import FirstStep from "../components/GuestContract/ContractCreateStep1";
+import SecondStep from "../components/GuestContract/ContractCreateStep2";
+import ThirdStep from "../components/GuestContract/ContractCreateStep3";
 
 const Contract = () => {
   React.useEffect(() => {
@@ -29,8 +29,8 @@ const Contract = () => {
         return <FirstStep />;
       case 2:
         return <SecondStep />;
-        case 3: 
-        // return <ThirdStep/>
+      case 3:
+        return <ThirdStep />;
       default:
     }
   }

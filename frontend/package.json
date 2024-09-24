@@ -5,22 +5,25 @@
   "dependencies": {
     "@emotion/react": "^11.13.3",
     "@emotion/styled": "^11.13.0",
-    "@mantine/dates": "^7.12.2",
-    "@mui/joy": "^5.0.0-beta.48",
+    "@mantine/core": "^7.12.2",
     "@mui/material": "^6.0.2",
     "@testing-library/jest-dom": "^5.17.0",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^13.5.0",
+    "axios": "^1.7.7",
     "bootstrap": "^5.3.3",
     "bootstrap-icons": "^1.11.3",
-    "dayjs": "^1.11.13",
+    "dutn": "file:",
+    "jsqr": "^1.4.0",
     "react": "^18.3.1",
     "react-bootstrap": "^2.10.4",
     "react-dom": "^18.3.1",
     "react-icons": "^5.3.0",
     "react-router-dom": "^6.26.1",
     "react-scripts": "5.0.1",
+    "react-slick": "^0.30.2",
     "react-tooltip": "^5.28.0",
+    "slick-carousel": "^1.8.1",
     "styled-components": "^6.1.13",
     "web-vitals": "^2.1.4"
   },
@@ -47,8 +50,5 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
-  },
-  "devDependencies": {
-    "@babel/plugin-proposal-private-property-in-object": "^7.21.11"
   }
 }

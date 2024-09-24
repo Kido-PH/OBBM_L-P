@@ -1,8 +1,10 @@
 import * as React from "react";
 import { Form, Card } from "react-bootstrap";
+import { FaEye } from "react-icons/fa6";
 
-import { multiStepContext } from "../StepContext";
-import EventModalBtn from "../components/EventsModal";
+import { multiStepContext } from "../../StepContext";
+import ModalEvents from "./ModalEvents";
+import ModalLocations  from "./ModalLocations";
 
 const ContractCreateStep1 = () => {
   const { setStep, userData, setUserData } = React.useContext(multiStepContext);
@@ -18,56 +20,29 @@ const ContractCreateStep1 = () => {
             <div className="col">
               <div className="mb-3">
                 <label className="form-label fw-bold">Menu</label>
-                <input
-                  type="text"
+                <a
+                  href="/menu"
                   id="menuId"
                   name="menuId"
-                  placeholder="Detail Menu"
                   aria-label="Menu:"
-                  className="form-control fs-4"
-                  readOnly
-                />
+                  className="form-control fs-4 d-flex justify-content-between align-middle"
+                >
+                  Menu Id
+                  <FaEye />
+                </a>
               </div>
 
               <div className="mb-3">
                 <label className="form-label fw-bold">Event</label>
                 <div className="d-flex align-items-center">
-                  <input
-                    type="text"
-                    value=""
-                    name="event"
-                    required
-                    placeholder="Choose Event"
-                    aria-label="Event"
-                    className="form-control fs-4 me-2"
-                    readOnly
-                  />
-                  <EventModalBtn />
+                  <ModalEvents/>
                 </div>
               </div>
 
               <div className="mb-3">
                 <label className="form-label fw-bold">Location</label>
                 <div className="d-flex align-items-center">
-                  <input
-                    type="text"
-                    value=""
-                    name="location"
-                    required
-                    placeholder="Choose Location"
-                    aria-label="UserName"
-                    className="form-control fs-4 me-2"
-                    readOnly
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-sm px-3"
-                    style={{ height: "32px" }}
-                    data-bs-toggle="modal"
-                    data-bs-target="#locationModal"
-                  >
-                    +
-                  </button>
+                  <ModalLocations/>
                 </div>
               </div>
             </div>
@@ -119,10 +94,10 @@ const ContractCreateStep1 = () => {
           </div>
 
           <div className="container px-2 w-100">
-            <div className="row row-cols-sm-1 row-cols-lg-4">
+            <div className="row row-cols-sm-1 row-cols-lg-3">
               <div className="col">
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Before Tax</label>{" "}
+                  <label className="form-label fw-bold">Additional service cost</label>{" "}
                   <input
                     type="text"
                     name="beTax"
@@ -159,31 +134,11 @@ const ContractCreateStep1 = () => {
                   />
                 </div>
               </div>
-
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Created Date</label>{" "}
-                  <input
-                    type="date"
-                    name="createdDate"
-                    id="createdDate"
-                    className="form-control fs-4"
-                  />
-                </div>
-              </div>
+              
             </div>
           </div>
 
-          <div style={{ textAlign: "center" }}>
-          <button
-              type="button"
-              className="btn btn-secondary mx-2"
-              onClick={() => setStep(2)}
-              style={{ margin: "10px auto" }}
-            >
-              Back to Menu
-            </button>
-
+          <div style={{ textAlign: "center" }}>          
             <button
               type="button"
               className="btn btn-save-form mx-2"
