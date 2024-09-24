@@ -15,12 +15,13 @@ import {
   TableHead,
   TableRow,
   Paper,
+  Divider,
 } from "@mui/material";
 import { toast } from "react-toastify";
 
 // Dữ liệu ban đầu của các quyền
 const initialRoles = [
-  { roleId: "admin", roleName: "Admin", description: "Toàn quyền hệ thống" },
+  { roleId: "Admin", roleName: "Admin", description: "Toàn quyền hệ thống" },
   { roleId: "user", roleName: "User", description: "Quyền hạn người dùng" },
   { roleId: "manager", roleName: "Manager", description: "Quản lý" },
 ];
@@ -28,7 +29,11 @@ const initialRoles = [
 const AccessControl = () => {
   const [roles, setRoles] = useState(initialRoles);
   const [openDialog, setOpenDialog] = useState(false);
-  const [newRole, setNewRole] = useState({ roleId: "", roleName: "", description: "" });
+  const [newRole, setNewRole] = useState({
+    roleId: "",
+    roleName: "",
+    description: "",
+  });
   const [isEdit, setIsEdit] = useState(false); // Xác định xem đang thêm mới hay chỉnh sửa
   const [editIndex, setEditIndex] = useState(null); // Lưu index của quyền đang chỉnh sửa
   const [errors, setErrors] = useState({ roleId: "", roleName: "" }); // Lưu lỗi
@@ -115,26 +120,27 @@ const AccessControl = () => {
 
   return (
     <Box p={3}>
-      {/* <Typography variant="h4" gutterBottom>
-        Quản lý Quyền Truy Cập
-      </Typography> */}
+      <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
+        Manage StockRequests
+      </Typography>
+      <Divider sx={{ mb: 1 }} />
 
-       {/* Nút thêm quyền */}
-       <Box mt={2} sx={{ marginBottom: 2 }}>
+      {/* Nút thêm quyền */}
+      <Box mt={2} sx={{ marginBottom: 2 }}>
         <Button variant="contained" color="primary" onClick={handleDialogOpen}>
-          Thêm Quyền Mới
+          Add New Permission
         </Button>
       </Box>
 
       {/* Bảng danh sách quyền */}
       <TableContainer component={Paper}>
-        <Table>
+        <Table className="table-container">
           <TableHead>
             <TableRow>
-              <TableCell>ID Quyền</TableCell>
-              <TableCell>Tên Quyền</TableCell>
-              <TableCell>Mô Tả</TableCell>
-              <TableCell>Hành Động</TableCell>
+              <TableCell>Permission ID</TableCell>
+              <TableCell>Permission Name</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>

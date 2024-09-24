@@ -95,7 +95,7 @@ function DashboardPage() {
             {
               key: "3",
               icon: <ShopOutlined />,
-              label: "Manage Contracts",
+              label: "Contracts",
               onClick: () => navigate("/admin/ManageContracts"),
             },
             {
@@ -215,7 +215,7 @@ function DashboardPage() {
         </Content>
         <Footer
           style={{
-            textAlign: "center",
+            textAlign: "center",           
           }}
         >
           OBBM ©{new Date().getFullYear()} Created by L&P

@@ -9,6 +9,7 @@ import {
   TableRow,
   Paper,
   Typography,
+  Divider,
 } from "@mui/material";
 import { stockRequests } from "../components/data.js";
 
@@ -26,46 +27,47 @@ const ManageStockRequests = () => {
 
   return (
     <div>
-      {/* <Typography variant="h4" sx={{ marginBottom: 3 }}>
-        Quản Lý Yêu Cầu Nguyên Liệu
-      </Typography> */}
+      <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
+        Manage StockRequests
+      </Typography>
+      <Divider sx={{ mb: 1 }} />
       <TableContainer
         component={Paper}
-        sx={{ maxWidth: "90%", margin: "auto" }}
+        sx={{ mt: 1 }}
+        className="table-container"
       >
         <Table sx={{ minWidth: 700 }}>
           <TableHead>
             <TableRow>
-              <TableCell sx={{ fontSize: "1.2rem" }}>RequestId</TableCell>
-              <TableCell sx={{ fontSize: "1.2rem" }}>ContractId</TableCell>
-              <TableCell sx={{ fontSize: "1.2rem" }}>IngredientId</TableCell>
-              <TableCell sx={{ fontSize: "1.2rem" }}>
+              <TableCell >RequestId</TableCell>
+              <TableCell >ContractId</TableCell>
+              <TableCell >IngredientId</TableCell>
+              <TableCell >
                 RequestedQuantity
               </TableCell>
-              <TableCell sx={{ fontSize: "1.2rem" }}>ApprovalStatus</TableCell>
-              <TableCell sx={{ fontSize: "1.2rem" }}>ReceivedDate</TableCell>
-              <TableCell sx={{ fontSize: "1.2rem" }}>RequestDate</TableCell>
-              <TableCell sx={{ fontSize: "1.2rem" }}>Actions</TableCell>
+              <TableCell >ApprovalStatus</TableCell>
+              <TableCell >ReceivedDate</TableCell>
+              <TableCell >RequestDate</TableCell>
+              <TableCell >Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {requests.map((request) => (
               <TableRow key={request.RequestId}>
-                <TableCell sx={{ fontSize: "1.1rem" }}>
+                <TableCell >
                   {request.RequestId}
                 </TableCell>
-                <TableCell sx={{ fontSize: "1.1rem" }}>
+                <TableCell >
                   {request.ContractId}
                 </TableCell>
-                <TableCell sx={{ fontSize: "1.1rem" }}>
+                <TableCell >
                   {request.IngredientId}
                 </TableCell>
-                <TableCell sx={{ fontSize: "1.1rem" }}>
+                <TableCell >
                   {request.RequestedQuantity}
                 </TableCell>
                 <TableCell
                   sx={{
-                    fontSize: "1.1rem",
                     color:
                       request.ApprovalStatus === "Approved"
                         ? "green"
@@ -76,10 +78,10 @@ const ManageStockRequests = () => {
                 >
                   {request.ApprovalStatus}
                 </TableCell>
-                <TableCell sx={{ fontSize: "1.1rem" }}>
+                <TableCell >
                   {request.ReceivedDate}
                 </TableCell>
-                <TableCell sx={{ fontSize: "1.1rem" }}>
+                <TableCell >
                   {request.RequestDate}
                 </TableCell>
                 <TableCell>
@@ -93,7 +95,7 @@ const ManageStockRequests = () => {
                           handleApproval(request.RequestId, "Approved")
                         }
                       >
-                        Xác Nhận
+                        Confirm
                       </Button>
                       <Button
                         variant="contained"
@@ -103,7 +105,7 @@ const ManageStockRequests = () => {
                           handleApproval(request.RequestId, "Rejected")
                         }
                       >
-                        Từ Chối
+                        Reject
                       </Button>
                     </>
                   )}
