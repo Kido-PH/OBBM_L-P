@@ -5,8 +5,9 @@ import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-route
 
 import Header from './components/Header';
 import Footer from './components/Footer';
-
-import ContractGuest from './views/Contract-guest';
+import StepContext from "./StepContext";
+import GuestContractList from "./components/GuestContract/GuestContractList";
+import GuestContractInfo from "./components/GuestContract/GuestContractInfo";
 import Home from './views/Home';
 import Login from './views/Login';
 import Menu from './views/Menu';
@@ -22,7 +23,9 @@ const App = () => {
 
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="/contract" element={<ContractGuest />} />
+        <Route path="/contract" element={<StepContext />} />
+          <Route path="/user/contract-list" element={<GuestContractList />} />
+          <Route path="/contract-info/id" element={<GuestContractInfo />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/account" element={<Account />} />
         <Route path="/login" element={<Login />} />
