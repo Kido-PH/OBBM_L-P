@@ -27,9 +27,6 @@ a {
     padding-inline: 5px !important;
 }
 
-.contractForm .btn {
-}
-
 .header {
   --color: var(--white);
   --btn-color: var(--champagne-pink);
@@ -41,8 +38,6 @@ a {
   z-index: 4;
 }
 
-.header.active {
-}
 .section-divider::before,
 .section-divider::after {
   content: "";
