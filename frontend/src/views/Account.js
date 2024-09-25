@@ -221,7 +221,7 @@ const AccountSection = () => {
             <a
               href="/login"
               className="d-flex align-items-center me-5 mb-2 btn btn-hover"
-              style={{ marginLeft: '505px', width: '160px', fontSize: '14px', paddingTop: '10px', paddingLeft: '47px', paddingRight: '47px', marginTop: '10px', borderRadius: '3px' }}
+              style={{ marginLeft: '54px', width: '160px', fontSize: '14px', paddingTop: '10px', paddingLeft: '47px', paddingRight: '47px', marginTop: '10px', borderRadius: '3px' }}
             >
               <i className="bi bi-door-open me-3"></i>
               Log out
