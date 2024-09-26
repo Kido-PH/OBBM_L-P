@@ -20,7 +20,6 @@ import {
   Select,
   MenuItem,
   TablePagination,
-  FormLabel,
   IconButton,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
@@ -35,7 +34,6 @@ import {} from "date-fns";
 const ManageContracts = () => {
   const [contracts, setContracts] = useState(initialContracts); // Dữ liệu hợp đồng
   const [showModal, setShowModal] = useState(false); // Hiển thị modal
-  const [setCurrentContract] = useState(null); // Hợp đồng hiện tại
   const [filterPaymentStatus, setFilterPaymentStatus] = useState(""); // Trạng thái lọc PaymentStatus
   const [filterContractType, setFilterContractType] = useState(""); // Trạng thái lọc ContractType
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm

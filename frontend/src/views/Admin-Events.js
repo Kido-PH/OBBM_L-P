@@ -13,8 +13,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Checkbox,
-  FormControlLabel,
   MenuItem,
   Select,
   InputLabel,
