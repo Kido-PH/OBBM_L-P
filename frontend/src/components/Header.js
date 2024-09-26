@@ -3,12 +3,11 @@ import React, { useState, useEffect } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import { RiContractLine } from "react-icons/ri";
 import { BiSolidFoodMenu } from "react-icons/bi";
+import { BiUser } from "react-icons/bi";
 
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import "../assets/css/headerStyle.css";
-
-
 
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
@@ -85,16 +84,22 @@ const Header = () => {
           </button>
 
           <Tooltip title="Menu">
-          <a href="/menu/view" className="navbar-link header-icon">
-            <BiSolidFoodMenu />
-          </a>
-        </Tooltip>
+            <a href="/menu" className="navbar-link header-icon">
+              <BiSolidFoodMenu />
+            </a>
+          </Tooltip>
 
-        <Tooltip title="Contract" >
-          <a href="/contract" className="navbar-link header-icon">
-            <RiContractLine />
-          </a>
-        </Tooltip>
+          <Tooltip title="Contract">
+            <a href="/contract" className="navbar-link header-icon">
+              <RiContractLine />
+            </a>
+          </Tooltip>
+
+          <Tooltip title="Account">
+            <a href="/account" className="navbar-link header-icon">
+              <BiUser />
+            </a>
+          </Tooltip>
 
           <a href="/login" className="btn btn-hover align-middle">
             Sign In
@@ -102,8 +107,7 @@ const Header = () => {
           <button
             className="nav-toggle-btn"
             aria-label="Toggle Menu"
-            data-menu-toggle-btn
-          >
+            data-menu-toggle-btn>
             <span className="line top"></span>{" "}
             <span className="line middle"></span>{" "}
             <span className="line bottom"></span>
