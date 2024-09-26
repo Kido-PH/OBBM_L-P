@@ -18,12 +18,13 @@ import {
   Divider,
 } from "@mui/material";
 import { toast } from "react-toastify";
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 
 // Dữ liệu ban đầu của các quyền
 const initialRoles = [
-  { roleId: "Admin", roleName: "Admin", description: "Toàn quyền hệ thống" },
-  { roleId: "user", roleName: "User", description: "Quyền hạn người dùng" },
-  { roleId: "manager", roleName: "Manager", description: "Quản lý" },
+  { roleId: "admin", roleName: "Admin", description: "Full system authority" },
+  { roleId: "user", roleName: "User", description: "User permissions" },
+  { roleId: "staff", roleName: "Staff", description: "Staff" },
 ];
 
 const AccessControl = () => {
@@ -62,11 +63,11 @@ const AccessControl = () => {
     let valid = true;
 
     if (!newRole.roleId.trim()) {
-      tempErrors.roleId = "ID Quyền không được để trống";
+      tempErrors.roleId = "Permission ID cannot be empty";
       valid = false;
     }
     if (!newRole.roleName.trim()) {
-      tempErrors.roleName = "Tên Quyền không được để trống";
+      tempErrors.roleName = "Permission Name cannot be empty";
       valid = false;
     }
 
@@ -82,10 +83,10 @@ const AccessControl = () => {
       const updatedRoles = [...roles];
       updatedRoles[editIndex] = newRole; // Cập nhật quyền đã sửa
       setRoles(updatedRoles);
-      toast.success("Sửa quyền thành công!");
+      toast.success("Edit Permissions succesfuly!");
     } else {
       setRoles([...roles, newRole]); // Thêm quyền mới
-      toast.success("Thêm quyền thành công!");
+      toast.success("Add Permissions succesfuly!");
     }
     handleDialogClose();
   };
@@ -114,20 +115,20 @@ const AccessControl = () => {
   const handleDeleteRole = () => {
     const updatedRoles = roles.filter((_, i) => i !== deleteIndex);
     setRoles(updatedRoles);
-    toast.success("Xóa quyền thành công!");
+    toast.success("Delete Permissions succesfuly!");
     handleDeleteConfirmClose();
   };
 
   return (
     <Box p={3}>
       <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
-        Manage StockRequests
+        Manage AccessControl
       </Typography>
       <Divider sx={{ mb: 1 }} />
 
       {/* Nút thêm quyền */}
-      <Box mt={2} sx={{ marginBottom: 2 }}>
-        <Button variant="contained" color="primary" onClick={handleDialogOpen}>
+      <Box mt={2} mb={2}>
+        <Button sx={{fontSize:'10px'}} variant="contained" color="primary" onClick={handleDialogOpen}>
           Add New Permission
         </Button>
       </Box>
@@ -156,14 +157,14 @@ const AccessControl = () => {
                     onClick={() => handleEditRole(index)}
                     style={{ marginRight: 8 }}
                   >
-                    Sửa
+                    EDIT
                   </Button>
                   <Button
                     variant="contained"
                     color="secondary"
                     onClick={() => handleDeleteConfirmOpen(index)}
                   >
-                    Xóa
+                    DELETE
                   </Button>
                 </TableCell>
               </TableRow>
@@ -174,11 +175,11 @@ const AccessControl = () => {
 
       {/* Dialog thêm quyền */}
       <Dialog open={openDialog} onClose={handleDialogClose}>
-        <DialogTitle>{isEdit ? "Sửa Quyền" : "Thêm Quyền Mới"}</DialogTitle>
-        <DialogContent>
+        <DialogTitle sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight:'bold' }}>{isEdit ? "Edit Permission" : "New Permission"}</DialogTitle>
+        <DialogContent className="custom-input">
           <TextField
             margin="dense"
-            label="ID Quyền"
+            label="ID Permission"
             fullWidth
             name="roleId"
             value={newRole.roleId}
@@ -189,7 +190,7 @@ const AccessControl = () => {
           />
           <TextField
             margin="dense"
-            label="Tên Quyền"
+            label="Name Permission"
             fullWidth
             name="roleName"
             value={newRole.roleName}
@@ -199,7 +200,7 @@ const AccessControl = () => {
           />
           <TextField
             margin="dense"
-            label="Mô Tả"
+            label="Description"
             fullWidth
             name="description"
             value={newRole.description}
@@ -208,27 +209,30 @@ const AccessControl = () => {
           />
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDialogClose} color="secondary">
-            Hủy
+          <Button onClick={handleDialogClose} color="secondary" sx={{fontSize:'1.4rem'}}>
+            Close
           </Button>
-          <Button onClick={handleAddOrEditRole} color="primary">
-            {isEdit ? "Lưu" : "Thêm"}
+          <Button onClick={handleAddOrEditRole} color="primary" sx={{fontSize:'1.4rem'}}>
+            {isEdit ? "Save" : "Add"}
           </Button>
         </DialogActions>
       </Dialog>
 
       {/* Dialog xác nhận xóa */}
       <Dialog open={openDeleteConfirm} onClose={handleDeleteConfirmClose}>
-        <DialogTitle>Xác nhận xóa</DialogTitle>
+      <DialogTitle sx={{fontSize:'1.6rem', color: '#d32f2f', display: 'flex', alignItems: 'center'}}>
+            <ErrorOutlineIcon sx={{ color: 'error.main', mr: 1 }} />
+            Delete confirmation
+        </DialogTitle>
         <DialogContent>
-          <Typography>Bạn có chắc chắn muốn xóa quyền này không?</Typography>
+          <p>Are you sure you want to remove this permission?</p>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleDeleteConfirmClose} color="secondary">
-            Hủy
+          <Button onClick={handleDeleteConfirmClose} color="secondary" sx={{fontSize:'1.3rem', fontWeight:'bold'}}>
+            Close
           </Button>
-          <Button onClick={handleDeleteRole} color="primary">
-            Xóa
+          <Button onClick={handleDeleteRole} color="primary" sx={{fontSize:'1.3rem', fontWeight:'bold'}}>
+            Delete
           </Button>
         </DialogActions>
       </Dialog>
