@@ -41,7 +41,7 @@ const App = () => {
         </Route>
 
         {/* Route admin không có header và footer */}
-        <Route path="/admin" element={<DashboardPage />}>
+        <Route path="/admin/*" element={<DashboardPage />}>
           <Route path="ManageContracts" element={<ManageContracts />} />
           <Route path="ManageStockRequests" element={<ManageStockRequests />} />
           <Route path="ManageServices" element={<ServiceManager />} />
