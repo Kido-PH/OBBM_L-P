@@ -1,0 +1,57 @@
+.ant-layout{
+    min-height: 100vh;
+}
+
+.ant-layout-header span.trigger svg {
+    width: 25px !important;
+    height: 25px !important;
+    margin: 10px !important;
+    transition: all 0.3s ease; /* Thêm hiệu ứng chuyển tiếp */
+}
+
+.ant-layout-header span.trigger:hover svg {
+    width: 30px !important; /* Kích thước khi hover */
+    height: 30px !important; /* Kích thước khi hover */
+}
+
+
+.logo h2{
+    color: #fff !important;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 16px;
+    margin-bottom: 16px;
+}
+
+.content-panel {
+    box-shadow: rgba(99, 99, 99, 0.2) 0px 2px 8px 0px;
+    padding: 16px;
+    width: 100%; /* Chiếm toàn bộ chiều ngang */
+    max-width: 100vw; /* Đảm bảo không vượt quá chiều ngang màn hình */
+    height: auto;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin: 0 auto; /* Căn giữa nội dung */
+}
+
+
+.table-container .MuiTableCell-root{
+    font-size: 12px;
+    font-family: 'Arial', sans-serif;
+    white-space: nowrap; /* Giữ văn bản trên một dòng */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Thêm dấu '...' khi văn bản quá dài */
+}
+
+.table-container .MuiTableHead-root .MuiTableCell-root {
+    font-weight: bold; /* Làm đậm tiêu đề */
+    font-size: 13px; /* Tăng kích thước chữ cho tiêu đề */
+    color: #333; /* Màu chữ đậm hơn cho tiêu đề */
+    letter-spacing: 0.05em; /* Tăng khoảng cách giữa các chữ */
+}
+
+.custom-input .MuiInputBase-input {
+    font-size: 13px;
+}  
