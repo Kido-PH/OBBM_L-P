@@ -17,7 +17,7 @@ const ContractCreateStep2 = () => {
             <div className="col">
               <div className="mb-3">
                 <label className="form-label fw-bold ">
-                  Customer Name
+                  Tên Khách Hàng
                   <span className="text-danger d-inline-block">*</span>
                 </label>{" "}
                 <input
@@ -31,7 +31,7 @@ const ContractCreateStep2 = () => {
 
               <div className="mb-3">
                 <label className="form-label fw-bold">
-                  Customer Phone
+                  Số Điện Thoại Khách Hàng
                   <span className="text-danger d-inline-block">*</span>
                 </label>
                 <div className="d-flex align-items-center">
@@ -52,7 +52,7 @@ const ContractCreateStep2 = () => {
             <div className="col">
               <div className="mb-3">
                 <label className="form-label fw-bold">
-                  Customer Email
+                  Email Khách Hàng
                   <span className="text-danger d-inline-block">*</span>
                 </label>{" "}
                 <input
@@ -64,16 +64,7 @@ const ContractCreateStep2 = () => {
                   required
                 />
               </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">Created Date</label>{" "}
-                <input
-                  type="date"
-                  name="createdDate"
-                  id="createdDate"
-                  className="form-control fs-4"
-                />
-              </div>
+             
             </div>
           </div>
 
