@@ -8,10 +8,8 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Typography,
-  Divider,
 } from "@mui/material";
-import { stockRequests } from "../components/data.js";
+import { stockRequests } from "../data";
 
 const ManageStockRequests = () => {
   const [requests, setRequests] = useState(stockRequests);
@@ -27,10 +25,6 @@ const ManageStockRequests = () => {
 
   return (
     <div>
-      <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
-        Manage StockRequests
-      </Typography>
-      <Divider sx={{ mb: 1 }} />
       <TableContainer
         component={Paper}
         sx={{ mt: 1 }}

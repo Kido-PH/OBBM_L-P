@@ -7,7 +7,6 @@ import {
   Button,
   TextField,
   Box,
-  Typography,
   Table,
   TableBody,
   TableCell,
@@ -15,7 +14,6 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Divider,
 } from "@mui/material";
 import { toast } from "react-toastify";
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
@@ -121,11 +119,6 @@ const AccessControl = () => {
 
   return (
     <Box p={3}>
-      <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
-        Manage AccessControl
-      </Typography>
-      <Divider sx={{ mb: 1 }} />
-
       {/* Nút thêm quyền */}
       <Box mt={2} mb={2}>
         <Button sx={{fontSize:'10px'}} variant="contained" color="primary" onClick={handleDialogOpen}>

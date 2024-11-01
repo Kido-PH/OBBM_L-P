@@ -13,8 +13,6 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Checkbox,
-  FormControlLabel,
   MenuItem,
   Select,
   InputLabel,
@@ -22,47 +20,49 @@ import {
   Box,
   IconButton,
   TablePagination,
-  Typography,
-  Divider,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { initialServices } from "../components/data";
 import { toast } from "react-toastify";
+import { initialLocations } from "../data";
 
-const ServiceManager = () => {
-  const [services, setServices] = useState(initialServices);
+const LocationManager = () => {
+  const [locations, setLocations] = useState(initialLocations);
   const [openDialog, setOpenDialog] = useState(false);
-  const [currentService, setCurrentService] = useState({
-    ServiceId: null,
-    ServiceName: "",
+  const [currentLocation, setCurrentLocation] = useState({
+    LocationId: null,
+    LocationName: "",
+    Address: "",
+    LocationType: "",
+    Capacity: 0,
+    TableNumber: 0,
+    RentCost: 0,
     Description: "",
-    ServiceType: "",
-    Availability: true,
-    Price: 0,
     IsDeleted: false,
     Status: false,
   });
-  const [dialogMode, setDialogMode] = useState("add"); // 'add', 'edit'
+  const [dialogMode, setDialogMode] = useState("add");
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [serviceToDelete, setServiceToDelete] = useState(null);
+  const [locationToDelete, setLocationToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
 
-  const handleOpenDialog = (mode, service) => {
+  const handleOpenDialog = (mode, location) => {
     setDialogMode(mode);
-    setCurrentService(
-      service || {
-        ServiceId: null,
-        ServiceName: "",
+    setCurrentLocation(
+      location || {
+        LocationId: null,
+        LocationName: "",
+        Address: "",
+        LocationType: "",
+        Capacity: 0,
+        TableNumber: 0,
+        RentCost: 0,
         Description: "",
-        ServiceType: "",
-        Availability: true,
-        Price: 0,
         IsDeleted: false,
         Status: false,
       }
@@ -76,8 +76,8 @@ const ServiceManager = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCurrentService({
-      ...currentService,
+    setCurrentLocation({
+      ...currentLocation,
       [name]:
         name === "IsDeleted"
           ? value === "true"
@@ -89,44 +89,44 @@ const ServiceManager = () => {
 
   const handleSave = () => {
     if (dialogMode === "add") {
-      setServices([
-        ...services,
-        { ...currentService, ServiceId: services.length + 1 },
+      setLocations([
+        ...locations,
+        { ...currentLocation, LocationId: locations.length + 1 },
       ]);
-      toast.success("Service add successfully !");
+      toast.success("Location add successfully !");
     } else if (dialogMode === "edit") {
-      setServices(
-        services.map((service) =>
-          service.ServiceId === currentService.ServiceId
-            ? currentService
-            : service
+      setLocations(
+        locations.map((location) =>
+          location.LocationId === currentLocation.LocationId
+            ? currentLocation
+            : location
         )
       );
-      toast.success("Edit service successful !");
+      toast.success("Edit location successful !");
     }
     handleCloseDialog();
   };
 
-  const handleDeleteClick = (serviceId) => {
-    setServiceToDelete(serviceId);
+  const handleDeleteClick = (locationId) => {
+    setLocationToDelete(locationId);
     setOpenConfirmDialog(true);
   };
 
   const handleConfirmDelete = () => {
-    setServices(
-      services.map((service) =>
-        service.ServiceId === serviceToDelete
-          ? { ...service, Status: true }
-          : service
+    setLocations(
+      locations.map((location) =>
+        location.LocationId === locationToDelete
+          ? { ...location, Status: true }
+          : location
       )
     );
     setOpenConfirmDialog(false);
-    setServiceToDelete(null);
+    setLocationToDelete(null);
   };
 
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);
-    setServiceToDelete(null);
+    setLocationToDelete(null);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -138,89 +138,78 @@ const ServiceManager = () => {
     setPage(0); // Reset về trang đầu tiên khi thay đổi số mục trên mỗi trang
   };
 
-  // Hàm tìm kiếm: Lọc các dịch vụ dựa trên từ khóa tìm kiếm
-  const filteredServices = services
-    .filter((service) =>
+    // Hàm tìm kiếm: Lọc các dịch vụ dựa trên từ khóa tìm kiếm
+    const filteredLocations = locations
+    .filter((locations) =>
       searchTerm === "" || // Nếu không có từ khóa tìm kiếm
-      Object.values(service).some((value) =>
+      Object.values(locations).some((value) =>
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       )
     )
-    .filter((service) => !service.Status); // Loại bỏ các dịch vụ có trạng thái 'Status' là true
+    .filter((locations) => !locations.Status); // Loại bỏ các dịch vụ có trạng thái 'Status' là true
 
   return (
     <div>
-     <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
-        Manage Service
-      </Typography>
-      <Divider sx={{ mb: 1 }} />
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mt: 3, 
-          mb: 2,
+          mt:2,
+          mb: 2, // margin bottom
         }}
       >
-        {/* Ô tìm kiếm nằm bên trái */}
-        <TextField
-          label="Search Service"
-          variant="outlined"
-          sx={{ width: "300px" }}
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)} // Cập nhật từ khóa tìm kiếm
-        />
-
-        {/* Nút Add New Contract */}
+        {/* Ô tìm kiếm */}
+        <div className="admin-group">
+          <svg className="admin-icon-search" aria-hidden="true" viewBox="0 0 24 24"><g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g></svg>
+          <input placeholder="Search" type="search" className="admin-input-search" value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)} />
+        </div>
         <Button
           sx={{fontSize:'10px'}}
           variant="contained"
           color="primary"
           onClick={() => handleOpenDialog("add")}
         >
-          Add New Service
+          Add Location
         </Button>
       </Box>
 
-      <TableContainer component={Paper} className="table-container">
+      <TableContainer component={Paper} sx={{ mt: 1 }} className="table-container">
         <Table>
           <TableHead>
             <TableRow>
               <TableCell>ID</TableCell>
-              <TableCell>Service Name</TableCell>
-              <TableCell>Description</TableCell>
-              <TableCell>Service Type</TableCell>
-              <TableCell>Available</TableCell>
-              <TableCell>Price</TableCell>
+              <TableCell>Location Name</TableCell>
+              <TableCell>Address</TableCell>
+              <TableCell>Location Type</TableCell>
+              <TableCell>Capacity</TableCell>
+              <TableCell>Table Number</TableCell>
+              <TableCell>Rent Cost</TableCell>
               <TableCell>IsDeleted</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredServices
+            {filteredLocations
+              .filter((location) => !location.Status)
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Chỉ lấy các mục cho trang hiện tại
-              .map((service) => (
-                <TableRow key={service.ServiceId}>
-                  <TableCell>{service.ServiceId}</TableCell>
-                  <TableCell>{service.ServiceName}</TableCell>
-                  <TableCell>{service.Description}</TableCell>
-                  <TableCell>{service.ServiceType}</TableCell>
-                  <TableCell>{service.Availability ? "Yes" : "No"}</TableCell>
-                  <TableCell>
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                      currencyDisplay: "code",
-                    }).format(service.Price)}
-                  </TableCell>
+              .map((location) => (
+                <TableRow key={location.LocationId}>
+                  <TableCell>{location.LocationId}</TableCell>
+                  <TableCell>{location.LocationName}</TableCell>
+                  <TableCell>{location.Address}</TableCell>
+                  <TableCell>{location.LocationType}</TableCell>
+                  <TableCell>{location.Capacity}</TableCell>
+                  <TableCell>{location.TableNumber}</TableCell>
+                  <TableCell>{location.RentCost}</TableCell>
                   <TableCell
                     sx={{
-                      color: service.IsDeleted ? "red" : "green",
+                      color: location.IsDeleted ? "red" : "green",
                       alignItems: "center",
                     }}
                   >
-                    {service.IsDeleted ? (
+                    {location.IsDeleted ? (
                       <>
                         <CancelIcon sx={{ color: "red" }} />{" "}
                         <span>Inactive</span>
@@ -237,7 +226,7 @@ const ServiceManager = () => {
                       size="large"
                       color="primary"
                       variant="outlined"
-                      onClick={() => handleOpenDialog("edit", service)}
+                      onClick={() => handleOpenDialog("edit", location)}
                       style={{ marginRight: "10px" }}
                     >
                       <EditIcon />
@@ -246,7 +235,7 @@ const ServiceManager = () => {
                       size="large"
                       variant="outlined"
                       color="error"
-                      onClick={() => handleDeleteClick(service.ServiceId)}
+                      onClick={() => handleDeleteClick(location.LocationId)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -255,10 +244,11 @@ const ServiceManager = () => {
               ))}
           </TableBody>
         </Table>
+        {/* Phân trang */}
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={services.length}
+          count={locations.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -294,18 +284,68 @@ const ServiceManager = () => {
 
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight:'bold' }}>
-          {dialogMode === "add" ? "Add Service" : "Edit Service"}
+          {dialogMode === "add" ? "Add Location" : "Edit Location"}
         </DialogTitle>
         <DialogContent className="custom-input">
           <TextField
             autoFocus
             margin="dense"
-            name="ServiceName"
-            label="Service Name"
+            name="LocationName"
+            label="Location Name"
             type="text"
             fullWidth
             variant="outlined"
-            value={currentService.ServiceName || ""}
+            value={currentLocation.LocationName || ""}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="Address"
+            label="Address"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={currentLocation.Address || ""}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="LocationType"
+            label="Location Type"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={currentLocation.LocationType || ""}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="Capacity"
+            label="Capacity"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={currentLocation.Capacity || 0}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="TableNumber"
+            label="Table Number"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={currentLocation.TableNumber || 0}
+            onChange={handleInputChange}
+          />
+          <TextField
+            margin="dense"
+            name="RentCost"
+            label="Rent Cost"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={currentLocation.RentCost || 0}
             onChange={handleInputChange}
           />
           <TextField
@@ -315,37 +355,7 @@ const ServiceManager = () => {
             type="text"
             fullWidth
             variant="outlined"
-            value={currentService.Description || ""}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="ServiceType"
-            label="Service Type"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentService.ServiceType || ""}
-            onChange={handleInputChange}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={currentService.Availability || false}
-                onChange={handleInputChange}
-                name="Availability"
-              />
-            }
-            label="Available"
-          />
-          <TextField
-            margin="dense"
-            name="Price"
-            label="Price"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={currentService.Price || 0}
+            value={currentLocation.Description || ""}
             onChange={handleInputChange}
           />
 
@@ -353,7 +363,7 @@ const ServiceManager = () => {
             <InputLabel>IsDeleted</InputLabel>
             <Select
               name="IsDeleted"
-              value={currentService.IsDeleted}
+              value={currentLocation.IsDeleted}
               onChange={handleInputChange}
               label="IsDeleted"
             >
@@ -372,18 +382,18 @@ const ServiceManager = () => {
         </DialogActions>
       </Dialog>
       <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
-        <DialogTitle sx={{fontSize:'1.6rem', color: '#d32f2f', display: 'flex', alignItems: 'center'}}>
+      <DialogTitle sx={{fontSize:'1.6rem', color: '#d32f2f', display: 'flex', alignItems: 'center'}}>
             <ErrorOutlineIcon sx={{ color: 'error.main', mr: 1 }} />
             Delete confirmation
         </DialogTitle>
         <DialogContent>
-          <p>Do you agree to delete this service?</p>
+          <p>Do you agree to delete this location ?</p>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDelete} color="secondary" sx={{fontSize:'1.3rem'}}> 
+          <Button onClick={handleCancelDelete} color="primary" sx={{fontSize:'1.3rem'}}>
             Close
           </Button>
-          <Button onClick={handleConfirmDelete} color="primary" sx={{fontSize:'1.3rem'}}> 
+          <Button onClick={handleConfirmDelete} color="secondary" sx={{fontSize:'1.3rem'}}>
             Submit
           </Button>
         </DialogActions>
@@ -392,4 +402,4 @@ const ServiceManager = () => {
   );
 };
 
-export default ServiceManager;
+export default LocationManager;

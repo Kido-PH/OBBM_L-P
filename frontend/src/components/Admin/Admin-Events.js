@@ -18,53 +18,44 @@ import {
   InputLabel,
   FormControl,
   Box,
-  Typography,
-  Divider,
   IconButton,
   TablePagination,
 } from "@mui/material";
+import { toast } from "react-toastify";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
-import { toast } from "react-toastify";
-import { initialLocations } from "../components/data";
+import { initialEvents } from "../data";
 
-const LocationManager = () => {
-  const [locations, setLocations] = useState(initialLocations);
+const EventManager = () => {
+  const [events, setEvents] = useState(initialEvents);
   const [openDialog, setOpenDialog] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState({
-    LocationId: null,
-    LocationName: "",
-    Address: "",
-    LocationType: "",
-    Capacity: 0,
-    TableNumber: 0,
-    RentCost: 0,
+  const [currentEvent, setCurrentEvent] = useState({
+    EventId: null,
+    EventName: "",
     Description: "",
+    TotalCost: 0,
     IsDeleted: false,
     Status: false,
   });
-  const [dialogMode, setDialogMode] = useState("add");
+  const [dialogMode, setDialogMode] = useState("add"); // 'add', 'edit'
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [locationToDelete, setLocationToDelete] = useState(null);
+  const [eventToDelete, setEventToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
 
-  const handleOpenDialog = (mode, location) => {
+  // Mở dialog thêm/sửa sự kiện
+  const handleOpenDialog = (mode, event) => {
     setDialogMode(mode);
-    setCurrentLocation(
-      location || {
-        LocationId: null,
-        LocationName: "",
-        Address: "",
-        LocationType: "",
-        Capacity: 0,
-        TableNumber: 0,
-        RentCost: 0,
+    setCurrentEvent(
+      event || {
+        EventId: null,
+        EventName: "",
         Description: "",
+        TotalCost: 0,
         IsDeleted: false,
         Status: false,
       }
@@ -72,63 +63,55 @@ const LocationManager = () => {
     setOpenDialog(true);
   };
 
+  // Đóng dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
 
+  // Xử lý thay đổi input
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCurrentLocation({
-      ...currentLocation,
-      [name]:
-        name === "IsDeleted"
-          ? value === "true"
-          : type === "checkbox"
-          ? checked
-          : value,
+    setCurrentEvent({
+      ...currentEvent,
+      [name]: type === "checkbox" ? checked : value,
     });
   };
 
+  // Lưu sự kiện mới hoặc chỉnh sửa sự kiện
   const handleSave = () => {
     if (dialogMode === "add") {
-      setLocations([
-        ...locations,
-        { ...currentLocation, LocationId: locations.length + 1 },
-      ]);
-      toast.success("Location add successfully !");
+      setEvents([...events, { ...currentEvent, EventId: events.length + 1 }]);
+      toast.success("Event add successfully !");
     } else if (dialogMode === "edit") {
-      setLocations(
-        locations.map((location) =>
-          location.LocationId === currentLocation.LocationId
-            ? currentLocation
-            : location
+      setEvents(
+        events.map((event) =>
+          event.EventId === currentEvent.EventId ? currentEvent : event
         )
       );
-      toast.success("Edit location successful !");
+      toast.success("Edit event successful !");
     }
     handleCloseDialog();
   };
 
-  const handleDeleteClick = (locationId) => {
-    setLocationToDelete(locationId);
+  // Xử lý click "Delete" để cập nhật trạng thái "Status" và ẩn sự kiện
+  const handleDeleteClick = (eventId) => {
+    setEventToDelete(eventId);
     setOpenConfirmDialog(true);
   };
 
   const handleConfirmDelete = () => {
-    setLocations(
-      locations.map((location) =>
-        location.LocationId === locationToDelete
-          ? { ...location, Status: true }
-          : location
+    setEvents(
+      events.map((event) =>
+        event.EventId === eventToDelete ? { ...event, Status: true } : event
       )
     );
     setOpenConfirmDialog(false);
-    setLocationToDelete(null);
+    setEventToDelete(null);
   };
 
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);
-    setLocationToDelete(null);
+    setEventToDelete(null);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -140,46 +123,41 @@ const LocationManager = () => {
     setPage(0); // Reset về trang đầu tiên khi thay đổi số mục trên mỗi trang
   };
 
-    // Hàm tìm kiếm: Lọc các dịch vụ dựa trên từ khóa tìm kiếm
-    const filteredLocations = locations
-    .filter((locations) =>
+  // Hàm tìm kiếm: Lọc các dịch vụ dựa trên từ khóa tìm kiếm
+  const filteredEvents = events
+    .filter((events) =>
       searchTerm === "" || // Nếu không có từ khóa tìm kiếm
-      Object.values(locations).some((value) =>
+      Object.values(events).some((value) =>
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       )
     )
-    .filter((locations) => !locations.Status); // Loại bỏ các dịch vụ có trạng thái 'Status' là true
+    .filter((events) => !events.Status); // Loại bỏ các dịch vụ có trạng thái 'Status' là true
 
   return (
     <div>
-      <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
-        Manage Location
-      </Typography>
-      <Divider sx={{ mb: 1 }} />
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mt:2,
+          mt: 2,
           mb: 2, // margin bottom
         }}
       >
-        {/* Ô tìm kiếm nằm bên trái */}
-        <TextField
-          label="Search Location"
-          variant="outlined"
-          sx={{ width: "300px" }}
-          value={searchTerm} // Liên kết với searchTerm
-          onChange={(e) => setSearchTerm(e.target.value)} // Cập nhật searchTerm khi người dùng nhập liệu
-        />
+        {/* Ô tìm kiếm */}
+        <div className="admin-group">
+          <svg className="admin-icon-search" aria-hidden="true" viewBox="0 0 24 24"><g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g></svg>
+          <input placeholder="Search" type="search" className="admin-input-search" value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)} />
+        </div>
+
         <Button
           sx={{fontSize:'10px'}}
           variant="contained"
           color="primary"
           onClick={() => handleOpenDialog("add")}
         >
-          Add Location
+          Add Event
         </Button>
       </Box>
 
@@ -187,37 +165,37 @@ const LocationManager = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>ID</TableCell>
-              <TableCell>Location Name</TableCell>
-              <TableCell>Address</TableCell>
-              <TableCell>Location Type</TableCell>
-              <TableCell>Capacity</TableCell>
-              <TableCell>Table Number</TableCell>
-              <TableCell>Rent Cost</TableCell>
+              <TableCell>Event ID</TableCell>
+              <TableCell>Event Name</TableCell>
+              <TableCell>Description</TableCell>
+              <TableCell>TotalCost</TableCell>
               <TableCell>IsDeleted</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredLocations
-              .filter((location) => !location.Status)
+            {filteredEvents
+              .filter((event) => !event.Status) // Chỉ hiển thị sự kiện không bị xóa tạm thời
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Chỉ lấy các mục cho trang hiện tại
-              .map((location) => (
-                <TableRow key={location.LocationId}>
-                  <TableCell>{location.LocationId}</TableCell>
-                  <TableCell>{location.LocationName}</TableCell>
-                  <TableCell>{location.Address}</TableCell>
-                  <TableCell>{location.LocationType}</TableCell>
-                  <TableCell>{location.Capacity}</TableCell>
-                  <TableCell>{location.TableNumber}</TableCell>
-                  <TableCell>{location.RentCost}</TableCell>
+              .map((event) => (
+                <TableRow key={event.EventId}>
+                  <TableCell>{event.EventId}</TableCell>
+                  <TableCell>{event.EventName}</TableCell>
+                  <TableCell>{event.Description}</TableCell>
+                  <TableCell>
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                      currencyDisplay: "code",
+                    }).format(event.TotalCost)}
+                  </TableCell>
                   <TableCell
                     sx={{
-                      color: location.IsDeleted ? "red" : "green",
+                      color: event.IsDeleted ? "red" : "green",
                       alignItems: "center",
                     }}
                   >
-                    {location.IsDeleted ? (
+                    {event.IsDeleted ? (
                       <>
                         <CancelIcon sx={{ color: "red" }} />{" "}
                         <span>Inactive</span>
@@ -231,19 +209,17 @@ const LocationManager = () => {
                   </TableCell>
                   <TableCell>
                     <IconButton
-                      size="large"
-                      color="primary"
                       variant="outlined"
-                      onClick={() => handleOpenDialog("edit", location)}
-                      style={{ marginRight: "10px" }}
+                      onClick={() => handleOpenDialog("edit", event)}
+                      sx={{ mr: 1 }}
+                      color="primary"
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
-                      size="large"
                       variant="outlined"
                       color="error"
-                      onClick={() => handleDeleteClick(location.LocationId)}
+                      onClick={() => handleDeleteClick(event.EventId)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -256,7 +232,7 @@ const LocationManager = () => {
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={locations.length}
+          count={events.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -290,70 +266,21 @@ const LocationManager = () => {
         />
       </TableContainer>
 
+      {/* Dialog thêm/sửa sự kiện */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight:'bold' }}>
-          {dialogMode === "add" ? "Add Location" : "Edit Location"}
+          {dialogMode === "add" ? "Add Events" : "Edit Event"}
         </DialogTitle>
         <DialogContent className="custom-input">
           <TextField
             autoFocus
             margin="dense"
-            name="LocationName"
-            label="Location Name"
+            name="EventName"
+            label="EventName"
             type="text"
             fullWidth
             variant="outlined"
-            value={currentLocation.LocationName || ""}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="Address"
-            label="Address"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.Address || ""}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="LocationType"
-            label="Location Type"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.LocationType || ""}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="Capacity"
-            label="Capacity"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.Capacity || 0}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="TableNumber"
-            label="Table Number"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.TableNumber || 0}
-            onChange={handleInputChange}
-          />
-          <TextField
-            margin="dense"
-            name="RentCost"
-            label="Rent Cost"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.RentCost || 0}
+            value={currentEvent.EventName || ""}
             onChange={handleInputChange}
           />
           <TextField
@@ -363,20 +290,29 @@ const LocationManager = () => {
             type="text"
             fullWidth
             variant="outlined"
-            value={currentLocation.Description || ""}
+            value={currentEvent.Description || ""}
             onChange={handleInputChange}
           />
-
+          <TextField
+            margin="dense"
+            name="TotalCost"
+            label="TotalCost"
+            type="number"
+            fullWidth
+            variant="outlined"
+            value={currentEvent.TotalCost || 0}
+            onChange={handleInputChange}
+          />
           <FormControl fullWidth margin="dense">
-            <InputLabel>IsDeleted</InputLabel>
+            <InputLabel>Status</InputLabel>
             <Select
               name="IsDeleted"
-              value={currentLocation.IsDeleted}
+              value={currentEvent.IsDeleted}
               onChange={handleInputChange}
-              label="IsDeleted"
+              label="Trạng thái"
             >
-              <MenuItem value="true">Deleted</MenuItem>
-              <MenuItem value="false">Active</MenuItem>
+              <MenuItem value={false}>Active</MenuItem>
+              <MenuItem value={true}>IsDeleted</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
@@ -389,13 +325,15 @@ const LocationManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Dialog xác nhận xóa */}
       <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
-      <DialogTitle sx={{fontSize:'1.6rem', color: '#d32f2f', display: 'flex', alignItems: 'center'}}>
+        <DialogTitle sx={{fontSize:'1.6rem', color: '#d32f2f', display: 'flex', alignItems: 'center'}}>
             <ErrorOutlineIcon sx={{ color: 'error.main', mr: 1 }} />
             Delete confirmation
         </DialogTitle>
         <DialogContent>
-          <p>Do you agree to delete this location ?</p>
+          <p>Do you agree to delete this event ?</p>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleCancelDelete} color="primary" sx={{fontSize:'1.3rem'}}>
@@ -410,4 +348,4 @@ const LocationManager = () => {
   );
 };
 
-export default LocationManager;
+export default EventManager;

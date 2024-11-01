@@ -1,7 +1,7 @@
 const initialContracts = [
   {
     ContractId: "CT001",
-    Username: "johndoe",
+    Username: "MinhPhi",
     Menu: 1,
     EventId: 101,
     DateCreate: "2024-09-01T10:30:00",
@@ -12,9 +12,9 @@ const initialContracts = [
     PaymentStatus: "Paid",
     ContractStatus: "Active",
     Description: "Catering service for event",
-    CustomerName: "John Doe",
+    CustomerName: "Do Phi",
     CustomerPhone: "+123456789",
-    CustomerEmail: "john.doe@example.com",
+    CustomerEmail: "dominhphi231220@gmail.com",
     IsDeleted: false,
   },
   {
@@ -179,25 +179,8 @@ const initialContracts = [
     CustomerEmail: "grace.johnson@example.com",
     IsDeleted: false,
   },
-  {
-    ContractId: "CT010",
-    Username: "gracej",
-    Menu: 11,
-    EventId: 110,
-    DateCreate: "2024-09-22T14:20:00",
-    OrganizDate: "2024-10-25T15:30:00",
-    LocationId: 9,
-    ContractType: "Rental",
-    TotalMoney: 600000,
-    PaymentStatus: "Paid",
-    ContractStatus: "Completed",
-    Description: "Rental of sound equipment for concert",
-    CustomerName: "Grace Johnson",
-    CustomerPhone: "+6546546543",
-    CustomerEmail: "grace.johnson@example.com",
-    IsDeleted: false,
-  },
 ];
+
 const stockRequests = [
   {
     RequestId: 1,
@@ -520,7 +503,6 @@ const initialLocations = [
   },
 ];
 
-
 const initialAccounts = [
   {
     Username: "emily_white",
@@ -643,7 +625,6 @@ const initialAccounts = [
     IsDeleted: false,
   }
 ];
-
 
 const initialInvoices = [
   {
