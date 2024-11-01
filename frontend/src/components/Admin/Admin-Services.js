@@ -13,51 +13,54 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Checkbox,
+  FormControlLabel,
   MenuItem,
   Select,
   InputLabel,
   FormControl,
   Box,
   IconButton,
-  Typography,
-  Divider,
   TablePagination,
 } from "@mui/material";
-import { toast } from "react-toastify";
-import { initialEvents } from "../components/data";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from '@mui/icons-material/Delete';
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import { toast } from "react-toastify";
+import { initialServices } from "../data";
 
-const EventManager = () => {
-  const [events, setEvents] = useState(initialEvents);
+const ServiceManager = () => {
+  const [services, setServices] = useState(initialServices);
   const [openDialog, setOpenDialog] = useState(false);
-  const [currentEvent, setCurrentEvent] = useState({
-    EventId: null,
-    EventName: "",
+  const [currentService, setCurrentService] = useState({
+    ServiceId: null,
+    ServiceName: "",
     Description: "",
-    TotalCost: 0,
+    ServiceType: "",
+    Availability: true,
+    Price: 0,
     IsDeleted: false,
     Status: false,
   });
   const [dialogMode, setDialogMode] = useState("add"); // 'add', 'edit'
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [eventToDelete, setEventToDelete] = useState(null);
+  const [serviceToDelete, setServiceToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
 
-  // Mở dialog thêm/sửa sự kiện
-  const handleOpenDialog = (mode, event) => {
+  const handleOpenDialog = (mode, service) => {
     setDialogMode(mode);
-    setCurrentEvent(
-      event || {
-        EventId: null,
-        EventName: "",
+    setCurrentService(
+      service || {
+        ServiceId: null,
+        ServiceName: "",
         Description: "",
-        TotalCost: 0,
+        ServiceType: "",
+        Availability: true,
+        Price: 0,
         IsDeleted: false,
         Status: false,
       }
@@ -65,55 +68,63 @@ const EventManager = () => {
     setOpenDialog(true);
   };
 
-  // Đóng dialog
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
 
-  // Xử lý thay đổi input
   const handleInputChange = (e) => {
     const { name, value, type, checked } = e.target;
-    setCurrentEvent({
-      ...currentEvent,
-      [name]: type === "checkbox" ? checked : value,
+    setCurrentService({
+      ...currentService,
+      [name]:
+        name === "IsDeleted"
+          ? value === "true"
+          : type === "checkbox"
+          ? checked
+          : value,
     });
   };
 
-  // Lưu sự kiện mới hoặc chỉnh sửa sự kiện
   const handleSave = () => {
     if (dialogMode === "add") {
-      setEvents([...events, { ...currentEvent, EventId: events.length + 1 }]);
-      toast.success("Event add successfully !");
+      setServices([
+        ...services,
+        { ...currentService, ServiceId: services.length + 1 },
+      ]);
+      toast.success("Service add successfully !");
     } else if (dialogMode === "edit") {
-      setEvents(
-        events.map((event) =>
-          event.EventId === currentEvent.EventId ? currentEvent : event
+      setServices(
+        services.map((service) =>
+          service.ServiceId === currentService.ServiceId
+            ? currentService
+            : service
         )
       );
-      toast.success("Edit event successful !");
+      toast.success("Edit service successful !");
     }
     handleCloseDialog();
   };
 
-  // Xử lý click "Delete" để cập nhật trạng thái "Status" và ẩn sự kiện
-  const handleDeleteClick = (eventId) => {
-    setEventToDelete(eventId);
+  const handleDeleteClick = (serviceId) => {
+    setServiceToDelete(serviceId);
     setOpenConfirmDialog(true);
   };
 
   const handleConfirmDelete = () => {
-    setEvents(
-      events.map((event) =>
-        event.EventId === eventToDelete ? { ...event, Status: true } : event
+    setServices(
+      services.map((service) =>
+        service.ServiceId === serviceToDelete
+          ? { ...service, Status: true }
+          : service
       )
     );
     setOpenConfirmDialog(false);
-    setEventToDelete(null);
+    setServiceToDelete(null);
   };
 
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);
-    setEventToDelete(null);
+    setServiceToDelete(null);
   };
 
   const handleChangePage = (event, newPage) => {
@@ -126,84 +137,82 @@ const EventManager = () => {
   };
 
   // Hàm tìm kiếm: Lọc các dịch vụ dựa trên từ khóa tìm kiếm
-  const filteredEvents = events
-    .filter((events) =>
+  const filteredServices = services
+    .filter((service) =>
       searchTerm === "" || // Nếu không có từ khóa tìm kiếm
-      Object.values(events).some((value) =>
+      Object.values(service).some((value) =>
         String(value).toLowerCase().includes(searchTerm.toLowerCase())
       )
     )
-    .filter((events) => !events.Status); // Loại bỏ các dịch vụ có trạng thái 'Status' là true
+    .filter((service) => !service.Status); // Loại bỏ các dịch vụ có trạng thái 'Status' là true
 
   return (
     <div>
-      <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
-        Manage Event
-      </Typography>
-      <Divider sx={{ mb: 1 }} />
       <Box
         sx={{
           display: "flex",
           justifyContent: "space-between",
           alignItems: "center",
-          mt: 2,
-          mb: 2, // margin bottom
+          mt: 3, 
+          mb: 2,
         }}
       >
-        {/* Ô tìm kiếm nằm bên trái */}
-        <TextField
-          label="Search Event"
-          variant="outlined"
-          sx={{ width: "300px" }}
-          value={searchTerm} // Liên kết với searchTerm
-          onChange={(e) => setSearchTerm(e.target.value)} // Cập nhật searchTerm khi người dùng nhập liệu
-        />
+        {/* Ô tìm kiếm */}
+        <div className="admin-group">
+          <svg className="admin-icon-search" aria-hidden="true" viewBox="0 0 24 24"><g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g></svg>
+          <input placeholder="Search" type="search" className="admin-input-search" value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)} />
+        </div>
 
-        <Button
+        {/* Nút Add New Service */}
+        <Button 
           sx={{fontSize:'10px'}}
           variant="contained"
           color="primary"
           onClick={() => handleOpenDialog("add")}
         >
-          Add Event
+          Add New Service
         </Button>
       </Box>
 
-      <TableContainer component={Paper} sx={{ mt: 1 }} className="table-container">
+      <TableContainer component={Paper} className="table-container">
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Event ID</TableCell>
-              <TableCell>Event Name</TableCell>
+              <TableCell>ID</TableCell>
+              <TableCell>Service Name</TableCell>
               <TableCell>Description</TableCell>
-              <TableCell>TotalCost</TableCell>
+              <TableCell>Service Type</TableCell>
+              <TableCell>Available</TableCell>
+              <TableCell>Price</TableCell>
               <TableCell>IsDeleted</TableCell>
               <TableCell>Actions</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredEvents
-              .filter((event) => !event.Status) // Chỉ hiển thị sự kiện không bị xóa tạm thời
+            {filteredServices
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Chỉ lấy các mục cho trang hiện tại
-              .map((event) => (
-                <TableRow key={event.EventId}>
-                  <TableCell>{event.EventId}</TableCell>
-                  <TableCell>{event.EventName}</TableCell>
-                  <TableCell>{event.Description}</TableCell>
+              .map((service) => (
+                <TableRow key={service.ServiceId}>
+                  <TableCell>{service.ServiceId}</TableCell>
+                  <TableCell>{service.ServiceName}</TableCell>
+                  <TableCell>{service.Description}</TableCell>
+                  <TableCell>{service.ServiceType}</TableCell>
+                  <TableCell>{service.Availability ? "Yes" : "No"}</TableCell>
                   <TableCell>
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
                       currency: "VND",
                       currencyDisplay: "code",
-                    }).format(event.TotalCost)}
+                    }).format(service.Price)}
                   </TableCell>
                   <TableCell
                     sx={{
-                      color: event.IsDeleted ? "red" : "green",
+                      color: service.IsDeleted ? "red" : "green",
                       alignItems: "center",
                     }}
                   >
-                    {event.IsDeleted ? (
+                    {service.IsDeleted ? (
                       <>
                         <CancelIcon sx={{ color: "red" }} />{" "}
                         <span>Inactive</span>
@@ -217,17 +226,19 @@ const EventManager = () => {
                   </TableCell>
                   <TableCell>
                     <IconButton
-                      variant="outlined"
-                      onClick={() => handleOpenDialog("edit", event)}
-                      sx={{ mr: 1 }}
+                      size="large"
                       color="primary"
+                      variant="outlined"
+                      onClick={() => handleOpenDialog("edit", service)}
+                      style={{ marginRight: "10px" }}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
+                      size="large"
                       variant="outlined"
                       color="error"
-                      onClick={() => handleDeleteClick(event.EventId)}
+                      onClick={() => handleDeleteClick(service.ServiceId)}
                     >
                       <DeleteIcon />
                     </IconButton>
@@ -236,11 +247,10 @@ const EventManager = () => {
               ))}
           </TableBody>
         </Table>
-        {/* Phân trang */}
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={events.length}
+          count={services.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}
@@ -274,21 +284,20 @@ const EventManager = () => {
         />
       </TableContainer>
 
-      {/* Dialog thêm/sửa sự kiện */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight:'bold' }}>
-          {dialogMode === "add" ? "Add Events" : "Edit Event"}
+          {dialogMode === "add" ? "Add Service" : "Edit Service"}
         </DialogTitle>
         <DialogContent className="custom-input">
           <TextField
             autoFocus
             margin="dense"
-            name="EventName"
-            label="EventName"
+            name="ServiceName"
+            label="Service Name"
             type="text"
             fullWidth
             variant="outlined"
-            value={currentEvent.EventName || ""}
+            value={currentService.ServiceName || ""}
             onChange={handleInputChange}
           />
           <TextField
@@ -298,29 +307,50 @@ const EventManager = () => {
             type="text"
             fullWidth
             variant="outlined"
-            value={currentEvent.Description || ""}
+            value={currentService.Description || ""}
             onChange={handleInputChange}
           />
           <TextField
             margin="dense"
-            name="TotalCost"
-            label="TotalCost"
+            name="ServiceType"
+            label="Service Type"
+            type="text"
+            fullWidth
+            variant="outlined"
+            value={currentService.ServiceType || ""}
+            onChange={handleInputChange}
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={currentService.Availability || false}
+                onChange={handleInputChange}
+                name="Availability"
+              />
+            }
+            label="Available"
+          />
+          <TextField
+            margin="dense"
+            name="Price"
+            label="Price"
             type="number"
             fullWidth
             variant="outlined"
-            value={currentEvent.TotalCost || 0}
+            value={currentService.Price || 0}
             onChange={handleInputChange}
           />
+
           <FormControl fullWidth margin="dense">
-            <InputLabel>Status</InputLabel>
+            <InputLabel>IsDeleted</InputLabel>
             <Select
               name="IsDeleted"
-              value={currentEvent.IsDeleted}
+              value={currentService.IsDeleted}
               onChange={handleInputChange}
-              label="Trạng thái"
+              label="IsDeleted"
             >
-              <MenuItem value={false}>Active</MenuItem>
-              <MenuItem value={true}>IsDeleted</MenuItem>
+              <MenuItem value="true">Deleted</MenuItem>
+              <MenuItem value="false">Active</MenuItem>
             </Select>
           </FormControl>
         </DialogContent>
@@ -333,21 +363,19 @@ const EventManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
-
-      {/* Dialog xác nhận xóa */}
       <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
         <DialogTitle sx={{fontSize:'1.6rem', color: '#d32f2f', display: 'flex', alignItems: 'center'}}>
             <ErrorOutlineIcon sx={{ color: 'error.main', mr: 1 }} />
             Delete confirmation
         </DialogTitle>
         <DialogContent>
-          <p>Do you agree to delete this event ?</p>
+          <p>Do you agree to delete this service?</p>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCancelDelete} color="primary" sx={{fontSize:'1.3rem'}}>
+          <Button onClick={handleCancelDelete} color="secondary" sx={{fontSize:'1.3rem'}}> 
             Close
           </Button>
-          <Button onClick={handleConfirmDelete} color="secondary" sx={{fontSize:'1.3rem'}}>
+          <Button onClick={handleConfirmDelete} color="primary" sx={{fontSize:'1.3rem'}}> 
             Submit
           </Button>
         </DialogActions>
@@ -356,4 +384,4 @@ const EventManager = () => {
   );
 };
 
-export default EventManager;
+export default ServiceManager;

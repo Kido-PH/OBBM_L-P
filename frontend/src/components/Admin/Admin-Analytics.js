@@ -42,7 +42,7 @@ const AdminAnalytics = () => {
   const [endDate, setEndDate] = useState(""); // State for end date
   const [groupBy, setGroupBy] = useState("month"); // State for grouping option
   const [selectedKPI, setSelectedKPI] = useState("revenue"); // State for selected KPI
-  const [totalRevenue, setTotalRevenue] = useState(0); // Total revenue for notification
+  const [totalRevenue] = useState(0); // Total revenue for notification
   
   // Effect to show notification when revenue exceeds 50 million VND
   useEffect(() => {
@@ -110,10 +110,6 @@ const AdminAnalytics = () => {
 
   return (
     <Box sx={{ padding: "20px" }}>
-      <Typography variant="h5" gutterBottom>
-        Revenue and Activity Statistics
-      </Typography>
-
       <Box sx={{ marginBottom: "20px" }}>
         <TextField
           label="From Date"

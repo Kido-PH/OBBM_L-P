@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../assets/css/menu.css";
 import steak from "../assets/images/steak.png";
-import ListFood from './listfood';
+import ListFood from "./listfood";
 
 // Dữ liệu mẫu cho menu
 const menuItems = {
@@ -27,6 +27,8 @@ const Menu = () => {
   const [activeTab, setActiveTab] = useState("tab1");
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showListFood, setShowListFood] = useState(false);
+  const [selectedCard, setSelectedCard] = useState(0); // Mặc định là card chính giữa
+
   const toggleListFood = () => {
     setShowListFood(!showListFood); // Đảo ngược trạng thái hiển thị danh sách món ăn
   };
@@ -98,11 +100,7 @@ const Menu = () => {
   ];
 
   // Các loại tiệc mẫu
-  const partyTypes = [
-    "Birhdays",
-    "Wedding",
-    "Anniversary",
-  ];
+  const partyTypes = ["Birhdays", "Wedding", "Anniversary"];
 
   useEffect(() => {
     if (activeTab === "tab1") {
@@ -118,18 +116,25 @@ const Menu = () => {
 
   return (
     <div className="menu-container">
-      
-      <div className="menu-left" style={{ display: showListFood ? 'hide' : 'block' }}>
+      <div
+        className="menu-left"
+        style={{ display: showListFood ? "hide" : "block" }}
+      >
         <div className="tabs">
-          <button 
-            className=  {`tab btn-save-form ${activeTab === "tab1" ? "active" : ""}` }
-            onClick={() => setActiveTab("tab1")}>
-              
+          <button
+            className={`tab btn-save-form ${
+              activeTab === "tab1" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("tab1")}
+          >
             Top menu
           </button>
           <button
-            className={`tab btn-save-form ${activeTab === "tab2" ? "active" : ""}`}
-            onClick={() => setActiveTab("tab2")}>
+            className={`tab btn-save-form ${
+              activeTab === "tab2" ? "active" : ""
+            }`}
+            onClick={() => setActiveTab("tab2")}
+          >
             Chat Suggestion
           </button>
         </div>
@@ -138,102 +143,115 @@ const Menu = () => {
           {activeTab === "tab1" && (
             <div>
               <div className="cards-wrapper">
-              {/* Card nhỏ bên trái */}
-              <div className="card small-card">
-                <h4>{cardsContent[(currentCardIndex + 2) % 3].title}</h4>
-                <ul className="menu-list">
-                  {Object.keys(
-                    cardsContent[(currentCardIndex + 2) % 3].content
-                  ).map((section, idx) =>
-                    cardsContent[(currentCardIndex + 2) % 3].content[
-                      section
-                    ].map((item, subIdx) => (
-                      <li key={`${idx}-${subIdx}`} className="menu-item">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="menu-item-image"
-                        />
-                        <div className="menu-item-details">
-                          <span className="menu-item-name">{item.name}</span>
-                          <span className="menu-item-price">{item.price}</span>
-                        </div>
-                      </li>
-                    ))
+                {/* Card nhỏ bên trái */}
+                <div
+                  className="card small-card"
+                  onClick={() => setSelectedCard((currentCardIndex + 2) % 3)}
+                >
+                  <h4>{cardsContent[(currentCardIndex + 2) % 3].title}</h4>
+                  <ul className="menu-list">
+                    {Object.keys(
+                      cardsContent[(currentCardIndex + 2) % 3].content
+                    ).map((section, idx) =>
+                      cardsContent[(currentCardIndex + 2) % 3].content[
+                        section
+                      ].map((item, subIdx) => (
+                        <li key={`${idx}-${subIdx}`} className="menu-item">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="menu-item-image"
+                          />
+                          <div className="menu-item-details">
+                            <span className="menu-item-name">{item.name}</span>
+                            <span className="menu-item-price">
+                              {item.price}
+                            </span>
+                          </div>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
+                {/* Card chính giữa lớn hơn */}
+                <div
+                  className="card main-card"
+                  onClick={() => setSelectedCard(currentCardIndex)}
+                >
+                  <h3>{cardsContent[currentCardIndex].title}</h3>
+                  {Object.keys(cardsContent[currentCardIndex].content).map(
+                    (section, idx) => (
+                      <div key={idx}>
+                        <h4>
+                          {section === "khaiVi"
+                            ? "Appetizer"
+                            : section === "monChinh"
+                            ? "Main course"
+                            : section === "trangMieng"
+                            ? "Dessert"
+                            : "Drinks"}
+                        </h4>
+                        <ul className="menu-list">
+                          {cardsContent[currentCardIndex].content[section].map(
+                            (item, subIdx) => (
+                              <li key={subIdx} className="menu-item">
+                                <img
+                                  src={item.image}
+                                  alt={item.name}
+                                  className="menu-item-image"
+                                />
+                                <div className="menu-item-details">
+                                  <span className="menu-item-name">
+                                    {item.name}
+                                  </span>
+                                  <span className="menu-item-price">
+                                    {item.price}
+                                  </span>
+                                </div>
+                              </li>
+                            )
+                          )}
+                        </ul>
+                      </div>
+                    )
                   )}
-                </ul>
-              </div>
-              {/* Card chính giữa lớn hơn */}
-              <div className="card main-card">
-                <h3>{cardsContent[currentCardIndex].title}</h3>
-                {Object.keys(cardsContent[currentCardIndex].content).map(
-                  (section, idx) => (
-                    <div key={idx}>
-                      <h4>
-                        {section === "khaiVi"
-                          ? "Appetizer"
-                          : section === "monChinh"
-                          ? "Main course"
-                          : section === "trangMieng"
-                          ? "Dessert"
-                          : "Drinks"}
-                      </h4>
-                      <ul className="menu-list">
-                        {cardsContent[currentCardIndex].content[section].map(
-                          (item, subIdx) => (
-                            <li key={subIdx} className="menu-item">
-                              <img
-                                src={item.image}
-                                alt={item.name}
-                                className="menu-item-image"
-                              />
-                              <div className="menu-item-details">
-                                <span className="menu-item-name">
-                                  {item.name}
-                                </span>
-                                <span className="menu-item-price">
-                                  {item.price}
-                                </span>
-                              </div>
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )
-                )}
+                </div>
+
+                {/* Card nhỏ bên phải */}
+                <div
+                  className="card small-card"
+                  onClick={() => setSelectedCard((currentCardIndex + 1) % 3)}
+                >
+                  <h4 className="small-card-h4">
+                    {cardsContent[(currentCardIndex + 1) % 3].title}
+                  </h4>
+                  <ul className="menu-list">
+                    {Object.keys(
+                      cardsContent[(currentCardIndex + 1) % 3].content
+                    ).map((section, idx) =>
+                      cardsContent[(currentCardIndex + 1) % 3].content[
+                        section
+                      ].map((item, subIdx) => (
+                        <li key={`${idx}-${subIdx}`} className="menu-item">
+                          <img
+                            src={item.image}
+                            alt={item.name}
+                            className="menu-item-image"
+                          />
+                          <div className="menu-item-details">
+                            <span className="menu-item-name">{item.name}</span>
+                            <span className="menu-item-price">
+                              {item.price}
+                            </span>
+                          </div>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                </div>
               </div>
 
-              {/* Card nhỏ bên phải */}
-              <div className="card small-card">
-                <h4 className="small-card-h4">{cardsContent[(currentCardIndex + 1) % 3].title}</h4>
-                <ul className="menu-list">
-                  {Object.keys(
-                    cardsContent[(currentCardIndex + 1) % 3].content
-                  ).map((section, idx) =>
-                    cardsContent[(currentCardIndex + 1) % 3].content[
-                      section
-                    ].map((item, subIdx) => (
-                      <li key={`${idx}-${subIdx}`} className="menu-item">
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          className="menu-item-image"
-                        />
-                        <div className="menu-item-details">
-                          <span className="menu-item-name">{item.name}</span>
-                          <span className="menu-item-price">{item.price}</span>
-                        </div>
-                      </li>
-                    ))
-                  )}
-                </ul>
-              </div>
-
-              
-            </div>
-
-            <div className="choose-button-container">
+              <div className="choose-button-container">
                 <select className="choose-combobox">
                   {partyTypes.map((type, index) => (
                     <option key={index} value={type}>
@@ -245,8 +263,8 @@ const Menu = () => {
             </div>
           )}
           {activeTab === "tab2" && (
-        <div className="tab2-content">
-          {/* <div className="menu-section">
+            <div className="tab2-content">
+              {/* <div className="menu-section">
             <h3>Menu</h3>
             <ul>
               <li>Item 1</li>
@@ -268,49 +286,54 @@ const Menu = () => {
               <button className="send-button">Gửi</button>
             </div>
           </div> */}
-        </div>
-      )}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Hiển thị ListFood */}
       <ListFood show={showListFood} />
-      
+
       {/* Menu Right */}
       <div className="menu-right">
         <h2>Menu</h2>
-        {Object.keys(menuItems).map((section, index) => (
-          <div className="menu-section" key={index}>
-            <h3>
-              {section === "khaiVi"
-                ? "Appetizer"
-                : section === "monChinh"
-                ? "Main course"
-                : section === "trangMieng"
-                ? "Dessert"
-                : "Drinks"}
-             
-             <button onClick={toggleListFood} className="add-button">+</button> {/* Dấu + */}
-            </h3>
-            <ul className="menu-list">
-              {menuItems[section].map((item, idx) => (
-                <li key={idx} className="menu-item">
-                  <img
-                    src={item.image}
-                    alt={item.name}
-                    className="menu-item-image"
-                  />
-                  <div className="menu-item-details">
-                    <span className="menu-item-name">{item.name}</span>
-                    <span className="menu-item-price">{item.price}</span>
-                    <button className="remove-button">x</button> {/* Dấu x nhỏ */}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        {/* Hai nút ở cuối */}
+        {Object.keys(cardsContent[selectedCard].content).map(
+          (section, index) => (
+            <div className="menu-section" key={index}>
+              <h3>
+                {section === "khaiVi"
+                  ? "Appetizer"
+                  : section === "monChinh"
+                  ? "Main course"
+                  : section === "trangMieng"
+                  ? "Dessert"
+                  : "Drinks"}
+                <button onClick={toggleListFood} className="add-button">
+                  +
+                </button>{" "}
+                {/* Dấu + */}
+              </h3>
+              <ul className="menu-list">
+                {cardsContent[selectedCard].content[section].map(
+                  (item, idx) => (
+                    <li key={idx} className="menu-item">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="menu-item-image"
+                      />
+                      <div className="menu-item-details">
+                        <span className="menu-item-name">{item.name}</span>
+                        <span className="menu-item-price">{item.price}</span>
+                        <button className="remove-button">x</button>
+                      </div>
+                    </li>
+                  )
+                )}
+              </ul>
+            </div>
+          )
+        )}
         <div style={{ textAlign: "center" }}>
           <button className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu">
             View Menu
