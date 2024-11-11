@@ -19,16 +19,15 @@ import {
   FormControl,
   Box,
   IconButton,
-  Input,
   Tooltip,
-  TextareaAutosize,
 } from "@mui/material";
+
 import dishApi from "../../api/dishApi";
 import danhMucApi from "../../api/danhMucApi";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import dish1 from "../../assets/images/food-menu-1.png";
+import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import toast, { Toaster } from "react-hot-toast";
 import ReactPaginate from "react-paginate";
 
@@ -37,19 +36,51 @@ const DishManager = () => {
   const [dishes, setDishes] = useState([]); // State cho danh sách món ăn
   const [open, setOpen] = useState(false); // State để điều khiển Dialog
   const [editMode, setEditMode] = useState(false); // State cho chế độ sửa món ăn
-  const [selectedDishId, setSelectedDishId] = useState(null); // Để lưu id món ăn khi sửa
   const [dishData, setDishData] = useState({
     name: "",
     price: "",
     image: "",
     description: "",
-    existing: "",
     categoryId: "",
+    existing: "Còn hàng",
   });
-  
+  const [dishId, setDishId] = useState("");
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [dishToDelete, setDishToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageCount, setPageCount] = useState(0);
+  const [page, setPage] = useState(1);
   const SIZE_DISH = 5;
+  const [errors, setErrors] = useState({
+    name: "",
+    price: "",
+  });
+  const validateForm = () => {
+    let tempErrors = { name: "", price: "", categoryId: "" };
+    let isValid = true;
+
+    if (!dishData.name.trim()) {
+      tempErrors.name = "Tên món ăn không được để trống";
+      isValid = false;
+    }
+
+    if (
+      !dishData.price ||
+      isNaN(dishData.price) ||
+      Number(dishData.price) <= 0
+    ) {
+      tempErrors.price = "Giá món ăn phải là số và lớn hơn 0";
+      isValid = false;
+    }
+
+    if (!dishData.categoryId) {
+      tempErrors.categoryId = "Vui lòng chọn danh mục";
+      isValid = false;
+    }
+
+    setErrors(tempErrors);
+    return isValid;
+  };
 
   // Hàm tìm kiếm
   const filteredDishes = dishes.filter((dish) => {
@@ -61,40 +92,40 @@ const DishManager = () => {
       dish.existing.toLowerCase().includes(searchTermLower) ||
       (dish.categoryId && dish.categoryId.toString().includes(searchTermLower))
     );
-  }
+  });
 
-  );
+  // Hàm để tải toàn bộ danh mục
+  const fetchAllCategories = async () => {
+    try {
+      const response = await danhMucApi.getAll(); 
+      setCategories(response.result.content || []);
+      console.log("Toàn bộ danh mục:", response.result.content);
+    } catch (error) {
+      console.error("Không tải được danh mục: ", error);
+    }
+  };
+
+  // Nạp danh sách danh mục một lần khi component được mount
+  useEffect(() => {
+    fetchAllCategories();
+  }, []);
+
+    // Hàm để nạp món ăn theo trang
+    const fetchDishesWithPaginate = async (page) => {
+      try {
+        const res = await dishApi.getPaginate(page, SIZE_DISH);
+        setDishes(res.result.content || []);
+        setPageCount(res.result.totalPages);
+        console.log("Món ăn:", res.result.content);
+      } catch (error) {
+        console.error("Không tìm nạp được món ăn: ", error);
+      }
+    };
 
   // Nạp danh sách danh mục và món ăn khi component được mount
   useEffect(() => {
-    // const fetchData = async () => {
-    //   try {
-    //     const responseCategory = await danhMucApi.getAll(); // Lấy tất cả danh mục
-    //     const responseDish = await dishApi.getAll(); // Lấy tất cả món ăn
-    //     setCategories(responseCategory.result.content); // Cập nhật state categories
-    //     setDishes(responseDish.result.content); // Cập nhật state dishes
-    //   } catch (error) {
-    //     console.error("Không tìm thấy danh mục: ", error);
-    //   }
-    // };
-
-    // fetchData(); // Gọi API khi component mount
-    fetchMonAnWithPaginate(1);
-  }, []);
-
-  // Hàm đổ dữ liệu & phân trang
-  const fetchMonAnWithPaginate = async (page) => {
-    try {
-      const responseCategory = await danhMucApi.getPaginate(page, SIZE_DISH); 
-      const res = await dishApi.getPaginate(page, SIZE_DISH);
-      setCategories(responseCategory.result.content);
-      setDishes(res.result.content);
-      setPageCount(res.result.totalPages);
-      console.log("res.dt = ", res.result.content);
-    } catch (error) {
-      console.error("Không tìm nạp được danh mục: ", error);
-    }
-  }
+    fetchDishesWithPaginate(page);
+  }, [page, dishData]);
 
   const handleOpen = () => {
     setOpen(true);
@@ -111,114 +142,202 @@ const DishManager = () => {
       existing: "",
       categoryId: "", // Reset lại id danh mục
     });
-    setSelectedDishId(null); // Clear dish id sau khi sửa hoặc thêm
+    setDishId(null); // Clear dish id sau khi sửa hoặc thêm
   };
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-    if (name === "image" && files && files.length > 0) {
-      const file = files[0];
-      const imageUrl = URL.createObjectURL(file);
-      setDishData({ ...dishData, image: imageUrl });
+
+    // Cập nhật dữ liệu món ăn
+    if (name === "image" && files) {
+      setDishData((prevData) => ({
+        ...prevData,
+        image: URL.createObjectURL(files[0]),
+      }));
     } else {
-      setDishData({ ...dishData, [name]: value });
+      setDishData((prevData) => ({
+        ...prevData,
+        [name]: value,
+      }));
     }
+
+    // Xóa lỗi khi người dùng nhập dữ liệu hợp lệ
+    setErrors((prevErrors) => {
+      const updatedErrors = { ...prevErrors };
+
+      if (name === "name" && value.trim()) {
+        updatedErrors.name = "";
+      }
+
+      if (name === "price" && value && Number(value) > 0) {
+        updatedErrors.price = "";
+      }
+
+      if (name === "categoryId" && value) {
+        updatedErrors.categoryId = "";
+      }
+
+      return updatedErrors;
+    });
   };
 
-  // Hàm xử lý thêm món ăn
   const handleAddDish = async () => {
     try {
-      await dishApi.add(dishData); // Thêm món ăn mới
+      console.log("Dish data being sent: ", dishData);
 
-      // Hiển thị toast thông báo thêm thành công
+      if (!dishData.name || !dishData.price || !dishData.categoryId) {
+        toast.error("Vui lòng điền đầy đủ thông tin món ăn!");
+        return;
+      }
+
+      const response = await dishApi.add(dishData);
+
       toast.success("Món ăn đã được thêm thành công!");
 
-      // Gọi API để lấy lại danh sách món ăn mới sau khi thêm
-      const responseDish = await dishApi.getAll();
+      console.log("Món ăn mới thêm:", response.result);
 
-      setDishes(responseDish.result.content);
-      setPageCount(responseDish.result.totalPages);
+      // Directly update the dish list with the new dish at the top
+      setDishes((prevDishes) => [response.result, ...prevDishes]);
     } catch (error) {
       console.error("Lỗi khi thêm món ăn: ", error);
+      toast.error("Có lỗi xảy ra khi thêm món ăn!");
     }
   };
 
-  // Hàm xử lý cập nhật món ăn
+  // Xử lý fill thông tin món ăn để chỉnh sửa
+  const handleEditDish = (dishId)  => {
+
+    const dishToEdit = dishes.find((dish) => dish.dishId === dishId);
+
+    if (dishToEdit) {
+      setEditMode(true);
+      setDishData({
+        name: dishToEdit.name,
+        price: dishToEdit.price,
+        image: dishToEdit.image,
+        description: dishToEdit.description,
+        existing: dishToEdit.existing,
+        categoryId: dishToEdit.categoryId,
+      });
+      setDishId(dishToEdit.dishId);
+      setOpen(true);
+    }
+  };
+
+  // Hàm chuyển đổi blob thành base64
+  const convertBlobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      // Kiểm tra xem dữ liệu có phải là Blob không
+      if (blob && blob instanceof Blob) {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result); // Trả về base64
+        reader.onerror = reject;
+        reader.readAsDataURL(blob); // Đọc blob dưới dạng base64
+      } else {
+        reject("Không phải Blob");
+      }
+    });
+  };
+
   const handleUpdateDish = async () => {
-    if (!selectedDishId) {
-      console.error("Không tìm thấy ID món ăn để cập nhật."); // Log lỗi
-      return; // Ngưng thực hiện nếu không có ID
+    if (!setDishId) {
+      toast.error("Không tìm thấy ID của món ăn!");
+      return;
+    }
+
+    // Kiểm tra các trường cần thiết
+    if (!dishData.name || !dishData.price || !dishData.categoryId) {
+      toast.error("Vui lòng điền đầy đủ thông tin món ăn!");
+      return;
     }
 
     try {
-      const dataToUpdate = { ...dishData, id: selectedDishId }; // Thêm ID vào dữ liệu
-      
-      await dishApi.update(dataToUpdate); // Cập nhật món ăn
+      // Kiểm tra nếu image là Blob và chuyển đổi nó thành base64
+      let base64Image = dishData.image;
+      if (dishData.image instanceof Blob) {
+        base64Image = await convertBlobToBase64(dishData.image);
+      }
 
-      // Hiển thị toast để thông báo sửa thành công
+      // Cập nhật dữ liệu mà không cần thêm lại id (vì id đã có trong URL)
+      const updatedDishData = {
+        name: dishData.name,
+        price: dishData.price ? Number(dishData.price) : 0,
+        description: dishData.description,
+        existing: dishData.existing,
+        categoryId: dishData.categoryId,
+        image: base64Image, // Gán ảnh base64 vào data
+      };
+
+      console.log(updatedDishData); // Kiểm tra lại dữ liệu gửi đi
+
+      // Gửi yêu cầu PUT để cập nhật món ăn
+      await dishApi.update(dishId, updatedDishData);
+
       toast.success("Món ăn đã được cập nhật thành công!");
 
-      // Gọi API để lấy lại danh sách món ăn mới sau khi cập nhật
-      const responseDish = await dishApi.getAll();
-      setDishes(responseDish.result.content);
+      // Lấy lại danh sách món ăn của trang hiện tại
+      fetchDishesWithPaginate(page);
     } catch (error) {
-      console.error("Lỗi khi cập nhật món ăn: ", error);
+      console.error("Lỗi khi cập nhật món ăn:", error);
+      if (error.response) {
+        console.log("Response error data:", error.response.data); // Kiểm tra dữ liệu lỗi trả về từ server
+      }
+      toast.error("Có lỗi xảy ra khi cập nhật món ăn!");
     }
+
+    // Đóng dialog sau khi cập nhật
+    handleClose();
   };
 
-  // Hàm để Thêm & cập nhật
   const handleSaveDish = async () => {
-    if (editMode && selectedDishId) {
+    if (!validateForm()) {
+      return; // Nếu có lỗi, không tiếp tục thêm hoặc cập nhật
+    }
+
+    if (editMode && setDishId) {
       await handleUpdateDish(); // Gọi hàm cập nhật
     } else {
       await handleAddDish(); // Gọi hàm thêm mới
     }
-
     handleClose();
   };
 
-  // Hàm xử lý xóa món ăn
-  const handleDeleteDish = async (dishId) => {
-    try {
-      const response = await dishApi.delete(dishId); // Xóa món ăn
+  const handleDeleteDish = (dishId) => {
+    const dish = dishes.find((dish) => dish.dishId === dishId);
 
-      // Hiển thị toast để thông báo xóa thành công
-      toast.success("Món ăn đã được xóa thành công!");
-
-      const responseDish = await dishApi.getAll(); // Lấy lại danh sách món ăn
-
-      console.log("Delete response: ", response);
-
-      setDishes(responseDish.result.content); // Cập nhật danh sách món ăn mới
-    } catch (error) {
-      console.error("Lỗi khi xóa món ăn: ", error);
-    }
+    // Lưu món ăn cần xóa và mở hộp thoại xác nhận
+    setDishToDelete(dish);
+    setDeleteDialogOpen(true);
   };
 
-  // Hàm mở dialog và nạp dữ liệu món ăn vào form để sửa
-  const handleEditDish = (dish, dishId) => {
-    setDishData({
-      name: dish.name,
-      price: dish.price,
-      image: dish.image,
-      description: dish.description,
-      existing: dish.existing,
-      categoryId: dish.categoryId || "", // Sử dụng categoryId (đảm bảo không undefined)
-    });
-    setSelectedDishId(dish.dishId); // Lưu id món ăn cần sửa
-    setEditMode(true); // Bật chế độ sửa
-    setOpen(true);
+  const confirmDeleteDish = async () => {
+    try {
+      // Xóa món ăn khi người dùng xác nhận
+      await dishApi.delete(dishToDelete.dishId);
+
+      // Hiển thị thông báo thành công
+      toast.success("Món ăn đã được xóa thành công!");
+
+      fetchDishesWithPaginate(page);
+    } catch (error) {
+      console.error("Lỗi khi xóa món ăn: ", error);
+      toast.error("Có lỗi xảy ra khi xóa món ăn.");
+    }
+
+    // Đóng hộp thoại xác nhận
+    setDeleteDialogOpen(false);
   };
 
   // Hàm xử lý phân trang
   const handlePageClick = (event) => {
-    fetchMonAnWithPaginate(+event.selected + 1);
+    const selectedPage = +event.selected + 1;
+    setPage(selectedPage);
     console.log(`User requested page number ${event.selected}`);
-  }
+  };
 
   return (
     <Box>
-    <Toaster position="top-center" reverseOrder={false} />
+      <Toaster position="top-center" reverseOrder={false} />
       {/* Ô tìm kiếm */}
       <div className="admin-toolbar">
         <div className="admin-group">
@@ -264,8 +383,48 @@ const DishManager = () => {
         </Button>
       </div>
 
+      <Dialog
+        open={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+      >
+        <DialogTitle
+          id="confirm-delete-title"
+          sx={{
+            fontSize: "1.6rem",
+            color: "#d32f2f",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          {" "}
+          <ErrorOutlineIcon sx={{ color: "error.main", mr: 1 }} /> Xác nhận xóa
+          món ăn
+        </DialogTitle>
+        <DialogContent>
+          <p>Bạn có chắc chắn muốn xóa món ăn "{dishToDelete?.name}" không?</p>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={() => setDeleteDialogOpen(false)}
+            color="primary"
+            sx={{ fontSize: "1.3rem" }}
+          >
+            Hủy
+          </Button>
+          <Button
+            onClick={confirmDeleteDish}
+            color="secondary"
+            sx={{ fontSize: "1.3rem" }}
+          >
+            Xóa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
       <Dialog open={open} onClose={handleClose}>
-        <DialogTitle sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight:'bold' }}>
+        <DialogTitle
+          sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight: "bold" }}
+        >
           {editMode ? "Cập nhật món ăn" : "Thêm món ăn mới"}
         </DialogTitle>
         <DialogContent className="custom-input">
@@ -277,6 +436,14 @@ const DishManager = () => {
             fullWidth
             value={dishData.name}
             onChange={handleChange}
+            error={Boolean(errors.name)}
+            helperText={errors.name}
+            FormHelperTextProps={{
+              sx: {
+                fontSize: "1rem",
+                color: "red",
+              },
+            }}
           />
           <TextField
             margin="dense"
@@ -286,53 +453,70 @@ const DishManager = () => {
             fullWidth
             value={dishData.price}
             onChange={handleChange}
+            error={Boolean(errors.price)}
+            helperText={errors.price}
+            FormHelperTextProps={{
+              sx: {
+                fontSize: "1rem",
+                color: "red",
+              },
+            }}
           />
-          {/* <TextField
-            margin="dense"
-            name="image"
-            label="Hình ảnh (URL)"
-            type="text"
-            fullWidth
-            value={dishData.image}  
-            onChange={handleChange}
-            disabled
-          /> */}
 
           {dishData.image && (
-
             <img
-          src={dish1}
-          alt="Dish"
-          style={{ width: "100%", height: "250px", marginBottom: "1em" }}
-        />
-
+              src={dishData.image}
+              alt="Dish"
+              style={{ width: "100%", height: "250px", marginBottom: "1em" }}
+            />
           )}
-          <Input
-            margin="dense"
-            name="image"
+
+          <input
             type="file"
-            fullWidth
+            name="image"
             onChange={handleChange}
+            style={{ display: "none" }}
+            id="file-upload"
           />
-          <TextareaAutosize 
-            className="admin-mota"
-            minRows={3} // Số dòng tối thiểu
+          <label htmlFor="file-upload">
+            <Button variant="contained" component="span" sx={{ mb: "5px" }}>
+              Chọn ảnh
+            </Button>
+          </label>
+          <TextField
+            margin="dense"
             name="description"
             label="Mô tả"
-            type="text" 
+            type="text"
+            fullWidth
+            multiline
+            rows={3}
+            maxRows={10}
             value={dishData.description}
             onChange={handleChange}
+            error={Boolean(errors.description)}
+            helperText={errors.description}
+            sx={{
+              "& .MuiFormHelperText-root": {
+                fontSize: "1rem", // Tăng kích thước chữ của helper text
+              },
+            }}
           />
-          <FormControl fullWidth margin="dense">
+
+          <FormControl
+            fullWidth
+            margin="dense"
+            error={Boolean(errors.categoryId)}
+          >
             <InputLabel id="category-label">Danh mục</InputLabel>
             <Select
               labelId="category-label"
-              name="categoryId" // Đổi thành categoryId
-              value={dishData.categoryId || ""} // Đổi thành categoryId
+              name="categoryId"
+              value={dishData.categoryId || ""}
               onChange={handleChange}
               label="Danh mục"
             >
-              {categories.length > 0 ? ( // Kiểm tra xem categories có không
+              {categories.length > 0 ? (
                 categories.map((category) => (
                   <MenuItem
                     key={category.categoryId}
@@ -342,9 +526,9 @@ const DishManager = () => {
                   </MenuItem>
                 ))
               ) : (
-                <MenuItem value="">Không có danh mục</MenuItem> // Thông báo nếu không có danh mục
+                <MenuItem value="">Không có danh mục</MenuItem>
               )}
-            </Select>
+            </Select>         
           </FormControl>
           <FormControl fullWidth margin="dense">
             <InputLabel id="dish-existing-label">Còn món ăn không?</InputLabel>
@@ -361,8 +545,10 @@ const DishManager = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose}>Hủy</Button>
-          <Button onClick={handleSaveDish}>
+          <Button onClick={handleClose} sx={{ fontSize: "1.3rem" }}>
+            Hủy
+          </Button>
+          <Button onClick={handleSaveDish} sx={{ fontSize: "1.3rem" }}>
             {editMode ? "Cập nhật" : "Thêm"}
           </Button>
         </DialogActions>
@@ -382,42 +568,47 @@ const DishManager = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredDishes.map((dish) => (
-                <TableRow key={dish.dishId}>
-                  <TableCell>{dish.dishId}</TableCell>
-                  <TableCell>{dish.name}</TableCell>
-                  <TableCell>{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND'}).format(dish.price)}</TableCell>
-                  <TableCell>
-                    <img src={dish1} alt={dish.name} width="70" />
-                  </TableCell>
-                  <TableCell>{dish.description}</TableCell>
-                  <TableCell>{dish.existing}</TableCell>
-                  <TableCell>
-                    <IconButton
-                      onClick={() => handleEditDish(dish)}
-                      color="primary"
+            {filteredDishes.map((dish, index) => (
+              <TableRow key={dish.dishId}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{dish.name}</TableCell>
+                <TableCell>
+                  {new Intl.NumberFormat("vi-VN", {
+                    style: "currency",
+                    currency: "VND",
+                  }).format(dish.price)}
+                </TableCell>
+                <TableCell>
+                  <img src={dish.image} alt={dish.name} width="70" />
+                </TableCell>
+                <TableCell>{dish.description}</TableCell>
+                <TableCell>{dish.existing}</TableCell>
+                <TableCell>
+                  <IconButton
+                    onClick={() => handleEditDish(dish.dishId)}
+                    color="primary"
+                  >
+                    <Tooltip
+                      title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
+                      placement="top"
                     >
-                      <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
-                        placement="top"
-                      >
-                        <EditIcon />
-                      </Tooltip>
-                    </IconButton>
-                    <IconButton
-                      onClick={() => handleDeleteDish(dish.dishId)}
-                      color="secondary"
+                      <EditIcon />
+                    </Tooltip>
+                  </IconButton>
+                  <IconButton
+                    onClick={() => handleDeleteDish(dish.dishId)}
+                    color="secondary"
+                  >
+                    <Tooltip
+                      title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
+                      placement="top"
                     >
-                      <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
-                        placement="top"
-                      >
-                        <DeleteIcon />
-                      </Tooltip>
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+                      <DeleteIcon />
+                    </Tooltip>
+                  </IconButton>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
         <ReactPaginate
@@ -439,7 +630,7 @@ const DishManager = () => {
           containerClassName="pagination"
           activeClassName="active"
           renderOnZeroPageCount={null}
-        />      
+        />
       </TableContainer>
     </Box>
   );

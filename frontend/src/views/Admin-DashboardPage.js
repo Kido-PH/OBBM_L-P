@@ -35,71 +35,71 @@ function DashboardPage() {
   } = theme.useToken();
 
   const menuItems = [
-    { key: "1", icon: <MdHome />, label: "HOME", path: "/" },
+    { key: "1", icon: <BarChartOutlined />, label: "TỔNG QUAN", path: "/admin" },
     {
       key: "2",
       icon: <FileDoneOutlined /> ,
-      label: "CONTRACTS",
+      label: "HỢP ĐỒNG",
       path: "/admin/ManageContracts",
     },
 
     {
       key: "3",
       icon: <UnorderedListOutlined />,
-      label: "CATEGORY DISH",
+      label: "DANH MỤC MÓN ĂN",
       path: "/admin/ManageCategoryDish",
     },
 
     {
       key: "4",
       icon: <CoffeeOutlined />,
-      label: "DISH",
+      label: "MÓN ĂN",
       path: "/admin/ManageDish",
     },
 
     {
       key: "5",
       icon: <CustomerServiceOutlined />,
-      label: "SERVICES",
+      label: "DỊCH VỤ",
       path: "/admin/ManageServices",
     },
     {
       key: "6",
       icon: <StarOutlined />,
-      label: "EVENTS",
+      label: "SỰ KIỆN",
       path: "/admin/ManageEvents",
     },
     {
       key: "7",
       icon: <EnvironmentOutlined />,
-      label: "LOCATION",
+      label: "ĐỊA ĐIỂM",
       path: "/admin/ManageLocation",
     },
     {
       key: "8",
       icon: <UsergroupAddOutlined />,
-      label: "ACCOUNTS",
+      label: "KHÁCH HÀNG",
       path: "/admin/ManageAccounts",
     },
     {
       key: "9",
-      icon: <BellOutlined />,
-      label: "STOCK REQUESTS",
-      path: "/admin/ManageStockRequests",
+      icon: <MenuOutlined />,
+      label: "THỰC ĐƠN",
+      path: "/admin/Menu",
     },
     {
       key: "10",
-      icon: <BarChartOutlined />,
-      label: "ANLYTICS",
-      path: "/admin/DashboardAnalytics",
+      icon: <BellOutlined />,
+      label: "NGUYÊN LIỆU",
+      path: "/admin/ManageStockRequests",
     },
     {
       key: "11",
       icon: <SisternodeOutlined />,
-      label: "ACCESS CONTROL",
+      label: "PHÂN QUYỀN",
       path: "/admin/AccessControl",
     },
-    { key: "12", icon: <LogoutOutlined />, label: "LOGOUT", path: "/login" },
+    { key: "12", icon: <LogoutOutlined />, label: "ĐĂNG XUẤT", path: "/login" },
   ];
 
   return (
@@ -167,7 +167,7 @@ function DashboardPage() {
             </Col>
             <Col md={3}>
               <div style={{ paddingRight: 16, textAlign: "right" }}>
-                <Avatar size="default" icon={<UserOutlined />}></Avatar> Admin
+                Admin <Avatar size="default" icon={<UserOutlined />}></Avatar> 
               </div>
             </Col>
           </Row>
@@ -206,7 +206,7 @@ function DashboardPage() {
             textAlign: "center",
             fontFamily: "circular std book, sans-serif",
             color: "#858796",
-            height: 65 /* Chiều cao cố định của Footer */,
+            height: "0px" /* Chiều cao cố định của Footer */,
             background: colorBgContainer /* Màu nền nhẹ cho Footer */,
             position: "fixed" /* Cố định Footer */,
             bottom: 0,

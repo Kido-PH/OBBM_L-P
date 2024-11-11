@@ -1,35 +1,35 @@
 import axiosClient from "../config/axiosClient";
 
-const dishApi = {
+const menuApi = {
     getAll(params) {
-        const url = "/dish";
+        const url = "/menu";
         return axiosClient.get(url, {params});
     },
 
     get(id) {
-        const url = `/dish/${id}`;
+        const url = `/menu/${id}`;
         return axiosClient.get(url);
     },
 
     add(data) {
-        const url = `/dish`;
+        const url = `/menu`;
         return axiosClient.post(url, data);
     },
 
     update(dishId, data) {
-        const url = `/dish/${dishId}`;
+        const url = `/menu/${dishId}`;
         return axiosClient.put(url, data);
     },
 
     delete(id) {
-        const url = `/dish/${id}`;
+        const url = `/menu/${id}`;
         return axiosClient.delete(url);
     },
 
     getPaginate(page, size) {
-        const url = `/dish?page=${page}&size=${size}`;
+        const url = `/menu?page=${page}&size=${size}`;
         return axiosClient.get(url);
     },
 };
 
-export default dishApi;
+export default menuApi;

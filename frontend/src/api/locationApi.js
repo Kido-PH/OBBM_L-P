@@ -1,36 +1,36 @@
 import axiosClient from "../config/axiosClient";
 
-const danhMucApi = {
+const locationApi = {
   getAll(params) {
-    const url = "/category";
+    const url = "/location";
     return axiosClient.get(url, { params });
   },
 
   get(id) {
-    const url = `/category/${id}`;
+    const url = `/location/${id}`;
     return axiosClient.get(url);
   },
 
   add(data) {
-    const url = `/category`;
+    const url = `/location/admin`;
     return axiosClient.post(url, data);
   },
 
-  update(categoryId, data) {
-    const url = `/category/${categoryId}`;
+  update(locationId, data) {
+    const url = `/location/${locationId}`;
     return axiosClient.put(url, data);
   },
 
   delete(id) {
-    const url = `/category/${id}`;
+    const url = `/location/${id}`;
     return axiosClient.delete(url);
   },
 
   getPaginate(page, size) {
-    const url = `/category?page=${page}&size=${size}`;
+    const url = `/location?page=${page}&size=${size}`;
     return axiosClient.get(url);
   }
 
 };
 
-export default danhMucApi;
+export default locationApi;
