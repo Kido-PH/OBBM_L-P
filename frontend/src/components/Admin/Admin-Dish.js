@@ -28,6 +28,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
 import toast, { Toaster } from "react-hot-toast";
 import ReactPaginate from "react-paginate";
 
@@ -147,18 +148,14 @@ const DishManager = () => {
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
-
-    // Cập nhật dữ liệu món ăn
-    if (name === "image" && files) {
-      setDishData((prevData) => ({
-        ...prevData,
-        image: URL.createObjectURL(files[0]),
-      }));
+    if (name === "image" && files && files.length > 0) {
+      const file = files[0];
+      // Lấy tên file và gán cứng vào thư mục /images/dish
+      const imageName = file.name;
+      const imagePath = `/images/dish/${imageName}`;  // Đường dẫn hình ảnh
+      setDishData({ ...dishData, image: imagePath });
     } else {
-      setDishData((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
+      setDishData({ ...dishData, [name]: value });
     }
 
     // Xóa lỗi khi người dùng nhập dữ liệu hợp lệ
@@ -351,7 +348,7 @@ const DishManager = () => {
             </g>
           </svg>
           <input
-            placeholder="Search"
+            placeholder="Tìm kiếm"
             type="search"
             className="admin-input-search"
             value={searchTerm}
@@ -480,6 +477,7 @@ const DishManager = () => {
           />
           <label htmlFor="file-upload">
             <Button variant="contained" component="span" sx={{ mb: "5px" }}>
+              <AddAPhotoIcon sx={{ mr: "3px" }}/>
               Chọn ảnh
             </Button>
           </label>
@@ -579,7 +577,13 @@ const DishManager = () => {
                   }).format(dish.price)}
                 </TableCell>
                 <TableCell>
-                  <img src={dish.image} alt={dish.name} width="70" />
+                <img
+                    src={`${dish.image}`}
+                    alt={dish.name}
+                    width="70"
+                    height="70"
+                    style={{ objectFit: "cover", width: "70px", height: "70px", borderRadius: "8px" }} // Thêm objectFit và borderRadius
+                  />
                 </TableCell>
                 <TableCell>{dish.description}</TableCell>
                 <TableCell>{dish.existing}</TableCell>

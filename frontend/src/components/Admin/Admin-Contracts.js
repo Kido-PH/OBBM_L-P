@@ -14,13 +14,14 @@ import {
   TableRow,
   Paper,
   IconButton,
+  Tooltip,
 } from "@mui/material";
 import axios from "axios";
 import InfoIcon from "@mui/icons-material/Info";
 import html2pdf from "html2pdf.js";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import { toast } from "react-toastify";
+import { toast, Toaster } from "react-hot-toast";
 import { format, parse } from "date-fns";
 import ReactPaginate from "react-paginate";
 import contractApi from "../../api/contractApi";
@@ -38,7 +39,7 @@ const ManageContracts = () => {
 
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxMzM3MDc4LCJpYXQiOjE3MzEzMzcwNzgsImp0aSI6ImJiMWU1OGM5LTU4OTEtNDBiOC05OTI3LTdmNzM2NzI2ZTMzZiIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.bOMQ8TIMtbQ-OlFC4yhmfApmMiuUykEqhxAJN-2Ll6LbKp5VrW4muMHRBZDqvIRoyRpz8H4IIQVSO0vRhG2LwQ";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDE5MzczLCJpYXQiOjE3MzE0MTkzNzMsImp0aSI6IjUwMDNjYjVkLWU0NjItNDY2OS05YWFjLTVlMzljMTM0MDE0MCIsInNjb3BlIjoiUk9MRV9BRE1JTiBFRElUX0NPTlRSQUNUIENSRUFURV9DT05UUkFDVCBWSUVXX0NPTlRSQUNUIEVESVRfTUVOVSBDUkVBVEVfTUVOVSBWSUVXX01FTlUifQ.PcGhO85pvvcFouDgdAWqcCxYFXbzYxBs_Hl84s0YkCKnnY-1Rp5tIz6Y0g11KmENWbSKrWJRaFHmXNgJVleWhA";
     sessionStorage.setItem("token", token);
 
     fetchContractWithPaginate(page);
@@ -56,32 +57,52 @@ const ManageContracts = () => {
     }
   };
 
-  const handleConfirmContract = async () => {
+  const handleConfirmContract = async (contract) => {
+    // nếu hợp động đang gửi (chờ duyệt) thì phải thanh toán 1 phần (PartiallyPaid) rồi mới đồng ý được
+    // nếu hợp đồng đã đồng ý (Approved) thì phải thanh toán toàn bộ (FullyPaid) mới hoàn tất
+    if (
+      contract.status === "Pending" &&
+      contract.paymentstatus === "PartiallyPaid"
+    ) {
+      contract.status = "Approved";
+      toast.success("Đã chuyển hợp đồng qua trạng thái chờ duyệt");
+    } else if (
+      contract.status === "Approved" &&
+      contract.paymentstatus === "FullyPaid"
+    ) {
+      contract.status = "Completed";
+      toast.success("Hợp đồng đã được xác nhận thành công!");
+    } else {
+      toast.error("Chưa đủ điều kiện về thanh toán");
+      return;
+    }
     try {
       const data = {
-        id: 11,
-        name: "Hợp đồng Tiệc Tân Niên I",
-        type: "Tiệc Tân Niên",
-        guest: 80,
-        table: 11,
-        totalcost: 4500000,
-        status: "Approved",
-        paymentstatus: "Paid",
-        organizdate: "2024-02-10T22:53:00", // Định dạng ISO 8601
-        custname: "Trần Văn I",
-        custphone: "0987654321",
-        description: "Hợp đồng cho tiệc tân niên",
-        userId: "U003",
-        locationId: 1,
-        eventId: 1,
-        menuId: 1,
+        name: contract.name,
+        type: contract.type,
+        guest: contract.guest,
+        table: contract.table,
+        totalcost: contract.totalcost,
+        status: contract.status,
+        paymentstatus: contract.paymentstatus,
+        organizdate: contract.organizdate, // Định dạng ISO 8601
+        custname: contract.custname,
+        custphone: contract.custphone,
+        description: contract.description,
+        userId: contract.users.userId,
+        locationId: contract.locations.locationId,
+        eventId: contract.events.eventId,
+        menuId: contract.menus.menuId,
       };
-  
+
       console.log("Dữ liệu gửi lên API:", data);
-  
+
       // Gọi API PUT với ID trong URL
-      await contractApi.update(data.id, data);
-      toast.success("Hợp đồng đã được xác nhận thành công!");
+      const res = await contractApi.update(contract.contractId, data);
+      console.log("check res: ", res);
+      if (res.code === 1000) {
+        fetchContractWithPaginate(page);
+      }
     } catch (error) {
       console.error("Lỗi khi xác nhận hợp đồng:", error);
       if (error.response) {
@@ -90,29 +111,34 @@ const ManageContracts = () => {
       toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
     }
   };
-  
 
   // Hàm hủy hợp đồng
   const handleCancelContract = async (contract) => {
     try {
       const updateData = {
-        ...contract,
-        confirmationStatus: "Đã hủy",
+        name: contract.name,
+        type: contract.type,
+        guest: contract.guest,
+        table: contract.table,
+        totalcost: contract.totalcost,
+        status: "Canceled",
+        paymentstatus: contract.paymentstatus,
+        organizdate: contract.organizdate, // Định dạng ISO 8601
+        custname: contract.custname,
+        custphone: contract.custphone,
+        description: contract.description,
+        userId: contract.users.userId,
+        locationId: contract.locations.locationId,
+        eventId: contract.events.eventId,
+        menuId: contract.menus.menuId,
       };
 
       // Gọi API POST để hủy hợp đồng
-      await contractApi.update(contract.contractId, updateData);
-
-      // Cập nhật danh sách hợp đồng trong state
-      setContracts((prevContracts) =>
-        prevContracts.map((item) =>
-          item.contractId === contract.contractId
-            ? { ...item, confirmationStatus: "Đã hủy" }
-            : item
-        )
-      );
-
-      toast.success("Hợp đồng đã được hủy thành công!");
+      const res = await contractApi.update(contract.contractId, updateData);
+      if (res.code === 1000) {
+        fetchContractWithPaginate(page);
+        toast.success("Hợp đồng đã được hủy thành công!");
+      }
     } catch (error) {
       console.error("Lỗi khi hủy hợp đồng:", error);
       toast.error("Không thể hủy hợp đồng. Vui lòng thử lại sau!");
@@ -175,6 +201,7 @@ const ManageContracts = () => {
 
   return (
     <div>
+      <Toaster position="top-center" reverseOrder={false} />
       <Box
         sx={{
           display: "flex",
@@ -194,7 +221,7 @@ const ManageContracts = () => {
             </g>
           </svg>
           <input
-            placeholder="Search"
+            placeholder="Tìm kiếm"
             type="search"
             className="admin-input-search"
             value={searchTerm}
@@ -245,6 +272,8 @@ const ManageContracts = () => {
                           ? "#28a745" // Màu xanh lá cho trạng thái "Completed"
                           : contract.status === "Approved"
                           ? "#ffc107" // Màu vàng cho trạng thái "Approved"
+                          : contract.status === "Canceled"
+                          ? "#dc3545" // Màu đỏ cho trạng thái "Canceled"
                           : "#17a2b8", // Màu xanh dương cho trạng thái "Pending"
                       fontWeight: "bold",
                     }}
@@ -257,9 +286,11 @@ const ManageContracts = () => {
                   <span
                     style={{
                       color:
-                        contract.paymentstatus === "Paid"
-                          ? "#28a745"
-                          : "#dc3545",
+                        contract.paymentstatus === "FullyPaid"
+                          ? "#28a745" // Màu xanh lá cho FullyPaid
+                          : contract.paymentstatus === "PartiallyPaid"
+                          ? "#ffc107" // Màu vàng cho PartiallyPaid
+                          : "#dc3545", // Màu đỏ cho Unpaid
                       fontWeight: "bold",
                     }}
                   >
@@ -283,26 +314,49 @@ const ManageContracts = () => {
                 <TableCell>{contract.custphone}</TableCell>
                 <TableCell>{contract.custmail}</TableCell>
                 <TableCell sx={{ display: "flex", gap: 1, flexWrap: "nowrap" }}>
-                  <IconButton
-                    color="success"
-                    onClick={() => handleConfirmContract(contract)}
-                  >
-                    <CheckCircleIcon />
-                  </IconButton>
+                  {contract.status !== "Completed" &&
+                    contract.status !== "Canceled" && (
+                      <span>
+                        <IconButton
+                          color="success"
+                          onClick={() => handleConfirmContract(contract)}
+                        >
+                          <Tooltip
+                            title={
+                              <span style={{ fontSize: "1.25rem" }}>Xác nhận</span>
+                            }
+                            placement="top"
+                          >
+                            <CheckCircleIcon />
+                          </Tooltip>
+                        </IconButton>
 
-                  <IconButton
-                    color="error"
-                    onClick={() => handleCancelContract(contract)}
-                  >
-                    <CancelIcon />
-                  </IconButton>
-
+                        <IconButton
+                          color="error"
+                          onClick={() => handleCancelContract(contract)}
+                        >
+                          <Tooltip
+                            title={
+                              <span style={{ fontSize: "1.25rem" }}>Hủy</span>
+                            }
+                            placement="top"
+                          >
+                            <CancelIcon />
+                          </Tooltip>
+                        </IconButton>
+                      </span>
+                    )}
                   <IconButton
                     color="info"
                     onClick={() => handleModalPDF(contract)}
                     sx={{ justifyContent: "center" }}
                   >
-                    <InfoIcon />
+                    <Tooltip
+                      title={<span style={{ fontSize: "1.25rem" }}>Thông tin</span>}
+                      placement="top"
+                    >
+                      <InfoIcon />
+                    </Tooltip>
                   </IconButton>
                 </TableCell>
               </TableRow>

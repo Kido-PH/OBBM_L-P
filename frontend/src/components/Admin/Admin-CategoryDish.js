@@ -43,7 +43,7 @@ const CategoryDish = () => {
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxMzM3MDc4LCJpYXQiOjE3MzEzMzcwNzgsImp0aSI6ImJiMWU1OGM5LTU4OTEtNDBiOC05OTI3LTdmNzM2NzI2ZTMzZiIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.bOMQ8TIMtbQ-OlFC4yhmfApmMiuUykEqhxAJN-2Ll6LbKp5VrW4muMHRBZDqvIRoyRpz8H4IIQVSO0vRhG2LwQ";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDE5MzczLCJpYXQiOjE3MzE0MTkzNzMsImp0aSI6IjUwMDNjYjVkLWU0NjItNDY2OS05YWFjLTVlMzljMTM0MDE0MCIsInNjb3BlIjoiUk9MRV9BRE1JTiBFRElUX0NPTlRSQUNUIENSRUFURV9DT05UUkFDVCBWSUVXX0NPTlRSQUNUIEVESVRfTUVOVSBDUkVBVEVfTUVOVSBWSUVXX01FTlUifQ.PcGhO85pvvcFouDgdAWqcCxYFXbzYxBs_Hl84s0YkCKnnY-1Rp5tIz6Y0g11KmENWbSKrWJRaFHmXNgJVleWhA";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
     fetchDanhMucWithPaginate(page); // Lấy trang đầu tiên
   }, [page]);
@@ -274,7 +274,7 @@ const CategoryDish = () => {
             </g>
           </svg>
           <input
-            placeholder="Search"
+            placeholder="Tìm kiếm"
             type="search"
             className="admin-input-search"
             value={searchTerm}
@@ -302,7 +302,7 @@ const CategoryDish = () => {
               verticalAlign: "middle",
             }}
           />
-          Thêm Món Ăn
+          Thêm danh mục
         </Button>
       </div>
 

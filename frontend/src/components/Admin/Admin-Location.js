@@ -19,11 +19,13 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  Tooltip,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
+import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
 import locationApi from "../../api/locationApi";
 import ReactPaginate from "react-paginate";
 import toast, { Toaster } from "react-hot-toast";
@@ -56,7 +58,7 @@ const LocationManager = () => {
 
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxMzM3MDc4LCJpYXQiOjE3MzEzMzcwNzgsImp0aSI6ImJiMWU1OGM5LTU4OTEtNDBiOC05OTI3LTdmNzM2NzI2ZTMzZiIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.bOMQ8TIMtbQ-OlFC4yhmfApmMiuUykEqhxAJN-2Ll6LbKp5VrW4muMHRBZDqvIRoyRpz8H4IIQVSO0vRhG2LwQ";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDE5MzczLCJpYXQiOjE3MzE0MTkzNzMsImp0aSI6IjUwMDNjYjVkLWU0NjItNDY2OS05YWFjLTVlMzljMTM0MDE0MCIsInNjb3BlIjoiUk9MRV9BRE1JTiBFRElUX0NPTlRSQUNUIENSRUFURV9DT05UUkFDVCBWSUVXX0NPTlRSQUNUIEVESVRfTUVOVSBDUkVBVEVfTUVOVSBWSUVXX01FTlUifQ.PcGhO85pvvcFouDgdAWqcCxYFXbzYxBs_Hl84s0YkCKnnY-1Rp5tIz6Y0g11KmENWbSKrWJRaFHmXNgJVleWhA";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
     fetchDanhMucWithPaginate(page); // Lấy trang đầu tiên
   }, [page]);
@@ -523,13 +525,23 @@ const handleSearch = (term) => {
                     color="primary"
                     onClick={() => handleOpenDialog("edit", location)}
                   >
-                    <EditIcon />
+                    <Tooltip
+                        title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
+                        placement="top"
+                      >
+                        <EditIcon />
+                      </Tooltip>
                   </IconButton>
                   <IconButton
                     color="error"
                     onClick={() => handleDeleteClick(location.locationId)}
                   >
-                    <DeleteIcon />
+                    <Tooltip
+                        title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
+                        placement="top"
+                      >
+                        <DeleteIcon />
+                      </Tooltip>
                   </IconButton>
                 </TableCell>
               </TableRow>
@@ -594,6 +606,7 @@ const handleSearch = (term) => {
           />
           <label htmlFor="file-upload">
             <Button variant="contained" component="span" sx={{ mb: "5px" }}>
+             <AddAPhotoIcon sx={{ mr: "3px" }}/>
               Chọn ảnh
             </Button>
           </label>
