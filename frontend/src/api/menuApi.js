@@ -2,7 +2,7 @@ import axiosClient from "../config/axiosClient";
 
 const menuApi = {
     getAll(params) {
-        const url = "/menu?page=1&size=7";
+        const url = "/menu?page=1&size=100";
         return axiosClient.get(url, {params});
     },
 

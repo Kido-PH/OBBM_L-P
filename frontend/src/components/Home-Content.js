@@ -172,7 +172,7 @@ const Content = () => {
   useEffect(() => {
     handleFilter(1);
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NDEyMjU0LCJpYXQiOjE3MzE0MTIyNTQsImp0aSI6Ijk0YmEwNmVmLTY1ZmMtNGViMi1iNmU4LTkwOGUxODMyMWQ5NiIsInNjb3BlIjoiUk9MRV9BRE1JTiBDUkVBVEVfTUVOVSBFRElUX01FTlUgVklFV19NRU5VIEVESVRfQ09OVFJBQ1QgQ1JFQVRFX0NPTlRSQUNUIFZJRVdfQ09OVFJBQ1QifQ.1eqAA6p4B4KE-jjsI3aOZNJip-PAVuyUMPfMlgfBfC7Fjr03ZAxsSpKHUc8WmIwZhcxaGzDot5mtCPd-s1qdnQ";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NDk5NDMzLCJpYXQiOjE3MzE0OTk0MzMsImp0aSI6IjE5YjhmZDA1LWQ3M2QtNGFiMC1hYjhiLTAxOGY1NDY1MWYwMyIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.nZbr_U9_3pkJpEia51fed9tcBgG6JCt47YeI5YA7Z-UTIgbBWWYGroR6CQNA42cbAOS3qMAbXdG1DGo2-Zg0-g";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
     fetchDanhMuc();
     fetchEvent();
