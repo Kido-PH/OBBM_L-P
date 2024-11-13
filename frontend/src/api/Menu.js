@@ -47,62 +47,24 @@ const Menu = () => {
     setSelectedMenuDishes(menuDishesList);
   };
 
-  
-
-  const { id } = useParams();
   const [menu, setMenu] = useState([]);
 
-    
+    const { id } = useParams();
   
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NTAxNTEwLCJpYXQiOjE3MzE1MDE1MTAsImp0aSI6IjNlMmJiYTM4LWI0OTEtNDlhZi04ZTIzLTFmNmI0MDdhOTYyMSIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.rulyOoCjnDk7E1rMAEpYtpA3zF_kpA_MuznBQ-JrNKQVACnbLnwuyyfpxJJmo0NWt8ayy0dO6_wPcPxLRL-7hw";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NDAyODk4LCJpYXQiOjE3MzE0MDI4OTgsImp0aSI6IjE4ZTA0MmQ5LTZmMGEtNDU2ZC1iYjYyLTc4Yjg2ZGQxZWI5YyIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.4U93XEC5NRyXZGdqfYTYSEu7YVRBuOINPLLo0H2CxatuN_IAtHZvOnrphYqKXzIwaQ8KhbxKD2xYPOz_i37Tfw";
     sessionStorage.setItem("token", token);
 
     const fetchMenu = async () => {
       const response = await menuApi.getAll();
-        const menuData = response.result.content;
-        
-
-        console.log("Menu Data from API:", menuData); // Kiểm tra dữ liệu từ API
-
-        if (id) {
-          const filteredMenuData = menuData.filter(
-            (menu) => menu.events.eventId === parseInt(id, 10)
-          );
-
-          console.log("Filtered Menu Data:", filteredMenuData); // Kiểm tra dữ liệu đã lọc
-          setMenu(filteredMenuData);
-        }
-        
+      const menuData = response.result.content;
+      console.log(menuData);
+      setMenu(menuData);
     };
 
     fetchMenu();
-  }, [id]);
-
-  const groupedMenu = menu.reduce((acc, category) => {
-    const groupedDishes = category.listMenuDish.reduce((dishAcc, menuDish) => {
-      const categoryName = menuDish.dishes.categories.name;
-
-      if (!dishAcc[categoryName]) {
-        dishAcc[categoryName] = [];
-      }
-
-      dishAcc[categoryName].push(menuDish.dishes);
-
-      return dishAcc;
-    }, {});
-
-    acc[category.menuId] = {
-      ...category,
-      groupedDishes,
-    };
-
-    return acc;
-  }, {});
-
-  const groupedMenuArray = Object.values(groupedMenu);
-  
+  }, []);
 
   const handleCreateMenu = async () => {
     try {
@@ -143,10 +105,38 @@ const Menu = () => {
       };
     });
   };
-  
+  const groupedMenu = menu.reduce((acc, category) => {
+    // Tạo đối tượng để lưu các món ăn theo categoryId
+    const groupedDishes = category.listMenuDish.reduce((dishAcc, menuDish) => {
+      const categoryName = menuDish.dishes.categories.name; // Lấy tên category từ menuDish
+
+      // Nếu categoryName chưa tồn tại trong dishAcc, tạo một mảng mới
+      if (!dishAcc[categoryName]) {
+        dishAcc[categoryName] = [];
+      }
+
+      // Thêm món ăn vào đúng category
+      dishAcc[categoryName].push(menuDish.dishes);
+
+      return dishAcc;
+    }, {});
+
+    // Lưu lại thông tin category và nhóm món ăn theo categoryName
+    acc[category.menuId] = {
+      ...category,
+      groupedDishes,
+    };
+
+    return acc;
+  }, {});
 
   // Chuyển đổi đối tượng groupedMenu thành mảng để dễ render
-  
+  const groupedMenuArray = Object.values(groupedMenu);
+
+  // Hàm để thêm món ăn vào menu-right
+  const addDishToMenuRight = (dish) => {
+    setSelectedDishes((prevDishes) => [...prevDishes, dish]);
+  };
 
   // Hàm bật/tắt hiển thị ListFood
   const toggleListFood = (id) => {
@@ -177,6 +167,19 @@ const Menu = () => {
       return () => clearInterval(interval);
     }
   }, [activeTab]);
+
+  const getSectionId = (section) => {
+    switch (section) {
+      case "khaiVi":
+        return 1;
+      case "monChinh":
+        return 2;
+      case "trangMieng":
+        return 3;
+      default:
+        return 4; // Drinks
+    }
+  };
 
   return (
     <div className="menu-container">
