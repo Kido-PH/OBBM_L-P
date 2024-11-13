@@ -20,29 +20,7 @@ import {
   Box,
 } from "@mui/material";
 import { toast } from "react-toastify";
-
-const initialInvoices = [
-  {
-    InvoiceId: 1,
-    ContractId: 1001,
-    IssueDate: "2024-01-10T10:00:00",
-    DueDate: "2024-01-20T23:59:59",
-    PaymentMethod: "Credit Card",
-    TotalAmount: 1500.5,
-    InvoiceContent: "Payment for web development services",
-    Status: "Pending",
-  },
-  {
-    InvoiceId: 2,
-    ContractId: 1002,
-    IssueDate: "2024-02-05T09:30:00",
-    DueDate: "2024-02-15T23:59:59",
-    PaymentMethod: "Bank Transfer",
-    TotalAmount: 2300,
-    InvoiceContent: "Payment for mobile app development",
-    Status: "Paid",
-  },
-];
+import { initialInvoices } from "../data";
 
 const InvoiceManager = () => {
   const [invoices, setInvoices] = useState(initialInvoices);

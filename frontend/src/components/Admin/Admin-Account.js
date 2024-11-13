@@ -16,8 +16,6 @@ import {
   Checkbox,
   FormControlLabel,
   Box,
-  Typography,
-  Divider,
   IconButton,
   TablePagination,
 } from "@mui/material";
@@ -27,7 +25,7 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { toast } from "react-toastify";
-import { initialAccounts } from "../components/data";
+import { initialAccounts } from "../data";
 
 const AccountManager = () => {
   const [accounts, setAccounts] = useState(initialAccounts);
@@ -146,10 +144,6 @@ const AccountManager = () => {
 
   return (
     <div>
-      <Typography variant="h2" sx={{ mb: 2, color: "orange" }}>
-        Manage Customer Account
-      </Typography>
-      <Divider sx={{ mb: 1 }} />
       <Box
         sx={{
           display: "flex",
@@ -159,14 +153,12 @@ const AccountManager = () => {
           mb: 2, // margin bottom
         }}
       >
-        {/* Ô tìm kiếm nằm bên trái */}
-        <TextField
-          label="Search Account"
-          variant="outlined"
-          sx={{ width: "300px" }}
-          value={searchTerm} // Liên kết với searchTerm
-          onChange={(e) => setSearchTerm(e.target.value)} // Cập nhật searchTerm khi người dùng nhập liệu
-        />
+        {/* Ô tìm kiếm */}
+        <div className="admin-group">
+          <svg className="admin-icon-search" aria-hidden="true" viewBox="0 0 24 24"><g><path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path></g></svg>
+          <input placeholder="Search" type="search" className="admin-input-search" value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)} />
+        </div>
         <Button
           sx={{fontSize:'10px'}}
           variant="contained"
@@ -184,6 +176,7 @@ const AccountManager = () => {
         <Table>
           <TableHead>
             <TableRow>
+              <TableCell>#</TableCell>
               <TableCell>Username</TableCell>
               <TableCell>Fullname</TableCell>
               <TableCell>Email</TableCell>
@@ -200,8 +193,9 @@ const AccountManager = () => {
             {filteredAccounts
               .filter((account) => !account.IsDeleted)
               .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Chỉ lấy các mục cho trang hiện tại
-              .map((account) => (
+              .map((account, index) => (
                 <TableRow key={account.Username}>
+                  <TableCell>{index + 1}</TableCell> 
                   <TableCell>{account.Username}</TableCell>
                   <TableCell>{account.Fullname}</TableCell>
                   <TableCell>{account.Email}</TableCell>
