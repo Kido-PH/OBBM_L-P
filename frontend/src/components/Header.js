@@ -33,7 +33,7 @@ const Header = () => {
     <header className={`header ${isActive ? "active" : ""}`} data-header>
       <div className="container">
         <h1>
-          <a href="/home" className="logo">
+          <a href="/" className="logo">
             OBBM<span className="span">.</span>
           </a>
         </h1>
@@ -42,17 +42,17 @@ const Header = () => {
           <ul className="navbar-list">
             <li className="nav-item">
               <a href="/" className="navbar-link" data-nav-link>
-                Home
+                Trang chủ
               </a>
             </li>
             <li className="nav-item">
               <a href="#about" className="navbar-link" data-nav-link>
-                About Us
+                Về chúng tôi
               </a>
             </li>
             <li className="nav-item">
-              <a href="/dish/list" className="navbar-link" data-nav-link>
-                Dishes
+              <a href="#food-menu" className="navbar-link" data-nav-link>
+                Món ăn
               </a>
             </li>
             <li className="nav-item">
@@ -67,7 +67,7 @@ const Header = () => {
             </li>
             <li className="nav-item">
               <a href="#contact" className="navbar-link" data-nav-link>
-                Contact Us
+                Liên hệ
               </a>
             </li>
             <li>
