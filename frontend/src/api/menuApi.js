@@ -5,8 +5,6 @@ const menuApi = {
 
         const url = "/menu?page=1&size=100";
 
-        const url = "/menu";
-
         return axiosClient.get(url, {params});
     },
 

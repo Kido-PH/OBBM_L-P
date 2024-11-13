@@ -255,7 +255,7 @@ const Content = () => {
                         <p className="card-text">{event.description}</p>
 
                         <img
-                          src={event.event_image}
+                          src={event.image}
                           width="300"
                           height="300"
                           loading="lazy"
@@ -272,7 +272,7 @@ const Content = () => {
 
           <section className="section section-divider gray about" id="about">
             <div className="container">
-              <div className="about-banner">
+              <div className="about-banner">  
                 <img
                   src={aboutBanner}
                   width="509"
