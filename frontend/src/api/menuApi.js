@@ -5,8 +5,6 @@ const menuApi = {
 
         const url = "/menu?page=1&size=100";
 
-        const url = "/menu";
-
         return axiosClient.get(url, {params});
     },
 
@@ -20,7 +18,7 @@ const menuApi = {
         return axiosClient.post(url, data);
     },
 
-  update(data) {
+    update(data) {
         const url = `/menu/${data.id}`;
         return axiosClient.put(url, data);
     },
