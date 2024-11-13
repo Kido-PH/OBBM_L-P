@@ -16,8 +16,8 @@ const dishApi = {
         return axiosClient.post(url, data);
     },
 
-    update(data) {
-        const url = `/dish/${data.id}`;
+    update(dishId, data) {
+        const url = `/dish/${dishId}`;
         return axiosClient.put(url, data);
     },
 
