@@ -28,6 +28,7 @@ const CategoryDish = () => {
   const [open, setOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(null);
+  const [categoryId, setCategoryId] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [categoryDescription, setCategoryDescription] = useState("");
   const [categories, setCategories] = useState([]); // Lưu trữ danh sách danh mục
@@ -35,34 +36,24 @@ const CategoryDish = () => {
   const SIZE_CATEGORY = 5;
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(0);
-  // State cho Dialog xác nhận xóa
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
+  const [nameError, setNameError] = useState("");
+  const [descriptionError, setDescriptionError] = useState("");
 
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzMwNDY1ODU5LCJpYXQiOjE3MzA0NjQwNTksImp0aSI6IjQwZTQxNzIyLTZlY2MtNDg3Ni04MGE5LWU4ODM5NGM5MzlhYiIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.COtk4hFVa6RfsHFYLkuoJOoI9DawW7CqxNpuPWswzvBbfdgaMzgGh2WHQ27xIXVAdBN9KS1H8AqAkMFwcNgXnA";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDE5MzczLCJpYXQiOjE3MzE0MTkzNzMsImp0aSI6IjUwMDNjYjVkLWU0NjItNDY2OS05YWFjLTVlMzljMTM0MDE0MCIsInNjb3BlIjoiUk9MRV9BRE1JTiBFRElUX0NPTlRSQUNUIENSRUFURV9DT05UUkFDVCBWSUVXX0NPTlRSQUNUIEVESVRfTUVOVSBDUkVBVEVfTUVOVSBWSUVXX01FTlUifQ.PcGhO85pvvcFouDgdAWqcCxYFXbzYxBs_Hl84s0YkCKnnY-1Rp5tIz6Y0g11KmENWbSKrWJRaFHmXNgJVleWhA";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    // fetchDanhMuc();
     fetchDanhMucWithPaginate(page); // Lấy trang đầu tiên
-  }, []);
-
-  // Hàm lấy tất cả listcategory
-  const fetchDanhMuc = async () => {
-    try {
-      const responseCategories = await danhMucApi.getAll();
-      setCategories(responseCategories.result.content); //Đặt kết quả vào state
-    } catch (error) {
-      console.error("Không tìm nạp được danh mục: ", error);
-    }
-  };
+  }, [page]);
 
   // Hàm đổ dữ liệu & phân trang
   const fetchDanhMucWithPaginate = async (page) => {
     try {
       const res = await danhMucApi.getPaginate(page, SIZE_CATEGORY);
-      setCategories(res.result.content);
-      setPageCount(res.result.totalPages);
+      setCategories(res.result?.content);
+      setPageCount(res.result?.totalPages);
       console.log("res.dt = ", res.result.content);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
@@ -93,40 +84,62 @@ const CategoryDish = () => {
     setOpenConfirmDelete(false);
   };
 
-  // Xử lý thêm danh mục món ăn (async là hàm bất đồng bộ)
   const handleAddCategory = async () => {
-    if (categoryName && categoryDescription) {
-      try {
-        // Tìm ID lớn nhất hiện có trong danh sách
-        const maxId =
-          categories.length > 0
-            ? Math.max(...categories.map((category) => category.categoryId))
-            : 0;
-        const newCategoryId = maxId + 1;
-
-        const danhMucMoi = {
-          categoryId: newCategoryId,
-          name: categoryName,
-          description: categoryDescription,
-        };
-
-        const response = await danhMucApi.add(danhMucMoi); // Gọi API để thêm danh mục
-
-        // Cập nhật danh mục mới vào danh sách và sắp xếp theo ID giảm dần
-        const updatedCategories = [response.result, ...categories];
-        // updatedCategories.sort((a, b) => b.categoryId - a.categoryId);
-
-        setCategories(updatedCategories);
-
-        // Hiển thị toast thông báo thành công
-        toast.success("Danh mục đã được thêm thành công!");
-
-        handleClose();
-      } catch (error) {
-        console.error("Lỗi khi thêm danh mục:", error);
-      }
+    if (!categoryName) {
+      setNameError("Tên danh mục không được để trống");
+      return;
     } else {
-      console.error("Vui lòng điền đầy đủ thông tin.");
+      setNameError("");
+    }
+
+    if (!categoryDescription) {
+      setDescriptionError("Mô tả không được để trống");
+      return;
+    } else {
+      setDescriptionError("");
+    }
+
+    try {
+      const danhMucMoi = {
+        name: categoryName,
+        description: categoryDescription,
+      };
+
+      const response = await danhMucApi.add(danhMucMoi);
+
+      // Update the categories list with the new category
+      setCategories((prevCategories) => [response.result, ...prevCategories]);
+
+      // Show success message
+      toast.success("Danh mục đã được thêm thành công!");
+
+      handleClose();
+    } catch (error) {
+      console.error("Lỗi khi thêm danh mục:", error);
+
+      if (error.response && error.response.data) {
+        const { name, description } = error.response.data;
+        setNameError(name || "Tên danh mục không hợp lệ");
+        setDescriptionError(description || "Mô tả không hợp lệ");
+      } else {
+        toast.error("Đã xảy ra lỗi khi thêm danh mục");
+      }
+    }
+  };
+
+  // Hàm xử lý thay đổi cho trường tên danh mục
+  const handleNameChange = (e) => {
+    setCategoryName(e.target.value);
+    if (e.target.value) {
+      setNameError(""); // Đặt lại thông báo lỗi nếu trường hợp hợp lệ
+    }
+  };
+
+  // Hàm xử lý thay đổi cho trường mô tả
+  const handleDescriptionChange = (e) => {
+    setCategoryDescription(e.target.value);
+    if (e.target.value) {
+      setDescriptionError(""); // Đặt lại thông báo lỗi nếu trường hợp hợp lệ
     }
   };
 
@@ -137,38 +150,41 @@ const CategoryDish = () => {
     );
 
     if (categoryToEdit) {
+      console.log("id: ", categoryToEdit);
       setEditMode(true);
       setCategoryName(categoryToEdit.name); // Lấy thông tin danh mục
       setCategoryDescription(categoryToEdit.description); // Lấy thông tin mô tả danh mục
-      setCurrentIndex(categoryId);
+      setCategoryId(categoryToEdit.categoryId);
       setOpen(true);
     }
   };
 
   // Cập nhật danh mục món ăn
   const handleUpdateCategory = async () => {
-    if (categoryName && categoryDescription && currentIndex !== null) {
+    if (categoryName && categoryDescription && categoryId !== null) {
       try {
         const updatedCategory = {
-          id: currentIndex,
           name: categoryName,
           description: categoryDescription,
         };
 
         // Gọi API cập nhật danh mục
-        const response = await danhMucApi.update(updatedCategory);
+        const response = await danhMucApi.update(categoryId, updatedCategory);
 
         // Cập nhật danh mục trong state sau khi API trả về thành công
         const updatedCategories = categories.map((category) =>
-          category.categoryId === currentIndex
+          category.categoryId === categoryId
             ? {
                 ...category,
-                name: response.result.name,
-                description: response.result.description,
+                name: response.data?.name || category.name,
+                description: response.data?.description || category.description,
               }
             : category
         );
         setCategories(updatedCategories);
+
+        // Tải lại danh mục ở trang hiện tại
+        fetchDanhMucWithPaginate(page);
 
         // Hiển thị toast thông báo chỉnh sửa thành công
         toast.success("Danh mục đã được chỉnh sửa thành công!");
@@ -200,6 +216,9 @@ const CategoryDish = () => {
 
       setCategories(updatedCategories);
 
+      // Tải lại danh mục ở trang hiện tại
+      fetchDanhMucWithPaginate(page);
+
       toast.success("Danh mục đã được xóa thành công!");
 
       setCurrentIndex(null); // Đặt lại currentIndex sau khi xóa xong
@@ -210,31 +229,32 @@ const CategoryDish = () => {
   };
 
   // Hàm xử lý thay đổi giá trị input tìm kiếm
-  const handleSearchChange = async (event) =>  {
+  const handleSearchChange = async (event) => {
     const value = event.target.value;
     setSearchTerm(value);
-    
+
+    // Nếu ô tìm kiếm trống, tải lại dữ liệu phân trang gốc
     if (value.trim() === "") {
-        try {
-          const res = await danhMucApi.getPaginate(page, SIZE_CATEGORY);
-          setCategories(res.result.content);
-          setPageCount(res.result.totalPages);
-        } catch (error) {
-          console.error("Không tìm nạp được danh mục: ", error);
-        }
+      try {
+        fetchDanhMucWithPaginate(page);
+      } catch (error) {
+        console.error("Không tìm nạp được danh mục: ", error);
+      }
     } else {
-      // Lọc danh sách hiện tại dựa trên từ khóa
-      const filtered = categories.filter((category) =>
-        category.name.toLowerCase().includes(value.toLowerCase()) ||
-        category.description.toLowerCase().includes(value.toLowerCase()) 
+      // Lọc dữ liệu hiện tại trong categories dựa trên từ khóa
+      const filtered = categories.filter(
+        (category) =>
+          category.name.toLowerCase().includes(value.toLowerCase()) ||
+          category.description.toLowerCase().includes(value.toLowerCase())
       );
-      setCategories(filtered);
+      setCategories(filtered); // Cập nhật bảng với dữ liệu đã lọc
     }
   };
 
   // Hàm xử lý phân trang
   const handlePageClick = (event) => {
-    fetchDanhMucWithPaginate(+event.selected + 1);
+    const selectedPage = +event.selected + 1; // Lấy số trang người dùng chọn
+    setPage(selectedPage); // Cập nhật page
     console.log(`User requested page number ${event.selected}`);
   };
 
@@ -254,11 +274,11 @@ const CategoryDish = () => {
             </g>
           </svg>
           <input
-            placeholder="Search"
+            placeholder="Tìm kiếm"
             type="search"
             className="admin-input-search"
             value={searchTerm}
-            onChange = {handleSearchChange}
+            onChange={handleSearchChange}
           />
         </div>
 
@@ -282,7 +302,7 @@ const CategoryDish = () => {
               verticalAlign: "middle",
             }}
           />
-          Thêm Món Ăn
+          Thêm danh mục
         </Button>
       </div>
 
@@ -305,7 +325,7 @@ const CategoryDish = () => {
           Xác nhận xóa danh mục
         </DialogTitle>
         <DialogContent>
-          <p>Bạn có chắc chắn muốn xóa danh mục này không?</p>
+          <p>Bạn có chắc chắn muốn xóa danh mục này không ?</p>
         </DialogContent>
         <DialogActions>
           <Button
@@ -339,15 +359,21 @@ const CategoryDish = () => {
             type="text"
             fullWidth
             value={categoryName}
-            onChange={(e) => setCategoryName(e.target.value)}
+            onChange={handleNameChange} // Sử dụng hàm xử lý thay đổi
+            error={!!nameError} // Hiển thị thông báo lỗi nếu có
+            helperText={nameError} // Hiển thị thông báo lỗi dưới trường nhập
           />
           <TextField
             margin="dense"
             label="Mô Tả"
             type="text"
             fullWidth
+            multiline 
+            rows={4}
             value={categoryDescription}
-            onChange={(e) => setCategoryDescription(e.target.value)}
+            onChange={handleDescriptionChange} // Sử dụng hàm xử lý thay đổi
+            error={!!descriptionError} // Hiển thị thông báo lỗi nếu có
+            helperText={descriptionError} // Hiển thị thông báo lỗi dưới trường nhập
           />
         </DialogContent>
         <DialogActions>

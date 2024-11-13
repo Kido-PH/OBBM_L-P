@@ -16,8 +16,8 @@ const danhMucApi = {
     return axiosClient.post(url, data);
   },
 
-  update(data) {
-    const url = `/category/${data.id}`;
+  update(categoryId, data) {
+    const url = `/category/${categoryId}`;
     return axiosClient.put(url, data);
   },
 

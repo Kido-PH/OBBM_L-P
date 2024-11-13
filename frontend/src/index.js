@@ -64,7 +64,7 @@ const App = () => {
           <Route path="ManageLocation" element={<LocationManager />} />
           <Route path="ManageAccounts" element={<AccountManager />} />
           <Route path="ManageInvoice" element={<InvoiceManager />} />
-          <Route path="DashboardAnalytics" element={<AdminAnalytics />} />
+          <Route path="" element={<AdminAnalytics />} />
           <Route path="AccessControl" element={<AccessControl />} />
           <Route path="login" element={<Login />} />
         </Route>
