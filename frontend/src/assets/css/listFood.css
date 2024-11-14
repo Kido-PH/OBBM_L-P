@@ -2,7 +2,7 @@
   position: fixed; /* Đặt thành phần ở vị trí cố định */
   top: 100px; /* Đặt khoảng cách từ trên cùng của trang */
   left: 0; /* Đặt thành phần ở bên trái của trang */
-  width: 1066px; /* Chiều rộng của ListFood */
+  width: 68%; /* Chiều rộng của ListFood */
   height: calc(100% - 100px); /* Chiều cao ListFood, trừ khoảng cách từ trên cùng */
   background-color: white; /* Màu nền */
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5); /* Đổ bóng */
@@ -20,8 +20,7 @@
   padding: 10px; /* Khoảng cách bên trong */
   border-bottom: 1px solid #ccc; /* Đường viền dưới */
   background-color: #fff;
-  
-  width: 1066px;
+  width: 68%;
 }
 
 .action-buttons {
@@ -184,7 +183,7 @@
   animation: fadeIn 0.3s forwards;
 }
 
-.modal-content {
+.modal-listfood-content {
   background-color: white;
   padding: 20px;
   border-radius: 8px;

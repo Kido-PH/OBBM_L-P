@@ -113,7 +113,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
 
       {showPopup && selectedDish && (
         <div className="modal" onClick={() => setShowPopup(false)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+          <div className="modal-listfood-content" onClick={(e) => e.stopPropagation()}>
             <span className="close" onClick={() => setShowPopup(false)}>
               &times;
             </span>

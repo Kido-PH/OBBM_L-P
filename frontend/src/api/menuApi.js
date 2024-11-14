@@ -18,7 +18,7 @@ const menuApi = {
         return axiosClient.post(url, data);
     },
 
-  update(data) {
+    update(data) {
         const url = `/menu/${data.id}`;
         return axiosClient.put(url, data);
     },
