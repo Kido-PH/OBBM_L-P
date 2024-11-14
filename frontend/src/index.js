@@ -45,10 +45,11 @@ const App = () => {
       {shouldShowHeaderFooter && <Header />}
 
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/"  element={<Home />} />
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract-info/id" element={<GuestContractInfo />} />
+        <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu" element={<Menu />} />
         <Route path="/account" element={<Account />} />
         <Route path="/login" element={<Login />} />

@@ -1,20 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import heroBannerBg from "../assets/images/hero-banner-bg.png";
 import steak from "../assets/images/steak.png";
-import promo1 from "../assets/images/promo-1.png";
-import promo2 from "../assets/images/promo-2.png";
-import promo3 from "../assets/images/promo-3.png";
-import promo4 from "../assets/images/promo-4.png";
-import promo5 from "../assets/images/promo-5.png";
 import aboutBanner from "../assets/images/about-banner.jpg";
-import foodMenu1 from "../assets/images/food-menu-1.png";
-import foodMenu2 from "../assets/images/food-menu-2.png";
-import foodMenu3 from "../assets/images/food-menu-3.png";
-import foodMenu4 from "../assets/images/food-menu-4.png";
-import foodMenu5 from "../assets/images/food-menu-5.png";
-import foodMenu6 from "../assets/images/food-menu-6.png";
 import flowerImage from "../assets/images/flower-1.jpg";
 import avatar1 from "../assets/images/avatar-1.jpg";
 import avatar2 from "../assets/images/avatar-2.jpg";
@@ -23,45 +12,48 @@ import weddingStage from "../assets/images/wedding-stage.jpg";
 import flowerCrown from "../assets/images/flower-crown.jpg";
 import event2 from "../assets/images/event-2.jpg";
 import turkey from "../assets/images/turkey.jpeg";
-import blog1 from '../assets/images/blog-1.jpg';
-import blog2 from '../assets/images/blog-2.jpg';
-import blog3 from '../assets/images/blog-3.jpg';
-import ctabanner from '../assets/images/hero-banner-bg.png';
+import blog1 from "../assets/images/blog-1.jpg";
+import blog2 from "../assets/images/blog-2.jpg";
+import blog3 from "../assets/images/blog-3.jpg";
+import ctabanner from "../assets/images/hero-banner-bg.png";
+import danhMucApi from "../api/danhMucApi";
+import eventApi from "../api/eventApi.js";
+import { useNavigate } from "react-router-dom"; // Import useNavigate
 
 const blogPosts = [
   {
     imgSrc: blog1,
-    alt: 'What Do You Think About Cheese Pizza Recipes?',
-    badge: 'Wedding',
-    date: '2022-01-01',
-    dateText: 'Jan 01 2022',
-    author: 'Jonathan Smith',
-    title: 'The Theatre Bar at the End of the Wharf in Dawes Point',
-    text: 'Financial experts support or help you to to find out which way you can raise your funds more...',
-    link: '#'
+    alt: "What Do You Think About Cheese Pizza Recipes?",
+    badge: "Wedding",
+    date: "2022-01-01",
+    dateText: "Jan 01 2022",
+    author: "Jonathan Smith",
+    title: "The Theatre Bar at the End of the Wharf in Dawes Point",
+    text: "Financial experts support or help you to to find out which way you can raise your funds more...",
+    link: "#",
   },
   {
     imgSrc: blog2,
-    alt: 'Making Chicken Strips With New Delicious Ingredients.',
-    badge: 'Wedding',
-    date: '2022-01-01',
-    dateText: 'Jan 01 2022',
-    author: 'Jonathan Smith',
-    title: 'Establishment Bar by Merivale in Sydney CBD',
-    text: 'Attached to the main bar is the garden — an industrial-style terrace area where drinking, dancing, and generally having a great time are encouraged. For an indulgent yet refined Sydney restaurant wedding, Establishment Bar should top your list.',
-    link: '#'
+    alt: "Making Chicken Strips With New Delicious Ingredients.",
+    badge: "Wedding",
+    date: "2022-01-01",
+    dateText: "Jan 01 2022",
+    author: "Jonathan Smith",
+    title: "Establishment Bar by Merivale in Sydney CBD",
+    text: "Attached to the main bar is the garden — an industrial-style terrace area where drinking, dancing, and generally having a great time are encouraged. For an indulgent yet refined Sydney restaurant wedding, Establishment Bar should top your list.",
+    link: "#",
   },
   {
     imgSrc: blog3,
-    alt: 'Innovative Hot Chessyraw Pasta Make Creator Fact.',
-    badge: 'Wedding',
-    date: '2022-01-01',
-    dateText: 'Jan 01 2022',
-    author: 'Jonathan Smith',
-    title: 'Cruise Bar Sydney in The Rocks.',
-    text: 'Financial experts support or help you to to find out which way you can raise your funds more...',
-    link: '#'
-  }
+    alt: "Innovative Hot Chessyraw Pasta Make Creator Fact.",
+    badge: "Wedding",
+    date: "2022-01-01",
+    dateText: "Jan 01 2022",
+    author: "Jonathan Smith",
+    title: "Cruise Bar Sydney in The Rocks.",
+    text: "Financial experts support or help you to to find out which way you can raise your funds more...",
+    link: "#",
+  },
 ];
 
 const testimonials = [
@@ -121,97 +113,99 @@ const banners = [
   },
 ];
 
-const foodMenuData = [
-  {
-    title: "Fried Chicken Unlimited",
-    category: "Chicken",
-    price: "$49.00",
-    oldPrice: "$69.00",
-    discount: "-15%",
-    imgSrc: foodMenu1,
-    alt: "Fried Chicken Unlimited",
-  },
-  {
-    title: "Burger King Whopper",
-    category: "Noodles",
-    price: "$29.00",
-    oldPrice: "$39.00",
-    discount: "-10%",
-    imgSrc: foodMenu2,
-    alt: "Burger King Whopper",
-  },
-  {
-    title: "White Castle Pizzas",
-    category: "Pizzas",
-    price: "$49.00",
-    oldPrice: "$69.00",
-    discount: "-25%",
-    imgSrc: foodMenu3,
-    alt: "White Castle Pizzas",
-  },
-  {
-    title: "Bell Burrito Supreme",
-    category: "Burrito",
-    price: "$59.00",
-    oldPrice: "$69.00",
-    discount: "-20%",
-    imgSrc: foodMenu4,
-    alt: "Bell Burrito Supreme",
-  },
-  {
-    title: "Kung Pao Chicken BBQ",
-    category: "Nuggets",
-    price: "$49.00",
-    oldPrice: "$69.00",
-    discount: "-5%",
-    imgSrc: foodMenu5,
-    alt: "Kung Pao Chicken BBQ",
-  },
-  {
-    title: "Wendy's Chicken",
-    category: "Chicken",
-    price: "$49.00",
-    oldPrice: "$69.00",
-    discount: "-15%",
-    imgSrc: foodMenu6,
-    alt: "Wendy's Chicken",
-  },
-];
-
 const promoData = [
   {
-    title: "Mexican Pizza",
-    text: "Food is any substance consumed to provide nutritional support for an organism.",
-    imgSrc: promo1,
-    alt: "Mexican Pizza",
+    title: "Tiệc BBQ Ngoài Trời",
+    text: "Thưởng thức các món nướng ngon cùng bạn bè với không gian ngoài trời thoáng đãng.",
+    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
+    alt: "Tiệc BBQ Ngoài Trời",
   },
   {
-    title: "Soft Drinks",
-    text: "Food is any substance consumed to provide nutritional support for an organism.",
-    imgSrc: promo2,
-    alt: "Soft Drinks",
+    title: "Dạ Tiệc Hoàng Gia",
+    text: "Hòa mình vào không gian sang trọng với âm nhạc cổ điển và thực đơn đẳng cấp hoàng gia.",
+    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
+    alt: "Dạ Tiệc Hoàng Gia",
   },
   {
-    title: "French Fry",
-    text: "Food is any substance consumed to provide nutritional support for an organism.",
-    imgSrc: promo3,
-    alt: "French Fry",
+    title: "Tiệc Buffet Hải Sản",
+    text: "Thỏa thích lựa chọn và thưởng thức các món hải sản tươi ngon từ khắp mọi nơi.",
+    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
+    alt: "Tiệc Buffet Hải Sản",
   },
   {
-    title: "Burger Kingo",
-    text: "Food is any substance consumed to provide nutritional support for an organism.",
-    imgSrc: promo4,
-    alt: "Burger Kingo",
+    title: "Tiệc Cưới Ngoài Trời",
+    text: "Chung vui cùng đôi uyên ương trong khung cảnh lãng mạn dưới ánh đèn lung linh.",
+    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
+    alt: "Tiệc Cưới Ngoài Trời",
   },
   {
-    title: "Chicken Masala",
-    text: "Food is any substance consumed to provide nutritional support for an organism.",
-    imgSrc: promo5,
-    alt: "Chicken Masala",
+    title: "Tiệc Tân Niên",
+    text: "Chào đón năm mới với bữa tiệc hoành tráng và những màn pháo hoa rực rỡ.",
+    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
+    alt: "Tiệc Tân Niên",
   },
 ];
 
 const Content = () => {
+  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categories, setCategories] = useState([]);
+  const [filteredCategories, setFilteredCategories] = useState([]);
+  const [activeCategoryId, setActiveCategoryId] = useState(1);
+  const [Events, setEvents] = useState([]);
+  const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
+
+
+  const handleFilter = (categoryId) => {
+    setActiveCategoryId(categoryId);
+    const filtered = categories.filter(
+      (category) => category.categoryId === categoryId
+    );
+    setFilteredCategories(filtered);
+  };
+  React.useEffect(() => {
+    if (EventToMenuUrl) {
+      navigate(EventToMenuUrl);
+    }
+  }, [EventToMenuUrl, navigate]);
+
+  const fetchDanhMuc = async () => {
+    const danhMucList = await danhMucApi.getAll();
+    setCategories(danhMucList.result.content);
+    
+  };
+
+  const fetchEvent = async () => {
+    const EventsList = await eventApi.getAll();
+    setEvents(EventsList.result.content); // Cập nhật state
+  };
+  useEffect(() => {
+    const token =
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NDk5NDMzLCJpYXQiOjE3MzE0OTk0MzMsImp0aSI6IjE5YjhmZDA1LWQ3M2QtNGFiMC1hYjhiLTAxOGY1NDY1MWYwMyIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.nZbr_U9_3pkJpEia51fed9tcBgG6JCt47YeI5YA7Z-UTIgbBWWYGroR6CQNA42cbAOS3qMAbXdG1DGo2-Zg0-g";
+    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
+    
+    fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
+      handleFilter(1); // Tự động gọi hàm handleFilter để mô phỏng việc nút "Khai vị" được bấm
+    
+    fetchEvent();
+    
+    
+  }, []);
+ 
+  
+
+  const setMenuIdUrl = (eventId) => {
+    setEventToMenuUrl(`menu/${eventId}`);
+  };
+
+  const pushEventIdtoMenu = async (eventId) => {
+    try {
+      const Id = (eventId)
+      setMenuIdUrl(Id);
+    } catch (error) {
+      console.error("Lỗi khi lấy event Id:", error);
+    }
+  }; 
   return (
     <div>
       <main>
@@ -219,17 +213,15 @@ const Content = () => {
           <section className="hero" id="home">
             <div className="container">
               <div className="hero-content">
-                <p className="hero-subtitle">Professional</p>
+                <p className="hero-subtitle">Chuyên nghiệp</p>
 
-                <h2 className="h1 hero-title">
-                  Best banquet booking service in city!
-                </h2>
+                <h2 className="h1 hero-title">Dịch vụ đặt tiệc tốt nhất</h2>
 
                 <p className="hero-text">
-                  Dedication and thoughtfulness bring satisfaction to you
+                  Sự tận tâm và chu đáo mang đến sự hài lòng cho bạn
                 </p>
 
-                <button className="btn">Book a banquet</button>
+                <button className="btn">Đặt tiệc ngay</button>
               </div>
 
               <figure className="hero-banner">
@@ -247,36 +239,43 @@ const Content = () => {
                   width="700"
                   height="637"
                   loading="lazy"
-                  alt="Steak"
+                  alt="Bít tết"
                   className="w-100 hero-img"
                 />
               </figure>
             </div>
           </section>
 
-          <section className="section section-divider white promo">
+          <section className="section section-divider white promo" id="events">
             <div className="container">
               <ul className="promo-list has-scrollbar">
-                {promoData.map((promo, index) => (
-                  <li key={index} className="promo-item">
-                    <div className="promo-card">
-                      <div className="card-icon">
-                        {/* Add any specific icons or elements here if needed */}
+                {Events.map((event) => (
+                  <li key={event.eventId} className="promo-item" style={{width: "285px", height:"443px"}}>
+                    <button onClick={() => {pushEventIdtoMenu(event.eventId)}}>
+                      <div className="promo-card" style={{width: "285px", height:"443px"}}>
+                        <div className="card-icon">
+                          {/* Add any specific icons or elements here if needed */}
+                        </div>
+
+                        <h3 className="h3 card-title">{event.name}</h3>
+
+                        <p className="card-text" style={{
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            textAlign: "center",
+                                          }}>{event.description}</p>
+
+                        <img
+                          src={event.image}
+                          width="300"
+                          height="300"
+                          loading="lazy"
+                          alt={event.name}
+                          className="w-100 card-banner"
+                        />
                       </div>
-
-                      <h3 className="h3 card-title">{promo.title}</h3>
-
-                      <p className="card-text">{promo.text}</p>
-
-                      <img
-                        src={promo.imgSrc}
-                        width="300"
-                        height="300"
-                        loading="lazy"
-                        alt={promo.alt}
-                        className="w-100 card-banner"
-                      />
-                    </div>
+                    </button>
                   </li>
                 ))}
               </ul>
@@ -285,176 +284,183 @@ const Content = () => {
 
           <section className="section section-divider gray about" id="about">
             <div className="container">
-              <div className="about-banner">
+              <div className="about-banner">  
                 <img
                   src={aboutBanner}
                   width="509"
                   height="459"
                   loading="lazy"
-                  alt="Burger with Drinks"
+                  alt="Burger và Đồ uống"
                   className="w-100 about-img"
                 />
               </div>
 
               <div className="about-content">
                 <h2 className="h2 section-title">
-                  <span className="span">OBBM:</span> Your Online Catering
-                  Solution
+                  <span className="span">OBBM:</span> Giải Pháp Đặt Tiệc Trực
+                  Tuyến Của Bạn
                 </h2>
 
                 <p className="section-text">
-                  At OBBM, we offer you a seamless and efficient online catering
-                  service with uncompromising quality. Our team comprises
-                  dedicated professionals who are always ready to serve you with
-                  utmost sincerity. With our highly skilled chefs from around
-                  the globe, we promise to tantalize your taste buds with
-                  exquisite flavors at your event. Equipped with modern
-                  facilities and catering to diverse themes, we ensure to exceed
-                  your expectations every time.
+                  Tại OBBM, chúng tôi mang đến cho bạn dịch vụ đặt tiệc trực
+                  tuyến tiện lợi và hiệu quả với chất lượng không thể bàn cãi.
+                  Đội ngũ của chúng tôi bao gồm những chuyên gia tận tâm, luôn
+                  sẵn sàng phục vụ bạn với lòng nhiệt thành cao nhất. Với các
+                  đầu bếp tay nghề cao từ khắp nơi trên thế giới, chúng tôi hứa
+                  hẹn mang đến cho bạn những hương vị tinh tế tại sự kiện của
+                  mình. Được trang bị cơ sở vật chất hiện đại và đáp ứng các chủ
+                  đề đa dạng, chúng tôi đảm bảo vượt xa mong đợi của bạn mỗi
+                  lần.
                 </p>
 
                 <ul className="about-list">
                   <li className="about-item">
                     <ion-icon name="checkmark-outline"></ion-icon>
-                    <span className="span">Delicious & Healthy Foods</span>
-                  </li>
-
-                  <li className="about-item">
-                    <ion-icon name="checkmark-outline"></ion-icon>
                     <span className="span">
-                      Professional and dedicated team
+                      Món ăn ngon và tốt cho sức khỏe
                     </span>
                   </li>
 
                   <li className="about-item">
                     <ion-icon name="checkmark-outline"></ion-icon>
-                    <span className="span">Music & Other Facilities</span>
+                    <span className="span">
+                      Đội ngũ chuyên nghiệp và tận tâm
+                    </span>
                   </li>
 
                   <li className="about-item">
                     <ion-icon name="checkmark-outline"></ion-icon>
-                    <span className="span">
-                      Enthusiastic support and advice
-                    </span>
+                    <span className="span">Âm nhạc và các tiện nghi khác</span>
+                  </li>
+
+                  <li className="about-item">
+                    <ion-icon name="checkmark-outline"></ion-icon>
+                    <span className="span">Hỗ trợ và tư vấn nhiệt tình</span>
                   </li>
                 </ul>
 
-                <button className="btn btn-hover">Booking Now</button>
+                <button className="btn btn-hover">Đặt Tiệc Ngay</button>
               </div>
             </div>
           </section>
 
           <section className="section food-menu" id="food-menu">
             <div className="container">
-              <p className="section-subtitle">Popular Dishes</p>
+              <p className="section-subtitle">Món ăn phổ biến</p>
 
               <h2 className="h2 section-title">
-                Our Delicious <span className="span">Foods</span>
+                Những món ngon <span className="span"> của chúng tôi</span>
               </h2>
 
               <p className="section-text">
-                Food is any substance consumed to provide nutritional support
-                for an organism.
+                Thực phẩm là bất kỳ chất nào được tiêu thụ để cung cấp hỗ trợ
+                dinh dưỡng cho cơ thể.
               </p>
 
               <ul className="fiter-list">
                 <li>
-                  <button className="filter-btn active">All</button>
+                  <button
+                    className={`filter-btn ${
+                      activeCategoryId === 1 ? "active" : ""
+                    }`}
+                    onClick={() => handleFilter(1)}
+                  >
+                    Khai vị
+                  </button>
                 </li>
 
                 <li>
-                  <button className="filter-btn">Appetizer</button>
+                  <button
+                    className={`filter-btn ${
+                      activeCategoryId === 2 ? "active" : ""
+                    }`}
+                    onClick={() => handleFilter(2)}
+                  >
+                    Món chính
+                  </button>
                 </li>
 
                 <li>
-                  <button className="filter-btn">Main dishes</button>
+                  <button
+                    className={`filter-btn ${
+                      activeCategoryId === 3 ? "active" : ""
+                    }`}
+                    onClick={() => handleFilter(3)}
+                  >
+                    Tráng miệng
+                  </button>
                 </li>
 
                 <li>
-                  <button className="filter-btn">Desserts</button>
-                </li>
-
-                <li>
-                  <button className="filter-btn">Drinks</button>
-                </li>
-
-                <li>
-                  <button className="filter-btn">Others</button>
+                  <button
+                    className={`filter-btn ${
+                      activeCategoryId === 4 ? "active" : ""
+                    }`}
+                    onClick={() => handleFilter(4)}
+                  >
+                    Đồ uống
+                  </button>
                 </li>
               </ul>
 
-              <ul className="food-menu-list">
-                {foodMenuData.map((item, index) => (
-                  <li key={index}>
-                    <div className="food-menu-card">
-                      <div className="card-banner">
-                        <img
-                          src={item.imgSrc}
-                          width="300"
-                          height="300"
-                          loading="lazy"
-                          alt={item.alt}
-                          className="w-100"
-                        />
+              {filteredCategories.map((category) => (
+                <div key={category.categoryId}>
+                  <ul className="food-menu-list">
+                    {category.listDish.map((dish) => (
+                      <li key={dish.dishId}>
+                        <div className="food-menu-card">
+                          <div className="card-banner-home-dish">
+                            <img
+                              src={dish.image}
+                              alt={dish.name}
+                              style={{ width: "100%", height: "200px" }}
+                              loading="lazy"
+                              className="w-100"
+                            />
 
-                        <div className="badge">{item.discount}</div>
+                            <button className="btn food-menu-btn">
+                              <a href="/menu">Thêm vào Thực đơn</a>
+                            </button>
+                          </div>
 
-                        <button className="btn food-menu-btn">
-                          Add To Menu
-                        </button>
-                      </div>
+                          <div className="wrapper">
+                            <p className="category">
+                              {category.description}
+                            </p>
+                          </div>
 
-                      <div className="wrapper">
-                        <p className="category">{item.category}</p>
+                          <h3 className="h3 card-title" style={{textAlign:"center"}}>{dish.name}</h3>
 
-                        <div className="rating-wrapper">
-                          {/* Assuming you want a fixed number of stars, replace with actual logic if needed */}
-                          <ion-icon name="star"></ion-icon>
-                          <ion-icon name="star"></ion-icon>
-                          <ion-icon name="star"></ion-icon>
-                          <ion-icon name="star"></ion-icon>
-                          <ion-icon name="star"></ion-icon>
+                          <div className="price-wrapper">
+                            <p className="price-text" >Giá:</p>
+                            {dish.price.toLocaleString()} VND
+                          </div>
                         </div>
-                      </div>
-
-                      <h3 className="h3 card-title">{item.title}</h3>
-
-                      <div className="price-wrapper">
-                        <p className="price-text">Price:</p>
-
-                        <data className="price" value={item.price}>
-                          {item.price}
-                        </data>
-
-                        <del className="del" value={item.oldPrice}>
-                          {item.oldPrice}
-                        </del>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
             </div>
           </section>
 
-          <section
-            className="section section-divider white cta "
-            >
+          <section className="section section-divider white cta ">
             <div className="container">
               <div className="cta-content">
                 <h2 className="h2 section-title">
-                  Crafted Cocktails: Taste the{" "}
-                  <span className="span">Difference</span>
+                  Thức uống pha chế tinh tế: Cảm nhận sự{" "}
+                  <span className="span">Khác biệt</span>
                 </h2>
 
                 <p className="section-text">
-                  At OBBM, our professional bartenders expertly craft bespoke
-                  drinks to elevate your event experience. From classic
-                  cocktails to innovative concoctions, we ensure every sip is
-                  unforgettable
+                  Tại OBBM, các bartender chuyên nghiệp của chúng tôi khéo léo
+                  pha chế các loại thức uống đặc biệt để nâng tầm trải nghiệm sự
+                  kiện của bạn. Từ các loại cocktail cổ điển đến những sáng tạo
+                  độc đáo, chúng tôi đảm bảo mỗi ngụm đều để lại ấn tượng khó
+                  quên.
                 </p>
 
-                <button className="btn btn-hover">Order Now</button>
+                <button className="btn btn-hover">Đặt ngay</button>
               </div>
               <figure className="cta-banner">
                 <img
@@ -462,7 +468,7 @@ const Content = () => {
                   width="700"
                   height="637"
                   loading="lazy"
-                  alt="Burger"
+                  alt="Bánh mì kẹp thịt"
                   className="w-100 cta-img"
                 />
               </figure>
@@ -473,18 +479,18 @@ const Content = () => {
             <div className="container">
               <div className="delivery-content">
                 <h2 className="h2 section-title">
-                  A Moments Of Delivered On{" "}
-                  <span className="span">Right Time</span> & Place
+                  Khoảnh Khắc Được Giao Đúng{" "}
+                  <span className="span">Thời Gian</span> & Địa Điểm
                 </h2>
 
                 <p className="section-text">
-                  The restaurants in Hangzhou also catered to many northern
-                  Chinese who had fled south from Kaifeng during the Jurchen
-                  invasion of the 1120s, while it is also known that many
-                  restaurants were run by families.
+                  Các nhà hàng ở Hàng Châu cũng phục vụ cho nhiều người Trung
+                  Quốc miền Bắc đã di cư xuống phía Nam từ Khai Phong trong cuộc
+                  xâm lược của người Nữ Chân vào những năm 1120, và cũng có rất
+                  nhiều nhà hàng được điều hành bởi các gia đình.
                 </p>
 
-                <button className="btn btn-hover">Order Now</button>
+                <button className="btn btn-hover">Đặt Hàng Ngay</button>
               </div>
 
               <figure className="delivery-banner">
@@ -493,7 +499,7 @@ const Content = () => {
                   width="700"
                   height="602"
                   loading="lazy"
-                  alt="clouds"
+                  alt="đám mây"
                   className="w-100"
                 />
               </figure>
@@ -502,15 +508,16 @@ const Content = () => {
 
           <section className="section section-divider white testi">
             <div className="container">
-              <p className="section-subtitle">Testimonials</p>
+              <p className="section-subtitle">Nhận Xét</p>
 
               <h2 className="h2 section-title">
-                Our Customers <span className="span">Reviews</span>
+                Đánh Giá Từ <span className="span">Khách Hàng</span> Của Chúng
+                Tôi
               </h2>
 
               <p className="section-text">
-                Food is any substance consumed to provide nutritional support
-                for an organism.
+                Thực phẩm là bất kỳ chất nào được tiêu thụ để cung cấp dinh
+                dưỡng cho cơ thể.
               </p>
 
               <ul className="testi-list has-scrollbar">
@@ -583,65 +590,68 @@ const Content = () => {
           </section>
 
           <section className="section section-divider white blog" id="blog">
-      <div className="container">
-        <p className="section-subtitle">Latest Blog Posts</p>
+            <div className="container">
+              <p className="section-subtitle">Bài Viết Mới Nhất</p>
 
-        <h2 className="h2 section-title">
-          Our Signature <span className="span">Celebratory Events</span>
-        </h2>
+              <h2 className="h2 section-title">
+                Sự Kiện <span className="span">Kỷ Niệm Đặc Biệt</span> Của Chúng
+                Tôi
+              </h2>
 
-        <p className="section-text">Where Every Occasion Sparkles!</p>
+              <p className="section-text">Nơi Mỗi Dịp Đều Tỏa Sáng!</p>
 
-        <ul className="blog-list">
-          {blogPosts.map((post, index) => (
-            <li key={index}>
-              <div className="blog-card">
-                <div className="card-banner">
-                  <img
-                    src={post.imgSrc}
-                    width="600"
-                    height="390"
-                    loading="lazy"
-                    alt={post.alt}
-                    className="w-100"
-                  />
-                  <div className="badge">{post.badge}</div>
-                </div>
+              <ul className="blog-list">
+                {blogPosts.map((post, index) => (
+                  <li key={index}>
+                    <div className="blog-card">
+                      <div className="card-banner">
+                        <img
+                          src={post.imgSrc}
+                          width="600"
+                          height="390"
+                          loading="lazy"
+                          alt={post.alt}
+                          className="w-100"
+                        />
+                        <div className="badge">{post.badge}</div>
+                      </div>
 
-                <div className="card-content">
-                  <div className="card-meta-wrapper">
-                    <a href={post.link} className="card-meta-link">
-                      <ion-icon name="calendar-outline"></ion-icon>
-                      <time className="meta-info" dateTime={post.date}>
-                        {post.dateText}
-                      </time>
-                    </a>
-                    <a href={post.link} className="card-meta-link">
-                      <ion-icon name="person-outline"></ion-icon>
-                      <p className="meta-info">{post.author}</p>
-                    </a>
-                  </div>
+                      <div className="card-content">
+                        <div className="card-meta-wrapper">
+                          <a href={post.link} className="card-meta-link">
+                            <ion-icon name="calendar-outline"></ion-icon>
+                            <time className="meta-info" dateTime={post.date}>
+                              {post.dateText}
+                            </time>
+                          </a>
+                          <a href={post.link} className="card-meta-link">
+                            <ion-icon name="person-outline"></ion-icon>
+                            <p className="meta-info">{post.author}</p>
+                          </a>
+                        </div>
 
-                  <h3 className="h3">
-                    <a href={post.link} className="card-title">
-                      {post.title}
-                    </a>
-                  </h3>
+                        <h3 className="h3">
+                          <a href={post.link} className="card-title">
+                            {post.title}
+                          </a>
+                        </h3>
 
-                  <p className="card-text">{post.text}</p>
+                        <p className="card-text">{post.text}</p>
 
-                  <a href={post.link} className="btn-link">
-                    <span>Read More</span>
-                    <ion-icon name="arrow-forward" aria-hidden="true"></ion-icon>
-                  </a>
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </section>
-
+                        <a href={post.link} className="btn-link">
+                          <span>Đọc Thêm</span>
+                          <ion-icon
+                            name="arrow-forward"
+                            aria-hidden="true"
+                          ></ion-icon>
+                        </a>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
         </article>
       </main>
     </div>

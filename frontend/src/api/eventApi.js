@@ -1,37 +1,35 @@
 import axiosClient from "../config/axiosClient";
 
-const menuApi = {
+const eventApi = {
     getAll(params) {
-
-        const url = "/menu?page=1&size=100";
-
+        const url = "/event";
         return axiosClient.get(url, {params});
     },
 
     get(id) {
-        const url = `/menu/${id}`;
+        const url = `/event/${id}`;
         return axiosClient.get(url);
     },
 
     add(data) {
-        const url = `/menu`;
+        const url = `/event`;
         return axiosClient.post(url, data);
     },
 
     update(data) {
-        const url = `/menu/${data.id}`;
+        const url = `/event/${data.id}`;
         return axiosClient.put(url, data);
     },
 
     delete(id) {
-        const url = `/menu/${id}`;
+        const url = `/event/${id}`;
         return axiosClient.delete(url);
     },
 
     getPaginate(page, size) {
-        const url = `/menu?page=${page}&size=${size}`;
+        const url = `/event?page=${page}&size=${size}`;
         return axiosClient.get(url);
     },
 };
 
-export default menuApi;
+export default eventApi;
