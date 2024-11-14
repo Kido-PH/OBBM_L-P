@@ -24,7 +24,7 @@ const RegisterForm = ({ toggleForm }) => {
         </div>
       </form>
       {/* <div className="social-login">
-        <a href="#" className="google-login">Sign up with Google</a>
+        // <a href="#" className="google-login">Sign up with Google</a>
         <a href="#" className="facebook-login">Sign up with Facebook</a>
       </div> */}
       <div className="register-link" onClick={() => toggleForm('login')}>

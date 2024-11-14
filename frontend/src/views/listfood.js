@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import "../assets/css/listFood.css";
 import danhMucApi from "../api/danhMucApi";
-import steak from "../assets/images/steak.png";
+import { FaPlus, FaEye } from "react-icons/fa"; // Import icons
 
 const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -34,8 +34,6 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
     setSelectedDish(dish);
     setShowPopup(true);
   };
-
-  
 
   return (
     <div
@@ -92,15 +90,17 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
                   </div>
                   <button
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
-                    onClick={() => onAddDish(dish)} // Gọi hàm để thêm món ăn
+                    onClick={() => onAddDish(dish)} // Call function to add dish
+                    title="Thêm"
                   >
-                    Thêm
+                    <FaPlus /> {/* Plus icon for "Add" */}
                   </button>
                   <button
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-view"
                     onClick={() => handleViewDetails(dish)}
+                    title="Xem Chi Tiết"
                   >
-                    Xem Chi Tiết
+                    <FaEye /> {/* Eye icon for "View Details" */}
                   </button>
                 </li>
               ))
@@ -113,7 +113,10 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
 
       {showPopup && selectedDish && (
         <div className="modal" onClick={() => setShowPopup(false)}>
-          <div className="modal-listfood-content" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal-listfood-content"
+            onClick={(e) => e.stopPropagation()}
+          >
             <span className="close" onClick={() => setShowPopup(false)}>
               &times;
             </span>
