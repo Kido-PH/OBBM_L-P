@@ -1,151 +1,180 @@
 import * as React from "react";
-import { Form, Card } from "react-bootstrap";
-import { FaEye } from "react-icons/fa6";
-
 import { multiStepContext } from "../../StepContext";
-import ModalEvents from "./ModalEvents";
-import ModalLocations  from "./ModalLocations";
+import { IoIosInformationCircle } from "react-icons/io";
+import { Form, Card, Row, Col } from "react-bootstrap";
+import axiosClient from "config/axiosClient";
 
 const ContractCreateStep1 = () => {
-  const { setStep, userData, setUserData } = React.useContext(multiStepContext);
+  const { setStep, contractData, setContractData, setTempData } =
+    React.useContext(multiStepContext);
+  const [userInfo, setUserInfo] = React.useState({});
+  const [errors, setErrors] = React.useState({ custname: "", custphone: "" });
+
+  const fetchUserInfo = async () => {
+    try {
+      const userInfoFetch = await axiosClient.get(
+        "http://localhost:8080/obbm/users/myInfo"
+      );
+      console.log("Fetch thành công");
+      setUserInfo(userInfoFetch.result);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchUserInfo();
+  }, []);
+
+  React.useEffect(() => {
+    // Only set initial values if fields are empty
+    if (
+      !contractData.custname &&
+      !contractData.custphone &&
+      userInfo.fullname
+    ) {
+      setContractData((prevData) => ({
+        ...prevData,
+        custname: userInfo.fullname,
+        custphone: userInfo.phone,
+      }));
+      setTempData((prevData) => ({
+        ...prevData,
+        custmail: userInfo.email,
+      }));
+    }
+  }, [userInfo, contractData, setContractData]);
+
+  // Function to validate the form fields
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { custname: "", custphone: "" };
+
+    // Check if the customer's name is empty
+    if (!contractData.custname || contractData.custname.trim() === "") {
+      newErrors.custname = "Tên khách hàng không được để trống.";
+      isValid = false;
+    }
+
+    // Check if the customer's phone is valid
+    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+    if (!contractData.custphone || !phoneRegex.test(contractData.custphone)) {
+      newErrors.custphone =
+        "Số điện thoại phải có đúng 10 số và hợp lệ ở Việt Nam.";
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  // Handle click on "Next" button
+  const handleNextClick = () => {
+    if (validateForm()) {
+      setStep(2);
+    }
+  };
+
   return (
     <div>
       <Card className="card p-5 w-100 mt-5">
         <div className="text-center mb-5">
-          <h1>Step 1: Choose Additional Content</h1>
+          <h1>Bước 1: Cung cấp thông tin khách hàng</h1>
         </div>
 
         <Form name="contractForm" className="contractForm">
-          <div className="row row-cols-sm-1 row-cols-md-2">
-            <div className="col">
-              <div className="mb-3">
-                <label className="form-label fw-bold">Menu</label>
-                <a
-                  href="/menu"
-                  id="menuId"
-                  name="menuId"
-                  aria-label="Menu:"
-                  className="form-control fs-4 d-flex justify-content-between align-middle"
-                >
-                  Menu Id
-                  <FaEye />
-                </a>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">Event</label>
-                <div className="d-flex align-items-center">
-                  <ModalEvents/>
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">Location</label>
-                <div className="d-flex align-items-center">
-                  <ModalLocations/>
-                </div>
-              </div>
-            </div>
-
-            <div className="col">
-              <div className="mb-3">
-                <label className="form-label fw-bold">Celebration Date</label>{" "}
-                <input
-                  type="date"
-                  name="date"
-                  id="date"
-                  placeholder="Detail Menu"
-                  aria-label="Full Name:"
-                  className="form-control fs-4"
-                  required
-                />
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">Service</label>
-                <div className="d-flex align-items-center">
+          <div className="container w-75">
+            <Row lg={2} md={2} xs={2}>
+              <Col>
+                <div className="mb-3">
+                  <label className="form-label fw-bold ">
+                    Tên Khách Hàng
+                    <span className="text-danger d-inline-block">*</span>
+                  </label>
                   <input
                     type="text"
-                    value=""
-                    name="location"
-                    required
-                    placeholder="Choose Additional Service"
-                    aria-label="Service"
+                    placeholder="Tên"
+                    className="form-control fs-4"
+                    value={contractData.custname || ""}
+                    onChange={(e) =>
+                      setContractData({
+                        ...contractData,
+                        custname: e.target.value,
+                      })
+                    }
+                  />
+                  {errors.custname && (
+                    <div className="text-danger fs-5">{errors.custname}</div>
+                  )}
+                </div>
+              </Col>
+              <Col>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">
+                    Số Điện Thoại Khách Hàng
+                    <span className="text-danger d-inline-block">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Số điện thoại"
                     className="form-control fs-4 me-2"
-                    readOnly
+                    value={contractData.custphone || ""}
+                    onChange={(e) =>
+                      setContractData({
+                        ...contractData,
+                        custphone: e.target.value,
+                      })
+                    }
                   />
-                  <button
-                    type="button"
-                    className="btn btn-sm px-3 fs-4 me-2"
-                    style={{ height: "32px" }}
-                    data-bs-toggle="modal"
-                    data-bs-target="#locationModal"
-                  >
-                    +
-                  </button>
+                  {errors.custphone && (
+                    <div className="text-danger fs-5">{errors.custphone}</div>
+                  )}
                 </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">Description</label>
-                <input className="form-control fs-4 me-2"></input>
-              </div>
+              </Col>
+              <Col>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Email tài khoản</label>
+                  <div className="form-control fs-4 input-hienthi" required>
+                    {userInfo.email || "Biến"}
+                  </div>
+                </div>
+              </Col>
+              <Col>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">CCCD tài khoản</label>
+                  <div className="form-control fs-4 input-hienthi" required>
+                    {userInfo.citizenIdentity || "CCCD nè"}
+                  </div>
+                </div>
+              </Col>
+            </Row>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <p
+                className="text-danger fw-bold mb-0"
+                style={{
+                  marginRight: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <IoIosInformationCircle className="mt-1 me-2" />
+                Lưu ý:{" "}
+              </p>
+              <span className="text-secondary fw-bold">
+                Email và CCCD là của tài khoản hiện tại không phải của khách
+                hàng
+              </span>
             </div>
           </div>
 
-          <div className="container px-2 w-100">
-            <div className="row row-cols-sm-1 row-cols-lg-3">
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Additional service cost</label>{" "}
-                  <input
-                    type="text"
-                    name="beTax"
-                    id="beTax"
-                    placeholder="1.000.000"
-                    aria-label="Full Name:"
-                    className="form-control fs-4"
-                  />
-                </div>
-              </div>
-
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Tax</label>{" "}
-                  <input
-                    type="text"
-                    name="tax"
-                    id="tax"
-                    placeholder="10%"
-                    className="form-control fs-4"
-                  />
-                </div>
-              </div>
-
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Total</label>{" "}
-                  <input
-                    type="text"
-                    name="total"
-                    id="total"
-                    placeholder="0"
-                    className="form-control text-success fw-bold fs-4"
-                  />
-                </div>
-              </div>
-              
-            </div>
-          </div>
-
-          <div style={{ textAlign: "center" }}>          
+          <div style={{ textAlign: "center" }}>
             <button
               type="button"
-              className="btn btn-save-form mx-2"
-              onClick={() => setStep(2)}
-              style={{ margin: "10px auto" }}
+              className="btn btn-save-form mx-3"
+              onClick={handleNextClick}
+              style={{ marginTop: "1rem" }}
             >
-              Next
+              Tiếp theo
             </button>
           </div>
         </Form>
