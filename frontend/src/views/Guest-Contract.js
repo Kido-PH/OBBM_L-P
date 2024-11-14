@@ -8,7 +8,6 @@ import ThirdStep from "../components/GuestContract/ContractCreateStep3";
 import danhMucApi from "../api/danhMucApi";
 
 const Contract = () => {
-
   const [categories, setCategories] = React.useState([]); //demo
 
   React.useEffect(() => {
@@ -18,23 +17,49 @@ const Contract = () => {
     import("../assets/css/contractGuestStyle.css");
 
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzI5MzQ5MzgwLCJpYXQiOjE3MjkzNDc1ODAsImp0aSI6ImY4YTdlYzY3LTZkMTctNDQxMC1hYWUzLTNhYWM0MTAxYTQ3NSIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.D6gFn9YB5-Uhjn-mq9c3O_l3IOqm-sztDAGttJkizcGo09Vkt6DviDh97vEpbYS-ZRHaIdfOkr5AOtjuZ_WDxw";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6InRpbnRyYW5seDE1OSIsImV4cCI6MTc0OTQxNDk5MCwiaWF0IjoxNzMxNDE0OTkwLCJqdGkiOiI1NDk1NmMxMy1iYWE5LTQ1ZTAtOTY4NC04NjU3YzZiNmEzYzIiLCJzY29wZSI6IlJPTEVfVVNFUiJ9.d6U8CuWiQ4C-LF6Rt5AdvBl08c4zu9qe3ifYZ6Zm81JvQ9f6przUNmHpLCGgwsV2MQGggkL2IsT5Oo4hxomZTQ";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
+    const currentUserID = "d1fffd0c-ae87-4d19-aaf6-e554fba1d930";
+    const currentEvent = {
+      eventId: 1,
+      event_name: "Tiệc đầy tháng",
+      event_totalcost: 1000000,
+    };
+
+    const currentMenu = {
+      name: "Menu VVVIP",
+      totalcost: 432000,
+      description: "Thực đơn của Tín",
+      userId: currentUserID,
+      eventId: currentEvent.eventId,
+    };
+
+    const currentMenuDishes = [
+      { menudish_id: 1, menudish_price: 150000, menu_id: 1, dish_id: 1 },
+      { menudish_id: 3, menudish_price: 250000, menu_id: 1, dish_id: 1 },
+      { menudish_id: 4, menudish_price: 100000, menu_id: 1, dish_id: 1 },
+    ];
+
+    localStorage.setItem(
+      "currentMenuDishes",
+      JSON.stringify(currentMenuDishes)
+    );
+    localStorage.setItem("createdMenu", JSON.stringify(currentMenu));
+    localStorage.setItem("currentEvent", JSON.stringify(currentEvent));
+    sessionStorage.setItem("currentUserId", JSON.stringify(currentUserID));
 
     const fetchDanhMuc = async () => {
-      const danhMucList = await danhMucApi.getAll();
+      const danhMucList = await danhMucApi.getPage(1, 100);
 
       setCategories(danhMucList.result.content); //set state
       console.log(danhMucList);
     };
-
-    fetchDanhMuc();
   }, []);
 
   const steps = [
-    "Step 1: Choose Additional Content",
-    "Step 2: Fill Your Information",
-    "Step 3: Payment",
+    "Step 1: Cung cấp thông tin khách hàng",
+    "Step 2: Chọn nội dung hợp đồng",
+    "Step 3: Xác nhận hợp đồng",
   ];
 
   const { currentStep, finalData } = useContext(multiStepContext);
@@ -57,11 +82,10 @@ const Contract = () => {
       className="section section-divider white account-section pt-5"
       id="blog"
     >
-
       <div className="container" style={{ marginTop: "120px" }}>
         <div className="fs-4">
           <p className="section-subtitle fs-1 pt-2 pb-4 mb-0 text-center fw-bold">
-            Contract Registration
+            Tạo hợp đồng
           </p>
           <div className="center-stepper">
             <Box sx={{ width: "100%" }}>
@@ -93,32 +117,6 @@ const Contract = () => {
         </div>
 
         {showStep(currentStep)}
-
-        <div className="categories">
-          <h2 className="my-4">Danh Mục</h2>
-          {categories.map((category) => (
-            <div key={category.categoryId} className="category mb-4">
-              <h3>{category.name} - {category.description}</h3>
-              <div className="dishes">
-                {category.listDish.length > 0 ? (
-                  category.listDish.map((dish) => (
-                    <div key={dish.dishId} className="dish">
-                      <h4>{dish.name}</h4>
-                      <p>{dish.description}</p>
-                      <p>Giá: {dish.price.toLocaleString()} VND</p>
-                      <img src={dish.image} alt={dish.name} style={{ maxWidth: "200px" }} />
-                      <p>Tình trạng: {dish.existing}</p>
-                    </div>
-                  ))
-                ) : (
-                  <p>Không có món ăn trong danh mục này.</p>
-                )}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        
       </div>
     </section>
   );

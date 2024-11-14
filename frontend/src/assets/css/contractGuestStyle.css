@@ -15,17 +15,64 @@ a {
   background-color: rgb(105, 112, 116) !important;
 }
 
+.input-hienthi {
+  background-color: #e9e9e9 !important;
+}
+
 .btn-vnp {
   background-color: #2e80c9 !important;
+  /* height: 35px !important; */
   padding-inline: 10px !important;
   align-content: center;
   justify-content: center;
 }
 
-.btn-modal-search{
-    height: fit-content;
-    padding-inline: 5px !important;
+.btn-sua {
+  padding-inline: 5px !important;
+  height: 30px !important;
+  align-content: center;
+  justify-content: center;
 }
+
+.btn-xoa {
+  background-color: #ff2a00 !important;
+  padding-inline: 5px !important;
+  height: 30px !important;
+  align-content: center;
+  justify-content: center;
+}
+
+.btn-huy{
+  background-color: #ff2a00 !important;
+}
+
+.btn-modal-search {
+  height: fit-content;
+  padding-inline: 5px !important;
+}
+
+.btn-modal-search:hover {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+}
+
+.btn-modal-confirm {
+  background-color: #2e80c9 !important;
+  height: 35px !important;
+  padding-inline: 10px !important;
+}
+
+.btn-modal-delete-huy {
+  background-color: rgb(105, 112, 116) !important;
+  height: 35px !important;
+  padding-inline: 10px !important;
+}
+
+.btn-modal-delete {
+  background-color: #ff2a00 !important;
+  height: 35px !important;
+  padding-inline: 10px !important;
+}
+
 
 .header {
   --color: var(--white);
@@ -50,6 +97,22 @@ a {
   background-position: bottom;
 }
 
-.section-divider.white::after { background-image: url("../images/shape-white.png"); }
+.section-divider.white::after {
+  background-image: url("../images/shape-white.png");
+}
 
-.section-divider.gray::after { background-image: url("../images/shape-grey.png"); }
+.section-divider.gray::after {
+  background-image: url("../images/shape-grey.png");
+}
+
+.react-datepicker-wrapper {
+  width: 100%;
+}
+
+.react-datepicker__input-container {
+  width: 100% !important;
+}
+
+.react-datepicker__input-container input {
+  width: 100% !important;
+}
