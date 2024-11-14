@@ -51,18 +51,19 @@ const Header = () => {
               </a>
             </li>
             <li className="nav-item">
+              <a href="#events" className="navbar-link" data-nav-link>
+                Sự kiện
+              </a>
+            </li>
+            <li className="nav-item">
               <a href="#food-menu" className="navbar-link" data-nav-link>
                 Món ăn
               </a>
             </li>
-            <li className="nav-item">
-              <a href="#events" className="navbar-link" data-nav-link>
-                Equipment
-              </a>
-            </li>
+            
             <li className="nav-item">
               <a href="#blog" className="navbar-link" data-nav-link>
-                Blog
+                Nhật ký
               </a>
             </li>
             <li className="nav-item">

@@ -199,7 +199,7 @@ body.active { overflow: hidden; }
   font-size: var(--fs-4) !important;
   font-weight: var(--fw-500) !important;
   height: var(--height, 45px);
-  padding-inline: var(--padding-inline, 25px) !important;
+  padding-inline: var(--padding-inline, 15px) !important;
   transition: var(--transition-1) !important;
 }
 
@@ -631,6 +631,7 @@ body.active { overflow: hidden; }
 .promo-item {
   min-width: 100%;
   scroll-snap-align: start;
+  margin-right: 30px;
 }
 
 
@@ -1534,7 +1535,7 @@ textarea.input-field {
 
   .container { max-width: 960px; }
 
-  .has-scrollbar > li { min-width: calc(33.33% - 6.66px); }
+  .has-scrollbar > li { min-width: calc(30% - 6.66px); }
 
   .h2 { --fs-1: 4.2rem; }
 
@@ -1702,7 +1703,7 @@ textarea.input-field {
    * PROMO
    */
   
-  .promo .promo-item { min-width: calc(25% - 7.5px); }
+  .promo .promo-item { min-width: calc(23% - 7.5px); }
 
 
 

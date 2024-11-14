@@ -11,12 +11,11 @@ const LoginForm = ({ toggleForm }) => {
       </form>
       <div className="social-login">
         <a href="#" className="google-login">Sign in with Google</a>
-        <a href="#" className="facebook-login">Sign in with Facebook</a>
       </div>
       <div className="forgot-password" onClick={() => toggleForm('forgotPassword')}>
         <a href="#">Reset Password</a>
       </div>
-      <div className="register-link" onClick={() => toggleForm('register')}>
+      <div className="register-link" onClick={() => toggleForm('register')} style={{color:"#3d4fc8"}}>
         Don't have an account? <strong>Create</strong> one
       </div>
     </div>

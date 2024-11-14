@@ -150,19 +150,12 @@ const Content = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState([]);
+  const [activeCategoryId, setActiveCategoryId] = useState(2); // Gán mặc định là 2
   const [filteredCategories, setFilteredCategories] = useState([]);
-  const [activeCategoryId, setActiveCategoryId] = useState(1);
   const [Events, setEvents] = useState([]);
   const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
 
-
-  const handleFilter = (categoryId) => {
-    setActiveCategoryId(categoryId);
-    const filtered = categories.filter(
-      (category) => category.categoryId === categoryId
-    );
-    setFilteredCategories(filtered);
-  };
+  
   React.useEffect(() => {
     if (EventToMenuUrl) {
       navigate(EventToMenuUrl);
@@ -172,7 +165,6 @@ const Content = () => {
   const fetchDanhMuc = async () => {
     const danhMucList = await danhMucApi.getAll();
     setCategories(danhMucList.result.content);
-    
   };
 
   const fetchEvent = async () => {
@@ -184,16 +176,21 @@ const Content = () => {
     const token =
       "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NDk5NDMzLCJpYXQiOjE3MzE0OTk0MzMsImp0aSI6IjE5YjhmZDA1LWQ3M2QtNGFiMC1hYjhiLTAxOGY1NDY1MWYwMyIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.nZbr_U9_3pkJpEia51fed9tcBgG6JCt47YeI5YA7Z-UTIgbBWWYGroR6CQNA42cbAOS3qMAbXdG1DGo2-Zg0-g";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    
+
     fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
-      handleFilter(1); // Tự động gọi hàm handleFilter để mô phỏng việc nút "Khai vị" được bấm
-    
+
     fetchEvent();
-    
-    
-  }, []);
- 
-  
+
+
+  }, [activeCategoryId]);
+
+  const handleFilter = (categoryId) => {
+    const filtered = categories.filter(
+      (category) => category.categoryId === categoryId
+    );
+    setFilteredCategories(filtered);
+    setActiveCategoryId(categoryId);
+  };
 
   const setMenuIdUrl = (eventId) => {
     setEventToMenuUrl(`menu/${eventId}`);
@@ -207,7 +204,7 @@ const Content = () => {
     } catch (error) {
       console.error("Lỗi khi lấy event Id:", error);
     }
-  }; 
+  };
   return (
     <div>
       <main>
@@ -250,6 +247,7 @@ const Content = () => {
 
           <section className="section section-divider white promo" id="events">
             <div className="container">
+              <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
               <ul className="promo-list has-scrollbar">
                 {Events.map((item) => (
                   <li key={item.eventId} className="promo-item" style={{width: "285px", height:"443px"}}>
@@ -260,7 +258,6 @@ const Content = () => {
                         </div>
 
                         <h3 className="h3 card-title">{item.name}</h3>
-
                         <p className="card-text" style={{
                                             overflow: "hidden",
                                             textOverflow: "ellipsis",
@@ -354,11 +351,6 @@ const Content = () => {
                 Những món ngon <span className="span"> của chúng tôi</span>
               </h2>
 
-              <p className="section-text">
-                Thực phẩm là bất kỳ chất nào được tiêu thụ để cung cấp hỗ trợ
-                dinh dưỡng cho cơ thể.
-              </p>
-
               <ul className="fiter-list">
                 <li>
                   <button
@@ -426,15 +418,18 @@ const Content = () => {
                           </div>
 
                           <div className="wrapper">
-                            <p className="category">
-                              {category.description}
-                            </p>
+                            <p className="category">{category.description}</p>
                           </div>
 
-                          <h3 className="h3 card-title" style={{textAlign:"center"}}>{dish.name}</h3>
+                          <h3
+                            className="h3 card-title"
+                            style={{ textAlign: "center" }}
+                          >
+                            {dish.name}
+                          </h3>
 
                           <div className="price-wrapper">
-                            <p className="price-text" >Giá:</p>
+                            <p className="price-text">Giá:</p>
                             {dish.price.toLocaleString()} VND
                           </div>
                         </div>
