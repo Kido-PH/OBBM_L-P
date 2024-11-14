@@ -11,7 +11,6 @@ const LoginForm = ({ toggleForm }) => {
       </form>
       <div className="social-login">
         <a href="#" className="google-login">Sign in with Google</a>
-        <a href="#" className="facebook-login">Sign in with Facebook</a>
       </div>
       <div className="forgot-password" onClick={() => toggleForm('forgotPassword')}>
         <a href="#">Reset Password</a>
