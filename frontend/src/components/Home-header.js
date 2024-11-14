@@ -35,7 +35,7 @@ const Header = () => {
           <ul className="navbar-list">
             <li className="nav-item"><Link to="/" className="navbar-link" data-nav-link>Home</Link></li>
             <li className="nav-item"><a href="#about" className="navbar-link" data-nav-link>About Us</a></li>
-            <li className="nav-item"><a href="/dish/list" className="navbar-link" data-nav-link>Dishes</a></li>
+            <li className="nav-item"><a href="#events" className="navbar-link" data-nav-link>Dishes</a></li>
             <li className="nav-item"><a href="#equiped" className="navbar-link" data-nav-link>Equipment</a></li>
             <li className="nav-item"><a href="#blog" className="navbar-link" data-nav-link>Blog</a></li>
             <li className="nav-item"><a href="#contact" className="navbar-link" data-nav-link>Contact Us</a></li>
