@@ -135,7 +135,16 @@ const ContractCreateStep3 = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Địa điểm</label>
                   <button className="form-control fs-4 d-flex justify-content-between align-middle">
-                    {currentLocation.name} - {currentLocation.address}
+                    <p
+                      className="mb-0"
+                      style={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {currentLocation.name} - {currentLocation.address}{" "}
+                    </p>
                     <FaEye />
                   </button>
                 </div>

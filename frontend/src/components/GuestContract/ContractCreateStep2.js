@@ -50,12 +50,12 @@ const ContractCreateStep2 = () => {
     const totalMenuCost = menuCost * guestCount;
     setTotalMenuCost(totalMenuCost);
 
-    const totalCost = totalMenuCost + parseInt(location.cost ?? 0);
+    const totalCost = totalMenuCost + parseInt(location?.cost ?? 0);
 
     setContractData((prevData) => ({
       ...prevData,
       totalcost: totalCost,
-      locationId: location.locationId,
+      locationId: location?.locationId,
     }));
 
     console.log("Cập nhật totalCost:", totalCost);
@@ -63,7 +63,7 @@ const ContractCreateStep2 = () => {
       ...contractData,
       totalCost: totalCost,
     });
-  }, [contractData.guest, setContractData, location.cost]);
+  }, [contractData.guest, setContractData, location?.cost]);
 
   const formatCurrency = (amount) => {
     return amount
@@ -283,7 +283,7 @@ const ContractCreateStep2 = () => {
                   className="fw-bold"
                   style={{ color: "var(--deep-saffron)" }}
                 >
-                  {formatCurrency(location.cost)} VND
+                  {formatCurrency(location?.cost)} VND
                 </span>
               </div>
             </div>

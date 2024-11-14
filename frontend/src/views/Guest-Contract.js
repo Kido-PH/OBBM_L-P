@@ -8,52 +8,25 @@ import ThirdStep from "../components/GuestContract/ContractCreateStep3";
 import danhMucApi from "../api/danhMucApi";
 
 const Contract = () => {
-  const [categories, setCategories] = React.useState([]); //demo
-
   React.useEffect(() => {
     // Dynamically import Bootstrap CSS
     import("bootstrap/dist/css/bootstrap.min.css");
     import("../assets/css/mainStyle.css");
     import("../assets/css/contractGuestStyle.css");
+    window.scrollTo({ top: 0, behavior: "smooth" });
 
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6InRpbnRyYW5seDE1OSIsImV4cCI6MTc0OTQxNDk5MCwiaWF0IjoxNzMxNDE0OTkwLCJqdGkiOiI1NDk1NmMxMy1iYWE5LTQ1ZTAtOTY4NC04NjU3YzZiNmEzYzIiLCJzY29wZSI6IlJPTEVfVVNFUiJ9.d6U8CuWiQ4C-LF6Rt5AdvBl08c4zu9qe3ifYZ6Zm81JvQ9f6przUNmHpLCGgwsV2MQGggkL2IsT5Oo4hxomZTQ";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6InRpbnRyYW4iLCJleHAiOjE3MzMzODYxMDcsImlhdCI6MTczMTU4NjEwNywianRpIjoiOGI4YTI1OGEtOGRmNy00MTI2LWI2ZTItY2EyZWM2M2NhZjY0Iiwic2NvcGUiOiJST0xFX1VTRVIifQ.09BbIjB_kS2u-HJ3CWRYfYuJAM5H5YO-n7nb5EoY2FLrWDQgpB7OgYNKnssI3hzUS9XU6JruFI9bPAbTmBpQIg";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    const currentUserID = "d1fffd0c-ae87-4d19-aaf6-e554fba1d930";
+    const currentUserID = "98fc9a36-5a51-4c7f-b308-fc6f8f408b5d";
     const currentEvent = {
       eventId: 1,
       event_name: "Tiệc đầy tháng",
       event_totalcost: 1000000,
     };
 
-    const currentMenu = {
-      name: "Menu VVVIP",
-      totalcost: 432000,
-      description: "Thực đơn của Tín",
-      userId: currentUserID,
-      eventId: currentEvent.eventId,
-    };
-
-    const currentMenuDishes = [
-      { menudish_id: 1, menudish_price: 150000, menu_id: 1, dish_id: 1 },
-      { menudish_id: 3, menudish_price: 250000, menu_id: 1, dish_id: 1 },
-      { menudish_id: 4, menudish_price: 100000, menu_id: 1, dish_id: 1 },
-    ];
-
-    localStorage.setItem(
-      "currentMenuDishes",
-      JSON.stringify(currentMenuDishes)
-    );
-    localStorage.setItem("createdMenu", JSON.stringify(currentMenu));
     localStorage.setItem("currentEvent", JSON.stringify(currentEvent));
     sessionStorage.setItem("currentUserId", JSON.stringify(currentUserID));
-
-    const fetchDanhMuc = async () => {
-      const danhMucList = await danhMucApi.getPage(1, 100);
-
-      setCategories(danhMucList.result.content); //set state
-      console.log(danhMucList);
-    };
   }, []);
 
   const steps = [

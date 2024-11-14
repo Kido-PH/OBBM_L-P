@@ -16,15 +16,21 @@ const danhMucApi = {
     return axiosClient.post(url, data);
   },
 
-  update(data) {
-    const url = `/category/${data.id}`;
-    return axiosClient.patch(url, data);
+  update(categoryId, data) {
+    const url = `/category/${categoryId}`;
+    return axiosClient.put(url, data);
   },
 
   delete(id) {
     const url = `/category/${id}`;
     return axiosClient.delete(url);
   },
+
+  getPaginate(page, size) {
+    const url = `/category?page=${page}&size=${size}`;
+    return axiosClient.get(url);
+  }
+
 };
 
 export default danhMucApi;

@@ -134,6 +134,7 @@ html {
   font-family: var(--ff-roboto);
   font-size: 10px;
   scroll-behavior: smooth;
+  
 }
 
 body {
@@ -742,7 +743,7 @@ body.active { overflow: hidden; }
 
 .food-menu-card {
   background-color: var(--white);
-  padding: 40px;
+  padding: 30px;
   box-shadow: var(--shadow-2);
 }
 
@@ -802,10 +803,13 @@ body.active { overflow: hidden; }
 
 .food-menu-card .price-wrapper {
   display: flex;
+  align-items: center;
   justify-content: center;
+  text-align: center;
   gap: 5px;
   font-family: var(--ff-rubik);
   font-weight: var(--fw-600);
+
 }
 
 .food-menu-card .price-text {
@@ -1423,7 +1427,7 @@ textarea.input-field {
 
   .food-menu-list { grid-template-columns: 1fr 1fr; }
 
-  .food-menu-card :is(.wrapper, .price-wrapper) { justify-content: flex-start; }
+  .food-menu-card :is(.wrapper, .price-wrapper) { justify-content: center; }
 
   .food-menu-card .card-title { text-align: left; }
 
@@ -1602,7 +1606,7 @@ textarea.input-field {
    * FOOD MENU
    */
 
-  .food-menu-list { grid-template-columns: repeat(3, 1fr); }
+  .food-menu-list { grid-template-columns: repeat(4, 1fr); }
 
   .food-menu-card { height: 100%; }
 

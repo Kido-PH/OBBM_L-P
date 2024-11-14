@@ -18,15 +18,17 @@ import Login from "./views/Login";
 import Menu from "./views/Menu";
 import Account from "./views/Account";
 import DashboardPage from "./views/Admin-DashboardPage";
-import ManageContracts from "./views/Admin-Contracts";
-import ManageStockRequests from "./views/Admin-StockRequests";
-import ServiceManager from "./views/Admin-Services";
-import EventManager from "./views/Admin-Events";
-import LocationManager from "./views/Admin-Location";
-import AccountManager from "./views/Admin-Account";
-import InvoiceManager from "./views/Admin-Invoices";
-import AdminAnalytics from "./views/Admin-Analytics";
-import AccessControl from "./views/Admin-AccessControl";
+import ManageContracts from "./components/Admin/Admin-Contracts";
+import ManageStockRequests from "./components/Admin/Admin-StockRequests";
+import ServiceManager from "./components/Admin/Admin-Services";
+import EventManager from "./components/Admin/Admin-Events";
+import LocationManager from "./components/Admin/Admin-Location";
+import AccountManager from "./components/Admin/Admin-Account";
+import InvoiceManager from "./components/Admin/Admin-Invoices";
+import AdminAnalytics from "./components/Admin/Admin-Analytics";
+import AccessControl from "./components/Admin/Admin-AccessControl";
+import DishManager from "./components/Admin/Admin-Dish";
+import CategoryDish from "./components/Admin/Admin-CategoryDish";
 
 const App = () => {
   const location = useLocation();
@@ -43,25 +45,28 @@ const App = () => {
       {shouldShowHeaderFooter && <Header />}
 
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/"  element={<Home />} />
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract/info/:id" element={<GuestContractInfo />} />
-        <Route path="/menu" element={<Menu />} />
+        <Route path="/menu/:id" element={<Menu />} />
         <Route path="/account" element={<Account />} />   
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login />} />
         <Route path="/resetpassword" element={<Login />} />
         <Route path="/admin/*" element={<DashboardPage />}>
           <Route path="ManageContracts" element={<ManageContracts />} />
+          <Route path="ManageCategoryDish" element={<CategoryDish />} />
+          <Route path="ManageDish" element={<DishManager />} />
           <Route path="ManageStockRequests" element={<ManageStockRequests />} />
           <Route path="ManageServices" element={<ServiceManager />} />
           <Route path="ManageEvents" element={<EventManager />} />
           <Route path="ManageLocation" element={<LocationManager />} />
           <Route path="ManageAccounts" element={<AccountManager />} />
           <Route path="ManageInvoice" element={<InvoiceManager />} />
-          <Route path="DashboardAnalytics" element={<AdminAnalytics />} />
+          <Route path="" element={<AdminAnalytics />} />
           <Route path="AccessControl" element={<AccessControl />} />
+          <Route path="login" element={<Login />} />
         </Route>
       </Routes>
 

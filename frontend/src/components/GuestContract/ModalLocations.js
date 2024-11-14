@@ -152,6 +152,7 @@ function Example() {
         show={lgShow}
         onHide={handleClose}
         aria-labelledby="example-modal-sizes-title-lg"
+        
       >
         <Modal.Header closeButton>
           <Modal.Title className="fs-1">Chọn địa điểm</Modal.Title>
@@ -222,7 +223,7 @@ function Example() {
                             {location.cost} VND
                           </h3>
                           <p>Sức chứa: {location.capacity}</p>
-                          <p>{location.description}</p>
+                          {/* <p>{location.description}</p> */}
                         </Card.Text>
                         <Button
                           variant="primary"

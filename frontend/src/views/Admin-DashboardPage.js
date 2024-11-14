@@ -1,36 +1,26 @@
 import React, { useState } from "react";
 import "../assets/css/DashboardPage.css";
 import {
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-  // UploadOutlined,
   UserOutlined,
-  ContactsOutlined,
   LogoutOutlined,
-  ShopOutlined,
   CustomerServiceOutlined,
   EnvironmentOutlined,
   UsergroupAddOutlined,
-  // PieChartOutlined,
   StarOutlined,
   BarChartOutlined,
   BellOutlined,
   SisternodeOutlined,
+  MenuOutlined,
+  FileDoneOutlined,
+  UnorderedListOutlined,
+  CoffeeOutlined,
 } from "@ant-design/icons";
 import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { Avatar, Col, Layout, Menu, Row, theme } from "antd";
-import { MdFormatListBulleted, MdHome, MdRequestPage } from "react-icons/md";
+import { MdHome } from "react-icons/md";
+import ManageContracts from "../components/Admin/Admin-Contracts";
+import ManageStockRequests from "../components/Admin/Admin-StockRequests";
 
-// import Home from "../components/home/Home";
-// import ListContracts from "./../components/contracts/ListContracts";
-// import AddorEditAccount from "./../components/accounts/AddorEditAccount";
-// import AddorEditStockRequest from "../components/stockrequests/AddorEditStockRequest";
-// import AddorEditServices from "../components/services/AddorEditServices";
-// import AddorEditEvents from "../components/events/AddorEditEvents";
-// import AddorEditLocation from "../components/locations/AddorEditLocation";
-// import AddorEditInvoices from "../components/invoices/AddorEditInvoices";
-import ManageContracts from "./Admin-Contracts";
-import ManageStockRequests from "./Admin-StockRequests";
 const { Header, Sider, Content, Footer } = Layout;
 
 function DashboardPage() {
@@ -41,8 +31,77 @@ function DashboardPage() {
 
   const siteLayoutStyle = { marginLeft: marginLeft };
   const {
-    token: { colorBgContainer, borderRadiusLG },
+    token: { colorBgContainer },
   } = theme.useToken();
+
+  const menuItems = [
+    { key: "1", icon: <BarChartOutlined />, label: "TỔNG QUAN", path: "/admin" },
+    {
+      key: "2",
+      icon: <FileDoneOutlined /> ,
+      label: "HỢP ĐỒNG",
+      path: "/admin/ManageContracts",
+    },
+
+    {
+      key: "3",
+      icon: <UnorderedListOutlined />,
+      label: "DANH MỤC MÓN ĂN",
+      path: "/admin/ManageCategoryDish",
+    },
+
+    {
+      key: "4",
+      icon: <CoffeeOutlined />,
+      label: "MÓN ĂN",
+      path: "/admin/ManageDish",
+    },
+
+    {
+      key: "5",
+      icon: <CustomerServiceOutlined />,
+      label: "DỊCH VỤ",
+      path: "/admin/ManageServices",
+    },
+    {
+      key: "6",
+      icon: <StarOutlined />,
+      label: "SỰ KIỆN",
+      path: "/admin/ManageEvents",
+    },
+    {
+      key: "7",
+      icon: <EnvironmentOutlined />,
+      label: "ĐỊA ĐIỂM",
+      path: "/admin/ManageLocation",
+    },
+    {
+      key: "8",
+      icon: <UsergroupAddOutlined />,
+      label: "KHÁCH HÀNG",
+      path: "/admin/ManageAccounts",
+    },
+    {
+      key: "9",
+      icon: <MenuOutlined />,
+      label: "THỰC ĐƠN",
+      path: "/admin/Menu",
+    },
+    {
+      key: "10",
+      icon: <BellOutlined />,
+      label: "NGUYÊN LIỆU",
+      path: "/admin/ManageStockRequests",
+    },
+    {
+      key: "11",
+      icon: <SisternodeOutlined />,
+      label: "PHÂN QUYỀN",
+      path: "/admin/AccessControl",
+    },
+    { key: "12", icon: <LogoutOutlined />, label: "ĐĂNG XUẤT", path: "/login" },
+  ];
+
   return (
     <Layout>
       <Sider
@@ -59,117 +118,43 @@ function DashboardPage() {
         }}
       >
         <div className="logo">
-          <h2>{collapsed ? "OM" : "OBBM"}</h2>
+          <h2>{collapsed ? "OM." : "OBBM."}</h2>
         </div>
 
         <Menu
+          style={{ fontWeight: "bold", fontSize: "12px" }}
           theme="dark"
           mode="inline"
           defaultSelectedKeys={["1"]}
-          items={[
-            {
-              key: "1",
-              icon: <MdHome />,
-              label: "Home",
-              onClick: () => navigate("/"),
-            },
-            // {
-            //   key: "2",
-            //   icon: <ContactsOutlined />,
-            //   label: "Contracts",
-            //   children: [
-            //     // {
-            //     // key: "21",
-            //     //  icon: <MdAddCircleOutline />,
-            //     //  label: "Add Contracts",
-            //     // onClick: () => navigate("/contracts/add"),
-            //     // },
-            //     {
-            //       key: "21",
-            //       icon: <MdFormatListBulleted />,
-            //       label: "List Contracts",
-            //       onClick: () => navigate("/contracts/list"),
-            //     },
-            //   ],
-            // },
-            {
-              key: "3",
-              icon: <ShopOutlined />,
-              label: "Contracts",
-              onClick: () => navigate("/admin/ManageContracts"),
-            },
-            {
-              key: "4",
-              icon: <CustomerServiceOutlined />,
-              label: "Services",
-              onClick: () => navigate("/admin/ManageServices"),
-            },
-            {
-              key: "5",
-              icon: <StarOutlined />,
-              label: "Events",
-              onClick: () => navigate("/admin/ManageEvents"),
-            },
-            {
-              key: "6",
-              icon: <EnvironmentOutlined />,
-              label: "Location",
-              onClick: () => navigate("/admin/ManageLocation"),
-            },
-            {
-              key: "7",
-              icon: <UsergroupAddOutlined />,
-              label: "Customer Accounts",
-              onClick: () => navigate("/admin/ManageAccounts"),
-            },
-            {
-              key: "8",
-              icon: <MdRequestPage />,
-              label: "Invoices",
-              onClick: () => navigate("/admin/ManageInvoice"),
-            },
-            {
-              key: "9",
-              icon: <BellOutlined />,
-              label: "Stock Requests",
-              onClick: () => navigate("/admin/ManageStockRequests"),
-            },
-            {
-              key: "10",
-              icon: <BarChartOutlined />,
-              label: "Analytics Dashboard",
-              onClick: () => navigate("/admin/DashboardAnalytics"),
-            },
-            {
-              key: "11",
-              icon: <SisternodeOutlined />,
-              label: "Access Control",
-              onClick: () => navigate("/admin/AccessControl"),
-            },
-            {
-              key: "12",
-              icon: <LogoutOutlined />,
-              label: "Logout",
-            },  
-          ]}
+          items={menuItems.map((item) => ({
+            key: item.key,
+            icon: item.icon,
+            label: item.label,
+            onClick: () => navigate(item.path),
+          }))}
         />
       </Sider>
       <Layout style={siteLayoutStyle}>
+        {/* Header */}
         <Header
           style={{
             padding: 0,
             background: colorBgContainer,
-            right: 16,
-            left: marginLeft + 16,
+            left: marginLeft + 2 /* Đảm bảo trừ đi phần sidebar */,
             top: 0,
             position: "fixed",
-            height: 70,
+            width: `calc(100% - ${
+              marginLeft + 6
+            }px)` /* Trừ khoảng cách cho sidebar */,
+            height: 65,
+            zIndex: 1000 /* Đảm bảo Header luôn nằm trên cùng */,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" /* Bóng đổ nhẹ */,
           }}
         >
           <Row>
             <Col md={21}>
               {React.createElement(
-                collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
+                collapsed ? MenuOutlined : MenuOutlined,
                 {
                   className: "trigger",
                   onClick: () => {
@@ -181,20 +166,22 @@ function DashboardPage() {
               )}
             </Col>
             <Col md={3}>
-              <div>
-                <Avatar size="default" icon={<UserOutlined />}></Avatar> Do Minh
-                Phi
+              <div style={{ paddingRight: 16, textAlign: "right" }}>
+                Admin <Avatar size="default" icon={<UserOutlined />}></Avatar> 
               </div>
             </Col>
           </Row>
         </Header>
+
+        {/* Content */}
         <Content
           style={{
-            margin: "80px 24px 16px 24px",
-            padding: 24,
-            minHeight: 280,
+            marginTop: 65 /* Đẩy nội dung xuống dưới Header */,
+            padding: 24 /* Padding để tạo khoảng cách */,
+            minHeight: "100%" /* Chiếm toàn bộ chiều cao còn lại trừ Header và Footer */,
             background: colorBgContainer,
-            borderRadius: borderRadiusLG,
+            borderRadius: 0,
+            overflow: "auto" /* Đảm bảo cuộn khi nội dung dài */,
           }}
         >
           <div className="content-panel">
@@ -202,20 +189,31 @@ function DashboardPage() {
               <Route
                 path="/admin/ManageContracts"
                 element={<ManageContracts />}
-              ></Route>
+              />
               <Route
                 path="/admin/ManageStockRequests"
                 element={<ManageStockRequests />}
-              ></Route>
-
+              />
               {/* Các Route khác */}
             </Routes>
-            <Outlet></Outlet>
+            <Outlet />
           </div>
         </Content>
+
+        {/* Footer */}
         <Footer
           style={{
-            textAlign: "center",           
+            textAlign: "center",
+            fontFamily: "circular std book, sans-serif",
+            color: "#858796",
+            height: "0px" /* Chiều cao cố định của Footer */,
+            background: colorBgContainer /* Màu nền nhẹ cho Footer */,
+            position: "fixed" /* Cố định Footer */,
+            bottom: 0,
+            width: `calc(100% - ${
+              marginLeft + 32
+            }px)` /* Đảm bảo căn giữa với phần content */,
+            left: marginLeft + 16,
           }}
         >
           OBBM ©{new Date().getFullYear()} Created by L&P
