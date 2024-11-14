@@ -580,9 +580,7 @@ const DishManager = () => {
                 <img
                     src={`${dish.image}`}
                     alt={dish.name}
-                    width="70"
-                    height="70"
-                    style={{ objectFit: "cover", width: "70px", height: "70px", borderRadius: "8px" }} // Thêm objectFit và borderRadius
+                    width="70"                    
                   />
                 </TableCell>
                 <TableCell>{dish.description}</TableCell>
