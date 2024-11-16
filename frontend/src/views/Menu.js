@@ -334,97 +334,103 @@ const Menu = () => {
                       </SwiperSlide>
                     ))}
                   </Swiper>
+                  <div
+                    className="choose-button-container"
+                    style={{ display: "flex", justifyContent: "flex-end" }}
+                  >
+                    <button
+                      className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
+                      onClick={handleOpenModalEvents}
+                      style={{
+                        marginRight: "0px",
+                        marginTop: "0px",
+                        marginBottom: "20px",
+                      }}
+                    >
+                      <p>Đổi sự kiện</p>
+                    </button>
+                  </div>
                 </div>
 
-                <div
-                  className="choose-button-container"
-                  style={{ display: "flex", justifyContent: "flex-end" }}
-                >
-                  <button
-                    className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
-                    onClick={handleOpenModalEvents}
-                    style={{
-                      marginRight: "20px",
-                      marginTop: "0px",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    <p>Đổi sự kiện</p>
-                  </button>
-                </div>
                 <Modal
                   show={isModalEventsOpen}
                   onHide={handleCloseModalEvents}
                   className="Modal-events"
                   style={{ maxH: "75%" }}
                 >
-                  <button className="add-button" onClick={handleCloseModalEvents} style={{color:"hsl(32, 100%, 59%)"}}>
-                    x
-                  </button>
-                  <Modal.Header closeButton>
-                    <Modal.Title>Sự Kiện</Modal.Title>
-                  </Modal.Header>
-
-                  <Modal.Body>
-                    <section
-                      className="section section-divider white promo"
-                      id="events"
-                      style={{ paddingTop: "20px", paddingBottom: "30px" }}
+                  <section
+                    className="section section-divider white promo"
+                    id="events"
+                    style={{
+                      paddingTop: "20px",
+                      paddingBottom: "30px",
+                      marginTop: "50px",
+                      width: "100%"
+                    }}
+                  >
+                    <button
+                      className="add-button"
+                      onClick={handleCloseModalEvents}
+                      style={{ color: "hsl(32, 100%, 59%)" }}
                     >
-                      <div className="" style={{marginLeft:"30px", marginRight:"30px"}} >
-                        <ul className="promo-list has-scrollbar">
-                          {Events.map((event) => (
-                            <li
-                              key={event.eventId}
-                              className="promo-item"
-                              style={{ width: "285px", height: "443px" }}
+                      x
+                    </button>
+                    <h2 style={{ textAlign: "center" }}>Sự kiện</h2>
+
+                    <div
+                      className=""
+                      style={{ marginLeft: "30px", marginRight: "30px" }}
+                    >
+                      <ul className="promo-list has-scrollbar">
+                        {Events.map((event) => (
+                          <li
+                            key={event.eventId}
+                            className="promo-item"
+                            style={{ width: "285px", height: "443px" }}
+                          >
+                            <button
+                              onClick={() => {
+                                pushEventIdtoMenu(event.eventId); // Gọi hàm để lưu eventId vào URL
+                                handleCloseModalEvents(); // Đóng modal ngay sau khi chọn sự kiện
+                              }}
                             >
-                              <button
-                                onClick={() => {
-                                  pushEventIdtoMenu(event.eventId); // Gọi hàm để lưu eventId vào URL
-                                  handleCloseModalEvents(); // Đóng modal ngay sau khi chọn sự kiện
-                                }}
+                              <div
+                                className="promo-card"
+                                style={{ width: "285px", height: "443px" }}
                               >
-                                <div
-                                  className="promo-card"
-                                  style={{ width: "285px", height: "443px" }}
-                                >
-                                  <div className="card-icon">
-                                    {/* Add any specific icons or elements here if needed */}
-                                  </div>
-
-                                  <h3 className="h3 card-title">
-                                    {event.name}
-                                  </h3>
-
-                                  <p
-                                    className="card-text"
-                                    style={{
-                                      overflow: "hidden",
-                                      textOverflow: "ellipsis",
-                                      whiteSpace: "nowrap",
-                                      textAlign: "center",
-                                    }}
-                                  >
-                                    {event.description}
-                                  </p>
-
-                                  <img
-                                    src={event.image}
-                                    width="300"
-                                    height="300"
-                                    loading="lazy"
-                                    alt={event.name}
-                                    className="w-100 card-banner"
-                                  />
+                                <div className="card-icon">
+                                  {/* Add any specific icons or elements here if needed */}
                                 </div>
-                              </button>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    </section>
-                  </Modal.Body>
+
+                                <h3 className="h3 card-title">{event.name}</h3>
+
+                                <p
+                                  className="card-text"
+                                  style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {event.description}
+                                </p>
+
+                                <img
+                                  src={event.image}
+                                  width="300"
+                                  height="300"
+                                  loading="lazy"
+                                  alt={event.name}
+                                  className="w-100 card-banner"
+                                />
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </section>
                 </Modal>
               </div>
             )}
@@ -442,11 +448,10 @@ const Menu = () => {
             closeListFood={() => setShowListFood(false)}
           />
         )}
-        {/* Hiển thị ListFood */}
 
         {/* Menu Right */}
         <div className="menu-right">
-          <h2>Thực đơn</h2>
+          <h2 style={{ marginBottom: "0px" }}>Thực đơn</h2>
           {selectedMenu ? (
             <div>
               {/* <h3 className="menu-category-title">{selectedMenu.name}</h3> */}
@@ -520,80 +525,85 @@ const Menu = () => {
           ) : (
             <p>Chọn một thực đơn để hiển thị chi tiết.</p>
           )}
-          <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-            
-          {selectedMenu && (
-        <div style={{ display: "flex", justifyContent: "center", gap: "10px" }}>
-          <button
-            className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
-            onClick={handleShowMenuPopup}
+          <div
+            style={{ display: "flex", justifyContent: "center", gap: "10px" }}
           >
-            Xem thực đơn
-          </button>
-          <button
-            className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
-            onClick={handleCreateMenu}
-          >
-            Chọn thực đơn
-          </button>
-          
-          <button
-            className="btn btn-refresh-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
-            onClick={handleRefreshMenu}
-          >
-            Làm mới thực đơn
-          </button>
-        </div>
-      )}
-            
+            {selectedMenu && (
+              <div
+                className="button-container d-flex"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "10px",
+                }}
+              >
+                <button
+                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
+                  onClick={handleShowMenuPopup}
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  Xem thực đơn
+                </button>
+                <button
+                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
+                  onClick={handleCreateMenu}
+                >
+                  Chọn thực đơn
+                </button>
+
+                <button
+                  className="btn btn-refresh-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
+                  onClick={handleRefreshMenu}
+                >
+                  Làm mới thực đơn
+                </button>
+              </div>
+            )}
           </div>
         </div>
+
         {/* Modal hiển thị thông tin thực đơn */}
         <Modal show={showModal} onHide={handleCloseModal}>
-        <button className="add-button" onClick={handleCloseModal} style={{color:"hsl(32, 100%, 59%)"}}>
-                    x
-                  </button>
-          <Modal.Header closeButton>
-            <Modal.Title>Chi tiết Thực đơn</Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {selectedMenu ? (
-              <div>
-                <h4>{selectedMenu.name}</h4>
-                {/* <p>Mô tả: {selectedMenu.description}</p> */}
-                <p>
-                  Tổng chi phí: {selectedMenu.totalcost.toLocaleString()} VND
-                </p>
-                {Object.keys(selectedMenu.groupedDishes).map(
-                  (categoryName, index) => (
-                    <div key={categoryName}>
-                      <h5>
-                        {index === 0
-                          ? "Khai vị"
-                          : index === 1
-                          ? "Món chính"
-                          : index === 2
-                          ? "Tráng miệng"
-                          : "Đồ uống"}
-                      </h5>
-                      <ul>
-                        {selectedMenu.groupedDishes[categoryName].map(
-                          (dish) => (
-                            <li key={dish.dishId}>
-                              <strong>{dish.name}</strong> -{" "}
-                              {dish.price.toLocaleString()} VND
-                            </li>
-                          )
-                        )}
-                      </ul>
-                    </div>
-                  )
-                )}
-              </div>
-            ) : (
-              <p>Không có thông tin thực đơn để hiển thị.</p>
-            )}
-          </Modal.Body>
+          {selectedMenu ? (
+            <div className="chiTietThucDon">
+              <button
+                className="add-button"
+                onClick={handleCloseModal}
+                style={{ color: "hsl(32, 100%, 59%)" }}
+              >
+                x
+              </button>
+              <h2>Chi Tiết thực đơn</h2>
+              <h4>{selectedMenu.name}</h4>
+              {/* <p>Mô tả: {selectedMenu.description}</p> */}
+              <p>Tổng chi phí: {selectedMenu.totalcost.toLocaleString()} VND</p>
+              {Object.keys(selectedMenu.groupedDishes).map(
+                (categoryName, index) => (
+                  <div key={categoryName}>
+                    <h5>
+                      {index === 0
+                        ? "Khai vị"
+                        : index === 1
+                        ? "Món chính"
+                        : index === 2
+                        ? "Tráng miệng"
+                        : "Đồ uống"}
+                    </h5>
+                    <ul>
+                      {selectedMenu.groupedDishes[categoryName].map((dish) => (
+                        <li key={dish.dishId}>
+                          <strong>{dish.name}</strong> -{" "}
+                          {dish.price.toLocaleString()} VND
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              )}
+            </div>
+          ) : (
+            <p>Không có thông tin thực đơn để hiển thị.</p>
+          )}
         </Modal>
       </div>
     </div>

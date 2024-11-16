@@ -631,7 +631,6 @@ body.active { overflow: hidden; }
 .promo-item {
   min-width: 100%;
   scroll-snap-align: start;
-  margin-right: 30px;
 }
 
 
