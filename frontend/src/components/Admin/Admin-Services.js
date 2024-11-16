@@ -66,7 +66,7 @@ const ServiceManager = () => {
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDM2MDA3LCJpYXQiOjE3MzE0MzYwMDcsImp0aSI6IjA1YTcyYjBmLTUxMmYtNGU0Zi04MTg1LWY5ZDY2OWVjN2VmOCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.wy3lrt_ADCvRqAzEEUrDVnLsGgavPBR1XwerUBm8XFojYISQRA-nzO-YvHBN140XrimRk4pKW3oiB3qSsJvc7w";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
     fetchDichVuWithPaginate(page); // Lấy trang đầu tiên
   }, [page]);
@@ -302,14 +302,7 @@ const ServiceManager = () => {
                     <img
                       src={`${service.image}`}
                       alt={service.name}
-                      width="70"
-                      height="70"
-                      style={{
-                        objectFit: "cover",
-                        width: "70px",
-                        height: "70px",
-                        borderRadius: "8px",
-                      }} // Thêm objectFit và borderRadius
+                      width="70"                      
                     />
                   </TableCell>
                   <TableCell>{service.description}</TableCell>

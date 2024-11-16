@@ -91,7 +91,7 @@ function DashboardPage() {
       key: "10",
       icon: <BellOutlined />,
       label: "NGUYÊN LIỆU",
-      path: "/admin/ManageStockRequests",
+      path: "/admin/ManagerIngredient",
     },
     {
       key: "11",

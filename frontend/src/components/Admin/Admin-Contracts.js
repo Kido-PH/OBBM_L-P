@@ -39,7 +39,7 @@ const ManageContracts = () => {
 
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDE5MzczLCJpYXQiOjE3MzE0MTkzNzMsImp0aSI6IjUwMDNjYjVkLWU0NjItNDY2OS05YWFjLTVlMzljMTM0MDE0MCIsInNjb3BlIjoiUk9MRV9BRE1JTiBFRElUX0NPTlRSQUNUIENSRUFURV9DT05UUkFDVCBWSUVXX0NPTlRSQUNUIEVESVRfTUVOVSBDUkVBVEVfTUVOVSBWSUVXX01FTlUifQ.PcGhO85pvvcFouDgdAWqcCxYFXbzYxBs_Hl84s0YkCKnnY-1Rp5tIz6Y0g11KmENWbSKrWJRaFHmXNgJVleWhA";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
     sessionStorage.setItem("token", token);
 
     fetchContractWithPaginate(page);
@@ -61,21 +61,27 @@ const ManageContracts = () => {
     // nếu hợp động đang gửi (chờ duyệt) thì phải thanh toán 1 phần (PartiallyPaid) rồi mới đồng ý được
     // nếu hợp đồng đã đồng ý (Approved) thì phải thanh toán toàn bộ (FullyPaid) mới hoàn tất
     if (
-      contract.status === "Pending" &&
-      contract.paymentstatus === "PartiallyPaid"
+      contract.status === "Đang hoạt động" &&
+      contract.paymentstatus === "Đã thanh toán một phần"
     ) {
-      contract.status = "Approved";
+      contract.status = "Chờ duyệt";
       toast.success("Đã chuyển hợp đồng qua trạng thái chờ duyệt");
     } else if (
-      contract.status === "Approved" &&
-      contract.paymentstatus === "FullyPaid"
+      contract.status === "Chờ duyệt" &&
+      contract.paymentstatus === "Đã thanh toán đầy đủ"
     ) {
-      contract.status = "Completed";
+      contract.status = "Đã hoàn thành";
       toast.success("Hợp đồng đã được xác nhận thành công!");
+    } else if (
+      contract.status === "Đã hoàn thành" &&
+      contract.paymentstatus === "Đã thanh toán đầy đủ"
+    ) {
+      toast.success("Hợp đồng đã hoàn thành và đã được xác nhận trước đó!");
     } else {
-      toast.error("Chưa đủ điều kiện về thanh toán");
+      toast.error("Chưa đủ điều kiện về xác nhận!");
       return;
     }
+
     try {
       const data = {
         name: contract.name,
@@ -121,7 +127,7 @@ const ManageContracts = () => {
         guest: contract.guest,
         table: contract.table,
         totalcost: contract.totalcost,
-        status: "Canceled",
+        status: "Đã hủy",
         paymentstatus: contract.paymentstatus,
         organizdate: contract.organizdate, // Định dạng ISO 8601
         custname: contract.custname,
@@ -236,16 +242,10 @@ const ManageContracts = () => {
               <TableCell>STT</TableCell>
               <TableCell>Tên hợp đồng</TableCell>
               <TableCell>Loại tiệc</TableCell>
-              <TableCell>Số lượng khách</TableCell>
-              <TableCell>Số bàn</TableCell>
               <TableCell>Tổng chi phí</TableCell>
               <TableCell>Trạng thái hợp đồng</TableCell>
               <TableCell>Trạng thái thanh toán</TableCell>
               <TableCell>Ngày tổ chức</TableCell>
-              <TableCell>Mô tả</TableCell>
-              <TableCell>Tên khách hàng</TableCell>
-              <TableCell>Số điện thoại</TableCell>
-              <TableCell>Email</TableCell>
               <TableCell>Hành động</TableCell>
             </TableRow>
           </TableHead>
@@ -256,8 +256,6 @@ const ManageContracts = () => {
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{contract.name}</TableCell>
                 <TableCell>{contract.type}</TableCell>
-                <TableCell>{contract.guest}</TableCell>
-                <TableCell>{contract.table}</TableCell>
                 <TableCell>
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
@@ -268,11 +266,11 @@ const ManageContracts = () => {
                   <span
                     style={{
                       color:
-                        contract.status === "Completed"
+                        contract.status === "Đã hoàn thành"
                           ? "#28a745" // Màu xanh lá cho trạng thái "Completed"
-                          : contract.status === "Approved"
+                          : contract.status === "Chờ duyệt"
                           ? "#ffc107" // Màu vàng cho trạng thái "Approved"
-                          : contract.status === "Canceled"
+                          : contract.status === "Đã hủy"
                           ? "#dc3545" // Màu đỏ cho trạng thái "Canceled"
                           : "#17a2b8", // Màu xanh dương cho trạng thái "Pending"
                       fontWeight: "bold",
@@ -286,9 +284,9 @@ const ManageContracts = () => {
                   <span
                     style={{
                       color:
-                        contract.paymentstatus === "FullyPaid"
+                        contract.paymentstatus === "Đã thanh toán đầy đủ"
                           ? "#28a745" // Màu xanh lá cho FullyPaid
-                          : contract.paymentstatus === "PartiallyPaid"
+                          : contract.paymentstatus === "Đã thanh toán một phần"
                           ? "#ffc107" // Màu vàng cho PartiallyPaid
                           : "#dc3545", // Màu đỏ cho Unpaid
                       fontWeight: "bold",
@@ -309,13 +307,9 @@ const ManageContracts = () => {
                       )
                     : "Không có ngày tổ chức"}
                 </TableCell>
-                <TableCell>{contract.description}</TableCell>
-                <TableCell>{contract.custname}</TableCell>
-                <TableCell>{contract.custphone}</TableCell>
-                <TableCell>{contract.custmail}</TableCell>
                 <TableCell sx={{ display: "flex", gap: 1, flexWrap: "nowrap" }}>
                   {contract.status !== "Completed" &&
-                    contract.status !== "Canceled" && (
+                    contract.status !== "Đã hủy" && (
                       <span>
                         <IconButton
                           color="success"
@@ -323,7 +317,9 @@ const ManageContracts = () => {
                         >
                           <Tooltip
                             title={
-                              <span style={{ fontSize: "1.25rem" }}>Xác nhận</span>
+                              <span style={{ fontSize: "1.25rem" }}>
+                                Xác nhận
+                              </span>
                             }
                             placement="top"
                           >
@@ -352,7 +348,9 @@ const ManageContracts = () => {
                     sx={{ justifyContent: "center" }}
                   >
                     <Tooltip
-                      title={<span style={{ fontSize: "1.25rem" }}>Thông tin</span>}
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>Thông tin</span>
+                      }
                       placement="top"
                     >
                       <InfoIcon />

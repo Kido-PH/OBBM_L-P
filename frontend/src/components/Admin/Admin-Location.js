@@ -20,12 +20,13 @@ import {
   Select,
   MenuItem,
   Tooltip,
+  Grid,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
+import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import locationApi from "../../api/locationApi";
 import ReactPaginate from "react-paginate";
 import toast, { Toaster } from "react-hot-toast";
@@ -58,7 +59,7 @@ const LocationManager = () => {
 
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDE5MzczLCJpYXQiOjE3MzE0MTkzNzMsImp0aSI6IjUwMDNjYjVkLWU0NjItNDY2OS05YWFjLTVlMzljMTM0MDE0MCIsInNjb3BlIjoiUk9MRV9BRE1JTiBFRElUX0NPTlRSQUNUIENSRUFURV9DT05UUkFDVCBWSUVXX0NPTlRSQUNUIEVESVRfTUVOVSBDUkVBVEVfTUVOVSBWSUVXX01FTlUifQ.PcGhO85pvvcFouDgdAWqcCxYFXbzYxBs_Hl84s0YkCKnnY-1Rp5tIz6Y0g11KmENWbSKrWJRaFHmXNgJVleWhA";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
     fetchDanhMucWithPaginate(page); // Lấy trang đầu tiên
   }, [page]);
@@ -300,20 +301,20 @@ const LocationManager = () => {
     }
   };
 
-    // Hàm chuyển đổi blob thành base64
-    const convertBlobToBase64 = (blob) => {
-      return new Promise((resolve, reject) => {
-        // Kiểm tra xem dữ liệu có phải là Blob không
-        if (blob && blob instanceof Blob) {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result); // Trả về base64
-          reader.onerror = reject;
-          reader.readAsDataURL(blob); // Đọc blob dưới dạng base64
-        } else {
-          reject("Không phải Blob");
-        }
-      });
-    };
+  // Hàm chuyển đổi blob thành base64
+  const convertBlobToBase64 = (blob) => {
+    return new Promise((resolve, reject) => {
+      // Kiểm tra xem dữ liệu có phải là Blob không
+      if (blob && blob instanceof Blob) {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result); // Trả về base64
+        reader.onerror = reject;
+        reader.readAsDataURL(blob); // Đọc blob dưới dạng base64
+      } else {
+        reject("Không phải Blob");
+      }
+    });
+  };
 
   const updateLocation = async () => {
     try {
@@ -328,11 +329,11 @@ const LocationManager = () => {
         return;
       }
 
-       // Kiểm tra nếu image là Blob và chuyển đổi nó thành base64
-       let base64Image = currentLocation.image;
-       if (currentLocation.image instanceof Blob) {
-         base64Image = await convertBlobToBase64(currentLocation.image);
-       }
+      // Kiểm tra nếu image là Blob và chuyển đổi nó thành base64
+      let base64Image = currentLocation.image;
+      if (currentLocation.image instanceof Blob) {
+        base64Image = await convertBlobToBase64(currentLocation.image);
+      }
 
       const data = {
         name: currentLocation.name,
@@ -425,28 +426,27 @@ const LocationManager = () => {
   };
 
   // Hàm tìm kiếm
-const handleSearch = (term) => {
-  setSearchTerm(term);
+  const handleSearch = (term) => {
+    setSearchTerm(term);
 
-  // Nếu từ khóa tìm kiếm rỗng, hiển thị toàn bộ danh sách
-  if (term.trim() === "") {
-    setFilteredLocations(locations);
-    return;
-  }
+    // Nếu từ khóa tìm kiếm rỗng, hiển thị toàn bộ danh sách
+    if (term.trim() === "") {
+      setFilteredLocations(locations);
+      return;
+    }
 
-  // Lọc kết quả tìm kiếm theo các trường: name, type, address, description, creatorName
-  const filtered = locations.filter(
-    (location) =>
-      location.name.toLowerCase().includes(term.toLowerCase()) ||
-      location.type.toLowerCase().includes(term.toLowerCase()) ||
-      location.address.toLowerCase().includes(term.toLowerCase()) ||
-      location.description.toLowerCase().includes(term.toLowerCase()) ||
-      location.creatorName.toLowerCase().includes(term.toLowerCase())
-  );
+    // Lọc kết quả tìm kiếm theo các trường: name, type, address, description, creatorName
+    const filtered = locations.filter(
+      (location) =>
+        location.name.toLowerCase().includes(term.toLowerCase()) ||
+        location.type.toLowerCase().includes(term.toLowerCase()) ||
+        location.address.toLowerCase().includes(term.toLowerCase()) ||
+        location.description.toLowerCase().includes(term.toLowerCase()) ||
+        location.creatorName.toLowerCase().includes(term.toLowerCase())
+    );
 
-  setFilteredLocations(filtered);
-};
-
+    setFilteredLocations(filtered);
+  };
 
   return (
     <div>
@@ -482,7 +482,7 @@ const handleSearch = (term) => {
               verticalAlign: "middle",
             }}
           />
-          Add Location
+          Thêm địa điểm
         </Button>
       </Box>
 
@@ -496,56 +496,58 @@ const handleSearch = (term) => {
               <TableCell>Loại</TableCell>
               <TableCell>Địa chỉ</TableCell>
               <TableCell>Sức chứa</TableCell>
-              <TableCell>Bàn</TableCell>
+              {/* <TableCell>Bàn</TableCell>
               <TableCell>Chi phí</TableCell>
               <TableCell>Mô tả</TableCell>
               <TableCell>Người tạo</TableCell>
-              <TableCell>Vai trò</TableCell>
+              <TableCell>Vai trò</TableCell> */}
               <TableCell>Hành động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {(searchTerm ? filteredLocations : locations).map((location, index) => (
-              <TableRow key={location.locationId}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{location.name}</TableCell>
-                <TableCell>
-                  <img src={location.image} alt={location.name} width="70" />
-                </TableCell>
-                <TableCell>{location.type}</TableCell>
-                <TableCell>{location.address}</TableCell>
-                <TableCell>{location.capacity}</TableCell>
-                <TableCell>{location.table}</TableCell>
-                <TableCell>{location.cost}</TableCell>
-                <TableCell>{location.description}</TableCell>
-                <TableCell>{location.creatorName}</TableCell>
-                <TableCell>{location.creatorRole}</TableCell>
-                <TableCell>
-                  <IconButton
-                    color="primary"
-                    onClick={() => handleOpenDialog("edit", location)}
-                  >
-                    <Tooltip
+            {(searchTerm ? filteredLocations : locations).map(
+              (location, index) => (
+                <TableRow key={location.locationId}>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{location.name}</TableCell>
+                  <TableCell>
+                    <img src={location.image} alt={location.name} width="70" />
+                  </TableCell>
+                  <TableCell>{location.type}</TableCell>
+                  <TableCell>{location.address}</TableCell>
+                  <TableCell>{location.capacity}</TableCell>
+                  {/* <TableCell>{location.table}</TableCell>
+                  <TableCell>{location.cost}</TableCell>
+                  <TableCell>{location.description}</TableCell>
+                  <TableCell>{location.creatorName}</TableCell>
+                  <TableCell>{location.creatorRole}</TableCell> */}
+                  <TableCell>
+                    <IconButton
+                      color="primary"
+                      onClick={() => handleOpenDialog("edit", location)}
+                    >
+                      <Tooltip
                         title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
                         placement="top"
                       >
                         <EditIcon />
                       </Tooltip>
-                  </IconButton>
-                  <IconButton
-                    color="error"
-                    onClick={() => handleDeleteClick(location.locationId)}
-                  >
-                    <Tooltip
+                    </IconButton>
+                    <IconButton
+                      color="error"
+                      onClick={() => handleDeleteClick(location.locationId)}
+                    >
+                      <Tooltip
                         title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
                         placement="top"
                       >
                         <DeleteIcon />
                       </Tooltip>
-                  </IconButton>
-                </TableCell>
-              </TableRow>
-            ))}
+                    </IconButton>
+                  </TableCell>
+                </TableRow>
+              )
+            )}
           </TableBody>
         </Table>
         <ReactPaginate
@@ -574,132 +576,184 @@ const handleSearch = (term) => {
         <DialogTitle
           sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight: "bold" }}
         >
-          {dialogMode === "add" ? "Add Location" : "Edit Location"}
+          {dialogMode === "add" ? "Thêm địa điểm" : "Chỉnh sửa địa điểm"}
         </DialogTitle>
         <DialogContent className="custom-input">
-          <TextField
-            margin="dense"
-            name="name"
-            label="Tên địa điểm"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.name}
-            onChange={handleInputChange}
-            error={!!errors.name}
-            helperText={errors.name}
-          />
-          {currentLocation.image && (
-            <img
-              src={currentLocation.image}
-              alt="Dish"
-              style={{ width: "100%", height: "250px", marginBottom: "1em" }}
-            />
-          )}
+          <Grid container spacing={2}>
+            <Grid item xs={6}>
+              <TextField
+                margin="dense"
+                name="name"
+                label="Tên địa điểm"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={currentLocation.name}
+                onChange={handleInputChange}
+                error={!!errors.name}
+                helperText={errors.name}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                margin="dense"
+                name="type"
+                label="Loại"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={currentLocation.type}
+                onChange={handleInputChange}
+                error={!!errors.type}
+                helperText={errors.type}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                margin="dense"
+                name="address"
+                label="Địa chỉ"
+                type="text"
+                fullWidth
+                variant="outlined"
+                value={currentLocation.address}
+                onChange={handleInputChange}
+                error={!!errors.address}
+                helperText={errors.address}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                margin="dense"
+                name="capacity"
+                label="Sức chứa"
+                type="number"
+                fullWidth
+                variant="outlined"
+                value={currentLocation.capacity}
+                onChange={handleInputChange}
+                error={!!errors.capacity}
+                helperText={errors.capacity}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                margin="dense"
+                name="table"
+                label="Bàn"
+                type="number"
+                fullWidth
+                variant="outlined"
+                value={currentLocation.table}
+                onChange={handleInputChange}
+                error={!!errors.table}
+                helperText={errors.table}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <TextField
+                margin="dense"
+                name="cost"
+                label="Chi phí"
+                type="number"
+                fullWidth
+                variant="outlined"
+                value={currentLocation.cost}
+                onChange={handleInputChange}
+                error={!!errors.cost}
+                helperText={errors.cost}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                margin="dense"
+                name="description"
+                label="Mô tả"
+                type="text"
+                fullWidth
+                variant="outlined"
+                multiline
+                rows={3}
+                maxRows={10}
+                value={currentLocation.description}
+                onChange={handleInputChange}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <FormControl
+                fullWidth
+                margin="dense"
+                variant="outlined"
+                sx={{ height: "100%" }}
+              >
+                <InputLabel id="status-label">
+                  <Box display="flex" alignItems="center">
+                    Trạng thái
+                  </Box>
+                </InputLabel>
+                <Select
+                  labelId="status-label"
+                  name="status"
+                  label="Trạng thái"
+                  value={currentLocation.status || ""}
+                  onChange={handleInputChange}
+                  error={!!errors.status}
+                  helperText={errors.status}
+                  sx={{
+                    "& .MuiSvgIcon-root": {
+                      color: "#3f51b5",
+                      fontSize: "2rem",
+                    },
+                    minHeight: "3.6em", // Đảm bảo chiều cao đồng nhất với TextField
+                  }}
+                >
+                  <MenuItem value="Hoạt động">Hoạt động</MenuItem>
+                  <MenuItem value="Đang chờ duyệt">Đang chờ duyệt</MenuItem>
+                  <MenuItem value="Không hoạt động">Không hoạt động</MenuItem>
+                  <MenuItem value="Đã hoàn thành">Đã hoàn thành</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-          <input
-            type="file"
-            name="image"
-            onChange={handleInputChange}
-            style={{ display: "none" }}
-            id="file-upload"
-          />
-          <label htmlFor="file-upload">
-            <Button variant="contained" component="span" sx={{ mb: "5px" }}>
-             <AddAPhotoIcon sx={{ mr: "3px" }}/>
-              Chọn ảnh
-            </Button>
-          </label>
-          <TextField
-            margin="dense"
-            name="type"
-            label="Loại"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.type}
-            onChange={handleInputChange}
-            error={!!errors.type}
-            helperText={errors.type}
-          />
-          <TextField
-            margin="dense"
-            name="address"
-            label="Địa chỉ"
-            type="text"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.address}
-            onChange={handleInputChange}
-            error={!!errors.address}
-            helperText={errors.address}
-          />
-          <TextField
-            margin="dense"
-            name="capacity"
-            label="Sức chứa"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.capacity}
-            onChange={handleInputChange}
-            error={!!errors.capacity}
-            helperText={errors.capacity}
-          />
-          <TextField
-            margin="dense"
-            name="table"
-            label="Bàn"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.table}
-            onChange={handleInputChange}
-            error={!!errors.table}
-            helperText={errors.table}
-          />
-          <TextField
-            margin="dense"
-            name="cost"
-            label="Chi phí"
-            type="number"
-            fullWidth
-            variant="outlined"
-            value={currentLocation.cost}
-            onChange={handleInputChange}
-            error={!!errors.cost}
-            helperText={errors.cost}
-          />
-          <TextField
-            margin="dense"
-            name="description"
-            label="Mô tả"
-            type="text"
-            fullWidth
-            variant="outlined"
-            multiline
-            rows={3}
-            maxRows={10}
-            value={currentLocation.description}
-            onChange={handleInputChange}
-          />
-          <FormControl fullWidth margin="dense" variant="outlined">
-            <InputLabel id="status-label">Trạng thái</InputLabel>
-            <Select
-              labelId="status-label"
-              name="status"
-              label="Trạng thái"
-              value={currentLocation.status || ""}
-              onChange={handleInputChange}
-              error={!!errors.status}
-              helperText={errors.status}
+            <Grid
+              item
+              xs={6}
+              display="flex"
+              flexDirection="column"
+              alignItems="center"
+              justifyContent="center"
             >
-              <MenuItem value="Hoạt động">Hoạt động</MenuItem>
-              <MenuItem value="Đang chờ duyệt">Đang chờ duyệt</MenuItem>
-              <MenuItem value="Không hoạt động">Không hoạt động</MenuItem>
-              <MenuItem value="Đã hoàn thành">Đã hoàn thành</MenuItem>
-            </Select>
-          </FormControl>
+              {currentLocation.image && (
+                <img
+                  src={currentLocation.image}
+                  alt="Dish"
+                  style={{
+                    width: "100%",
+                    height: "150px",
+                    objectFit: "cover",
+                    borderRadius: "8px",
+                    marginBottom: "0.5em",
+                  }}
+                />
+              )}
+              <input
+                type="file"
+                name="image"
+                onChange={handleInputChange}
+                style={{ display: "none" }}
+                id="file-upload"
+              />
+              <label
+                htmlFor="file-upload"
+                style={{ width: "100%", textAlign: "center" }}
+              >
+                <Button variant="contained" component="span" fullWidth>
+                  <AddAPhotoIcon sx={{ mr: "3px" }} />
+                  Chọn ảnh
+                </Button>
+              </label>
+            </Grid>
+          </Grid>
         </DialogContent>
         <DialogActions>
           <Button

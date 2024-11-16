@@ -19,7 +19,6 @@ import Menu from "./views/Menu";
 import Account from "./views/Account";
 import DashboardPage from "./views/Admin-DashboardPage";
 import ManageContracts from "./components/Admin/Admin-Contracts";
-import ManageStockRequests from "./components/Admin/Admin-StockRequests";
 import ServiceManager from "./components/Admin/Admin-Services";
 import EventManager from "./components/Admin/Admin-Events";
 import LocationManager from "./components/Admin/Admin-Location";
@@ -29,7 +28,11 @@ import AdminAnalytics from "./components/Admin/Admin-Analytics";
 import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
 import CategoryDish from "./components/Admin/Admin-CategoryDish";
+<<<<<<< HEAD
+import IngredientManager from "./components/Admin/Admin-Ingredient";
+=======
 import Authenticate from "./components/Authenticate";
+>>>>>>> main
 
 const App = () => {
   const location = useLocation();
@@ -60,7 +63,7 @@ const App = () => {
           <Route path="ManageContracts" element={<ManageContracts />} />
           <Route path="ManageCategoryDish" element={<CategoryDish />} />
           <Route path="ManageDish" element={<DishManager />} />
-          <Route path="ManageStockRequests" element={<ManageStockRequests />} />
+          <Route path="ManagerIngredient" element={<IngredientManager />} />
           <Route path="ManageServices" element={<ServiceManager />} />
           <Route path="ManageEvents" element={<EventManager />} />
           <Route path="ManageLocation" element={<LocationManager />} />
