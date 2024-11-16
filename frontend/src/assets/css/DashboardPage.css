@@ -6,12 +6,12 @@
     width: 25px !important;
     height: 25px !important;
     margin: 10px !important;
-    transition: all 0.3s ease; 
+    transition: all 0.3s ease; /* Thêm hiệu ứng chuyển tiếp */
 }
 
 .ant-layout-header span.trigger:hover svg {
-    width: 30px !important; 
-    height: 30px !important; 
+    width: 30px !important; /* Kích thước khi hover */
+    height: 30px !important; /* Kích thước khi hover */
 }
 
 .logo h2{
