@@ -59,7 +59,7 @@ const LocationManager = () => {
 
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxNDE5MzczLCJpYXQiOjE3MzE0MTkzNzMsImp0aSI6IjUwMDNjYjVkLWU0NjItNDY2OS05YWFjLTVlMzljMTM0MDE0MCIsInNjb3BlIjoiUk9MRV9BRE1JTiBFRElUX0NPTlRSQUNUIENSRUFURV9DT05UUkFDVCBWSUVXX0NPTlRSQUNUIEVESVRfTUVOVSBDUkVBVEVfTUVOVSBWSUVXX01FTlUifQ.PcGhO85pvvcFouDgdAWqcCxYFXbzYxBs_Hl84s0YkCKnnY-1Rp5tIz6Y0g11KmENWbSKrWJRaFHmXNgJVleWhA";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
     fetchDanhMucWithPaginate(page); // Lấy trang đầu tiên
   }, [page]);
@@ -496,11 +496,11 @@ const LocationManager = () => {
               <TableCell>Loại</TableCell>
               <TableCell>Địa chỉ</TableCell>
               <TableCell>Sức chứa</TableCell>
-              <TableCell>Bàn</TableCell>
+              {/* <TableCell>Bàn</TableCell>
               <TableCell>Chi phí</TableCell>
               <TableCell>Mô tả</TableCell>
               <TableCell>Người tạo</TableCell>
-              <TableCell>Vai trò</TableCell>
+              <TableCell>Vai trò</TableCell> */}
               <TableCell>Hành động</TableCell>
             </TableRow>
           </TableHead>
@@ -516,11 +516,11 @@ const LocationManager = () => {
                   <TableCell>{location.type}</TableCell>
                   <TableCell>{location.address}</TableCell>
                   <TableCell>{location.capacity}</TableCell>
-                  <TableCell>{location.table}</TableCell>
+                  {/* <TableCell>{location.table}</TableCell>
                   <TableCell>{location.cost}</TableCell>
                   <TableCell>{location.description}</TableCell>
                   <TableCell>{location.creatorName}</TableCell>
-                  <TableCell>{location.creatorRole}</TableCell>
+                  <TableCell>{location.creatorRole}</TableCell> */}
                   <TableCell>
                     <IconButton
                       color="primary"

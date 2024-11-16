@@ -179,7 +179,7 @@ const AdminAnalytics = () => {
                   }}
                 >
                   <Typography variant="h6" color="textSecondary">
-                    Doanh thu cao nhất
+                    Tổng doanh thu
                   </Typography>
                   <Typography
                     variant="h5"

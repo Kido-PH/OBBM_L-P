@@ -6,12 +6,12 @@
     width: 25px !important;
     height: 25px !important;
     margin: 10px !important;
-    transition: all 0.3s ease; /* Thêm hiệu ứng chuyển tiếp */
+    transition: all 0.3s ease; 
 }
 
 .ant-layout-header span.trigger:hover svg {
-    width: 30px !important; /* Kích thước khi hover */
-    height: 30px !important; /* Kích thước khi hover */
+    width: 30px !important; 
+    height: 30px !important; 
 }
 
 .logo h2{
@@ -58,22 +58,13 @@
 }
 
 .table-container {
-    overflow: auto;
+    overflow: hidden;
 }
 
 /* Tùy chỉnh thanh cuộn */
 .table-container::-webkit-scrollbar {
     width: 8px; /* Thu nhỏ chiều rộng thanh cuộn */
     height: 8px; /* Thu nhỏ chiều cao thanh cuộn ngang */
-}
-
-.table-container::-webkit-scrollbar-thumb {
-    background-color: #4a90e2; /* Màu xanh nhạt hơn */
-}
-
-.table-container::-webkit-scrollbar-track {
-    background: #f0f0f0; /* Màu nền thanh cuộn */
-    border-radius: 4px;
 }
 
 

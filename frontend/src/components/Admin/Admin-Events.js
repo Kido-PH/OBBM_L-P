@@ -48,7 +48,7 @@ const EventManager = () => {
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQxMzgxNDIyLCJpYXQiOjE3MzEzODE0MjIsImp0aSI6ImE1MWRhY2Q0LTAxZDgtNDYyNy1hMmY0LWUzMTIyZjNmMTNjOCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.ET7C8_3BVsTz6viUJxSPcU3LTOOPfBDin3X82dlIykfMy-6jZEcZRhOUjfFskt6KXU5_vpdrxFHrp1OPl9LsnA";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
     fetchEventsWithPaginate(page + 1); // Lấy trang đầu tiên
   }, [page, rowsPerPage]);

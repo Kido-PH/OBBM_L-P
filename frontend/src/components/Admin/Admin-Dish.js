@@ -28,7 +28,7 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import AddAPhotoIcon from '@mui/icons-material/AddAPhoto';
+import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import toast, { Toaster } from "react-hot-toast";
 import ReactPaginate from "react-paginate";
 
@@ -98,7 +98,7 @@ const DishManager = () => {
   // Hàm để tải toàn bộ danh mục
   const fetchAllCategories = async () => {
     try {
-      const response = await danhMucApi.getAll(); 
+      const response = await danhMucApi.getAll();
       setCategories(response.result.content || []);
       console.log("Toàn bộ danh mục:", response.result.content);
     } catch (error) {
@@ -111,17 +111,17 @@ const DishManager = () => {
     fetchAllCategories();
   }, []);
 
-    // Hàm để nạp món ăn theo trang
-    const fetchDishesWithPaginate = async (page) => {
-      try {
-        const res = await dishApi.getPaginate(page, SIZE_DISH);
-        setDishes(res.result.content || []);
-        setPageCount(res.result.totalPages);
-        console.log("Món ăn:", res.result.content);
-      } catch (error) {
-        console.error("Không tìm nạp được món ăn: ", error);
-      }
-    };
+  // Hàm để nạp món ăn theo trang
+  const fetchDishesWithPaginate = async (page) => {
+    try {
+      const res = await dishApi.getPaginate(page, SIZE_DISH);
+      setDishes(res.result.content || []);
+      setPageCount(res.result.totalPages);
+      console.log("Món ăn:", res.result.content);
+    } catch (error) {
+      console.error("Không tìm nạp được món ăn: ", error);
+    }
+  };
 
   // Nạp danh sách danh mục và món ăn khi component được mount
   useEffect(() => {
@@ -152,7 +152,7 @@ const DishManager = () => {
       const file = files[0];
       // Lấy tên file và gán cứng vào thư mục /images/dish
       const imageName = file.name;
-      const imagePath = `/images/dish/${imageName}`;  // Đường dẫn hình ảnh
+      const imagePath = `/images/dish/${imageName}`; // Đường dẫn hình ảnh
       setDishData({ ...dishData, image: imagePath });
     } else {
       setDishData({ ...dishData, [name]: value });
@@ -202,8 +202,7 @@ const DishManager = () => {
   };
 
   // Xử lý fill thông tin món ăn để chỉnh sửa
-  const handleEditDish = (dishId)  => {
-
+  const handleEditDish = (dishId) => {
     const dishToEdit = dishes.find((dish) => dish.dishId === dishId);
 
     if (dishToEdit) {
@@ -477,7 +476,7 @@ const DishManager = () => {
           />
           <label htmlFor="file-upload">
             <Button variant="contained" component="span" sx={{ mb: "5px" }}>
-              <AddAPhotoIcon sx={{ mr: "3px" }}/>
+              <AddAPhotoIcon sx={{ mr: "3px" }} />
               Chọn ảnh
             </Button>
           </label>
@@ -526,7 +525,7 @@ const DishManager = () => {
               ) : (
                 <MenuItem value="">Không có danh mục</MenuItem>
               )}
-            </Select>         
+            </Select>
           </FormControl>
           <FormControl fullWidth margin="dense">
             <InputLabel id="dish-existing-label">Còn món ăn không?</InputLabel>
@@ -577,11 +576,7 @@ const DishManager = () => {
                   }).format(dish.price)}
                 </TableCell>
                 <TableCell>
-                <img
-                    src={`${dish.image}`}
-                    alt={dish.name}
-                    width="70"                    
-                  />
+                  <img src={`${dish.image}`} alt={dish.name} width="70" />
                 </TableCell>
                 <TableCell>{dish.description}</TableCell>
                 <TableCell>{dish.existing}</TableCell>
@@ -600,6 +595,14 @@ const DishManager = () => {
                   <IconButton
                     onClick={() => handleDeleteDish(dish.dishId)}
                     color="secondary"
+                    sx={{
+                      fontSize: "1.5rem",
+                      color: "#d32f2f",
+                      "&:hover": {
+                        color: "#f44336", 
+                        transform: "scale(1.1)", 
+                      },
+                    }}
                   >
                     <Tooltip
                       title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
