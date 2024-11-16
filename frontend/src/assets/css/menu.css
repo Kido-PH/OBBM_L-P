@@ -569,7 +569,7 @@ textarea {
   border: 1px solid #343434;
   border-radius: 5px;
   background-image: url("../images/menu-br-img.png");
-  height: 450px;
+  height: 100% !important;
 }
 
 
@@ -664,17 +664,18 @@ textarea {
   height: auto;
 }
 
-.modal-dialog{
+/* .modal-dialog{
   width: 100%;
   height: 100%;
   display: flex;
-  justify-content: center; /* Căn giữa theo chiều ngang */
-  align-items: center; /* Căn giữa theo chiều dọc */
+  justify-content: center; 
+  align-items: center; 
   min-height: 100vh;
   transform: scale(0.75);
 }
+  */
 
-.modal-content {
+/* .modal-content {
   background-color: white;
   padding: 20px;
   border-radius: 8px;
@@ -682,7 +683,77 @@ textarea {
   position: relative;
   animation: slideDown 0.3s forwards;
  
+}  */
+
+/* Container để chứa các button */
+.button-container {
+  display: flex; /* Sử dụng Flexbox để căn chỉnh theo chiều ngang */
+  gap: 10px; /* Thêm khoảng cách giữa các button */
 }
+
+/* Button có thể giữ các kiểu dáng hiện tại */
+.btn-save-form {
+  font-size: 0.85rem; /* Nếu cần giảm kích thước chữ */
+}
+
+
+.chiTietThucDon {
+  width: 300px; /* Để chiều rộng tự động điều chỉnh theo nội dung */
+  height: auto; /* Để chiều cao tự động điều chỉnh theo nội dung */
+  background-color: #fff;
+  border-radius: 5px;
+  margin: 0 auto;
+  margin-top: 100px;
+  padding-bottom: 30px;
+  padding-top: 30px;
+}
+
+.chiTietThucDon h2{
+  text-align: center;
+}
+
+.chiTietThucDon h4 {
+  font-size: 1.25rem;
+  font-weight: bold;
+  color: #333;
+  text-align: center;
+}
+
+.chiTietThucDon p {
+  font-size: 1rem;
+  color: #666;
+  width: 100%;
+  text-align: center;
+}
+
+.chiTietThucDon ul {
+  list-style-type: none;
+  padding-left: 0;
+  width: 100%
+}
+
+.chiTietThucDon ul li {
+  font-size: 1rem;
+  color: #555;
+  padding: 5px 0;
+  width: 100%;
+  text-align: center;
+}
+
+.chiTietThucDon ul li strong {
+  font-weight: bold;
+}
+
+/* Category Titles */
+.chiTietThucDon h5 {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: hsl(32, 100%, 59%);
+  margin-top: 15px;
+  margin-bottom: 10px;
+  padding-left: 30px;
+}
+
 
 .swiper-slide {
   position: relative;
