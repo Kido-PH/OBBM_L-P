@@ -28,7 +28,11 @@ import AdminAnalytics from "./components/Admin/Admin-Analytics";
 import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
 import CategoryDish from "./components/Admin/Admin-CategoryDish";
+<<<<<<< HEAD
 import IngredientManager from "./components/Admin/Admin-Ingredient";
+=======
+import Authenticate from "./components/Authenticate";
+>>>>>>> main
 
 const App = () => {
   const location = useLocation();
@@ -48,13 +52,13 @@ const App = () => {
         <Route path="/"  element={<Home />} />
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
-        <Route path="/contract-info/id" element={<GuestContractInfo />} />
+        <Route path="/contract/info/:id" element={<GuestContractInfo />} />
         <Route path="/menu/:id" element={<Menu />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="/account" element={<Account />} />
+        <Route path="/account" element={<Account />} />   
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login />} />
         <Route path="/resetpassword" element={<Login />} />
+        <Route path="/authenticate" element={<Authenticate />} />
         <Route path="/admin/*" element={<DashboardPage />}>
           <Route path="ManageContracts" element={<ManageContracts />} />
           <Route path="ManageCategoryDish" element={<CategoryDish />} />

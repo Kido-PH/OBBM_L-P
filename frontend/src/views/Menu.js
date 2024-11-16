@@ -16,7 +16,6 @@ import { Modal, Button } from "react-bootstrap";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 
-
 const Menu = () => {
   const sliderRef = useRef(null);
   const [isHovered, setIsHovered] = useState(false); // Trạng thái hover
@@ -34,6 +33,9 @@ const Menu = () => {
   const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
   const location = useLocation();
   const [isModalEventsOpen, setIsModalEventsOpen] = useState(false);
+  const currentUserId = JSON.parse(sessionStorage.getItem("currentUserId")); // Parse chuỗi JSON thành đối tượng
+  const [hoveredSlide, setHoveredSlide] = useState(null);
+
   const handleOpenModalEvents = () => {
     setIsModalEventsOpen(true);
   };
@@ -80,9 +82,10 @@ const Menu = () => {
 
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NTAxNTEwLCJpYXQiOjE3MzE1MDE1MTAsImp0aSI6IjNlMmJiYTM4LWI0OTEtNDlhZi04ZTIzLTFmNmI0MDdhOTYyMSIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.rulyOoCjnDk7E1rMAEpYtpA3zF_kpA_MuznBQ-JrNKQVACnbLnwuyyfpxJJmo0NWt8ayy0dO6_wPcPxLRL-7hw";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NTc0Nzc1LCJpYXQiOjE3MzE1NzQ3NzUsImp0aSI6IjgzMTI2ZWIwLTg1ZjAtNGNlOC1hZDgyLTE5YzcyN2FmZGVlZSIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.vFWld-GMSCGLh0oocqvoTRutjA1cKgJpLhT2JjF96M03-JThuqUFxzzWR1BN7fQr0K2hDD7Ensvdp88W8c-Kow";
     sessionStorage.setItem("token", token);
 
+    window.scrollTo({ top: 0, behavior: "smooth" });
     const fetchMenu = async () => {
       const response = await menuApi.getAll();
       const menuData = response.result.content;
@@ -100,7 +103,6 @@ const Menu = () => {
       if (!id && location.pathname === "/menu") {
         handleOpenModalEvents(); // Mở modal khi không có id và đang ở trang "/menu"
       }
-      
     };
     fetchEvent();
     fetchMenu();
@@ -144,8 +146,9 @@ const Menu = () => {
         name: selectedMenu.name,
         totalcost: 10000000,
         description: selectedMenu.description,
-        userId: "U002",
-        eventId: 1,
+        userId: currentUserId,
+        eventId: selectedMenu.events?.eventId,
+
       };
       console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
@@ -158,6 +161,7 @@ const Menu = () => {
       alert("Thực đơn và món ăn đã được tạo thành công!");
       console.log(selectedMenu);
       console.log("menu dish gửi đi api:", selectedMenuDishes);
+      navigate("/contract")
     } catch (error) {
       console.log("Lỗi khi tạo thực đơn hoặc món ăn:", error);
       alert("Không thể tạo thực đơn hoặc món ăn. Vui lòng thử lại.");
@@ -211,139 +215,172 @@ const Menu = () => {
     }
   }, [activeTab]);
 
+  const handleRefreshMenu = () => {
+    setSelectedMenu(null); // Reset the menu
+  };
+
   return (
     <div className="Menu">
       <div className="menu-container">
-      <div className="menu-left">
-        <div className="tabs">
-          {/* <button
+        <div className="menu-left">
+          <div className="tabs">
+            {/* <button
             className={`tab btn-save-form ${
               activeTab === "tab1" ? "active" : ""
             }`}
             onClick={() => setActiveTab("tab1")}>
             Top menu
           </button> */}
-          {/* <button
+            {/* <button
             className={`tab btn-save-form ${
               activeTab === "tab2" ? "active" : ""
             }`}
             onClick={() => setActiveTab("tab2")}>
             Chat Suggestion
           </button> */}
-        </div>
-        <div className="tab-content">
-          {activeTab === "tab1" && (
-            <div>
-              <div className="container" >
-                <h3 className="heading" style={{ fontSize: "25px" ,color:"#191919"}}>
-                  Thực đơn gợi ý
-                </h3>
-                <Swiper
-                  effect={"coverflow"}
-                  grabCursor={true}
-                  centeredSlides={true}
-                  loop={true}
-                  slidesPerView={"auto"}
-                  coverflowEffect={{
-                    rotate: 0,
-                    stretch: 0,
-                    depth: 100,
-                    modifier: 2.5,
-                  }}
-                  pagination={{ el: ".swiper-pagination", clickable: true }}
-                  navigation={{
-                    nextEl: ".swiper-button-next",
-                    prevEl: ".swiper-button-prev",
-                    clickable: true,
-                  }}
-                  modules={[EffectCoverflow, Pagination, Navigation]}
-                  className="swiper_container"
-                >
-                  {groupedMenuArray.map((category) => (
-                    <SwiperSlide
-                      key={category.menuId}
-                      onClick={() => handleSelectMenu(category)}
-                    >
-                      <div className="food-category">
-                        <h4 style={{ textAlign: "center" }}>{category.name}</h4>
-                        {Object.keys(category.groupedDishes).map(
-                          (categoryName) => (
-                            <div key={categoryName} className="menu-category">
-                              <h6>{categoryName}</h6>
-                              <div className="menu-category-dish">
-                                <ul
-                                  className="promo-list has-scrollbar"
-                                  style={{ paddingTop: "10px" }}
-                                >
-                                  {category.groupedDishes[categoryName].map(
-                                    (dish) => (
-                                      <li key={dish.dishId}>
-                                        <img
-                                          src={dish.image}
-                                          alt={dish.name}
-                                          style={{
-                                            width: "100%",
-                                            height: "60px",
-                                          }}
-                                        />
-                                        <p
-                                          style={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            textAlign: "center",
-                                            fontWeight: "bold",
-                                            marginTop:"5px"
-                                          }}
-                                        >
-                                          {dish.name}
-                                        </p>
-                                        <p
-                                          style={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {dish.price.toLocaleString()} VND
-                                        </p>
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
+          </div>
+          <div className="tab-content">
+            {activeTab === "tab1" && (
+              <div>
+                <div className="container">
+                  <h3
+                    className="heading"
+                    style={{ fontSize: "25px", color: "#191919" }}
+                  >
+                    Thực đơn gợi ý
+                  </h3>
+                  <Swiper
+                    effect={"coverflow"}
+                    grabCursor={true}
+                    centeredSlides={true}
+                    loop={true}
+                    slidesPerView={"auto"}
+                    coverflowEffect={{
+                      rotate: 0,
+                      stretch: 0,
+                      depth: 100,
+                      modifier: 2.5,
+                    }}
+                    pagination={{ el: ".swiper-pagination", clickable: true }}
+                    navigation={{
+                      nextEl: ".swiper-button-next",
+                      prevEl: ".swiper-button-prev",
+                      clickable: true,
+                    }}
+                    modules={[EffectCoverflow, Pagination, Navigation]}
+                    className="swiper_container"
+                  >
+                    {groupedMenuArray.map((category) => (
+                      <SwiperSlide
+                        key={category.menuId}
+                        onClick={() => handleSelectMenu(category)}
+                      >
+                        <div className="food-category">
+                          <h4 style={{ textAlign: "center" }}>
+                            {category.name}
+                          </h4>
+                          {Object.keys(category.groupedDishes).map(
+                            (categoryName) => (
+                              <div key={categoryName} className="menu-category">
+                                <h6>{categoryName}</h6>
+                                <div className="menu-category-dish">
+                                  <ul
+                                    className="promo-list has-scrollbar"
+                                    style={{ paddingTop: "10px" }}
+                                  >
+                                    {category.groupedDishes[categoryName].map(
+                                      (dish) => (
+                                        <li key={dish.dishId}>
+                                          <img
+                                            src={dish.image}
+                                            alt={dish.name}
+                                            style={{
+                                              width: "63px",
+                                              height: "60px",
+                                              marginLeft: "7px",
+                                            }}
+                                          />
+                                          <p
+                                            style={{
+                                              overflow: "hidden",
+                                              textOverflow: "ellipsis",
+                                              whiteSpace: "nowrap",
+                                              textAlign: "center",
+                                              fontWeight: "bold",
+                                              marginTop: "5px",
+                                            }}
+                                          >
+                                            {dish.name}
+                                          </p>
+                                          <p
+                                            style={{
+                                              overflow: "hidden",
+                                              textOverflow: "ellipsis",
+                                              whiteSpace: "nowrap",
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {/* {dish.price.toLocaleString()} VND */}
+                                          </p>
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                </div>
                               </div>
-                            </div>
-                          )
-                        )}
-                      </div>
-                    </SwiperSlide>
-                  ))}
-                </Swiper>
-              </div>
+                            )
+                          )}
+                        </div>
+                      </SwiperSlide>
+                    ))}
+                  </Swiper>
+                  <div
+                    className="choose-button-container"
+                    style={{ display: "flex", justifyContent: "flex-end" }}
+                  >
+                    <button
+                      className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
+                      onClick={handleOpenModalEvents}
+                      style={{
+                        marginRight: "0px",
+                        marginTop: "0px",
+                        marginBottom: "20px",
+                      }}
+                    >
+                      <p>Đổi sự kiện</p>
+                    </button>
+                  </div>
+                </div>
 
-              <div
-                className="choose-button-container"
-                style={{ display: "flex", justifyContent: "flex-end" }}
-              >
-                <button
-                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
-                  onClick={handleOpenModalEvents}
-                  style={{marginRight:"20px",marginBottom:"20px"}}
+                <Modal
+                  show={isModalEventsOpen}
+                  onHide={handleCloseModalEvents}
+                  className="Modal-events"
+                  style={{ maxH: "75%" }}
                 >
-                  <p>Đổi sự kiện</p>
-                </button>
-              </div>
-              <Modal show={isModalEventsOpen} onHide={handleCloseModalEvents} className="Modal-events" style={{ maxH: "75%" }}>
-                <Modal.Header closeButton>
-                  <Modal.Title>Sự Kiện</Modal.Title>
-                </Modal.Header>
-                <Modal.Body>
                   <section
                     className="section section-divider white promo"
-                    id="events" style={{paddingTop: "20px", paddingBottom: "30px"}}
+                    id="events"
+                    style={{
+                      paddingTop: "20px",
+                      paddingBottom: "30px",
+                      marginTop: "50px",
+                      width: "100%"
+                    }}
                   >
-                    <div className="container">
+                    <button
+                      className="add-button"
+                      onClick={handleCloseModalEvents}
+                      style={{ color: "hsl(32, 100%, 59%)" }}
+                    >
+                      x
+                    </button>
+                    <h2 style={{ textAlign: "center" }}>Sự kiện</h2>
+
+                    <div
+                      className=""
+                      style={{ marginLeft: "30px", marginRight: "30px" }}
+                    >
                       <ul className="promo-list has-scrollbar">
                         {Events.map((event) => (
                           <li
@@ -394,117 +431,151 @@ const Menu = () => {
                       </ul>
                     </div>
                   </section>
-                </Modal.Body>
-                <Modal.Footer>
-                  <Button onClick={handleCloseModalEvents}>
-                    Đóng
-                  </Button>
-                </Modal.Footer>
-              </Modal>
-            </div>
-          )}
-          {activeTab === "tab2" && (
-            <div className="tab2-content">{/* Nội dung cho tab 2 */}</div>
-          )}
-        </div>
-      </div>
-
-      {setSelectedId && (
-        <ListFood
-          onAddDish={addDishToCategory}
-          categoryId={selectedId}
-          show={showListFood}
-          closeListFood={() => setShowListFood(false)}
-        />
-      )}
-      {/* Hiển thị ListFood */}
-
-      {/* Menu Right */}
-      <div className="menu-right">
-        <h2>Thực đơn</h2>
-        {selectedMenu ? (
-          <div>
-            {/* <h3 className="menu-category-title">{selectedMenu.name}</h3> */}
-            {Object.keys(selectedMenu.groupedDishes).map(
-              (categoryName, index) => (
-                <div key={categoryName} className="menu-category">
-                  <h3>
-                    {index === 0
-                      ? "Khai vị"
-                      : index === 1
-                      ? "Món chính"
-                      : index === 2
-                      ? "Tráng miệng"
-                      : "Đồ uống"}
-                    <button
-                      onClick={() => toggleListFood(index + 1)}
-                      className="add-button"
-                    >
-                      +
-                    </button>
-                  </h3>
-                  <ul
-                    className="promo-list has-scrollbar"
-                    style={{ paddingBottom: "10px" }}
-                  >
-                    {selectedMenu.groupedDishes[categoryName].map((dish) => (
-                      <li key={dish.dishId}>
-                        <img src={dish.image} alt={dish.name} />
-                        <p
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            textAlign: "center",
-                          }}
-                        >
-                          {dish.name}
-                        </p>
-                        <p
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            textAlign: "center",
-                          }}
-                        >
-                          {dish.price.toLocaleString()} VND
-                        </p>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )
+                </Modal>
+              </div>
+            )}
+            {activeTab === "tab2" && (
+              <div className="tab2-content">{/* Nội dung cho tab 2 */}</div>
             )}
           </div>
-        ) : (
-          <p>Chọn một thực đơn để hiển thị chi tiết.</p>
-        )}
-        <div style={{ textAlign: "center" }}>
-          <button
-            className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
-            onClick={handleShowMenuPopup}
-          >
-            Xem thực đơn
-          </button>
-          <button
-            className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
-            onClick={handleCreateMenu}
-          >
-            Tạo thực đơn
-          </button>
         </div>
-      </div>
-      {/* Modal hiển thị thông tin thực đơn */}
-      <Modal show={showModal} onHide={handleCloseModal}>
-        <Modal.Header closeButton>
-          <Modal.Title>Chi tiết Thực đơn</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
+
+        {setSelectedId && (
+          <ListFood
+            onAddDish={addDishToCategory}
+            categoryId={selectedId}
+            show={showListFood}
+            closeListFood={() => setShowListFood(false)}
+          />
+        )}
+
+        {/* Menu Right */}
+        <div className="menu-right">
+          <h2 style={{ marginBottom: "0px" }}>Thực đơn</h2>
           {selectedMenu ? (
             <div>
+              {/* <h3 className="menu-category-title">{selectedMenu.name}</h3> */}
+              {Object.keys(selectedMenu.groupedDishes).map(
+                (categoryName, index) => (
+                  <div key={categoryName} className="menu-category-dish">
+                    <h4>
+                      {index === 0
+                        ? "Khai vị"
+                        : index === 1
+                        ? "Món chính"
+                        : index === 2
+                        ? "Tráng miệng"
+                        : "Đồ uống"}
+                      <button
+                        onClick={() => toggleListFood(index + 1)}
+                        className="add-button"
+                      >
+                        +
+                      </button>
+                    </h4>
+                    <ul
+                      className="promo-list has-scrollbar"
+                      style={{ paddingBottom: "10px" }}
+                    >
+                      {selectedMenu.groupedDishes[categoryName].map((dish) => (
+                        <li key={dish.dishId}>
+                          <img
+                            src={dish.image}
+                            alt={dish.name}
+                            style={{
+                              width: "63px",
+                              height: "60px",
+                              marginLeft: "25px",
+                              borderRadius: "2rem",
+                            }}
+                          />
+                          <p
+                            style={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              textAlign: "center",
+                              fontWeight: "bold",
+                              marginTop: "5px",
+                              fontSize: "10px",
+                              color: "#1e1e1e",
+                            }}
+                          >
+                            {dish.name}
+                          </p>
+                          <p
+                            style={{
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                              textAlign: "center",
+                              fontSize: "10px",
+                              color: "#1e1e1e",
+                            }}
+                          >
+                            {dish.price.toLocaleString()} VND
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )
+              )}
+            </div>
+          ) : (
+            <p>Chọn một thực đơn để hiển thị chi tiết.</p>
+          )}
+          <div
+            style={{ display: "flex", justifyContent: "center", gap: "10px" }}
+          >
+            {selectedMenu && (
+              <div
+                className="button-container d-flex"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "10px",
+                }}
+              >
+                <button
+                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
+                  onClick={handleShowMenuPopup}
+                  style={{ fontSize: "0.85rem" }}
+                >
+                  Xem thực đơn
+                </button>
+                <button
+                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
+                  onClick={handleCreateMenu}
+                >
+                  Chọn thực đơn
+                </button>
+
+                <button
+                  className="btn btn-refresh-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
+                  onClick={handleRefreshMenu}
+                >
+                  Làm mới thực đơn
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Modal hiển thị thông tin thực đơn */}
+        <Modal show={showModal} onHide={handleCloseModal}>
+          {selectedMenu ? (
+            <div className="chiTietThucDon">
+              <button
+                className="add-button"
+                onClick={handleCloseModal}
+                style={{ color: "hsl(32, 100%, 59%)" }}
+              >
+                x
+              </button>
+              <h2>Chi Tiết thực đơn</h2>
               <h4>{selectedMenu.name}</h4>
-              <p>Mô tả: {selectedMenu.description}</p>
+              {/* <p>Mô tả: {selectedMenu.description}</p> */}
               <p>Tổng chi phí: {selectedMenu.totalcost.toLocaleString()} VND</p>
               {Object.keys(selectedMenu.groupedDishes).map(
                 (categoryName, index) => (
@@ -533,14 +604,8 @@ const Menu = () => {
           ) : (
             <p>Không có thông tin thực đơn để hiển thị.</p>
           )}
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="secondary" onClick={handleCloseModal}>
-            Đóng
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    </div>
+        </Modal>
+      </div>
     </div>
   );
 };
