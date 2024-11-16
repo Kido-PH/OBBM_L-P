@@ -27,6 +27,7 @@
   --white: hsl(0, 0%, 100%);
   --black: hsl(0, 0%, 0%);
   --onyx: hsl(0, 0%, 27%);
+  --green-success: hsl(132, 100%, 32%);
 
   /**
    * typography

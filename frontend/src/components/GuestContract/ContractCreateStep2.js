@@ -1,50 +1,213 @@
 import * as React from "react";
-
-import { multiStepContext } from "../../StepContext";
+import moment from "moment";
 import { Form, Card } from "react-bootstrap";
+import { FaEye } from "react-icons/fa6";
+import { multiStepContext } from "../../StepContext";
+import ModalLocations from "./ModalLocations";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import ModalInfoMenu from "./ModalInfoMenu";
 
 const ContractCreateStep2 = () => {
-  const { setStep, userData, setUserData } = React.useContext(multiStepContext);
+  const { setStep, contractData, setContractData } =
+    React.useContext(multiStepContext);
+  const location = JSON.parse(localStorage.getItem("currentLocation")); // Parse chuỗi JSON thành đối tượng
+  const currentEvent = JSON.parse(localStorage.getItem("currentEvent")); // Parse chuỗi JSON thành đối tượng
+  const createdMenu = JSON.parse(localStorage.getItem("createdMenu")); // Parse chuỗi JSON thành đối tượng
+  const [totalMenuCost, setTotalMenuCost] = React.useState(0);
+
+  const [guestPerTable, setGuestPerTable] = React.useState(10);
+  const [showModalMenu, setShowModalMenu] = React.useState(false);
+
+  // const getCurrentMenuDishes = () => {
+  //   const dishes = localStorage.getItem("currentMenuDishes");
+  //   return dishes ? JSON.parse(dishes) : [];
+  // };
+
+  const handleShowModalMenu = () => {
+    setShowModalMenu(true);
+  };
+
+  const handleCloseModalMenu = () => {
+    setShowModalMenu(false);
+  };
+
+  React.useEffect(() => {
+    const guestCount = parseInt(contractData.guest) || 0; // Số khách mặc định là 0 nếu không nhập
+    const guestPerTableLocal = guestPerTable || 1; // Số khách trên một bàn mặc định là 1
+    const tableCount = Math.ceil(guestCount / guestPerTableLocal); // Chia cho số khách trên một bàn và làm tròn lên
+    setContractData((prevData) => ({
+      ...prevData,
+      table: tableCount,
+    }));
+  }, [contractData.guest, guestPerTable, setContractData]); // Theo dõi khi `guest` hoặc `guestPerTable` thay đổi
+
+  React.useEffect(() => {
+    const guestCount = parseInt(contractData.guest) || 0;
+    const menuCost = parseInt(createdMenu.totalcost);
+
+    //set total cost của contract
+    const totalMenuCost = menuCost * guestCount;
+    setTotalMenuCost(totalMenuCost);
+
+    const totalCost = totalMenuCost + parseInt(location?.cost ?? 0);
+
+    setContractData((prevData) => ({
+      ...prevData,
+      totalcost: totalCost,
+      locationId: location?.locationId,
+    }));
+
+    console.log("Cập nhật totalCost:", totalCost);
+    console.log("contractData sau khi cập nhật totalCost:", {
+      ...contractData,
+      totalCost: totalCost,
+    });
+  }, [contractData.guest, setContractData, location?.cost]);
+
+  const formatCurrency = (amount) => {
+    return amount
+      ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+      : "0";
+  };
+
+  const handleDateChange = (date) => {
+    if (date) {
+      // Kiểm tra nếu ngày hợp lệ và thêm thời gian mặc định nếu cần
+      const dateWithDefaultTime = new Date(date);
+      if (
+        dateWithDefaultTime.getHours() === 0 &&
+        dateWithDefaultTime.getMinutes() === 0
+      ) {
+        dateWithDefaultTime.setHours(11, 0, 0, 0);
+      }
+
+      const formattedDate =
+        moment(dateWithDefaultTime).format("DD/MM/YYYY HH:mm");
+      setContractData({
+        ...contractData,
+        organizdate: formattedDate,
+      });
+    } else {
+      console.error("Ngày không hợp lệ:", date);
+    }
+  };
+
+  const handleGuestChange = (e) => {
+    // Lấy giá trị từ input và chuyển sang số
+    const value = parseInt(e.target.value) || 0;
+
+    // Kiểm tra nếu giá trị là số âm
+    if (value < 0) {
+      // Nếu là số âm, không làm gì hoặc đặt lại giá trị thành 0
+      setContractData({
+        ...contractData,
+        guest: 0, // Hoặc bạn có thể giữ lại giá trị cũ nếu cần
+      });
+    } else {
+      // Giới hạn giá trị tối đa là 10,000 và cập nhật giá trị
+      setContractData({
+        ...contractData,
+        guest: Math.min(value, 10000),
+      });
+    }
+  };
+
+  const isFormValid =
+    guestPerTable !== undefined &&
+    contractData.guest !== undefined &&
+    contractData.guest > 10 &&
+    contractData.locationId !== undefined &&
+    contractData.organizdate !== undefined;
+
   return (
     <div>
       <Card className="card p-5 w-100 mt-5">
         <div className="text-center mb-5">
-          <h1>Step 2: Fill Your Information</h1>
+          <h1>Bước 2: Chọn nội dung hợp đồng</h1>
         </div>
 
         <Form name="contractForm" className="contractForm">
           <div className="row row-cols-sm-1 row-cols-md-2">
             <div className="col">
               <div className="mb-3">
-                <label className="form-label fw-bold ">
-                  Customer Name
-                  <span className="text-danger d-inline-block">*</span>
-                </label>{" "}
-                <input
-                  type="text"
+                <label className="form-label fw-bold">Thực đơn</label>
+                <button
                   id="menuId"
                   name="menuId"
-                  placeholder="Customer Name"
-                  className="form-control fs-4"
-                />
+                  aria-label="Menu:"
+                  className="form-control fs-4 d-flex justify-content-between align-middle"
+                  onClick={handleShowModalMenu}
+                >
+                  Thực đơn của bạn
+                  <FaEye />
+                </button>
               </div>
 
               <div className="mb-3">
                 <label className="form-label fw-bold">
-                  Customer Phone
-                  <span className="text-danger d-inline-block">*</span>
+                  Địa điểm<span className="text-danger d-inline-block">*</span>
                 </label>
                 <div className="d-flex align-items-center">
-                  <input
-                    type="text"
-                    value=""
-                    name="event"
+                  <ModalLocations />
+                </div>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold" htmlFor="organizdate">
+                  Ngày tổ chức
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
+                <div className="d-flex">
+                  <DatePicker
+                    selected={
+                      contractData.organizdate
+                        ? moment(
+                            contractData.organizdate,
+                            "DD/MM/YYYY HH:mm"
+                          ).toDate()
+                        : null
+                    }
+                    onChange={handleDateChange}
+                    showTimeSelect
+                    dateFormat="dd/MM/yyyy HH:mm"
+                    timeFormat="HH:mm"
+                    minDate={new Date()}
                     required
-                    placeholder="Customer Phone"
-                    aria-label="Event"
-                    className="form-control fs-4 me-2"
-                    readOnly
+                    className="form-control fs-4 w-100"
                   />
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-bold">Ghi chú</label>
+                <input
+                  className="form-control fs-4 me-2"
+                  value={contractData["description"]}
+                  onChange={(e) => {
+                    setContractData({
+                      ...contractData,
+                      description: e.target.value,
+                    });
+                  }}
+                  placeholder="Nhập ghi chú..."
+                ></input>
+              </div>
+            </div>
+          </div>
+
+          <div className="row row-cols-sm-2 row-cols-lg-4">
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">Sự kiện</label>
+                <div
+                  name="table"
+                  id="table"
+                  className="form-control input-hienthi fs-4"
+                >
+                  {currentEvent.event_name}
                 </div>
               </div>
             </div>
@@ -52,27 +215,101 @@ const ContractCreateStep2 = () => {
             <div className="col">
               <div className="mb-3">
                 <label className="form-label fw-bold">
-                  Customer Email
+                  Số lượng khách
                   <span className="text-danger d-inline-block">*</span>
-                </label>{" "}
+                </label>
                 <input
-                  type="email"
-                  name="email"
-                  id="date"
-                  placeholder="Youremail@gmail.com"
+                  type="number"
+                  name="guest"
+                  id="guest"
+                  placeholder="Số lượng khách"
                   className="form-control fs-4"
+                  value={contractData["guest"]}
+                  onChange={handleGuestChange}
                   required
                 />
               </div>
-
+            </div>
+            <div className="col">
               <div className="mb-3">
-                <label className="form-label fw-bold">Created Date</label>{" "}
-                <input
-                  type="date"
-                  name="createdDate"
-                  id="createdDate"
-                  className="form-control fs-4"
-                />
+                <label className="form-label fw-bold">
+                  Số lượng khách / bàn
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
+                <select
+                  name="guestPerTable"
+                  id="guestPerTable"
+                  className="form-select fs-4"
+                  value={guestPerTable}
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value);
+                    if (!isNaN(value) && value > 0) {
+                      setGuestPerTable(value); // Chỉ cập nhật state nếu giá trị hợp lệ
+                    }
+                  }}
+                  required
+                >
+                  <option value={6}>6 người/bàn</option>
+                  <option value={8}>8 người/bàn</option>
+                  <option value={10}>10 người/bàn</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">Số bàn</label>
+                <div
+                  type="number"
+                  name="table"
+                  id="table"
+                  className="form-control input-hienthi fs-4"
+                  readOnly // Để chỉ đọc
+                  required
+                >
+                  {contractData["table"]}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="row row-cols-sm-1 row-cols-lg-3 mt-3">
+            <div className="col">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Chi phí địa điểm:
+                </label>
+                <span
+                  className="fw-bold"
+                  style={{ color: "var(--deep-saffron)" }}
+                >
+                  {formatCurrency(location?.cost)} VND
+                </span>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Tổng chi phí thực đơn:
+                </label>
+                <span
+                  className="fw-bold"
+                  style={{ color: "var(--deep-saffron)" }}
+                >
+                  {formatCurrency(totalMenuCost)} VND
+                </span>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Tổng cộng:
+                </label>
+                <span className="text-success fw-bold">
+                  {formatCurrency(contractData.totalcost)} VND
+                </span>
               </div>
             </div>
           </div>
@@ -82,21 +319,23 @@ const ContractCreateStep2 = () => {
               type="button"
               className="btn btn-secondary btn-save-form mx-3"
               onClick={() => setStep(1)}
-              style={{ marginTop: "1rem" }}
+              style={{ margin: "10px auto" }}
             >
-              Back
+              Trở về
             </button>
             <button
               type="button"
-              className="btn btn-save-form mx-3"
+              className="btn btn-save-form mx-2"
               onClick={() => setStep(3)}
-              style={{ marginTop: "1rem" }}
+              style={{ margin: "10px auto" }}
+              disabled={!isFormValid}
             >
-              Next
+              Tiếp theo
             </button>
           </div>
         </Form>
       </Card>
+      <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} />
     </div>
   );
 };
