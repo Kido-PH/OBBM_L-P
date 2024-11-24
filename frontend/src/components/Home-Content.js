@@ -249,7 +249,7 @@ const Content = () => {
             <div className="container">
               <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
               <ul className="promo-list has-scrollbar">
-<<<<<<< HEAD
+
                 {Events.map((event) => (
                   <li
                     key={event.eventId}
@@ -265,12 +265,7 @@ const Content = () => {
                         className="promo-card"
                         style={{ width: "285px", height: "443px" }}
                       >
-=======
-                {Events.map((item) => (
-                  <li key={item.eventId} className="promo-item" style={{width: "285px", height:"443px"}}>
-                    <button onClick={() => {pushEventIdtoMenu(item)}}>
-                      <div className="promo-card" style={{width: "285px", height:"443px"}}>
->>>>>>> 66e1d803fb9265b4c074abbbc3bb99bc0cf7523a
+
                         <div className="card-icon">
                           {/* Add any specific icons or elements here if needed */}
                         </div>
