@@ -1,280 +1,350 @@
 import * as React from "react";
-import { Form, Card } from "react-bootstrap";
+import { Form, Card, Row, Col } from "react-bootstrap";
 import { FaEye } from "react-icons/fa6";
 
-import { multiStepContext } from "../../StepContext";
+import { useNavigate, useParams } from "react-router-dom";
+import guestContractApi from "api/guestContractApi";
+import ConfirmCancelModal from "./ModalCancelContract";
+import Swal from "sweetalert2";
+import ModalInfoMenu from "./ModalInfoMenu";
 
-const ContractCreateStep1 = () => {
+const ContractInfo = () => {
+  const { id } = useParams();
+  const [contractInfo, setContractInfo] = React.useState({});
+
+  const navigate = useNavigate();
+  const [showModalCancel, setShowModalCancel] = React.useState(false);
+  const [showModalMenu, setShowModalMenu] = React.useState(false);
+
+  // Hàm mở modal
+  const handleShowModalCancel = () => {
+    setShowModalCancel(true);
+  };
+
+  // Hàm đóng modal
+  const handleCloseModalCancel = () => {
+    setShowModalCancel(false);
+  };
+
+  const handleShowModalMenu = () => {
+    setShowModalMenu(true);
+  };
+
+  const handleCloseModalMenu = () => {
+    setShowModalMenu(false);
+  };
+
+  // Hàm xóa hợp đồng và thực đơn
+  const handleDeleteContractAndMenu = async () => {
+    try {
+      // Gọi API xóa hợp đồng
+      await guestContractApi.delete(contractInfo.contractId);
+
+      // Gọi API xóa thực đơn
+      await guestContractApi.deleteMenu(contractInfo.menus?.menuId);
+      await Swal.fire({
+        icon: "success",
+        title: "Thành công",
+        text: "Hủy hợp đồng thành công!",
+        timer: 2000, // Tự động đóng sau 2 giây
+        showConfirmButton: false,
+      });
+
+      // Điều hướng về danh sách hợp đồng khi xóa thành công
+      navigate("/user/contract-list");
+    } catch (error) {
+      console.error("Xóa thất bại:", error);
+      await Swal.fire({
+        icon: "danger",
+        title: "Hủy hợp đồng",
+        text: "Hủy hợp đồng thất bại!",
+        timer: 2000, // Tự động đóng sau 2 giây
+        showConfirmButton: true,
+      });
+    }
+  };
+
+  const fetchContractInfo = async () => {
+    try {
+      const userInfoFetch = await guestContractApi.get(id);
+      console.log("Fetch contract thành công", userInfoFetch);
+      setContractInfo(userInfoFetch.result);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
+  };
+
   React.useEffect(() => {
     // Dynamically import Bootstrap CSS
     import("bootstrap/dist/css/bootstrap.min.css");
     import("../../assets/css/mainStyle.css");
     import("../../assets/css/contractGuestStyle.css");
+
+    console.log("Id hứng được:", id);
+    fetchContractInfo();
   }, []);
+
+  const formatCurrency = (amount) => {
+    return amount
+      ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+      : "0";
+  };
+
   return (
     <section
       className="section section-divider white account-section pt-5"
       id="blog"
     >
       <div className="container" style={{ marginTop: "120px" }}>
-        <Card className="card p-5 w-100 mt-5 paymentCard">
-          <div className="text-center mb-5 fw-bold">
-            <h1>Contract Infomation</h1>
-          </div>
-          <Card name="contractInfo" className="p-5" style={{ opacity: 0.9 }}>
-            <h2 style={{ color: "hsl(28, 100%, 58%)" }}>
-              Contract Information
-            </h2>
-            <Form name="contractForm" className="contractForm">
-              <div className="row row-cols-sm-1 row-cols-md-2">
-                <div className="col">
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Menu</label>
-                    <a
-                      href="/menu"
-                      id="menuId"
-                      name="menuId"
-                      aria-label="Menu:"
-                      className="form-control fs-4 d-flex justify-content-between align-middle"
-                    >
-                      Menu Id
-                      <FaEye />
-                    </a>
-                  </div>
+        <div className="text-center mb-5 fw-bold">
+          <h1>Thông tin chi tiết hợp dồng</h1>
+        </div>
+        <Card name="contractInfo" className="p-5" style={{ opacity: 0.9 }}>
+          <h2 style={{ color: "hsl(28, 100%, 58%)" }}>Thông tin hợp đồng</h2>
+          <div name="contractForm" className="contractForm">
+            <div className="row row-cols-sm-1 row-cols-md-2">
+              <div className="col">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Thực đơn</label>
+                  <button
+                    className="form-control fs-4 d-flex justify-content-between align-middle"
+                    onClick={handleShowModalMenu}
+                  >
+                    Menu Id
+                    <FaEye />
+                  </button>
+                </div>
 
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Event</label>
-                    <div className="d-flex align-items-center">
-                      <input
-                        type="text"
-                        value=""
-                        name="event"
-                        required
-                        placeholder="Choose Event"
-                        aria-label="Event"
-                        className="form-control fs-4 me-2"
-                        readOnly
-                      />
-                    </div>
-                  </div>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Địa điểm</label>
+                  <button className="form-control fs-4 d-flex justify-content-between align-middle">
+                    {contractInfo.locations?.name} -{" "}
+                    {contractInfo.locations?.address}
+                    <FaEye />
+                  </button>
+                </div>
+              </div>
 
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Location</label>
-                    <div className="d-flex align-items-center">
-                      <input
-                        type="text"
-                        value=""
-                        name="location"
-                        required
-                        placeholder="Choose Location"
-                        aria-label="UserName"
-                        className="form-control fs-4 me-2"
-                        readOnly
-                      />
-                    </div>
+              <div className="col">
+                <div className="mb-3">
+                  <label className="form-label fw-bold ">Ngày tổ chức</label>
+                  <div className="form-control input-hienthi fs-4">
+                    {contractInfo.organizdate}
                   </div>
                 </div>
 
-                <div className="col">
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">
-                      Celebration Date
-                    </label>{" "}
-                    <input
-                      type="date"
-                      name="date"
-                      id="date"
-                      placeholder="Detail Menu"
-                      aria-label="Full Name:"
-                      className="form-control fs-4"
-                      readOnly
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Service</label>
-                    <div className="d-flex align-items-center">
-                      <input
-                        type="text"
-                        value=""
-                        name="location"
-                        required
-                        placeholder="Choose Additional Service"
-                        aria-label="Service"
-                        className="form-control fs-4 me-2"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Description</label>
-                    <input className="form-control fs-4 me-2" readOnly></input>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Ghi chú</label>
+                  <div className="form-control input-hienthi fs-4 me-2">
+                    {contractInfo.description ? (
+                      <div>{contractInfo.description}</div>
+                    ) : (
+                      <div>Không có ghi chú...</div>
+                    )}
                   </div>
                 </div>
               </div>
-              <h2 style={{ color: "hsl(28, 100%, 58%)" }}>
-                Customer Information
-              </h2>
-              <div className="row row-cols-sm-1 row-cols-md-2">
-                <div className="col">
-                  <div className="mb-3">
-                    <label className="form-label fw-bold ">
-                      Customer Name
-                      <span className="text-danger d-inline-block">*</span>
-                    </label>{" "}
-                    <input
-                      type="text"
-                      id="menuId"
-                      name="menuId"
-                      placeholder="Customer Name"
-                      className="form-control fs-4"
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">
-                      Customer Phone
-                      <span className="text-danger d-inline-block">*</span>
-                    </label>
-                    <div className="d-flex align-items-center">
-                      <input
-                        type="text"
-                        value=""
-                        name="event"
-                        required
-                        placeholder="Customer Phone"
-                        aria-label="Event"
-                        className="form-control fs-4 me-2"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className="col">
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">
-                      Customer Email
-                      <span className="text-danger d-inline-block">*</span>
-                    </label>{" "}
-                    <input
-                      type="email"
-                      name="email"
-                      id="date"
-                      placeholder="Youremail@gmail.com"
-                      className="form-control fs-4"
-                      required
-                    />
-                  </div>
-
-                  <div className="mb-3">
-                    <label className="form-label fw-bold">Created Date</label>{" "}
-                    <input
-                      type="date"
-                      name="createdDate"
-                      id="createdDate"
-                      className="form-control fs-4"
-                    />
+            </div>
+            <div className="row row-cols-sm-2 row-cols-lg-4">
+              <div className="col">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Sự kiện</label>
+                  <div className="form-control input-hienthi fs-4">
+                    {contractInfo.events?.name}
                   </div>
                 </div>
               </div>
 
-              <h2 style={{ color: "hsl(28, 100%, 58%)" }}>Costs</h2>
-
-              <div className=" px-2 w-100">
-                <div className="row row-cols-sm-1  row-cols-md-3 row-cols-lg-5">
-                  <div className="col">
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Menu cost</label>{" "}
-                      <input
-                        type="text"
-                        placeholder="1.000.000"
-                        aria-label="Full Name:"
-                        className="form-control fs-4"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col">
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">
-                        Additional service cost
-                      </label>{" "}
-                      <input
-                        type="text"
-                        placeholder="1.000.000"
-                        aria-label="Full Name:"
-                        className="form-control fs-4"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col">
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">
-                        Customer location costs
-                      </label>{" "}
-                      <input
-                        type="text"
-                        placeholder="1.000.000"
-                        aria-label="Full Name:"
-                        className="form-control fs-4"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col">
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Tax</label>{" "}
-                      <input
-                        type="text"
-                        name="tax"
-                        id="tax"
-                        placeholder="10%"
-                        className="form-control fs-4"
-                        readOnly
-                      />
-                    </div>
-                  </div>
-
-                  <div className="col">
-                    <div className="mb-3">
-                      <label className="form-label fw-bold">Total</label>{" "}
-                      <input
-                        type="text"
-                        name="total"
-                        id="total"
-                        placeholder="0"
-                        className="form-control text-success fw-bold fs-4"
-                        readOnly
-                      />
-                    </div>
+              <div className="col">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Số lượng khách</label>
+                  <div className="form-control input-hienthi fs-4">
+                    {contractInfo.guest}
                   </div>
                 </div>
               </div>
-              <h2 style={{ color: "hsl(28, 100%, 58%)" }}>
-                Contract Status:{" "}
-                <span className="text-warning d-inline-block">Pending</span>
-              </h2>
-            </Form>
-          </Card>
-          <div style={{ textAlign: "center" }}>
-            <button
-              type="button"
-              className="btn btn-save-form mx-3"
-              style={{ marginTop: "1rem" }}
-            >
-              Pay
-            </button>
+              <div className="col">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">
+                    Số lượng khách / bàn
+                    <span className="text-danger d-inline-block">*</span>
+                  </label>
+                  <div className="form-control input-hienthi fs-4">
+                    {/* {contractInfo.guest} */} số người/bàn
+                  </div>
+                </div>
+              </div>
+
+              <div className="col">
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Số bàn</label>
+                  <div className="form-control input-hienthi fs-4">
+                    {contractInfo.table}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h3 style={{ color: "var(--dark-orange)" }}>
+              Thông Tin Khách Hàng
+            </h3>
+            <Row lg={3} md={3} xs={1}>
+              <Col>
+                <div className="mb-3">
+                  <label className="form-label fw-bold ">Tên Khách Hàng</label>
+                  <div className="form-control input-hienthi fs-4">
+                    {contractInfo.custname}
+                  </div>
+                </div>
+              </Col>
+              <Col>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">
+                    Số Điện Thoại Khách Hàng
+                  </label>
+                  <div className="form-control input-hienthi fs-4">
+                    {contractInfo.custphone}
+                  </div>
+                </div>
+              </Col>
+              <Col>
+                <div className="mb-3">
+                  <label className="form-label fw-bold">Email liên hệ</label>
+                  <div className="form-control input-hienthi fs-4">
+                    {contractInfo.custmail}
+                  </div>
+                </div>
+              </Col>
+            </Row>
+            <h3 style={{ color: "var(--dark-orange)" }}>Chi Phí</h3>
+            <div className="row row-cols-sm-1 row-cols-lg-3 mt-3">
+              <div className="col">
+                <div className="mb-3 d-flex align-items-center">
+                  <label className="form-label fw-bold mb-0 me-2">
+                    Chi phí địa điểm:
+                  </label>
+                  <span
+                    className="fw-bold"
+                    style={{ color: "var(--deep-saffron)" }}
+                  >
+                    {formatCurrency(contractInfo.locations?.cost)} VND
+                  </span>
+                </div>
+              </div>
+
+              <div className="col">
+                <div className="mb-3 d-flex align-items-center">
+                  <label className="form-label fw-bold mb-0 me-2">
+                    Tổng chi phí thực đơn:
+                  </label>
+                  <span
+                    className="fw-bold"
+                    style={{ color: "var(--deep-saffron)" }}
+                  >
+                    {formatCurrency(
+                      contractInfo.menus?.totalcost * contractInfo.guest
+                    )}{" "}
+                    VND
+                  </span>
+                </div>
+              </div>
+
+              <div className="col">
+                <div className="mb-3 d-flex align-items-center">
+                  <label className="form-label fw-bold mb-0 me-2">
+                    Tổng cộng:
+                  </label>
+                  <span className="text-success fw-bold">
+                    {formatCurrency(
+                      contractInfo.menus?.totalcost * contractInfo.guest +
+                        contractInfo.locations?.cost
+                    )}{" "}
+                    VND
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div className="d-flex justify-content-between">
+              <h3 style={{ color: "var(--dark-orange)" }}>
+                Trạng thái hợp đồng:{" "}
+                <span
+                  className="d-inline-block"
+                  style={{
+                    color:
+                      contractInfo.status === "Pending"
+                        ? "var(--sonic-silver)"
+                        : contractInfo.status === "Approved"
+                        ? "var(--deep-saffron)"
+                        : "var(--green-success)",
+                  }}
+                >
+                  {contractInfo.status === "Pending"
+                    ? "Chờ xác nhận"
+                    : contractInfo.status === "Approved"
+                    ? "Đã xác nhận"
+                    : "Đã hoàn thành"}
+                </span>
+              </h3>
+
+              <h3 style={{ color: "var(--dark-orange)" }}>
+                Trạng thái thanh toán:{" "}
+                <span
+                  className="d-inline-block"
+                  style={{
+                    color:
+                      contractInfo.paymentstatus === "Unpaid"
+                        ? "var(--sonic-silver)"
+                        : contractInfo.paymentstatus === "50%"
+                        ? "var(--deep-saffron)"
+                        : contractInfo.paymentstatus === "70%"
+                        ? "var(--deep-saffron)"
+                        : "var(--green-success)",
+                  }}
+                >
+                  {contractInfo.paymentstatus === "Unpaid"
+                    ? "Chưa thanh toán"
+                    : contractInfo.paymentstatus === "50%"
+                    ? "Đã thanh toán 50%"
+                    : contractInfo.paymentstatus === "70%"
+                    ? "Đã thanh toán 70%"
+                    : "Đã thanh toán"}
+                </span>
+              </h3>
+            </div>
           </div>
         </Card>
+        <div style={{ textAlign: "center" }}>
+          {contractInfo.status === "Pending" && (
+            <button
+              type="button"
+              className="btn btn-save-form btn-huy mx-3"
+              style={{ marginTop: "1rem" }}
+              onClick={handleShowModalCancel}
+            >
+              Hủy
+            </button>
+          )}
+          {contractInfo.paymentstatus !== "Paid" && (
+            <button
+              type="button"
+              className="btn btn-save-form btn-hover mx-3"
+              style={{ marginTop: "1rem" }}
+            >
+              Thanh Toán
+            </button>
+          )}
+        </div>
       </div>
+
+      <ConfirmCancelModal
+        show={showModalCancel}
+        onHide={handleCloseModalCancel}
+        onConfirm={handleDeleteContractAndMenu}
+      />
+
+      <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} />
     </section>
   );
 };
 
-export default ContractCreateStep1;
+export default ContractInfo;

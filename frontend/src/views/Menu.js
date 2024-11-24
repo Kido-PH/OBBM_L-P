@@ -30,6 +30,7 @@ const Menu = () => {
   const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
   const location = useLocation();
   const [isModalEventsOpen, setIsModalEventsOpen] = useState(false);
+  const [hoveredSlide, setHoveredSlide] = useState(null);
   const handleOpenModalEvents = () => {
     setIsModalEventsOpen(true);
   };
@@ -75,6 +76,10 @@ const Menu = () => {
   };
 
   useEffect(() => {
+    const token =
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NTc0Nzc1LCJpYXQiOjE3MzE1NzQ3NzUsImp0aSI6IjgzMTI2ZWIwLTg1ZjAtNGNlOC1hZDgyLTE5YzcyN2FmZGVlZSIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.vFWld-GMSCGLh0oocqvoTRutjA1cKgJpLhT2JjF96M03-JThuqUFxzzWR1BN7fQr0K2hDD7Ensvdp88W8c-Kow";
+    sessionStorage.setItem("token", token);
+
     const fetchMenu = async () => {
       const response = await menuApi.getAllMenuAdmin();
       const menuData = response.result.content;
@@ -137,8 +142,9 @@ const Menu = () => {
         name: selectedMenu.name,
         totalcost: 10000000,
         description: selectedMenu.description,
-        userId: "U002",
-        eventId: selectedMenu.events,
+        userId: currentUserId,
+        eventId: selectedMenu.events?.eventId,
+
       };
       console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
@@ -155,6 +161,7 @@ const Menu = () => {
       });
       console.log(selectedMenu);
       console.log("menu dish gửi đi api:", selectedMenuDishes);
+      navigate("/contract")
     } catch (error) {
       console.log("Lỗi khi tạo thực đơn hoặc món ăn:", error);
       Swal.fire({

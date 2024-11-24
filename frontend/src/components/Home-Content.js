@@ -171,6 +171,7 @@ const Content = () => {
     const EventsList = await eventApi.getAll();
     setEvents(EventsList.result.content); // Cập nhật state
   };
+
   useEffect(() => {
     const token =
       "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTczMjQzNjUwNiwiaWF0IjoxNzMyNDM2NTA2LCJqdGkiOiIzOGFkMWNhZC0yYjFkLTQxOGUtYmI5Yi0wMDM1ZmM2NTgxYmUiLCJzY29wZSI6IlJPTEVfQURNSU4gREVMRVRFX0RJU0ggQ1JFQVRFX1VTRVIgVVBEQVRFX1NFUlZJQ0VTIERFTEVURV9FVkVOVCBERUxFVEVfTE9DQVRJT04gUkVBRF9TRVJWSUNFUyBSRUFEX0VWRU5UIENSRUFURV9DT05UUkFDVCBSRUFEX0xPQ0FUSU9OIFJFQURfSU5HUkVESUVOVCBERUxFVEVfVVNFUiBDUkVBVEVfTUVOVSBERUxFVEVfU0VSVklDRVMgQ1JFQVRFX0xPQ0FUSU9OIENSRUFURV9FVkVOVCBSRUFEX0NPTlRSQUNUIFVQREFURV9NRU5VIFJFQURfRElTSCBDUkVBVEVfU0VSVklDRVMgREVMRVRFX01FTlUgVVBEQVRFX0VWRU5UIENSRUFURV9ESVNIIFJFQURfVVNFUiBVUERBVEVfTE9DQVRJT04gVVBEQVRFX0NPTlRSQUNUIFVQREFURV9JTkdSRURJRU5UIENSRUFURV9JTkdSRURJRU5UIERFTEVURV9JTkdSRURJRU5UIERFTEVURV9DT05UUkFDVCBSRUFEX01FTlUgVVBEQVRFX0RJU0ggVVBEQVRFX1VTRVIifQ.kaLopBa7E2vF75Eo_9wEKr82jCRfkkOB84-5FvrK5Cmtd2HMTm8nCtkkF-TkcqdOmdVbruCxApS-iB8EtZzO5Q";
@@ -195,10 +196,11 @@ const Content = () => {
     setEventToMenuUrl(`menu/${eventId}`);
   };
 
-  const pushEventIdtoMenu = async (eventId) => {
+  const pushEventIdtoMenu = async (item) => {
     try {
-      const Id = eventId;
-      setMenuIdUrl(Id);
+      const selectedEvent = item;
+      localStorage.setItem("currentEventId",selectedEvent.eventId)
+      setMenuIdUrl(selectedEvent.eventId);
     } catch (error) {
       console.error("Lỗi khi lấy event Id:", error);
     }
@@ -247,6 +249,7 @@ const Content = () => {
             <div className="container">
               <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
               <ul className="promo-list has-scrollbar">
+<<<<<<< HEAD
                 {Events.map((event) => (
                   <li
                     key={event.eventId}
@@ -262,30 +265,30 @@ const Content = () => {
                         className="promo-card"
                         style={{ width: "285px", height: "443px" }}
                       >
+=======
+                {Events.map((item) => (
+                  <li key={item.eventId} className="promo-item" style={{width: "285px", height:"443px"}}>
+                    <button onClick={() => {pushEventIdtoMenu(item)}}>
+                      <div className="promo-card" style={{width: "285px", height:"443px"}}>
+>>>>>>> 66e1d803fb9265b4c074abbbc3bb99bc0cf7523a
                         <div className="card-icon">
                           {/* Add any specific icons or elements here if needed */}
                         </div>
 
-                        <h3 className="h3 card-title">{event.name}</h3>
-
-                        <p
-                          className="card-text"
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            textAlign: "center",
-                          }}
-                        >
-                          {event.description}
-                        </p>
+                        <h3 className="h3 card-title">{item.name}</h3>
+                        <p className="card-text" style={{
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            textAlign: "center",
+                                          }}>{item.description}</p>
 
                         <img
-                          src={event.image}
+                          src={item.image}
                           width="300"
                           height="300"
                           loading="lazy"
-                          alt={event.name}
+                          alt={item.name}
                           className="w-100 card-banner"
                         />
                       </div>
@@ -298,7 +301,7 @@ const Content = () => {
 
           <section className="section section-divider gray about" id="about">
             <div className="container">
-              <div className="about-banner">
+              <div className="about-banner">  
                 <img
                   src={aboutBanner}
                   width="509"
