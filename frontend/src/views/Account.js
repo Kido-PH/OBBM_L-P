@@ -155,6 +155,7 @@ const AccountSection = () => {
 
   return (
     <main style={{ marginTop: '50px' }}>
+        {userDetails ? (
       <section
         className="section section-divider white account-section"
         id="blog"
@@ -169,10 +170,16 @@ const AccountSection = () => {
                 alt="Profile"
               />
             </div>
-            <p className="profile-name">Bill Gates</p>
-            <p className="join-date section-title">
-              Registration Date: <span className="span">26/05/2024</span>
-            </p>
+            <p className="profile-name">{`${userDetails.fullname}`}</p>
+            <p className="email">Ngày sinh: {userDetails.dob}</p>
+              <ul>
+                Vai trò: 
+                {userDetails.roles?.map((item, index) => (
+                  <li className="email" key={index}>
+                    {item.name}
+                  </li>
+                ))}
+              </ul>
           </div>
 
           <div className="container w-75">
@@ -194,6 +201,7 @@ const AccountSection = () => {
                   aria-label="Full Name:"
                   className="input-field"
                   disabled
+                  value={userDetails.fullname || ""}
                 />
                 <input
                   type="text"
@@ -203,10 +211,10 @@ const AccountSection = () => {
                   placeholder="UserName"
                   aria-label="UserName"
                   className="input-field"
+                  value={userDetails.username || ""}
                   disabled
                 />
               </div>
-
               <div className="input-wrapper">
                 <input
                   type="email"
@@ -216,6 +224,7 @@ const AccountSection = () => {
                   placeholder="Email"
                   aria-label="Email"
                   className="input-field"
+                  value={userDetails.email || ""}
                   disabled
                 />
                 <input
@@ -226,6 +235,7 @@ const AccountSection = () => {
                   placeholder="Phone Number"
                   aria-label="Phone Number"
                   className="input-field"
+                  value={userDetails.phone || ""}
                   disabled
                 />
               </div>
@@ -238,6 +248,7 @@ const AccountSection = () => {
                   placeholder="Address"
                   aria-label="Address"
                   className="input-field"
+                  // value={userDetails.address || ""}
                   disabled
                 />
                 <input
@@ -247,6 +258,7 @@ const AccountSection = () => {
                   placeholder="Birthdate"
                   aria-label="Date of Birth"
                   className="input-field"
+                  value={userDetails.dob || ""}
                   disabled
                 />
               </div>
@@ -298,7 +310,8 @@ const AccountSection = () => {
                   <div id="result" className="mt-3" style={{ display: 'none' }}></div>
                 </div>
               </div>
-              <Snackbar
+              
+              {/* <Snackbar
         open={snackBarOpen}
         onClose={handleCloseSnackBar}
         autoHideDuration={6000}
@@ -312,8 +325,8 @@ const AccountSection = () => {
         >
           {snackBarMessage}
         </Alert>
-      </Snackbar>
-              {userDetails ? (
+      </Snackbar> */}
+              {/* {userDetails ? (
         <Box
           display="flex"
           flexDirection="column"
@@ -404,7 +417,7 @@ const AccountSection = () => {
           <CircularProgress></CircularProgress>
           <Typography>Loading ...</Typography>
         </Box>
-      )}
+      )} */}
 
              
 
@@ -434,6 +447,21 @@ const AccountSection = () => {
           </div>
         </div>
       </section>
+      ) : (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "30px",
+            justifyContent: "center",
+            alignItems: "center",
+            height: "100vh",
+          }}
+        >
+          <CircularProgress></CircularProgress>
+          <Typography>Loading ...</Typography>
+        </Box>
+      )}
     </main>
   );
 };

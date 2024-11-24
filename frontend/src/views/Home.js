@@ -1,4 +1,4 @@
-// src/components/Home.js
+
 import React from 'react';
 import Content from '../components/Home-Content';
 

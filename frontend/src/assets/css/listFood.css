@@ -73,10 +73,9 @@
 
 .food-item {
   flex: 1 1 16%; /* Chiếm khoảng 30% chiều rộng và co dãn */
-  margin: 10px; /* Khoảng cách giữa các món ăn */
+  margin: 20px; /* Khoảng cách giữa các món ăn */
   border: 1px solid #ddd; /* Đường viền nhẹ cho từng món ăn */
   border-radius: 8px; /* Bo tròn góc */
-  padding: 15px; /* Padding bên trong từng món ăn */
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Đổ bóng nhẹ */
   text-align: center; /* Canh giữa nội dung */
   background-color: #fff; /* Màu nền trắng cho món ăn */
@@ -88,21 +87,21 @@
   transform: translateY(-5px); /* Hiệu ứng nâng lên khi hover */
 }
 
-.food-details {
-  margin-top: 10px; /* Khoảng cách giữa tên món ăn và giá */
-}
+
 
 .food-details {
   display: flex;
   align-items: center; /* Căn giữa theo chiều dọc */
   justify-content: center; /* Căn giữa theo chiều ngang */
   flex-direction: column; /* Đảm bảo nội dung bên trong xếp chồng lên nhau */
+  border-radius: 40px;
 }
 
 .food-details img {
-  width: 120px;
-  height: 100px;
+  width: 100%;
+  height: 150px;
   padding-left: 0px !important; 
+  border-radius: 40px;
 }
 
 
@@ -155,11 +154,10 @@
   justify-content: flex-start; /* Căn các món về trái */
   padding: 0;
   margin: 0;
+  margin-left: 10px;
 }
 
 .food-item {
-  margin-right: 25px;
-  margin-left: 16px;  
   flex: 1 1 calc(23% - 10px); /* Đảm bảo món chiếm đúng 20% */
   max-width: calc(20% - 10px); /* Giới hạn tối đa chiều rộng */
   box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước */

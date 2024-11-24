@@ -38,6 +38,7 @@
     "react-tooltip": "^5.28.0",
     "slick-carousel": "^1.8.1",
     "styled-components": "^6.1.13",
+    "sweetalert2": "^11.14.5",
     "swiper": "^11.1.14",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5"

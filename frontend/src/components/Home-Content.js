@@ -173,7 +173,7 @@ const Content = () => {
   };
   useEffect(() => {
     const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxNzQ5NDk5NDMzLCJpYXQiOjE3MzE0OTk0MzMsImp0aSI6IjE5YjhmZDA1LWQ3M2QtNGFiMC1hYjhiLTAxOGY1NDY1MWYwMyIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.nZbr_U9_3pkJpEia51fed9tcBgG6JCt47YeI5YA7Z-UTIgbBWWYGroR6CQNA42cbAOS3qMAbXdG1DGo2-Zg0-g";
+      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTczMjQzNjUwNiwiaWF0IjoxNzMyNDM2NTA2LCJqdGkiOiIzOGFkMWNhZC0yYjFkLTQxOGUtYmI5Yi0wMDM1ZmM2NTgxYmUiLCJzY29wZSI6IlJPTEVfQURNSU4gREVMRVRFX0RJU0ggQ1JFQVRFX1VTRVIgVVBEQVRFX1NFUlZJQ0VTIERFTEVURV9FVkVOVCBERUxFVEVfTE9DQVRJT04gUkVBRF9TRVJWSUNFUyBSRUFEX0VWRU5UIENSRUFURV9DT05UUkFDVCBSRUFEX0xPQ0FUSU9OIFJFQURfSU5HUkVESUVOVCBERUxFVEVfVVNFUiBDUkVBVEVfTUVOVSBERUxFVEVfU0VSVklDRVMgQ1JFQVRFX0xPQ0FUSU9OIENSRUFURV9FVkVOVCBSRUFEX0NPTlRSQUNUIFVQREFURV9NRU5VIFJFQURfRElTSCBDUkVBVEVfU0VSVklDRVMgREVMRVRFX01FTlUgVVBEQVRFX0VWRU5UIENSRUFURV9ESVNIIFJFQURfVVNFUiBVUERBVEVfTE9DQVRJT04gVVBEQVRFX0NPTlRSQUNUIFVQREFURV9JTkdSRURJRU5UIENSRUFURV9JTkdSRURJRU5UIERFTEVURV9JTkdSRURJRU5UIERFTEVURV9DT05UUkFDVCBSRUFEX01FTlUgVVBEQVRFX0RJU0ggVVBEQVRFX1VTRVIifQ.kaLopBa7E2vF75Eo_9wEKr82jCRfkkOB84-5FvrK5Cmtd2HMTm8nCtkkF-TkcqdOmdVbruCxApS-iB8EtZzO5Q";
     sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
 
     fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
@@ -251,7 +251,7 @@ const Content = () => {
                   <li
                     key={event.eventId}
                     className="promo-item"
-                    style={{ width: "285px", height: "443px" }}
+                    style={{ width: "285px", height: "443px", marginRight:"30px" }}
                   >
                     <button
                       onClick={() => {
@@ -413,7 +413,9 @@ const Content = () => {
               </ul>
 
               {filteredCategories.map((category) => (
-                <div key={category.categoryId}>
+                <div key={category.categoryId} style={{display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center"}}>
                   <ul className="food-menu-list">
                     {category.listDish.map((dish) => (
                       <li key={dish.dishId}>
@@ -422,7 +424,7 @@ const Content = () => {
                             <img
                               src={dish.image}
                               alt={dish.name}
-                              style={{ width: "100%", height: "200px" }}
+                              style={{ width: "100%", height: "120px" }}
                               loading="lazy"
                               className="w-100"
                             />
@@ -436,17 +438,17 @@ const Content = () => {
                             <p className="category">{category.description}</p>
                           </div>
 
-                          <h3
-                            className="h3 card-title"
+                          <h4
+                            className=" card-title"
                             style={{ textAlign: "center" }}
                           >
                             {dish.name}
-                          </h3>
+                          </h4>
 
-                          <div className="price-wrapper">
+                          {/* <div className="price-wrapper">
                             <p className="price-text">Giá:</p>
                             {dish.price.toLocaleString()} VND
-                          </div>
+                          </div> */}
                         </div>
                       </li>
                     ))}
