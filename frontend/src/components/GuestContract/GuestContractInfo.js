@@ -7,6 +7,7 @@ import guestContractApi from "api/guestContractApi";
 import ConfirmCancelModal from "./ModalCancelContract";
 import Swal from "sweetalert2";
 import ModalInfoMenu from "./ModalInfoMenu";
+import PaymentCard from "./PaymentCard";
 
 const ContractInfo = () => {
   const { id } = useParams();
@@ -15,6 +16,7 @@ const ContractInfo = () => {
   const navigate = useNavigate();
   const [showModalCancel, setShowModalCancel] = React.useState(false);
   const [showModalMenu, setShowModalMenu] = React.useState(false);
+  const [showPaymentCard, setShowPaymentCard] = React.useState(false);
 
   // Hàm mở modal
   const handleShowModalCancel = () => {
@@ -33,6 +35,12 @@ const ContractInfo = () => {
   const handleCloseModalMenu = () => {
     setShowModalMenu(false);
   };
+
+  const handleTogglePaymentCard = () => {
+    setShowPaymentCard((prevShowForm) => !prevShowForm);
+  };
+
+  const handlePayment = () => {};
 
   // Hàm xóa hợp đồng và thực đơn
   const handleDeleteContractAndMenu = async () => {
@@ -255,9 +263,27 @@ const ContractInfo = () => {
                     Tổng cộng:
                   </label>
                   <span className="text-success fw-bold">
+                    {formatCurrency(contractInfo.totalcost)} VND
+                  </span>
+                </div>
+                <div className="mb-3 d-flex align-items-center">
+                  <label className="form-label fw-bold mb-0 me-2">
+                    Đã thanh toán:
+                  </label>
+                  <span className="text-success fw-bold">
                     {formatCurrency(
-                      contractInfo.menus?.totalcost * contractInfo.guest +
-                        contractInfo.locations?.cost
+                      "0" //sau này tính ở đây
+                    )}{" "}
+                    VND
+                  </span>
+                </div>
+                <div className="mb-3 d-flex align-items-center">
+                  <label className="form-label fw-bold mb-0 me-2">
+                    Số tiền còn lại:
+                  </label>
+                  <span className="text-success fw-bold">
+                    {formatCurrency(
+                      contractInfo.totalcost //sau này tính ở đây
                     )}{" "}
                     VND
                   </span>
@@ -324,16 +350,25 @@ const ContractInfo = () => {
               Hủy
             </button>
           )}
-          {contractInfo.paymentstatus !== "Paid" && (
+          {(contractInfo.paymentstatus === "Unpaid" ||
+            contractInfo.paymentstatus === "50%" ||
+            contractInfo.paymentstatus === "70%") && (
             <button
               type="button"
               className="btn btn-save-form btn-hover mx-3"
               style={{ marginTop: "1rem" }}
+              onClick={handleTogglePaymentCard}
             >
               Thanh Toán
             </button>
           )}
         </div>
+        {showPaymentCard && (
+          <PaymentCard
+            onHide={handlePayment}
+            totalCost={contractInfo.totalcost}
+          />
+        )}
       </div>
 
       <ConfirmCancelModal

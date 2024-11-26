@@ -28,11 +28,8 @@ import AdminAnalytics from "./components/Admin/Admin-Analytics";
 import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
 import CategoryDish from "./components/Admin/Admin-CategoryDish";
-<<<<<<< HEAD
 import IngredientManager from "./components/Admin/Admin-Ingredient";
-=======
 import Authenticate from "./components/Authenticate";
->>>>>>> main
 
 const App = () => {
   const location = useLocation();

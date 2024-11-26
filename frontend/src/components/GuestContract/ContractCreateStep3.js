@@ -7,6 +7,9 @@ import { multiStepContext } from "../../StepContext";
 import { useNavigate } from "react-router-dom";
 import ModalInfoMenu from "./ModalInfoMenu";
 import LoadingPage from "components/LoadingPage";
+import ModalServices from "./ModalServices";
+import ModalInfoServices from "./ModalInfoServices";
+import eventApi from "api/eventApi";
 
 const ContractCreateStep3 = () => {
   const {
@@ -17,20 +20,60 @@ const ContractCreateStep3 = () => {
     submitData,
     menuData,
     setMenuData,
+    tempServicesData,
+    eventData,
+    setEventData,
+    eventServicesData,
   } = React.useContext(multiStepContext);
   const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
   const createdMenu = JSON.parse(localStorage.getItem("createdMenu"));
   const currentUserId = JSON.parse(sessionStorage.getItem("currentUserId")); // Parse chuỗi JSON thành đối tượng
-  const currentEvent = JSON.parse(localStorage.getItem("currentEvent")); // Parse chuỗi JSON thành đối tượng
+  const currentEventId = JSON.parse(localStorage.getItem("currentEventId")); // Parse chuỗi JSON thành đối tượng
   const currentLocation = JSON.parse(localStorage.getItem("currentLocation")); // UserId có thể là chuỗi
 
+  const [currentEventChoosen, setCurrentEventChoosen] = React.useState();
+  const [totalServicesCost, setTotalServicesCost] = React.useState(0);
+
   const [showModalMenu, setShowModalMenu] = React.useState(false);
+  const [showModalServices, setShowModalServices] = React.useState(false);
   const [showModalConfirm, setShowModalConfirm] = React.useState(false);
+
+  const initStateEvent = async () => {
+    try {
+      const currentEvent = await eventApi.get(currentEventId);
+      setEventData({
+        name: currentEvent?.result.name + " của " + contractData.custname,
+        totalcost: calculateTotalCost(),
+        description:
+          currentEvent?.result.name +
+          " của " +
+          contractData.custname +
+          " hoành tráng",
+        image: "",
+        userId: currentUserId,
+      });
+
+      setContractData((prevData) => ({
+        ...prevData,
+        type: currentEvent?.result.name,
+      }));
+
+      console.log("state eventData gửi đi API:", eventData);
+    } catch (error) {
+      console.error("Error fetching event info:", error);
+    }
+  };
+
+  const calculateTotalCost = () => {
+    const total = tempServicesData.reduce((sum, service) => {
+      return sum + service.price; // Sử dụng field `cost` của từng service
+    }, 0);
+    return total;
+  };
 
   const initStateMenu = () => {
     setMenuData(createdMenu);
-    console.log("menuData:", menuData);
   };
 
   const setInfoUrl = (contractId) => {
@@ -45,19 +88,22 @@ const ContractCreateStep3 = () => {
     setLoading(false);
   };
 
+  const handleServicesTotalCost = (cost) => {
+    setTotalServicesCost(cost);
+  };
+
   React.useEffect(() => {
     const userId = JSON.parse(sessionStorage.getItem("currentUserId")); // UserId có thể là chuỗi
-
     initStateMenu();
+    initStateEvent();
 
     setContractData((prevData) => ({
       ...prevData,
-      eventId: currentEvent ? currentEvent.eventId : null,
+      // eventId: currentEvent ? currentEvent.eventId : null,
       userId: userId,
       status: "Pending",
       paymentstatus: "Unpaid",
       name: "Hợp đồng của " + contractData.custname,
-      type: currentEvent.event_name,
     }));
   }, []);
 
@@ -68,6 +114,8 @@ const ContractCreateStep3 = () => {
   const checkState = () => {
     console.log("Contract data:", contractData);
     console.log("Menu data: ", menuData);
+    console.log("Event data: ", eventData);
+    console.log("Services data: ", eventServicesData);
   };
 
   React.useEffect(() => {
@@ -76,12 +124,21 @@ const ContractCreateStep3 = () => {
     }
   }, [contractInfoUrl, navigate]);
 
+  //tắt mở các modal
   const handleShowModalMenu = () => {
     setShowModalMenu(true);
   };
 
   const handleCloseModalMenu = () => {
     setShowModalMenu(false);
+  };
+
+  const handleShowModalServices = () => {
+    setShowModalServices(true);
+  };
+
+  const handleCloseModalServices = () => {
+    setShowModalServices(false);
   };
 
   const formatCurrency = (amount) => {
@@ -132,21 +189,45 @@ const ContractCreateStep3 = () => {
                   </button>
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Địa điểm</label>
-                  <button className="form-control fs-4 d-flex justify-content-between align-middle">
-                    <p
-                      className="mb-0"
-                      style={{
-                        whiteSpace: "nowrap",
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                      }}
-                    >
-                      {currentLocation.name} - {currentLocation.address}{" "}
-                    </p>
-                    <FaEye />
-                  </button>
+                <div className="row row-cols-md-2 mb-3">
+                  <div className="col">
+                    <label className="form-label fw-bold">Địa điểm</label>
+                    <button className="form-control fs-4 d-flex justify-content-between align-middle">
+                      <p
+                        className="mb-0"
+                        style={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {currentLocation.name} - {currentLocation.address}{" "}
+                      </p>
+                      <FaEye />
+                    </button>
+                  </div>
+                  <div className="col">
+                    <label className="form-label fw-bold">Dịch vụ</label>
+                    <div className="d-flex align-items-center">
+                      <div
+                        className="form-control fs-4"
+                        onClick={handleShowModalServices}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <p
+                          className="mb-0"
+                          style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {tempServicesData[0]?.name} -{" "}
+                          {formatCurrency(tempServicesData[0]?.price)} ...
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -175,7 +256,7 @@ const ContractCreateStep3 = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Sự kiện</label>
                   <div className="form-control input-hienthi fs-4">
-                    {currentEvent.event_name}
+                    {currentEventChoosen?.name}
                   </div>
                 </div>
               </div>
@@ -260,6 +341,20 @@ const ContractCreateStep3 = () => {
               <div className="col">
                 <div className="mb-3 d-flex align-items-center">
                   <label className="form-label fw-bold mb-0 me-2">
+                    Tổng chi phí dịch vụ:
+                  </label>
+                  <span
+                    className="fw-bold"
+                    style={{ color: "var(--deep-saffron)" }}
+                  >
+                    {formatCurrency(totalServicesCost)} VND
+                  </span>
+                </div>
+              </div>
+
+              <div className="col">
+                <div className="mb-3 d-flex align-items-center">
+                  <label className="form-label fw-bold mb-0 me-2">
                     Tổng chi phí thực đơn:
                   </label>
                   <span
@@ -271,16 +366,15 @@ const ContractCreateStep3 = () => {
                   </span>
                 </div>
               </div>
-
-              <div className="col">
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label fw-bold mb-0 me-2">
-                    Tổng cộng:
-                  </label>
-                  <span className="text-success fw-bold">
-                    {formatCurrency(contractData.totalcost)} VND
-                  </span>
-                </div>
+            </div>
+            <div className="d-flex justify-content-center">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Tổng cộng:
+                </label>
+                <span className="text-success fw-bold">
+                  {formatCurrency(contractData.totalcost)} VND
+                </span>
               </div>
             </div>
           </div>
@@ -322,6 +416,11 @@ const ContractCreateStep3 = () => {
       </div>
 
       <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} />
+      <ModalInfoServices
+        show={showModalServices}
+        onClose={handleCloseModalServices}
+        onTotalCost={handleServicesTotalCost}
+      />
 
       <Modal
         show={showModalConfirm}
