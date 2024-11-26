@@ -58,13 +58,13 @@ const Menu = () => {
   const [menu, setMenu] = useState([]);
 
   const handleShowMenuPopup = (menu) => {
-    // Lấy menuId lớn nhất từ cơ sở dữ liệu hoặc danh sách menu
-    const latestMenuId = Math.max(...menuList.map((menu) => menu.menuId), 0);
-    const newMenuId = latestMenuId + 1;
+    // // Lấy menuId lớn nhất từ cơ sở dữ liệu hoặc danh sách menu
+    // const latestMenuId = Math.max(...menuList.map((menu) => menu.menuId), 0);
+    // const newMenuId = latestMenuId + 1;
   
-    // Cập nhật menuId cho selectedMenu
-    const updatedMenu = { ...menu, menuId: newMenuId };
-    setSelectedMenu(updatedMenu);
+    // // Cập nhật menuId cho selectedMenu
+    // const updatedMenu = { ...menu, menuId: newMenuId };
+    // setSelectedMenu(updatedMenu);
   
     setShowModal(true); // Hiển thị modal
   };
@@ -84,7 +84,7 @@ const Menu = () => {
         dishesId: menuDishes?.dishes?.dishId,
         quantity: 1,
         price: menuDishes.dishes?.price,
-        menuId: latestMenuId +1,
+        menuId: null,
       };
     });
     setSelectedMenuDishes(menuDishesList);
@@ -120,9 +120,6 @@ const Menu = () => {
             ? Math.max(...menuList.map((menu) => menu.menuId))
             : 0;
     
-        console.log("Danh sách menu:", menuList);
-        console.log("MenuId lớn nhất:", latestMenuId);
-    
         setMenuList(menuList); // Lưu danh sách thực đơn vào state
         setLatestMenuId(latestMenuId); // Lưu menuId lớn nhất vào state (nếu cần)
       } catch (error) {
@@ -140,7 +137,6 @@ const Menu = () => {
   ? Math.max(...menuList.map((menu) => menu.menuId), 0)
   : 0;
 
-    console.log("MenuId lớn nhất:", latestMenuId);
     // console.log("selectedMenu Menu Data:", selectedMenu);
   }, [id, location]);
 
@@ -177,63 +173,61 @@ const Menu = () => {
 
   const handleCreateMenu = async () => {
     try {
+      const userId = localStorage.getItem("userId");
+  
+      if (!userId) {
+        throw new Error("Người dùng chưa đăng nhập.");
+      }
+  
+      const totalCost = Object.values(selectedMenu.groupedDishes)
+        .flat()
+        .reduce((total, dish) => total + (dish.price || 0), 0);
+  
+      // Loại bỏ các món ăn trùng lặp trong selectedMenuDishes
+      const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
+        if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
+          acc.push(currentDish);
+        }
+        return acc;
+      }, []);
+  
       // Chuẩn bị dữ liệu để gửi lên server
       const dataToSave = {
         name: selectedMenu.name,
-        totalcost: 10000000,
+        totalcost: totalCost,
         description: selectedMenu.description,
-        userId: "U002",
-        eventId: selectedMenu.events,
+        userId: userId, // Lấy userId từ localStorage
+        eventId: selectedMenu.events.eventId,
       };
+  
       console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
+  
+      // Lưu dữ liệu đã được loại bỏ trùng lặp vào localStorage
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
-      localStorage.setItem(
-        "createdMenuDishes",
-        JSON.stringify(selectedMenuDishes)
-      );
-
-      // Có thể hiển thị thông báo hoặc cập nhật giao diện
+      localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
+  
       Swal.fire({
         icon: "success",
         title: "Thành công!",
         text: "Thực đơn và món ăn đã được tạo thành công!",
       });
-      console.log(selectedMenu);
-      console.log("menu dish gửi đi api:", selectedMenuDishes);
     } catch (error) {
-      console.log("Lỗi khi tạo thực đơn hoặc món ăn:", error);
+      console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
       Swal.fire({
         icon: "error",
         title: "Thất bại!",
         text: "Không thể tạo thực đơn hoặc món ăn. Vui lòng thử lại.",
       });
-      console.log(selectedMenu);
     }
   };
+  
+  
 
-  const handleAddDishToCategory = (dish, categoryId) => {
-    setSelectedDishes((prevSelectedDishes) => {
-      // Lấy danh sách hiện tại của danh mục hoặc tạo mảng mới
-      const updatedCategoryDishes = prevSelectedDishes[categoryId]
-        ? [...prevSelectedDishes[categoryId], dish]
-        : [dish];
-
-      return {
-        ...prevSelectedDishes,
-        [categoryId]: updatedCategoryDishes,
-      };
-    });
-  };
-
-  // Chuyển đổi đối tượng groupedMenu thành mảng để dễ render
-
-  // Hàm bật/tắt hiển thị ListFood
   const toggleListFood = (id) => {
     setSelectedId(id);
     setShowListFood(true);
   };
 
-  // Hàm để ẩn ListFood
   const closeListFood = () => {
     setShowListFood(false);
   };
@@ -248,41 +242,77 @@ const Menu = () => {
   };
 
   const handleAddDish = (dish) => {
+    // Kiểm tra xem món ăn đã tồn tại trong selectedMenuDishes hay chưa
+    const isDishExists = selectedMenuDishes.some(
+      (existingDish) => existingDish.dishesId === dish.dishId
+    );
+  
+    if (isDishExists) {
+      // Hiển thị thông báo món ăn đã tồn tại
+      Swal.fire({
+        icon: "warning",
+        title: "Món ăn đã tồn tại",
+        text: `Món ăn "${dish.name}" đã có trong danh sách!`,
+      });
+      return; // Kết thúc hàm nếu món ăn đã tồn tại
+    }
+    
+    // Nếu chưa tồn tại, tiến hành thêm món
     setSelectedMenu((prevMenu) => {
       const categoryName = dish.categories.name; // Lấy tên category từ dish
       const updatedGroupedDishes = { ...prevMenu.groupedDishes };
-
+  
       // Nếu category chưa tồn tại, tạo mảng mới
       if (!updatedGroupedDishes[categoryName]) {
         updatedGroupedDishes[categoryName] = [];
       }
-
+  
       // Thêm món ăn vào category
       updatedGroupedDishes[categoryName] = [
         ...updatedGroupedDishes[categoryName],
         dish,
       ];
-
+  
       // Cập nhật selectedMenuDishes với món ăn mới
-      setSelectedMenuDishes((prevDishes) => {
-        const updatedDishesList = [
-          ...prevDishes,
-          {
-            dishesId: dish.dishId,
-            quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
-            price: dish.price,
-            menuId: selectedMenu.menuId,
-          },
-        ];
-        return updatedDishesList; // Cập nhật danh sách món ăn
-      });
-
+      setSelectedMenuDishes((prevDishes) => [
+        ...prevDishes,
+        {
+          dishesId: dish.dishId,
+          quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
+          price: dish.price,
+          menuId: null,
+        },
+      ]);
       return {
         ...prevMenu,
         groupedDishes: updatedGroupedDishes,
       };
     });
+
+    setSelectedMenuDishes((prevDishes) => {
+      // Thêm món mới vào danh sách
+      const updatedDishesList = [
+        ...prevDishes,
+        {
+          dishesId: dish.dishId,
+          quantity: 1,
+          price: dish.price,
+          menuId: null,
+        },
+      ];
+  
+      // Loại bỏ các món trùng lặp dựa trên dishId
+      const uniqueDishes = updatedDishesList.reduce((acc, currentDish) => {
+        if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
+          acc.push(currentDish);
+        }
+        return acc;
+      }, []);
+  
+      return uniqueDishes; // Cập nhật lại danh sách không trùng lặp
+    });
   };
+  
 
   // useEffect(() => {
   //   if (activeTab === "tab1") {
