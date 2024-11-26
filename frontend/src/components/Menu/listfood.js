@@ -92,7 +92,9 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
                     title="Thêm"
                     onClick={() => onAddDish(dish)}
+                    
                   >
+                    
                     <FaPlus /> {/* Plus icon for "Add" */}
                   </button>
                   <button
