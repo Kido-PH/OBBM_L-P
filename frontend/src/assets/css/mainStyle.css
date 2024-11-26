@@ -705,7 +705,7 @@ body.active { overflow: hidden; }
   text-align: center;
 }
 
-.food-menu .section-title { margin-block: 10px 20px; }
+.food-menu .section-title { margin-block: 10px 10px; }
 
 .food-menu .section-text {
   max-width: 44ch;
@@ -718,7 +718,7 @@ body.active { overflow: hidden; }
   flex-wrap: wrap;
   justify-content: center;
   gap: 10px;
-  margin-block-end: 40px;
+  margin-block-end: 20px;
 }
 
 .filter-btn {
@@ -739,11 +739,12 @@ body.active { overflow: hidden; }
 .food-menu-list {
   display: grid;
   gap: 30px;
+  width: 700px;
 }
 
 .food-menu-card {
   background-color: var(--white);
-  padding: 30px;
+  padding: 10px;
   box-shadow: var(--shadow-2);
 }
 
@@ -788,7 +789,7 @@ body.active { overflow: hidden; }
   justify-content: center;
   align-items: center;
   gap: 15px;
-  margin-block: 20px 10px;
+  /* margin-block: 10px 10px; */
 }
 
 .food-menu-card .category {
@@ -799,7 +800,7 @@ body.active { overflow: hidden; }
 
 .food-menu-card .rating-wrapper { font-size: 1.4rem; }
 
-.food-menu-card .card-title { margin-block-end: 10px; }
+/* .food-menu-card .card-title { margin-block-end: 10px; } */
 
 .food-menu-card .price-wrapper {
   display: flex;

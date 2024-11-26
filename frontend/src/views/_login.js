@@ -11,7 +11,6 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-
 import GoogleIcon from "@mui/icons-material/Google";
 import { OAuthConfig } from "../configurations/configuration";
 import { useEffect, useState } from "react";
