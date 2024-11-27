@@ -61,11 +61,11 @@ const Menu = () => {
     // // Lấy menuId lớn nhất từ cơ sở dữ liệu hoặc danh sách menu
     // const latestMenuId = Math.max(...menuList.map((menu) => menu.menuId), 0);
     // const newMenuId = latestMenuId + 1;
-  
+
     // // Cập nhật menuId cho selectedMenu
     // const updatedMenu = { ...menu, menuId: newMenuId };
     // setSelectedMenu(updatedMenu);
-  
+
     setShowModal(true); // Hiển thị modal
   };
   const handleCloseModal = () => setShowModal(false);
@@ -73,11 +73,11 @@ const Menu = () => {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
 
   const handleSelectMenu = (menu) => {
-    
     setSelectedMenu(menu);
-    const latestMenuId = menuList && menuList.length > 0
-  ? Math.max(...menuList.map((menu) => menu.menuId), 0)
-  : 0;
+    const latestMenuId =
+      menuList && menuList.length > 0
+        ? Math.max(...menuList.map((menu) => menu.menuId), 0)
+        : 0;
 
     const menuDishesList = menu.listMenuDish.map((menuDishes) => {
       return {
@@ -113,13 +113,13 @@ const Menu = () => {
       try {
         const response = await menuApi.getAll(); // Gọi API lấy danh sách menu
         const menuList = response.result?.content || []; // Lấy danh sách thực đơn hoặc mảng rỗng
-    
+
         // Lấy menuId lớn nhất
         const latestMenuId =
           menuList.length > 0
             ? Math.max(...menuList.map((menu) => menu.menuId))
             : 0;
-    
+
         setMenuList(menuList); // Lưu danh sách thực đơn vào state
         setLatestMenuId(latestMenuId); // Lưu menuId lớn nhất vào state (nếu cần)
       } catch (error) {
@@ -127,15 +127,15 @@ const Menu = () => {
         setMenuList([]); // Nếu lỗi, gán danh sách thực đơn rỗng
       }
     };
-    
 
     fetchMenuList();
     fetchEvent();
     fetchMenu();
     fetchMenuList();
-    const latestMenuId = menuList && menuList.length > 0
-  ? Math.max(...menuList.map((menu) => menu.menuId), 0)
-  : 0;
+    const latestMenuId =
+      menuList && menuList.length > 0
+        ? Math.max(...menuList.map((menu) => menu.menuId), 0)
+        : 0;
 
     // console.log("selectedMenu Menu Data:", selectedMenu);
   }, [id, location]);
@@ -174,15 +174,15 @@ const Menu = () => {
   const handleCreateMenu = async () => {
     try {
       const userId = localStorage.getItem("userId");
-  
+
       if (!userId) {
         throw new Error("Người dùng chưa đăng nhập.");
       }
-  
+
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
         .reduce((total, dish) => total + (dish.price || 0), 0);
-  
+
       // Loại bỏ các món ăn trùng lặp trong selectedMenuDishes
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
@@ -190,7 +190,7 @@ const Menu = () => {
         }
         return acc;
       }, []);
-  
+
       // Chuẩn bị dữ liệu để gửi lên server
       const dataToSave = {
         name: selectedMenu.name,
@@ -199,13 +199,13 @@ const Menu = () => {
         userId: userId, // Lấy userId từ localStorage
         eventId: selectedMenu.events.eventId,
       };
-  
+
       console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
-  
+
       // Lưu dữ liệu đã được loại bỏ trùng lặp vào localStorage
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
       localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-  
+
       Swal.fire({
         icon: "success",
         title: "Thành công!",
@@ -220,8 +220,6 @@ const Menu = () => {
       });
     }
   };
-  
-  
 
   const toggleListFood = (id) => {
     setSelectedId(id);
@@ -246,33 +244,33 @@ const Menu = () => {
     const isDishExists = selectedMenuDishes.some(
       (existingDish) => existingDish.dishesId === dish.dishId
     );
-  
+
     if (isDishExists) {
       // Hiển thị thông báo món ăn đã tồn tại
       Swal.fire({
-        icon: "warning",
+        icon: "info",
         title: "Món ăn đã tồn tại",
-        text: `Món ăn "${dish.name}" đã có trong danh sách!`,
+        text: `Món "${dish.name}" đã có trong danh sách!`,
       });
       return; // Kết thúc hàm nếu món ăn đã tồn tại
     }
-    
+
     // Nếu chưa tồn tại, tiến hành thêm món
     setSelectedMenu((prevMenu) => {
       const categoryName = dish.categories.name; // Lấy tên category từ dish
       const updatedGroupedDishes = { ...prevMenu.groupedDishes };
-  
+
       // Nếu category chưa tồn tại, tạo mảng mới
       if (!updatedGroupedDishes[categoryName]) {
         updatedGroupedDishes[categoryName] = [];
       }
-  
+
       // Thêm món ăn vào category
       updatedGroupedDishes[categoryName] = [
         ...updatedGroupedDishes[categoryName],
         dish,
       ];
-  
+
       // Cập nhật selectedMenuDishes với món ăn mới
       setSelectedMenuDishes((prevDishes) => [
         ...prevDishes,
@@ -300,7 +298,7 @@ const Menu = () => {
           menuId: null,
         },
       ];
-  
+
       // Loại bỏ các món trùng lặp dựa trên dishId
       const uniqueDishes = updatedDishesList.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
@@ -308,11 +306,10 @@ const Menu = () => {
         }
         return acc;
       }, []);
-  
+
       return uniqueDishes; // Cập nhật lại danh sách không trùng lặp
     });
   };
-  
 
   // useEffect(() => {
   //   if (activeTab === "tab1") {
@@ -415,7 +412,16 @@ const Menu = () => {
                         {Object.keys(category.groupedDishes).map(
                           (categoryName) => (
                             <div key={categoryName} className="menu-category">
-                              <h6>{categoryName}</h6>
+                              <h6>
+                                {categoryName === "Appetizers"
+                                  ? "Khai vị và đồ uống"
+                                  : categoryName === "Main Courses"
+                                  ? "Món chính"
+                                  : categoryName === "Desserts"
+                                  ? "Tráng miệng"
+                                  : categoryName}
+                              </h6>
+
                               <div className="menu-category-dish">
                                 <ul
                                   className="promo-list has-scrollbar"
@@ -470,16 +476,16 @@ const Menu = () => {
                             paddingTop: "10px",
                           }}
                         >
-                          <p style={{color:"rgb(66 66 66)"}}>
-                          Tổng tiền:{" "}
-                          {Object.values(category.groupedDishes)
-                            .flat()
-                            .reduce(
-                              (total, dish) => total + (dish.price || 0),
-                              0
-                            )
-                            .toLocaleString()}{" "}
-                          VND
+                          <p style={{ color: "rgb(66 66 66)" }}>
+                            Tổng tiền:{" "}
+                            {Object.values(category.groupedDishes)
+                              .flat()
+                              .reduce(
+                                (total, dish) => total + (dish.price || 0),
+                                0
+                              )
+                              .toLocaleString()}{" "}
+                            VND
                           </p>
                         </div>
                       </div>
