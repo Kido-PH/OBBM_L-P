@@ -29,7 +29,7 @@ const menuApi = {
     },
 
     getAllMenuAdmin(params){
-        const url = "/menu/getAlLMenuAdmin?page=1&size=100";
+        const url = "/menu/getAllMenuAdmin?page=1&size=100";
 
         return axiosClient.get(url, {params});
     },

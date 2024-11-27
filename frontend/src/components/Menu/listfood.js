@@ -10,17 +10,22 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   const [selectedDish, setSelectedDish] = useState(null);
 
   useEffect(() => {
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTczMjQzNjUwNiwiaWF0IjoxNzMyNDM2NTA2LCJqdGkiOiIzOGFkMWNhZC0yYjFkLTQxOGUtYmI5Yi0wMDM1ZmM2NTgxYmUiLCJzY29wZSI6IlJPTEVfQURNSU4gREVMRVRFX0RJU0ggQ1JFQVRFX1VTRVIgVVBEQVRFX1NFUlZJQ0VTIERFTEVURV9FVkVOVCBERUxFVEVfTE9DQVRJT04gUkVBRF9TRVJWSUNFUyBSRUFEX0VWRU5UIENSRUFURV9DT05UUkFDVCBSRUFEX0xPQ0FUSU9OIFJFQURfSU5HUkVESUVOVCBERUxFVEVfVVNFUiBDUkVBVEVfTUVOVSBERUxFVEVfU0VSVklDRVMgQ1JFQVRFX0xPQ0FUSU9OIENSRUFURV9FVkVOVCBSRUFEX0NPTlRSQUNUIFVQREFURV9NRU5VIFJFQURfRElTSCBDUkVBVEVfU0VSVklDRVMgREVMRVRFX01FTlUgVVBEQVRFX0VWRU5UIENSRUFURV9ESVNIIFJFQURfVVNFUiBVUERBVEVfTE9DQVRJT04gVVBEQVRFX0NPTlRSQUNUIFVQREFURV9JTkdSRURJRU5UIENSRUFURV9JTkdSRURJRU5UIERFTEVURV9JTkdSRURJRU5UIERFTEVURV9DT05UUkFDVCBSRUFEX01FTlUgVVBEQVRFX0RJU0ggVVBEQVRFX1VTRVIifQ.kaLopBa7E2vF75Eo_9wEKr82jCRfkkOB84-5FvrK5Cmtd2HMTm8nCtkkF-TkcqdOmdVbruCxApS-iB8EtZzO5Q";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-
     const fetchDanhMuc = async () => {
-      const danhMucList = await danhMucApi.getAll();
-      setCategories(danhMucList.result.content); // Cập nhật state
+      try {
+        const response = await fetch('http://localhost:8080/obbm/category?page=1&size=5');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json(); // Chuyển đổi kết quả thành JSON
+        setCategories(data.result.content); // Cập nhật state
+      } catch (error) {
+        console.error('Lỗi khi gọi API:', error); // Xử lý lỗi
+      }
     };
-
+  
     fetchDanhMuc();
   }, []);
+  
 
   const filteredCategories = categories.filter(
     (category) => category.categoryId === categoryId

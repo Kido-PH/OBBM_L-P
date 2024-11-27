@@ -38,7 +38,7 @@ const LoginForm = ({ toggleForm }) => {
     const accessToken = getToken();
 
     if (accessToken) {
-      navigate("/");
+      navigate("/account");
     }
   }, [navigate]);
 
