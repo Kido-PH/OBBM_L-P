@@ -45,6 +45,7 @@ const Menu = () => {
   };
   const pushEventIdtoMenu = (newEventId) => {
     // Điều hướng đến trang menu mới với eventId thay đổi
+    localStorage.setItem("currentEventId", newEventId);
     navigate(`/menu/${newEventId}`);
   };
   
@@ -204,6 +205,7 @@ const fetchEvent = async () => {
       throw new Error("Người dùng chưa đăng nhập.");
     }
 
+
     const totalCost = Object.values(selectedMenu.groupedDishes)
       .flat()
       .reduce((total, dish) => total + (dish.price || 0), 0);
@@ -241,17 +243,19 @@ const fetchEvent = async () => {
     localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
     localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
 
+    navigate("/contract");
+
     Swal.fire({
       icon: "success",
-      title: "Thành công!",
-      text: "Thực đơn và món ăn đã được tạo thành công!",
+      title: "Tạo thực đơn thành công!",
+      text: "Hãy tiếp tục các bước sau đây để hoàn thành quy trình đặt tiệc nhé!",
     });
   } catch (error) {
     console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
     Swal.fire({
       icon: "error",
       title: "Thất bại!",
-      text: "Không thể tạo thực đơn hoặc món ăn. Vui lòng thử lại.",
+      text: "Không thể tạo thực đơn hoặc món ăn. Vui lòng tải lại trang và thử lại.",
     });
   }
 };

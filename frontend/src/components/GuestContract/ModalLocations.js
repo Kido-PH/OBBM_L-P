@@ -65,14 +65,14 @@ function Example() {
     setUserLocationShow(true);
   };
 
-  const closeModalAll = () => {
+  const closeModalAll = () => { 
+    handleClose();
     setUserLocationShow(false);
-    setLgShow(false);
   };
 
-  const userLocationClose = async () => {
+  const userLocationClose = () => {
     setUserLocationShow(false);
-    await fetchLocations();
+    // await fetchLocations();
     setLgShow(true);
   };
 
@@ -90,7 +90,7 @@ function Example() {
     return savedLocation ? JSON.parse(savedLocation) : null;
   });
 
-  const filteredLocations = locationList.filter(
+  const filteredLocations = locationList?.filter(
     (location) =>
       location.isCustom && location?.users?.userId === String(currentUserId)
   );
@@ -122,6 +122,12 @@ function Example() {
       : { width: "100%" /* các thuộc tính mặc định khác */ };
   };
 
+  const formatCurrency = (amount) => {
+    return amount
+      ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+      : "0";
+  };
+
   React.useEffect(() => {
     fetchLocations();
   }, []);
@@ -129,7 +135,7 @@ function Example() {
   return (
     <>
       <div
-        className="form-control fs-4"
+        className="form-control fs-4 input-hienthi-popup"
         onClick={() => setLgShow(true)}
         style={{ cursor: "pointer" }}
       >
@@ -152,7 +158,6 @@ function Example() {
         show={lgShow}
         onHide={handleClose}
         aria-labelledby="example-modal-sizes-title-lg"
-        
       >
         <Modal.Header closeButton>
           <Modal.Title className="fs-1">Chọn địa điểm</Modal.Title>
@@ -217,14 +222,14 @@ function Example() {
                         <Card.Title className="fs-2">
                           {location.name}
                         </Card.Title>
-                        <Card.Text>
-                          <p>{location.address}</p>
-                          <h3 className="text-success fw-bold">
-                            {location.cost} VND
-                          </h3>
-                          <p>Sức chứa: {location.capacity}</p>
-                          {/* <p>{location.description}</p> */}
-                        </Card.Text>
+                        <div>
+                          <div>{location.address}</div>{" "}
+                          <div className="text-success fw-bold fs-3">
+                            {formatCurrency(location.cost)} VND
+                          </div>
+                          <div>Sức chứa: {location.capacity} người</div>
+                        </div>
+
                         <Button
                           variant="primary"
                           onClick={() => handleSelect(location)}
@@ -321,6 +326,7 @@ function Example() {
                 <Card
                   className="my-3 card-select"
                   style={getCardStyle(location)}
+                  key={index}
                 >
                   <Row>
                     <Col
@@ -334,7 +340,7 @@ function Example() {
                           {location.name}
                         </Card.Title>
                         <Card.Text>
-                          <p>Địa chỉ: {location.address}</p>
+                          <div>Địa chỉ: {location.address}</div>
                         </Card.Text>
                       </Card.Body>
                     </Col>

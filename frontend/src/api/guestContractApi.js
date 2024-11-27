@@ -16,8 +16,8 @@ const guestContractApi = {
     return axiosClient.post(url, data);
   },
 
-  addMenu(data) {
-    const url = "/menu";
+  addMenuAsUser(data) {
+    const url = "/menu/user";
     return axiosClient.post(url, data);
   },
 

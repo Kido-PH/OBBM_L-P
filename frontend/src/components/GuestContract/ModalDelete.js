@@ -43,7 +43,7 @@ function ModalDelete({ show, onClose, locationId, onDeleteSuccess, name }) {
         <div className="mb-3">
           <IoWarningOutline size={92} color="orange" />
         </div>
-        <p>Xác nhận xóa địa điểm "{name}"?</p>
+        <div>Xác nhận xóa địa điểm "{name}"?</div>
       </Modal.Body>
       <Modal.Footer className="d-flex justify-content-center">
         <Button

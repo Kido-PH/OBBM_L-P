@@ -28,6 +28,7 @@ import DishManager from "./components/Admin/Admin-Dish";
 import CategoryDish from "./components/Admin/Admin-CategoryDish";
 import IngredientManager from "./components/Admin/Admin-Ingredient";
 import Authenticate from "./views/Authenticate";
+import PaymentCoordinatorPage from "views/PaymentCoordinator";
 
 
 const App = () => {
@@ -49,6 +50,7 @@ const App = () => {
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract/info/:id" element={<GuestContractInfo />} />
+        <Route path="/obbm/payment/status" element={<PaymentCoordinatorPage />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
         <Route path="/account" element={<Account />} />   
