@@ -23,35 +23,35 @@ import { useNavigate } from "react-router-dom"; // Import useNavigate
 const blogPosts = [
   {
     imgSrc: blog1,
-    alt: "What Do You Think About Cheese Pizza Recipes?",
-    badge: "Wedding",
+    alt: "Bạn Nghĩ Gì Về Các Công Thức Pizza Phô Mai?",
+    badge: "Đám cưới",
     date: "2022-01-01",
-    dateText: "Jan 01 2022",
+    dateText: "01 Tháng 01 2022",
     author: "Jonathan Smith",
-    title: "The Theatre Bar at the End of the Wharf in Dawes Point",
-    text: "Financial experts support or help you to to find out which way you can raise your funds more...",
+    title: "Quầy Bar Nhà Hát Cuối Cầu Cảng Tại Dawes Point",
+    text: "Các chuyên gia tài chính sẽ hỗ trợ hoặc giúp bạn tìm cách tăng nguồn vốn hiệu quả...",
     link: "#",
   },
   {
     imgSrc: blog2,
-    alt: "Making Chicken Strips With New Delicious Ingredients.",
-    badge: "Wedding",
+    alt: "Làm Gà Chiên Với Nguyên Liệu Mới Thơm Ngon.",
+    badge: "Đám cưới",
     date: "2022-01-01",
-    dateText: "Jan 01 2022",
+    dateText: "01 Tháng 01 2022",
     author: "Jonathan Smith",
-    title: "Establishment Bar by Merivale in Sydney CBD",
-    text: "Attached to the main bar is the garden — an industrial-style terrace area where drinking, dancing, and generally having a great time are encouraged. For an indulgent yet refined Sydney restaurant wedding, Establishment Bar should top your list.",
+    title: "Quán Bar Establishment tại Sydney CBD",
+    text: "Gắn liền với quầy bar chính là khu vực vườn — một sân thượng kiểu công nghiệp nơi bạn có thể uống, nhảy múa và tận hưởng không gian tuyệt vời. Nếu bạn muốn một đám cưới tinh tế nhưng vẫn xa hoa tại Sydney, Establishment Bar nên là lựa chọn hàng đầu của bạn.",
     link: "#",
   },
   {
     imgSrc: blog3,
-    alt: "Innovative Hot Chessyraw Pasta Make Creator Fact.",
-    badge: "Wedding",
+    alt: "Món Mỳ Ý Sáng Tạo Nóng Hổi Thơm Ngon.",
+    badge: "Đám cưới",
     date: "2022-01-01",
-    dateText: "Jan 01 2022",
+    dateText: "01 Tháng 01 2022",
     author: "Jonathan Smith",
-    title: "Cruise Bar Sydney in The Rocks.",
-    text: "Financial experts support or help you to to find out which way you can raise your funds more...",
+    title: "Quán Cruise Bar Sydney tại The Rocks",
+    text: "Các chuyên gia tài chính sẽ hỗ trợ hoặc giúp bạn tìm cách tăng nguồn vốn hiệu quả...",
     link: "#",
   },
 ];
@@ -61,90 +61,59 @@ const testimonials = [
     name: "Robert William",
     title: "CEO Kingfisher",
     avatar: avatar1,
-    text: "I would be lost without restaurant. I would like to personally thank you for your outstanding product.",
+    text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
   },
   {
     name: "Thomas Josef",
     title: "CEO Getforce",
     avatar: avatar2,
-    text: "I would be lost without restaurant. I would like to personally thank you for your outstanding product.",
+    text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
   },
   {
     name: "Charles Richard",
     title: "CEO Angela",
     avatar: avatar3,
-    text: "I would be lost without restaurant. I would like to personally thank you for your outstanding product.",
+    text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
   },
 ];
 
 const banners = [
   {
     imgSrc: weddingStage,
-    alt: "Discount For Delicious Tasty Burgers!",
-    subtitle: "20% Off Now!",
-    title: "Elegant White Wedding Stage",
-    text: "Sale off 20% only this week",
-    buttonText: "Book now",
+    alt: "Giảm Giá Cho Burger Ngon Tuyệt!",
+    subtitle: "Giảm 20% Ngay Bây Giờ!",
+    title: "Sân Khấu Đám Cưới Trắng Thanh Lịch",
+    text: "Giảm giá 20% chỉ trong tuần này",
+    buttonText: "Đặt Ngay",
     size: "banner-lg",
   },
   {
     imgSrc: flowerCrown,
-    alt: "Delicious Pizza",
-    title: "Flower Crown",
-    text: "Summer Love Package: Included with Your Wedding Reservation this Season.",
-    buttonText: "Order Now",
+    alt: "Pizza Thơm Ngon",
+    title: "Vương Miện Hoa",
+    text: "Gói Yêu Mùa Hè: Bao gồm trong đặt chỗ đám cưới mùa này.",
+    buttonText: "Đặt Ngay",
     size: "banner-sm",
   },
   {
     imgSrc: event2,
-    alt: "American Burgers",
-    title: "Dosa Chicken Crepe",
-    text: "30% off Now",
-    buttonText: "Order Now",
+    alt: "Burger Mỹ",
+    title: "Bánh Kếp Gà Dosa",
+    text: "Giảm giá 30% ngay bây giờ",
+    buttonText: "Đặt Ngay",
     size: "banner-sm",
   },
   {
     imgSrc: turkey,
-    alt: "Tasty Buzzed Pizza",
-    title: "Thanksgiving Turkey",
-    text: "Sale off 20% in this thanksgiving",
-    buttonText: "Order Now",
+    alt: "Pizza Thơm Ngon",
+    title: "Gà Tây Lễ Tạ Ơn",
+    text: "Giảm giá 20% trong lễ Tạ ơn này",
+    buttonText: "Đặt Ngay",
     size: "banner-md",
   },
 ];
 
-const promoData = [
-  {
-    title: "Tiệc BBQ Ngoài Trời",
-    text: "Thưởng thức các món nướng ngon cùng bạn bè với không gian ngoài trời thoáng đãng.",
-    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
-    alt: "Tiệc BBQ Ngoài Trời",
-  },
-  {
-    title: "Dạ Tiệc Hoàng Gia",
-    text: "Hòa mình vào không gian sang trọng với âm nhạc cổ điển và thực đơn đẳng cấp hoàng gia.",
-    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
-    alt: "Dạ Tiệc Hoàng Gia",
-  },
-  {
-    title: "Tiệc Buffet Hải Sản",
-    text: "Thỏa thích lựa chọn và thưởng thức các món hải sản tươi ngon từ khắp mọi nơi.",
-    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
-    alt: "Tiệc Buffet Hải Sản",
-  },
-  {
-    title: "Tiệc Cưới Ngoài Trời",
-    text: "Chung vui cùng đôi uyên ương trong khung cảnh lãng mạn dưới ánh đèn lung linh.",
-    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
-    alt: "Tiệc Cưới Ngoài Trời",
-  },
-  {
-    title: "Tiệc Tân Niên",
-    text: "Chào đón năm mới với bữa tiệc hoành tráng và những màn pháo hoa rực rỡ.",
-    imgSrc: weddingStage, // Thay bằng đường dẫn ảnh phù hợp
-    alt: "Tiệc Tân Niên",
-  },
-];
+
 
 const Content = () => {
   const navigate = useNavigate();
@@ -243,58 +212,7 @@ const Content = () => {
             </div>
           </section>
 
-          <section className="section section-divider white promo" id="events">
-            <div className="container">
-              <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
-              <ul className="promo-list has-scrollbar">
-                {Events.map((event) => (
-                  <li
-                    key={event.eventId}
-                    className="promo-item"
-                    style={{ width: "285px", height: "443px", marginRight:"30px" }}
-                  >
-                    <button
-                      onClick={() => {
-                        pushEventIdtoMenu(event.eventId);
-                      }}
-                    >
-                      <div
-                        className="promo-card"
-                        style={{ width: "285px", height: "443px" }}
-                      >
-                        <div className="card-icon">
-                          {/* Add any specific icons or elements here if needed */}
-                        </div>
-
-                        <h3 className="h3 card-title">{event.name}</h3>
-
-                        <p
-                          className="card-text"
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            textAlign: "center",
-                          }}
-                        >
-                          {event.description}
-                        </p>
-
-                        <img
-                          src={event.image}
-                          width="300"
-                          height="300"
-                          loading="lazy"
-                          alt={event.name}
-                          className="w-100 card-banner"
-                        />
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
+          
 
           <section className="section section-divider gray about" id="about">
             <div className="container">
@@ -355,6 +273,60 @@ const Content = () => {
 
                 <button className="btn btn-hover">Đặt Tiệc Ngay</button>
               </div>
+            </div>
+          </section>
+
+
+          <section className="section section-divider white promo" id="events">
+            <div className="container">
+              <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
+              <ul className="promo-list has-scrollbar">
+                {Events.map((event) => (
+                  <li
+                    key={event.eventId}
+                    className="promo-item"
+                    style={{ width: "285px", height: "443px", marginRight:"30px" }}
+                  >
+                    <button
+                      onClick={() => {
+                        pushEventIdtoMenu(event.eventId);
+                      }}
+                    >
+                      <div
+                        className="promo-card"
+                        style={{ width: "285px", height: "443px" }}
+                      >
+                        <div className="card-icon">
+                          {/* Add any specific icons or elements here if needed */}
+                        </div>
+
+                        <h3 className="h3 card-title">{event.name}</h3>
+
+                        <p
+                          className="card-text"
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            textAlign: "center",
+                          }}
+                        >
+                          {event.description}
+                        </p>
+
+                        <img
+                          src={event.image}
+                          width="300"
+                          height="300"
+                          loading="lazy"
+                          alt={event.name}
+                          className="w-100 card-banner"
+                        />
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
 
@@ -520,58 +492,7 @@ const Content = () => {
             </div>
           </section>
 
-          <section className="section section-divider white testi">
-            <div className="container">
-              <p className="section-subtitle">Nhận Xét</p>
-
-              <h2 className="h2 section-title">
-                Đánh Giá Từ <span className="span">Khách Hàng</span> Của Chúng
-                Tôi
-              </h2>
-
-              <p className="section-text">
-                Thực phẩm là bất kỳ chất nào được tiêu thụ để cung cấp dinh
-                dưỡng cho cơ thể.
-              </p>
-
-              <ul className="testi-list has-scrollbar">
-                {testimonials.map((testimonial, index) => (
-                  <li className="testi-item" key={index}>
-                    <div className="testi-card">
-                      <div className="profile-wrapper">
-                        <figure className="avatar">
-                          <img
-                            src={testimonial.avatar}
-                            width="80"
-                            height="80"
-                            loading="lazy"
-                            alt={testimonial.name}
-                          />
-                        </figure>
-
-                        <div>
-                          <h3 className="h4 testi-name">{testimonial.name}</h3>
-                          <p className="testi-title">{testimonial.title}</p>
-                        </div>
-                      </div>
-
-                      <blockquote className="testi-text">
-                        "{testimonial.text}"
-                      </blockquote>
-
-                      <div className="rating-wrapper">
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
+          
 
           <section className="section section-divider gray banner">
             <div className="container">
@@ -659,6 +580,60 @@ const Content = () => {
                             aria-hidden="true"
                           ></ion-icon>
                         </a>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
+
+          <section className="section section-divider white testi" id="contact">
+            <div className="container">
+              <p className="section-subtitle">Liên hệ</p>
+
+              <h2 className="h2 section-title">
+                Những <span className="span">Đầu bếp</span> Của Chúng
+                Tôi
+              </h2>
+
+              <p className="section-text">
+                Thực phẩm là bất kỳ chất nào được tiêu thụ để cung cấp dinh
+                dưỡng cho cơ thể.
+              </p>
+
+              <ul className="testi-list has-scrollbar">
+                {testimonials.map((testimonial, index) => (
+                  <li className="testi-item" key={index}>
+                    <div className="testi-card">
+                      <div className="profile-wrapper">
+                        <figure className="avatar">
+                          <img
+                            src={testimonial.avatar}
+                            width="80"
+                            height="80"
+                            loading="lazy"
+                            alt={testimonial.name}
+                          />
+                        </figure>
+
+                        <div>
+                          <h3 className="h4 testi-name">{testimonial.name}</h3>
+                          <p className="testi-title">{testimonial.title}</p>
+                        </div>
+                      </div>
+
+                      <blockquote className="testi-text">
+                        "{testimonial.text}"
+                      </blockquote>
+
+                      <div className="rating-wrapper">
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
                       </div>
                     </div>
                   </li>

@@ -70,32 +70,58 @@ const LoginForm = ({ toggleForm }) => {
 
   const handleLogin = (event) => {
     event.preventDefault();
-
+  
     const data = {
       username: username,
       password: password,
     };
-
+  
     fetch("http://localhost:8080/obbm/auth/token", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(data),
-    }).then((response) => {
-        return response.json();
-      }).then((data) => {
-        console.log(data);
-
+    })
+      .then((response) => response.json())
+      .then((data) => {
         if (data.code !== 1000) throw new Error(data.message);
-
-        setToken(data.result?.accessToken);
+  
+        const accessToken = data.result?.accessToken;
+        setToken(accessToken);
+  
+        // Lấy thông tin người dùng
+        return getUserDetails(accessToken);
+      })
+      .then((userDetails) => {
+        // Lưu userId vào localStorage
+        localStorage.setItem("userId", userDetails.userId);
+  
         navigate("/");
       })
       .catch((error) => {
         showError(error.message);
       });
   };
+  
+  const getUserDetails = async (accessToken) => {
+    const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+  
+    const data = await response.json();
+  
+    if (data.code !== 1000) {
+      throw new Error(data.message);
+    }
+  
+    console.log("User details:", data.result);
+    return data.result; // Trả về thông tin người dùng
+  };
+  
 
   return (
     <div className="login-form" id="loginForm">
