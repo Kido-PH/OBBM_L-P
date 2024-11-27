@@ -212,58 +212,7 @@ const Content = () => {
             </div>
           </section>
 
-          <section className="section section-divider white promo" id="events">
-            <div className="container">
-              <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
-              <ul className="promo-list has-scrollbar">
-                {Events.map((event) => (
-                  <li
-                    key={event.eventId}
-                    className="promo-item"
-                    style={{ width: "285px", height: "443px", marginRight:"30px" }}
-                  >
-                    <button
-                      onClick={() => {
-                        pushEventIdtoMenu(event.eventId);
-                      }}
-                    >
-                      <div
-                        className="promo-card"
-                        style={{ width: "285px", height: "443px" }}
-                      >
-                        <div className="card-icon">
-                          {/* Add any specific icons or elements here if needed */}
-                        </div>
-
-                        <h3 className="h3 card-title">{event.name}</h3>
-
-                        <p
-                          className="card-text"
-                          style={{
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            textAlign: "center",
-                          }}
-                        >
-                          {event.description}
-                        </p>
-
-                        <img
-                          src={event.image}
-                          width="300"
-                          height="300"
-                          loading="lazy"
-                          alt={event.name}
-                          className="w-100 card-banner"
-                        />
-                      </div>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
+          
 
           <section className="section section-divider gray about" id="about">
             <div className="container">
@@ -324,6 +273,60 @@ const Content = () => {
 
                 <button className="btn btn-hover">Đặt Tiệc Ngay</button>
               </div>
+            </div>
+          </section>
+
+
+          <section className="section section-divider white promo" id="events">
+            <div className="container">
+              <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
+              <ul className="promo-list has-scrollbar">
+                {Events.map((event) => (
+                  <li
+                    key={event.eventId}
+                    className="promo-item"
+                    style={{ width: "285px", height: "443px", marginRight:"30px" }}
+                  >
+                    <button
+                      onClick={() => {
+                        pushEventIdtoMenu(event.eventId);
+                      }}
+                    >
+                      <div
+                        className="promo-card"
+                        style={{ width: "285px", height: "443px" }}
+                      >
+                        <div className="card-icon">
+                          {/* Add any specific icons or elements here if needed */}
+                        </div>
+
+                        <h3 className="h3 card-title">{event.name}</h3>
+
+                        <p
+                          className="card-text"
+                          style={{
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            textAlign: "center",
+                          }}
+                        >
+                          {event.description}
+                        </p>
+
+                        <img
+                          src={event.image}
+                          width="300"
+                          height="300"
+                          loading="lazy"
+                          alt={event.name}
+                          className="w-100 card-banner"
+                        />
+                      </div>
+                    </button>
+                  </li>
+                ))}
+              </ul>
             </div>
           </section>
 
@@ -489,58 +492,7 @@ const Content = () => {
             </div>
           </section>
 
-          <section className="section section-divider white testi">
-            <div className="container">
-              <p className="section-subtitle">Nhận Xét</p>
-
-              <h2 className="h2 section-title">
-                Đánh Giá Từ <span className="span">Khách Hàng</span> Của Chúng
-                Tôi
-              </h2>
-
-              <p className="section-text">
-                Thực phẩm là bất kỳ chất nào được tiêu thụ để cung cấp dinh
-                dưỡng cho cơ thể.
-              </p>
-
-              <ul className="testi-list has-scrollbar">
-                {testimonials.map((testimonial, index) => (
-                  <li className="testi-item" key={index}>
-                    <div className="testi-card">
-                      <div className="profile-wrapper">
-                        <figure className="avatar">
-                          <img
-                            src={testimonial.avatar}
-                            width="80"
-                            height="80"
-                            loading="lazy"
-                            alt={testimonial.name}
-                          />
-                        </figure>
-
-                        <div>
-                          <h3 className="h4 testi-name">{testimonial.name}</h3>
-                          <p className="testi-title">{testimonial.title}</p>
-                        </div>
-                      </div>
-
-                      <blockquote className="testi-text">
-                        "{testimonial.text}"
-                      </blockquote>
-
-                      <div className="rating-wrapper">
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                        <ion-icon name="star"></ion-icon>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </section>
+          
 
           <section className="section section-divider gray banner">
             <div className="container">
@@ -628,6 +580,60 @@ const Content = () => {
                             aria-hidden="true"
                           ></ion-icon>
                         </a>
+                      </div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </section>
+
+
+          <section className="section section-divider white testi" id="contact">
+            <div className="container">
+              <p className="section-subtitle">Liên hệ</p>
+
+              <h2 className="h2 section-title">
+                Những <span className="span">Đầu bếp</span> Của Chúng
+                Tôi
+              </h2>
+
+              <p className="section-text">
+                Thực phẩm là bất kỳ chất nào được tiêu thụ để cung cấp dinh
+                dưỡng cho cơ thể.
+              </p>
+
+              <ul className="testi-list has-scrollbar">
+                {testimonials.map((testimonial, index) => (
+                  <li className="testi-item" key={index}>
+                    <div className="testi-card">
+                      <div className="profile-wrapper">
+                        <figure className="avatar">
+                          <img
+                            src={testimonial.avatar}
+                            width="80"
+                            height="80"
+                            loading="lazy"
+                            alt={testimonial.name}
+                          />
+                        </figure>
+
+                        <div>
+                          <h3 className="h4 testi-name">{testimonial.name}</h3>
+                          <p className="testi-title">{testimonial.title}</p>
+                        </div>
+                      </div>
+
+                      <blockquote className="testi-text">
+                        "{testimonial.text}"
+                      </blockquote>
+
+                      <div className="rating-wrapper">
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
+                        <ion-icon name="star"></ion-icon>
                       </div>
                     </div>
                   </li>

@@ -71,7 +71,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
           style={{ marginTop: "70px" }}
         >
           <h3>
-            {category.name} - {category.description}
+           {category.description}
           </h3>
           <ul className="foodList">
             {category.listDish.length > 0 ? (
