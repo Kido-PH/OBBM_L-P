@@ -135,7 +135,7 @@ function Example() {
   return (
     <>
       <div
-        className="form-control fs-4"
+        className="form-control fs-4 input-hienthi-popup"
         onClick={() => setLgShow(true)}
         style={{ cursor: "pointer" }}
       >

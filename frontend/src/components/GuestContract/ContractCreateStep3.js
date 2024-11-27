@@ -66,6 +66,11 @@ const ContractCreateStep3 = () => {
 
       setContractData((prevData) => ({
         ...prevData,
+        name:
+          "Hợp đồng" +
+          (currentEvent?.result.name?.toLowerCase() || "") +
+          " của " +
+          contractData.custname,
         type: currentEvent?.result.name,
       }));
 
@@ -124,7 +129,6 @@ const ContractCreateStep3 = () => {
       userId: userId,
       status: "Pending",
       paymentstatus: "Unpaid",
-      name: "Hợp đồng của " + contractData.custname,
     }));
   }, []);
 
@@ -203,7 +207,7 @@ const ContractCreateStep3 = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Thực đơn</label>
                   <button
-                    className="form-control fs-4 d-flex justify-content-between align-middle"
+                    className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi-popup"
                     onClick={handleShowModalMenu}
                   >
                     Menu Id
@@ -214,7 +218,7 @@ const ContractCreateStep3 = () => {
                 <div className="row row-cols-md-2 mb-3">
                   <div className="col">
                     <label className="form-label fw-bold">Địa điểm</label>
-                    <button className="form-control fs-4 d-flex justify-content-between align-middle">
+                    <button className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi">
                       <p
                         className="mb-0"
                         style={{
@@ -225,14 +229,13 @@ const ContractCreateStep3 = () => {
                       >
                         {currentLocation.name} - {currentLocation.address}{" "}
                       </p>
-                      <FaEye />
                     </button>
                   </div>
                   <div className="col">
                     <label className="form-label fw-bold">Dịch vụ</label>
                     <div className="d-flex align-items-center">
                       <div
-                        className="form-control fs-4"
+                        className="form-control fs-4 input-hienthi-popup d-flex justify-content-between align-items-center w-100"
                         onClick={handleShowModalServices}
                         style={{ cursor: "pointer" }}
                       >
@@ -247,6 +250,7 @@ const ContractCreateStep3 = () => {
                           {tempServicesData[0]?.name} -{" "}
                           {formatCurrency(tempServicesData[0]?.price)} ...
                         </p>
+                        <FaEye />
                       </div>
                     </div>
                   </div>
@@ -426,17 +430,6 @@ const ContractCreateStep3 = () => {
             </i>
             Tạo hợp đồng
           </button>
-
-          <button
-            onClick={checkState}
-            className="btn btn-vnp mx-3 d-inline-flex align-items-center"
-            style={{ marginTop: "1rem" }}
-          >
-            <i className="me-2">
-              <GiConfirmed />
-            </i>
-            Check state{" "}
-          </button>
         </div>
       </div>
 
@@ -469,7 +462,7 @@ const ContractCreateStep3 = () => {
               setShowModalConfirm(false);
             }}
           >
-            Suy nghĩ lại
+            Để tôi kiểm tra lại
           </Button>
           <Button className="btn-modal-confirm mx-2" onClick={createEverything}>
             Đồng ý

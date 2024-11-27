@@ -490,7 +490,7 @@ const ContractInfo = () => {
                 style={{ marginTop: "1rem" }}
                 onClick={handleShowModalCancel}
               >
-                Hủy
+                Hủy hợp đồng
               </button>
             )}
         </div>

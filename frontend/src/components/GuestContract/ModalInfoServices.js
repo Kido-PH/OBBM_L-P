@@ -2,7 +2,6 @@ import React, { useEffect } from "react";
 import { Modal, Button, Row, Col, Card } from "react-bootstrap";
 
 function ModalInfoServices({ show, onClose, onTotalCost, servicesList }) {
-
   const formatCurrency = (amount) => {
     return amount
       ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")

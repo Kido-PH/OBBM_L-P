@@ -19,7 +19,7 @@ const ContractCreateStep2 = () => {
   ); // Parse chuỗi JSON thành đối tượng
   const currentEventId = JSON.parse(localStorage.getItem("currentEventId")); // Parse chuỗi JSON thành đối tượng
   const createdMenu = JSON.parse(localStorage.getItem("createdMenu")); // Parse chuỗi JSON thành đối tượng
-  
+
   const [currentEventInfo, setCurrentEventInfo] = React.useState({});
 
   const [totalMenuCost, setTotalMenuCost] = React.useState(0);
@@ -154,37 +154,22 @@ const ContractCreateStep2 = () => {
           <div className="row row-cols-sm-1 row-cols-md-2">
             <div className="col">
               <div className="mb-3">
-                <label className="form-label fw-bold">Thực đơn</label>
-                <button
-                  id="menuId"
-                  name="menuId"
-                  aria-label="Menu:"
-                  className="form-control fs-4 d-flex justify-content-between align-middle"
-                  onClick={handleShowModalMenu}
-                >
-                  Thực đơn của bạn
-                  <FaEye />
-                </button>
+                <label className="form-label fw-bold">
+                  Địa điểm
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
+                <div className="d-flex align-items-center">
+                  <ModalLocations />
+                </div>
               </div>
 
-              <div className="row row-cols-md-2 mb-3">
-                <div className="col">
-                  <label className="form-label fw-bold">
-                    Địa điểm
-                    <span className="text-danger d-inline-block">*</span>
-                  </label>
-                  <div className="d-flex align-items-center">
-                    <ModalLocations />
-                  </div>
-                </div>
-                <div className="col">
-                  <label className="form-label fw-bold">
-                    Dịch vụ đi kèm
-                    <span className="text-danger d-inline-block">*</span>
-                  </label>
-                  <div className="d-flex align-items-center">
-                    <ModalServices onUpdateTotalCost={handleUpdateTotalCost} />
-                  </div>
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Dịch vụ đi kèm
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
+                <div className="d-flex align-items-center">
+                  <ModalServices onUpdateTotalCost={handleUpdateTotalCost} />
                 </div>
               </div>
             </div>

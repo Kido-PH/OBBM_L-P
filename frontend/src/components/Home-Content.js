@@ -138,7 +138,7 @@ const Content = () => {
 
   const fetchEvent = async () => {
     const EventsList = await eventApi.getAll();
-    setEvents(EventsList.result.content); // Cập nhật state
+    setEvents(EventsList.result.content);
   };
   useEffect(() => {
     const token =
