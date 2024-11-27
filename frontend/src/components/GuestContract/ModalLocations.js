@@ -90,7 +90,7 @@ function Example() {
     return savedLocation ? JSON.parse(savedLocation) : null;
   });
 
-  const filteredLocations = locationList.filter(
+  const filteredLocations = locationList?.filter(
     (location) =>
       location.isCustom && location?.users?.userId === String(currentUserId)
   );

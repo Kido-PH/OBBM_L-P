@@ -24,10 +24,15 @@ const ContractCreateStep3 = () => {
     eventData,
     setEventData,
     eventServicesData,
+    setMenuDishesData,
+    menuDishesData,
   } = React.useContext(multiStepContext);
   const navigate = useNavigate();
   const [loading, setLoading] = React.useState(false);
   const createdMenu = JSON.parse(localStorage.getItem("createdMenu"));
+  const createdMenuDishes = JSON.parse(
+    localStorage.getItem("createdMenuDishes")
+  );
   const currentUserId = JSON.parse(sessionStorage.getItem("currentUserId")); // Parse chuỗi JSON thành đối tượng
   const currentEventId = JSON.parse(localStorage.getItem("currentEventId")); // Parse chuỗi JSON thành đối tượng
   const currentLocation = JSON.parse(localStorage.getItem("currentLocation")); // UserId có thể là chuỗi
@@ -38,6 +43,11 @@ const ContractCreateStep3 = () => {
   const [showModalMenu, setShowModalMenu] = React.useState(false);
   const [showModalServices, setShowModalServices] = React.useState(false);
   const [showModalConfirm, setShowModalConfirm] = React.useState(false);
+
+  const fetchEvent = async () => {
+    const currentEvent = await eventApi.get(currentEventId);
+    setCurrentEventChoosen(currentEvent.result);
+  };
 
   const initStateEvent = async () => {
     try {
@@ -72,8 +82,17 @@ const ContractCreateStep3 = () => {
     return total;
   };
 
+  const calculateGuestPerTable = (guest, table) => {
+    const guestPerTable = Math.round(guest / table);
+    return guestPerTable;
+  };
+
   const initStateMenu = () => {
     setMenuData(createdMenu);
+  };
+
+  const initStateMenuDishes = () => {
+    setMenuDishesData(createdMenuDishes);
   };
 
   const setInfoUrl = (contractId) => {
@@ -93,8 +112,10 @@ const ContractCreateStep3 = () => {
   };
 
   React.useEffect(() => {
+    fetchEvent();
     const userId = JSON.parse(sessionStorage.getItem("currentUserId")); // UserId có thể là chuỗi
     initStateMenu();
+    initStateMenuDishes();
     initStateEvent();
 
     setContractData((prevData) => ({
@@ -116,6 +137,7 @@ const ContractCreateStep3 = () => {
     console.log("Menu data: ", menuData);
     console.log("Event data: ", eventData);
     console.log("Services data: ", eventServicesData);
+    console.log("Menu Dishes Data: ", menuDishesData);
   };
 
   React.useEffect(() => {
@@ -276,7 +298,10 @@ const ContractCreateStep3 = () => {
                     <span className="text-danger d-inline-block">*</span>
                   </label>
                   <div className="form-control input-hienthi fs-4">
-                    {/* {contractData.guest} */} số người/bàn
+                    {calculateGuestPerTable(
+                      contractData.guest,
+                      contractData.table
+                    )}
                   </div>
                 </div>
               </div>
@@ -415,11 +440,12 @@ const ContractCreateStep3 = () => {
         </div>
       </div>
 
-      <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} />
+      {/* <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} /> */}
       <ModalInfoServices
         show={showModalServices}
         onClose={handleCloseModalServices}
         onTotalCost={handleServicesTotalCost}
+        servicesList={tempServicesData}
       />
 
       <Modal

@@ -19,6 +19,10 @@ a {
   background-color: #e9e9e9 !important;
 }
 
+.input-hienthi-popup {
+  background: radial-gradient(circle, white 10%, #fcf0dc);
+}
+
 .btn-vnp {
   background-color: #2e80c9 !important;
   /* height: 35px !important; */
@@ -162,4 +166,8 @@ a {
   margin: 0;
   font-weight: bold;
   font-size: 1.2rem; /* Tăng kích thước chữ */
+}
+
+.menu-contract-font {
+  font-family: 'Lobster, cursive' !important;
 }

@@ -28,6 +28,12 @@ const menuApi = {
         return axiosClient.delete(url);
     },
 
+    getAllMenuAdmin(params){
+        const url = "/menu/getAlLMenuAdmin?page=1&size=100";
+
+        return axiosClient.get(url, {params});
+    },
+
     getPaginate(page, size) {
         const url = `/menu?page=${page}&size=${size}`;
         return axiosClient.get(url);

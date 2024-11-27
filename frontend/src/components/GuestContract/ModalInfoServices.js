@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
 import { Modal, Button, Row, Col, Card } from "react-bootstrap";
-import { multiStepContext } from "StepContext";
 
-function ModalInfoServices({ show, onClose, onTotalCost }) {
-  const { tempServicesData } = React.useContext(multiStepContext);
+function ModalInfoServices({ show, onClose, onTotalCost, servicesList }) {
 
   const formatCurrency = (amount) => {
     return amount
@@ -13,7 +11,7 @@ function ModalInfoServices({ show, onClose, onTotalCost }) {
 
   // Hàm tính tổng tiền
   const calculateTotalCost = () => {
-    const total = tempServicesData.reduce((sum, service) => {
+    const total = servicesList?.reduce((sum, service) => {
       return sum + service.price; // Sử dụng field `cost` của từng service
     }, 0);
     return total;
@@ -23,7 +21,7 @@ function ModalInfoServices({ show, onClose, onTotalCost }) {
   useEffect(() => {
     const totalCost = calculateTotalCost();
     onTotalCost(totalCost); // Gửi tổng tiền cho component cha
-  }, [show, tempServicesData, onTotalCost]); // Chạy lại khi show thay đổi hoặc tempServicesData thay đổi
+  }, [show, servicesList, onTotalCost]); // Chạy lại khi show thay đổi hoặc tempServicesData thay đổi
 
   return (
     <Modal show={show} onHide={onClose} size="lg">
@@ -34,7 +32,7 @@ function ModalInfoServices({ show, onClose, onTotalCost }) {
       </Modal.Header>
       <Modal.Body className="d-flex flex-column align-items-center text-center">
         <Row lg={3} sm={2}>
-          {tempServicesData.map((item, index) => (
+          {servicesList?.map((item, index) => (
             <Col key={index} className="p-2">
               <Card className="h-100 card-select">
                 <Card.Img

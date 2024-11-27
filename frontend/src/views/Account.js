@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 import jsQR from 'jsqr';
 import '../assets/css/customStyle.css';
 import '../assets/css/mainStyle.css';
-import { logOut } from "../services/authenticationService";
+
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../services/localStorageService";
-
 import {
   Alert,
   Box,
@@ -16,6 +15,8 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+
+import { logOut } from "../services/authenticationService";
 const AccountSection = () => {
   const navigate = useNavigate();
   const [userDetails, setUserDetails] = useState({});
@@ -97,11 +98,6 @@ const AccountSection = () => {
 
     getUserDetails(accessToken);
   }, [navigate]);
-  const handleLogout = (event) => {
-    logOut();
-    window.location.href = "/login";
-  };
-  const [imageSrc, setImageSrc] = useState(null);
 
   useEffect(() => {
     const fileInput = document.getElementById('avatar-upload');
@@ -109,59 +105,27 @@ const AccountSection = () => {
       fileInput.addEventListener('change', handleFile);
     }
 
+    // Cleanup function to remove the event listener
     return () => {
       if (fileInput) {
         fileInput.removeEventListener('change', handleFile);
       }
     };
   }, []);
-
-  const handleFile = (event) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const img = new Image();
-      img.onload = function () {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        context.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        const qrCodeImage = context.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(qrCodeImage.data, qrCodeImage.width, qrCodeImage.height);
-        if (code) {
-          document.getElementById('result').innerText = `Thông tin từ mã QR: ${code.data}`;
-          
-          const userInfo = code.data.split('||')[1].split('|');
-          const [fullname, birthdate, gender, address] = userInfo;
-          document.getElementById('fullname').value = fullname;
-
-          const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(2, 4)}-${birthdate.slice(0, 2)}`;
-          document.getElementById('birthdate').value = formattedBirthdate;
-          document.getElementById('address').value = address;
-
-          const genderSelect = document.getElementById('gender');
-          genderSelect.value = gender === "Nam" ? "Male" : gender === "Nữ" ? "Female" : "Other";
-        } else {
-          document.getElementById('result').innerText = 'Không tìm thấy mã QR.';
-        }
-      };
-      img.src = event.target.result;
-      setImageSrc(event.target.result); // Set the image source
-    };
-    reader.readAsDataURL(file);
+  const handleLogout = (event) => {
+    logOut();
+    window.location.href = "/login";
   };
-
   return (
-    <main style={{ marginTop: '50px' }}>
+    <main style={{marginTop:'50px'}}>
+      {userDetails ? (
       <section
         className="section section-divider white account-section"
         id="blog"
         style={{ paddingTop: '60px', paddingBottom: '60px' }}
       >
         <div className="container pt-4">
-          <p className="section-subtitle">Account</p>
+          <p className="section-subtitle">Tài khoản</p>
           <div className="profile-container">
             <div className="profile-photo">
               <img
@@ -169,16 +133,16 @@ const AccountSection = () => {
                 alt="Profile"
               />
             </div>
-            <p className="profile-name">Bill Gates</p>
-            <p className="join-date section-title">
+            <p className="profile-name">{`${userDetails.fullname}`}</p>
+            {/* <p className="join-date section-title">
               Registration Date: <span className="span">26/05/2024</span>
-            </p>
+            </p> */}
           </div>
 
           <div className="container w-75">
             <form id="userInfoForm" className="footer-form form-account">
               <div className="d-flex align-items-center justify-content-between mb-3">
-                <p className="footer-list-title account-form-title">Profile info</p>
+                <p className="footer-list-title account-form-title">Thông tin cá nhân</p>
                 <button
                   type="button"
                   className="edit-profile-btn navbar-link bi bi-pencil-square"
@@ -194,6 +158,7 @@ const AccountSection = () => {
                   aria-label="Full Name:"
                   className="input-field"
                   disabled
+                  value={userDetails.fullname || ""}
                 />
                 <input
                   type="text"
@@ -203,10 +168,10 @@ const AccountSection = () => {
                   placeholder="UserName"
                   aria-label="UserName"
                   className="input-field"
+                  value={userDetails.username || ""}
                   disabled
                 />
               </div>
-
               <div className="input-wrapper">
                 <input
                   type="email"
@@ -216,6 +181,7 @@ const AccountSection = () => {
                   placeholder="Email"
                   aria-label="Email"
                   className="input-field"
+                  value={userDetails.email || ""}
                   disabled
                 />
                 <input
@@ -226,6 +192,7 @@ const AccountSection = () => {
                   placeholder="Phone Number"
                   aria-label="Phone Number"
                   className="input-field"
+                  value={userDetails.phone || ""}
                   disabled
                 />
               </div>
@@ -238,6 +205,7 @@ const AccountSection = () => {
                   placeholder="Address"
                   aria-label="Address"
                   className="input-field"
+                  // value={userDetails.address || ""}
                   disabled
                 />
                 <input
@@ -247,6 +215,7 @@ const AccountSection = () => {
                   placeholder="Birthdate"
                   aria-label="Date of Birth"
                   className="input-field"
+                  value={userDetails.dob || ""}
                   disabled
                 />
               </div>
@@ -260,21 +229,20 @@ const AccountSection = () => {
                   className="input-field"
                 >
                   <option value="" disabled>
-                    -- Choose your gender --
+                    -- Chọn giới tính --
                   </option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
+                  <option value="Male">Nam</option>
+                  <option value="Female">Nữ</option>
+                  <option value="Other">Khác</option>
                 </select>
 
-                <div className="input-wrapper" style={{ marginTop: '7px' }}>
+                <div className="input-wrapper" style={{marginTop: '7px'}}>
                   <div className="upload-wrapper">
-                    <label
-                      style={{ paddingTop: '10px', paddingBottom: '10px', borderRadius: '3px' }}
+                    <label style={{paddingTop: '10px', paddingBottom: '10px',borderRadius: '3px'}}
                       htmlFor="avatar-upload"
-                      className="custom-file-upload btn btn-secondary"
+                      className="custom-file-upload btn btn-secondary "
                     >
-                      ID card image
+                      Căn cước công dân
                     </label>
                     <input
                       type="file"
@@ -285,111 +253,41 @@ const AccountSection = () => {
                     />
                   </div>
 
-                   {/* New Image Preview */}
-              {imageSrc && (
-                <img
-                  src={imageSrc}
-                  alt="Selected"
-                  style={{ maxWidth: '300px', marginTop: '10px' }}
-                />
-              )}
+                  <div className="file-info">
+                    <div id="file-name" className="file-name"></div>
+                    <div id="file-size" className="file-size"></div>
+                  </div>
 
                   <canvas id="canvas" style={{ display: 'none' }}></canvas>
                   <div id="result" className="mt-3" style={{ display: 'none' }}></div>
                 </div>
               </div>
-              <Snackbar
-        open={snackBarOpen}
-        onClose={handleCloseSnackBar}
-        autoHideDuration={6000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleCloseSnackBar}
-          severity={snackType}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackBarMessage}
-        </Alert>
-      </Snackbar>
-              {userDetails ? (
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          height="100vh"
-          bgcolor={"#f0f2f5"}
-        >
-          <Card
-            sx={{
-              minWidth: 400,
-              maxWidth: 500,
-              boxShadow: 4,
-              borderRadius: 2,
-              padding: 4,
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                width: "100%", // Ensure content takes full width
-              }}
-            >
-              <img
-                src={userDetails.image}
-                alt={`${userDetails.fullname}'s profile`}
-                className="profile-pic"
-              />
-              <p>Welcome back to Kido, {userDetails.fullname}</p>
-              <h1 className="name">{`${userDetails.fullname}`}</h1>
-              <p className="email">{userDetails.dob}</p>
-              <ul>
-                User's roles:
-                {userDetails.roles?.map((item, index) => (
-                  <li className="email" key={index}>
-                    {item.name}
-                  </li>
-                ))}
-              </ul>
-              {userDetails.noPassword && (
-                <Box
-                  component="form"
-                  onSubmit={addPassword}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    width: "100%",
-                  }}
+
+              <div style={{ textAlign: 'center' }}>
+                <button
+                  type="submit"
+                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
+                  style={{ margin: '10px auto' }}
+                  disabled
                 >
-                  <Typography>Do you want to create password?</Typography>
-                  <TextField
-                    label="Password"
-                    type="password"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    fullWidth
-                  >
-                    Create password
-                  </Button>
-                </Box>
-              )}
-            </Box>
-          </Card>
-        </Box>
+                  Lưu
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="d-flex flex-wrap fw-bold fs-3 mt-4 pe-2 justify-content-center">
+            <a
+              onClick={handleLogout}
+              className="d-flex align-items-center me-5 mb-2 btn btn-hover"
+              style={{ marginLeft: '505px',width: '160px', fontSize:'14px', paddingTop:'10px ',paddingLeft: '47px', paddingRight: '47px', marginTop:'10px ',borderRadius:'3px ' }}
+            >
+              <i className="bi bi-door-open me-3"></i>
+              Đăng xuất
+            </a>
+          </div>
+        </div>
+      </section>
       ) : (
         <Box
           sx={{
@@ -405,37 +303,61 @@ const AccountSection = () => {
           <Typography>Loading ...</Typography>
         </Box>
       )}
-
-             
-
-              <div style={{ textAlign: 'center' }}>
-                <button
-                  type="submit"
-                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
-                  style={{ margin: '10px auto' }}
-                  disabled
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div className="d-flex flex-wrap fw-bold fs-3 mt-4 pe-2 justify-content-center">
-            <a
-              href="/login"
-              className="d-flex align-items-center me-5 mb-2 btn btn-hover"
-              style={{ marginLeft: '54px', width: '160px', fontSize: '14px', paddingTop: '10px', paddingLeft: '47px', paddingRight: '47px', marginTop: '10px', borderRadius: '3px' }}
-              onClick={handleLogout}
-            >
-              <i className="bi bi-door-open me-3"></i>
-              Log out
-            </a>
-          </div>
-        </div>
-      </section>
     </main>
   );
 };
 
 export default AccountSection;
+
+function handleFile(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+    reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.getElementById('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+            const qrCodeImage = context.getImageData(0, 0, canvas.width, canvas.height);
+            const code = jsQR(qrCodeImage.data, qrCodeImage.width, qrCodeImage.height);
+            if (code) {
+                document.getElementById('result').innerText = `Thông tin từ mã QR: ${code.data}`;
+                
+                // Split the QR code data based on the expected delimiter (e.g., "||")
+                const userInfo = code.data.split('||')[1].split('|');
+
+                // Extracting data from the split array
+                const [fullname, birthdate, gender, address] = userInfo;
+
+                // Set the values to the form fields
+                document.getElementById('fullname').value = fullname;
+                
+                // Convert birthdate from DDMMYYYY to YYYY-MM-DD format (if needed)
+                const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(2, 4)}-${birthdate.slice(0, 2)}`;
+                document.getElementById('birthdate').value = formattedBirthdate;
+
+                // Set the address
+                document.getElementById('address').value = address;
+
+                // Set the gender
+                const genderSelect = document.getElementById('gender');
+                if (gender === "Nam") {
+                    genderSelect.value = "Male";
+                } else if (gender === "Nữ") {
+                    genderSelect.value = "Female";
+                } else {
+                    genderSelect.value = "Other";
+                }
+            } else {
+                document.getElementById('result').innerText = 'Không tìm thấy mã QR.';
+            }
+        };
+        img.src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+
+    document.getElementById('file-name').innerText = file.name;
+}

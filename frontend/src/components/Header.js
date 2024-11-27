@@ -90,11 +90,11 @@ const Header = () => {
             </a>
           </Tooltip>
 
-          <Tooltip title="Contract">
+          {/* <Tooltip title="Contract">
             <a href="/contract" className="navbar-link header-icon">
               <RiContractLine />
             </a>
-          </Tooltip>
+          </Tooltip> */}
 
           <Tooltip title="Account">
             <a href="/account" className="navbar-link header-icon">
@@ -105,6 +105,7 @@ const Header = () => {
           <a href="/login" className="btn btn-hover align-middle">
             Sign In
           </a>
+
           <button
             className="nav-toggle-btn"
             aria-label="Toggle Menu"

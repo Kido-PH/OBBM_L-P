@@ -8,14 +8,22 @@ import ConfirmCancelModal from "./ModalCancelContract";
 import Swal from "sweetalert2";
 import ModalInfoMenu from "./ModalInfoMenu";
 import PaymentCard from "./PaymentCard";
+import guestEventServiceApi from "api/guestEventServicesApi";
+import menudishApi from "api/menudishApi";
+import ModalInfoServices from "./ModalInfoServices";
 
 const ContractInfo = () => {
   const { id } = useParams();
+  const [totalServicesCost, setTotalServicesCost] = React.useState(0);
+
   const [contractInfo, setContractInfo] = React.useState({});
+  const [eventServicesInfo, setEventServicesInfo] = React.useState([]);
+  const [menuDishesInfo, setMenuDishesInfo] = React.useState([]);
 
   const navigate = useNavigate();
   const [showModalCancel, setShowModalCancel] = React.useState(false);
   const [showModalMenu, setShowModalMenu] = React.useState(false);
+  const [showModalServices, setShowModalServices] = React.useState(false);
   const [showPaymentCard, setShowPaymentCard] = React.useState(false);
 
   // Hàm mở modal
@@ -36,12 +44,28 @@ const ContractInfo = () => {
     setShowModalMenu(false);
   };
 
+  const handleShowModalServices = () => {
+    setShowModalServices(true);
+  };
+
+  const handleCloseModalServices = () => {
+    setShowModalServices(false);
+  };
+
   const handleTogglePaymentCard = () => {
     setShowPaymentCard((prevShowForm) => !prevShowForm);
   };
 
-  const handlePayment = () => {};
-
+  const handleServicesTotalCost = (cost) => {
+    setTotalServicesCost(cost);
+  };
+  const calculateGuestPerTable = (guest, table) => {
+    if (!guest || !table || table === 0) {
+      return "Không xác định"; // Trả về chuỗi nếu dữ liệu không hợp lệ
+    }
+    const guestPerTable = Math.round(guest / table);
+    return guestPerTable;
+  };
   // Hàm xóa hợp đồng và thực đơn
   const handleDeleteContractAndMenu = async () => {
     try {
@@ -74,12 +98,39 @@ const ContractInfo = () => {
 
   const fetchContractInfo = async () => {
     try {
-      const userInfoFetch = await guestContractApi.get(id);
-      console.log("Fetch contract thành công", userInfoFetch);
-      setContractInfo(userInfoFetch.result);
+      const contractInfoFetch = await guestContractApi.get(id);
+      const eventServicesFetch = await guestEventServiceApi.getByEventId(
+        contractInfoFetch.result.events.eventId,
+        1,
+        5000
+      );
+      const menuDishesFetch = await menudishApi.getByMenu(
+        contractInfoFetch.result.menus.menuId,
+        1,
+        5000
+      );
+
+      const servicesList = eventServicesFetch.result.content.map(
+        (item) => item.services
+      );
+      const menuDishes = menuDishesFetch.result.content.map(
+        (item) => item.dishes
+      );
+      setEventServicesInfo(servicesList);
+      setContractInfo(contractInfoFetch.result);
+      setMenuDishesInfo(menuDishes);
+      console.log("Fetch contract thành công", contractInfo);
+      console.log("Fetch event Services thành công:", eventServicesInfo);
+      console.log("Fetch menu dishes thành công", menuDishesInfo);
     } catch (error) {
       console.error("Error fetching user info:", error);
     }
+  };
+
+  const checkStates = () => {
+    console.log("Fetch contract thành công", contractInfo);
+    console.log("Fetch event Services thành công:", eventServicesInfo);
+    console.log("Fetch menu dishes thành công", menuDishesInfo);
   };
 
   React.useEffect(() => {
@@ -98,6 +149,8 @@ const ContractInfo = () => {
       : "0";
   };
 
+  const handlePayment = () => {};
+
   return (
     <section
       className="section section-divider white account-section pt-5"
@@ -115,21 +168,54 @@ const ContractInfo = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Thực đơn</label>
                   <button
-                    className="form-control fs-4 d-flex justify-content-between align-middle"
+                    className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi-popup"
                     onClick={handleShowModalMenu}
                   >
-                    Menu Id
+                    Thực đơn {contractInfo.events?.name}
                     <FaEye />
                   </button>
                 </div>
 
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Địa điểm</label>
-                  <button className="form-control fs-4 d-flex justify-content-between align-middle">
-                    {contractInfo.locations?.name} -{" "}
-                    {contractInfo.locations?.address}
-                    <FaEye />
-                  </button>
+                <div className="row row-cols-md-2 mb-3">
+                  <div className="col">
+                    <label className="form-label fw-bold">Địa điểm</label>
+                    <div className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi">
+                      <p
+                        className="mb-0"
+                        style={{
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {contractInfo.locations?.name} -{" "}
+                        {contractInfo.locations?.address}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="col">
+                    <label className="form-label fw-bold">Dịch vụ</label>
+                    <div className="d-flex align-items-center ">
+                      <div
+                        className="form-control fs-4  input-hienthi-popup d-flex justify-content-between align-items-center w-100"
+                        onClick={handleShowModalServices}
+                        style={{ cursor: "pointer" }}
+                      >
+                        <p
+                          className="mb-0"
+                          style={{
+                            whiteSpace: "nowrap",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                          }}
+                        >
+                          {eventServicesInfo[0]?.name} -{" "}
+                          {formatCurrency(eventServicesInfo[0]?.price)} ...
+                        </p>
+                        <FaEye />
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
@@ -171,6 +257,7 @@ const ContractInfo = () => {
                   </div>
                 </div>
               </div>
+
               <div className="col">
                 <div className="mb-3">
                   <label className="form-label fw-bold">
@@ -178,7 +265,10 @@ const ContractInfo = () => {
                     <span className="text-danger d-inline-block">*</span>
                   </label>
                   <div className="form-control input-hienthi fs-4">
-                    {/* {contractInfo.guest} */} số người/bàn
+                    {calculateGuestPerTable(
+                      contractInfo.guest,
+                      contractInfo.table
+                    )}
                   </div>
                 </div>
               </div>
@@ -243,6 +333,20 @@ const ContractInfo = () => {
               <div className="col">
                 <div className="mb-3 d-flex align-items-center">
                   <label className="form-label fw-bold mb-0 me-2">
+                    Tổng chi phí dịch vụ:
+                  </label>
+                  <span
+                    className="fw-bold"
+                    style={{ color: "var(--deep-saffron)" }}
+                  >
+                    {formatCurrency(totalServicesCost)} VND
+                  </span>
+                </div>
+              </div>
+
+              <div className="col">
+                <div className="mb-3 d-flex align-items-center">
+                  <label className="form-label fw-bold mb-0 me-2">
                     Tổng chi phí thực đơn:
                   </label>
                   <span
@@ -257,7 +361,7 @@ const ContractInfo = () => {
                 </div>
               </div>
 
-              <div className="col">
+              <div className="ms-auto">
                 <div className="mb-3 d-flex align-items-center">
                   <label className="form-label fw-bold mb-0 me-2">
                     Tổng cộng:
@@ -290,6 +394,7 @@ const ContractInfo = () => {
                 </div>
               </div>
             </div>
+
             <div className="d-flex justify-content-between">
               <h3 style={{ color: "var(--dark-orange)" }}>
                 Trạng thái hợp đồng:{" "}
@@ -340,16 +445,17 @@ const ContractInfo = () => {
           </div>
         </Card>
         <div style={{ textAlign: "center" }}>
-          {contractInfo.status === "Pending" && (
-            <button
-              type="button"
-              className="btn btn-save-form btn-huy mx-3"
-              style={{ marginTop: "1rem" }}
-              onClick={handleShowModalCancel}
-            >
-              Hủy
-            </button>
-          )}
+          {contractInfo.status === "Pending" &&
+            contractInfo.paymentstatus === "Unpaid" && (
+              <button
+                type="button"
+                className="btn btn-save-form btn-huy mx-3"
+                style={{ marginTop: "1rem" }}
+                onClick={handleShowModalCancel}
+              >
+                Hủy
+              </button>
+            )}
           {(contractInfo.paymentstatus === "Unpaid" ||
             contractInfo.paymentstatus === "50%" ||
             contractInfo.paymentstatus === "70%") && (
@@ -377,7 +483,17 @@ const ContractInfo = () => {
         onConfirm={handleDeleteContractAndMenu}
       />
 
-      <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} />
+      <ModalInfoMenu
+        show={showModalMenu}
+        onClose={handleCloseModalMenu}
+        menuDishes={menuDishesInfo}
+      />
+      <ModalInfoServices
+        show={showModalServices}
+        onClose={handleCloseModalServices}
+        onTotalCost={handleServicesTotalCost}
+        servicesList={eventServicesInfo}
+      />
     </section>
   );
 };

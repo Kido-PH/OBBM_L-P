@@ -43,6 +43,7 @@ const ContractCreateStep1 = () => {
         custmail: userInfo.email,
       }));
     }
+    sessionStorage.setItem("currentUserId", JSON.stringify(userInfo.userId));
   }, [userInfo, contractData, setContractData]);
 
   // Function to validate the form fields

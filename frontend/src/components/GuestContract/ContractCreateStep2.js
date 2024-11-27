@@ -8,6 +8,7 @@ import ModalServices from "./ModalServices";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import ModalInfoMenu from "./ModalInfoMenu";
+import eventApi from "api/eventApi";
 
 const ContractCreateStep2 = () => {
   const { setStep, contractData, setContractData } =
@@ -16,8 +17,11 @@ const ContractCreateStep2 = () => {
   const servicesStored = JSON.parse(
     localStorage.getItem("currentEventServices")
   ); // Parse chuỗi JSON thành đối tượng
-  const currentEvent = JSON.parse(localStorage.getItem("currentEvent")); // Parse chuỗi JSON thành đối tượng
+  const currentEventId = JSON.parse(localStorage.getItem("currentEventId")); // Parse chuỗi JSON thành đối tượng
   const createdMenu = JSON.parse(localStorage.getItem("createdMenu")); // Parse chuỗi JSON thành đối tượng
+  
+  const [currentEventInfo, setCurrentEventInfo] = React.useState({});
+
   const [totalMenuCost, setTotalMenuCost] = React.useState(0);
   const [totalServicesCost, setTotalServicesCost] = React.useState(0);
 
@@ -28,6 +32,11 @@ const ContractCreateStep2 = () => {
   //   const dishes = localStorage.getItem("currentMenuDishes");
   //   return dishes ? JSON.parse(dishes) : [];
   // };
+
+  const fetchEvent = async () => {
+    const currentEvent = await eventApi.get(currentEventId);
+    setCurrentEventInfo(currentEvent.result);
+  };
 
   const handleShowModalMenu = () => {
     setShowModalMenu(true);
@@ -74,6 +83,10 @@ const ContractCreateStep2 = () => {
       totalCost: totalCost,
     });
   }, [contractData.guest, setContractData, location?.cost, totalServicesCost]);
+
+  React.useEffect(() => {
+    fetchEvent();
+  }, []);
 
   const formatCurrency = (amount) => {
     return amount
@@ -229,7 +242,7 @@ const ContractCreateStep2 = () => {
                   id="table"
                   className="form-control input-hienthi fs-4"
                 >
-                  {currentEvent.event_name}
+                  {currentEventInfo?.name}
                 </div>
               </div>
             </div>
@@ -368,7 +381,7 @@ const ContractCreateStep2 = () => {
           </div>
         </Form>
       </Card>
-      <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} />
+      {/* <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} /> */}
     </div>
   );
 };
