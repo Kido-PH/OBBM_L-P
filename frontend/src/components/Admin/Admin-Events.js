@@ -62,6 +62,7 @@ const EventManager = () => {
     setSelectedEvent(null); 
   };
 
+
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     fetchEventsWithPaginate(page + 1);
@@ -80,6 +81,7 @@ const EventManager = () => {
     }
   };
 
+
   // Hàm lấy danh sách service
   const fetchServiceEvent = async () => {
     try {
@@ -92,6 +94,7 @@ const EventManager = () => {
       console.error("Lỗi khi lấy danh sách dịch vụ:", error);
     }
   };
+
 
   // Fetch thông tin người dùng từ API
   const fetchUserData = async () => {

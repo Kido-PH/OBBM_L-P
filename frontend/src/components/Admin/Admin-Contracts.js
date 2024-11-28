@@ -42,7 +42,6 @@ const ManageContracts = () => {
   useEffect(() => {
     fetchContractWithPaginate(page + 1, rowsPerPage);
   }, [page, rowsPerPage]);
-
   // Hàm lấy tất cả listContract
   const fetchContractWithPaginate = async (page, rowsPerPage) => {
     try {
