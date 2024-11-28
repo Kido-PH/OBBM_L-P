@@ -14,8 +14,8 @@ import {
   DialogContent,
   DialogTitle,
   Box,
-  IconButton,
   Tooltip,
+  TablePagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -24,7 +24,7 @@ import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import AddIcon from "@mui/icons-material/Add";
 import { toast, Toaster } from "react-hot-toast";
 import serviceApi from "../../api/serviceApi";
-import ReactPaginate from "react-paginate";
+import { Typography } from "antd";
 
 const ServiceManager = () => {
   const [services, setServices] = useState([]);
@@ -41,9 +41,9 @@ const ServiceManager = () => {
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [serviceToDelete, setServiceToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
-  const SIZE_SERVICE = 5;
-  const [page, setPage] = useState(1);
-  const [pageCount, setPageCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [errors, setErrors] = useState({});
 
   const handleOpenDialog = (mode, event) => {
@@ -65,22 +65,23 @@ const ServiceManager = () => {
 
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    fetchDichVuWithPaginate(page); // Lấy trang đầu tiên
-  }, [page]);
+    fetchDichVuWithPaginate(page + 1);
+  }, [page, rowsPerPage]);
 
   // Hàm đổ dữ liệu & phân trang
   const fetchDichVuWithPaginate = async (page) => {
     try {
-      const res = await serviceApi.getPaginate(page, SIZE_SERVICE);
+      const res = await serviceApi.getPaginate(page, rowsPerPage);
       setServices(res.result?.content);
-      setPageCount(res.result?.totalPages);
+      setTotalElements(res.result?.totalElements);
       console.log("res.dt = ", res.result.content);
     } catch (error) {
       console.error("Không tìm nạp được dịch vụ: ", error);
     }
+  };
+
+  const handleRemoveImage = () => {
+    setCurrentService((prev) => ({ ...prev, image: "" }));
   };
 
   // Đóng dialog
@@ -141,10 +142,6 @@ const ServiceManager = () => {
       newErrors.price = "Giá phải lớn hơn 0.";
     }
 
-    // if (!currentService.description || currentService.description.trim() === "") {
-    //   newErrors.description = "Mô tả là bắt buộc.";
-    // }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -201,11 +198,13 @@ const ServiceManager = () => {
     setServiceToDelete(null);
   };
 
-  // Hàm xử lý phân trang
-  const handlePageClick = (event) => {
-    const selectedPage = +event.selected + 1; // Lấy số trang người dùng chọn
-    setPage(selectedPage); // Cập nhật page
-    console.log(`User requested page number ${event.selected}`);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   const filteredServices = services
@@ -223,51 +222,51 @@ const ServiceManager = () => {
   return (
     <div>
       <Toaster position="top-center" reverseOrder={false} />
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mt: 3,
-          mb: 2,
-        }}
-      >
+      <Box>
         {/* Ô tìm kiếm */}
-        <div className="admin-group">
-          <svg
-            className="admin-icon-search"
-            aria-hidden="true"
-            viewBox="0 0 24 24"
-          >
-            <g>
-              <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path>
-            </g>
-          </svg>
-          <input
-            placeholder="Tìm kiếm"
-            type="search"
-            className="admin-input-search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
+        <div className="admin-toolbar">
+          <div className="admin-group">
+            <svg
+              className="admin-icon-search"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+            >
+              <g>
+                <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path>
+              </g>
+            </svg>
+            <input
+              placeholder="Tìm kiếm"
+              type="search"
+              className="admin-input-search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
 
-        {/* Nút Add New Service */}
-        <Button
-          sx={{ fontSize: "10px" }}
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenDialog("add")}
-        >
-          <AddIcon
+          {/* Nút Add New Service */}
+          <Button
             sx={{
-              marginRight: "5px",
-              fontSize: "16px",
-              verticalAlign: "middle",
+              fontSize: "10px",
+              display: "flex",
+              alignItems: "center",
+              padding: "6px 12px",
+              lineHeight: "1.5",
             }}
-          />
-          Thêm dịch vụ
-        </Button>
+            variant="contained"
+            color="primary"
+            onClick={() => handleOpenDialog("add")}
+          >
+            <AddIcon
+              sx={{
+                marginRight: "5px",
+                fontSize: "16px",
+                verticalAlign: "middle",
+              }}
+            />
+            Thêm dịch vụ
+          </Button>
+        </div>
       </Box>
 
       <TableContainer component={Paper} className="table-container">
@@ -280,7 +279,16 @@ const ServiceManager = () => {
               <TableCell>Giá</TableCell>
               <TableCell>Hình ảnh</TableCell>
               <TableCell>Mô tả</TableCell>
-              <TableCell>Hành động</TableCell>
+              <TableCell
+                sx={{
+                  position: "sticky",
+                  right: 0,
+                  backgroundColor: "white",
+                  zIndex: 1,
+                }}
+              >
+                Hành động
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -302,12 +310,19 @@ const ServiceManager = () => {
                     <img
                       src={`${service.image}`}
                       alt={service.name}
-                      width="70"                      
+                      width="70"
                     />
                   </TableCell>
                   <TableCell>{service.description}</TableCell>
-                  <TableCell>
-                    <IconButton
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      right: 0,
+                      backgroundColor: "white",
+                      zIndex: 1,
+                    }}
+                  >
+                    <Button
                       size="large"
                       color="primary"
                       variant="outlined"
@@ -320,8 +335,8 @@ const ServiceManager = () => {
                       >
                         <EditIcon />
                       </Tooltip>
-                    </IconButton>
-                    <IconButton
+                    </Button>
+                    <Button
                       size="large"
                       variant="outlined"
                       color="error"
@@ -333,46 +348,89 @@ const ServiceManager = () => {
                       >
                         <DeleteIcon />
                       </Tooltip>
-                    </IconButton>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
           </TableBody>
         </Table>
-        <ReactPaginate
-          nextLabel="next >"
-          onPageChange={handlePageClick}
-          pageRangeDisplayed={3}
-          marginPagesDisplayed={2}
-          pageCount={pageCount}
-          previousLabel="< previous"
-          pageClassName="page-item"
-          pageLinkClassName="page-link"
-          previousClassName="page-item"
-          previousLinkClassName="page-link"
-          nextClassName="page-item"
-          nextLinkClassName="page-link"
-          breakLabel="..."
-          breakClassName="page-item"
-          breakLinkClassName="page-link"
-          containerClassName="pagination"
-          activeClassName="active"
-          renderOnZeroPageCount={null}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalElements}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "1.2rem",
+            padding: "16px",
+            color: "#333", // Đổi màu chữ thành màu tối hơn
+            backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
+            borderRadius: "8px", // Thêm bo góc
+            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+              {
+                fontSize: "1.2rem",
+              },
+            "& .MuiTablePagination-actions > button": {
+              fontSize: "1.2rem",
+              margin: "0 8px", // Thêm khoảng cách giữa các nút
+              backgroundColor: "#1976d2", // Màu nền của các nút
+              color: "#fff", // Màu chữ của các nút
+              borderRadius: "50%", // Nút bấm hình tròn
+              padding: "8px", // Tăng kích thước nút
+              transition: "background-color 0.3s", // Hiệu ứng hover
+              "&:hover": {
+                backgroundColor: "#1565c0", // Đổi màu khi hover
+              },
+            },
+          }}
         />
       </TableContainer>
 
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      {/* Dialog thêm sửa */}
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle
-          sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight: "bold" }}
+          sx={{
+            fontSize: "1.7rem",
+            fontWeight: "bold",
+            color: "#333",
+          }}
         >
           {dialogMode === "add" ? "Thêm dịch vụ" : "Chỉnh sửa dịch vụ"}
         </DialogTitle>
-        <DialogContent className="custom-input">
+        <DialogContent className="custom-input" dividers>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Tên dịch vụ</Typography>
+          </div>
           <TextField
+            sx={{ marginBottom: "20px" }}
             autoFocus
             margin="dense"
             name="name"
-            label="Tên dịch vụ"
+            placeholder="Tên dịch vụ"
             type="text"
             fullWidth
             variant="outlined"
@@ -380,11 +438,36 @@ const ServiceManager = () => {
             onChange={handleInputChange}
             error={!!errors.name}
             helperText={errors.name}
+            size="small"
+            FormHelperTextProps={{
+              style: {
+                fontSize: "1.2rem",
+                color: "red",
+              },
+            }}
           />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Loại dịch vụ</Typography>
+          </div>
           <TextField
+            sx={{ marginBottom: "20px" }}
             margin="dense"
             name="type"
-            label="Loại dịch vụ"
+            placeholder="Loại dịch vụ"
             type="text"
             fullWidth
             variant="outlined"
@@ -392,11 +475,36 @@ const ServiceManager = () => {
             onChange={handleInputChange}
             error={!!errors.type}
             helperText={errors.type}
+            size="small"
+            FormHelperTextProps={{
+              style: {
+                fontSize: "1.2rem",
+                color: "red",
+              },
+            }}
           />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Giá</Typography>
+          </div>
           <TextField
+            sx={{ marginBottom: "20px" }}
             margin="dense"
             name="price"
-            label="Giá"
+            placeholder="Giá"
             type="number"
             fullWidth
             variant="outlined"
@@ -404,39 +512,110 @@ const ServiceManager = () => {
             onChange={handleInputChange}
             error={!!errors.price}
             helperText={errors.price}
+            size="small"
+            FormHelperTextProps={{
+              style: {
+                fontSize: "1.2rem",
+                color: "red",
+              },
+            }}
           />
 
-          {currentService.image && (
-            <img
-              src={currentService.image}
-              alt="Dịch vụ"
-              style={{ width: "100%", height: "250px", marginBottom: "1em" }}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "2px dashed #ccc",
+              borderRadius: "8px",
+              padding: "1em",
+              marginBottom: "1em",
+              cursor: "pointer",
+              position: "relative",
+              overflow: "hidden",
+              textAlign: "center",
+            }}
+            onClick={() => document.getElementById("file-upload").click()}
+          >
+            {currentService.image ? (
+              <Box
+                component="img"
+                src={currentService.image}
+                alt="Dịch vụ"
+                sx={{
+                  width: "100%",
+                  height: "250px",
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                }}
+              />
+            ) : (
+              <>
+                <AddAPhotoIcon sx={{ fontSize: 48, color: "#aaa", mb: 1 }} />
+                <Typography variant="body2" sx={{ color: "#aaa" }}>
+                  Nhấn để chọn ảnh
+                </Typography>
+              </>
+            )}
+
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={handleInputChange}
+              style={{ display: "none" }}
+              id="file-upload"
             />
-          )}
+            {currentService.image && (
+              <Button
+                variant="contained"
+                sx={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  backgroundColor: "#dc3545",
+                  color: "#fff",
+                  "&:hover": {
+                    backgroundColor: "#c82333",
+                  },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveImage();
+                }}
+              >
+                Xóa ảnh
+              </Button>
+            )}
+          </Box>
 
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={handleInputChange}
-            style={{ display: "none" }}
-            id="file-upload"
-          />
-          <label htmlFor="file-upload">
-            <Button variant="contained" component="span" sx={{ mb: "5px" }}>
-              <AddAPhotoIcon sx={{ mr: "5px" }} />
-              Chọn ảnh
-            </Button>
-          </label>
-
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Mô tả</Typography>
+          </div>
           <TextField
             margin="dense"
             name="description"
-            label="Mô tả"
+            placeholder="Mô tả"
             type="text"
             fullWidth
             multiline
-            rows={4}
+            minRows={5}
+            maxRows={10}
             variant="outlined"
             value={currentService.description || ""}
             onChange={handleInputChange}
@@ -445,13 +624,19 @@ const ServiceManager = () => {
         <DialogActions>
           <Button
             onClick={handleCloseDialog}
-            color="primary"
-            sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
+            variant="outlined"
+            sx={{
+              fontSize: "1.3rem",
+              fontWeight: "bold",
+              color: "red",
+              borderColor: "red",
+            }}
           >
             Hủy
           </Button>
           <Button
             onClick={handleSave}
+            variant="outlined"
             color="primary"
             sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
           >
@@ -459,7 +644,14 @@ const ServiceManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
-      <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
+
+      {/* Dialog xác nhận xóa */}
+      <Dialog
+        open={openConfirmDialog}
+        onClose={handleCancelDelete}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle
           sx={{
             fontSize: "1.6rem",
@@ -469,7 +661,7 @@ const ServiceManager = () => {
           }}
         >
           <ErrorOutlineIcon sx={{ color: "error.main", mr: 1 }} />
-          Xác nhận xóa
+          Xác nhận xóa dịch vụ
         </DialogTitle>
         <DialogContent>
           <p>Bạn chắc chắn muốn xóa dịch vụ này ?</p>
@@ -477,14 +669,16 @@ const ServiceManager = () => {
         <DialogActions>
           <Button
             onClick={handleCancelDelete}
-            color="secondary"
+            color="primary"
+            variant="outlined"
             sx={{ fontSize: "1.3rem" }}
           >
-            Đóng
+            Hủy
           </Button>
           <Button
             onClick={handleConfirmDelete}
-            color="primary"
+            color="error"
+            variant="outlined"
             sx={{ fontSize: "1.3rem" }}
           >
             Đồng ý
