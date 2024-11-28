@@ -21,6 +21,7 @@ const AccountSection = () => {
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState(null);
   const [userDetails, setUserDetails] = useState({
+    fullname: "",
     gender: null,
   });
   const [password, setPassword] = useState("");
@@ -76,6 +77,8 @@ const AccountSection = () => {
 
     setUserDetails(data.result);
   };
+
+  
 
   const handleFile = (event) => {
     const file = event.target.files[0];
@@ -254,9 +257,16 @@ const AccountSection = () => {
   };
 
   const handleLogout = (event) => {
+    // Clear all data in localStorage
+    localStorage.clear();
+  
+    // Call your logout function if you have one
     logOut();
+  
+    // Redirect the user to the login page
     window.location.href = "/login";
   };
+  
   return (
     <main style={{ marginTop: "50px" }}>
       {userDetails ? (
@@ -293,11 +303,8 @@ const AccountSection = () => {
                     placeholder="Your Name"
                     aria-label="Full Name:"
                     className="input-field"
-                    disabled={!isEditing}
                     value={userDetails.fullname || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fullname: e.target.value })
-                    }
+                    disabled={!isEditing}
                   />
                   <input
                     type="text"
@@ -309,6 +316,7 @@ const AccountSection = () => {
                     className="input-field"
                     value={userDetails.username || ""}
                     disabled={!isEditing}
+                    
                   />
                 </div>
                 <div className="input-wrapper">
@@ -333,6 +341,7 @@ const AccountSection = () => {
                     className="input-field"
                     value={userDetails.phone || ""}
                     disabled={!isEditing}
+                    onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
                   />
                 </div>
 
@@ -366,7 +375,6 @@ const AccountSection = () => {
                     id="gender"
                     style={{ height: "40px" }}
                     className="input-field"
-                    onChange={handleGenderChange} // Gọi hàm khi người dùng chọn giới tính
                     value={
                       userDetails.gender === null
                         ? ""
