@@ -1,4 +1,3 @@
-// src/index.js
 import React from "react";
 import ReactDOM from "react-dom/client"; // Thay đổi từ 'react-dom' sang 'react-dom/client'
 import {
@@ -7,7 +6,6 @@ import {
   Route,
   useLocation,
 } from "react-router-dom";
-
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import StepContext from "./StepContext";
@@ -16,7 +14,7 @@ import GuestContractInfo from "./components/GuestContract/GuestContractInfo";
 import Home from "./views/Home";
 import Login from "./views/Login";
 import Menu from "./views/Menu";
-import Account from "./views/Account";
+import Account from "./views/Account.js";
 import DashboardPage from "./views/Admin-DashboardPage";
 import ManageContracts from "./components/Admin/Admin-Contracts";
 import ServiceManager from "./components/Admin/Admin-Services";
@@ -28,7 +26,9 @@ import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
 import CategoryDish from "./components/Admin/Admin-CategoryDish";
 import IngredientManager from "./components/Admin/Admin-Ingredient";
-import Authenticate from "./components/Authenticate";
+import Authenticate from "./views/Authenticate";
+import PaymentCoordinatorPage from "views/PaymentCoordinator";
+
 
 const App = () => {
   const location = useLocation();
@@ -49,7 +49,9 @@ const App = () => {
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract/info/:id" element={<GuestContractInfo />} />
+        <Route path="/obbm/payment/status" element={<PaymentCoordinatorPage />} />
         <Route path="/menu/:id" element={<Menu />} />
+        <Route path="/menu/" element={<Menu />} />
         <Route path="/account" element={<Account />} />   
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login />} />

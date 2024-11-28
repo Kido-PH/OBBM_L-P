@@ -11,7 +11,7 @@ const axiosClient = axios.create({
 axiosClient.interceptors.request.use(
   function (config) {
     // Do something before request is sent
-    const token = sessionStorage.getItem("token"); // Hoặc sessionStorage.getItem("token");
+    const token = localStorage.getItem("accessToken"); // Hoặc sessionStorage.getItem("token");
 
     // Nếu có token thì thêm vào header Authorization
     if (token) {

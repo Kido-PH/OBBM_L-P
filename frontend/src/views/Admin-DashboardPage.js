@@ -18,12 +18,19 @@ import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
 import ManageContracts from "../components/Admin/Admin-Contracts";
 import AdminUserAvatar from "components/Admin/Admin-UserAvatar";
+import { logOut } from "../services/authenticationService";
 
 const { Header, Sider, Content, Footer } = Layout;
 
 function DashboardPage() {
   const [marginLeft, setMarginLeft] = useState(200);
   const [collapsed, setCollapsed] = useState(false);
+
+  const handleLogout = (event) => {
+    logOut();
+    window.location.href = "/login";
+  };
+
   const navigate = useNavigate();
   const siteLayoutStyle = { marginLeft: marginLeft };
   const {
@@ -100,7 +107,7 @@ function DashboardPage() {
       label: "PHÂN QUYỀN",
       path: "/admin/AccessControl",
     },
-    { key: "12", icon: <LogoutOutlined />, label: "ĐĂNG XUẤT", path: "/" },
+    { key: "12", icon: <LogoutOutlined />, label: "ĐĂNG XUẤT", onclick: handleLogout},
   ];
 
   return (

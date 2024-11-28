@@ -109,28 +109,6 @@ const ManageContracts = () => {
       return;
     }
   
-    // Tính phần trăm thanh toán đã hoàn thành
-    let paymentPercentage = 0;
-    switch (contract.paymentstatus) {
-      case "Unpaid":
-        paymentPercentage = 0; // Chưa thanh toán
-        break;
-      case "Prepay 50%":
-        paymentPercentage = 50; // Thanh toán trước 50%
-        break;
-      case "Prepay 70%":
-        paymentPercentage = 70; // Thanh toán trước 70%
-        break;
-      case "Paid":
-        paymentPercentage = 100; // Đã thanh toán đầy đủ
-        break;
-      default:
-        paymentPercentage = 0;
-        break;
-    }
-  
-    console.log(`Phần trăm thanh toán: ${paymentPercentage}%`);
-  
     // Chuẩn bị dữ liệu gửi lên API để cập nhật
     const data = {
       name: contract.name,
