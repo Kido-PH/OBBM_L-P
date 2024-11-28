@@ -28,12 +28,9 @@ import AdminAnalytics from "./components/Admin/Admin-Analytics";
 import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
 import CategoryDish from "./components/Admin/Admin-CategoryDish";
-<<<<<<< HEAD
 import IngredientManager from "./components/Admin/Admin-Ingredient";
-=======
+import MenuManagement from "./components/Admin/Admin-Menu";
 import Authenticate from "./components/Authenticate";
->>>>>>> main
-
 const App = () => {
   const location = useLocation();
 
@@ -69,6 +66,7 @@ const App = () => {
           <Route path="ManageLocation" element={<LocationManager />} />
           <Route path="ManageAccounts" element={<AccountManager />} />
           <Route path="ManageInvoice" element={<InvoiceManager />} />
+          <Route path="MenuManagement" element={<MenuManagement />} />
           <Route path="" element={<AdminAnalytics />} />
           <Route path="AccessControl" element={<AccessControl />} />
           <Route path="login" element={<Login />} />
