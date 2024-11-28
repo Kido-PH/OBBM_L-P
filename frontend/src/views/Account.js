@@ -64,55 +64,66 @@ const AccountSection = () => {
   const handleFile = (event) => {
     const file = event.target.files[0];
     const reader = new FileReader();
-  
+
     reader.onload = function (event) {
       const img = new Image();
-      
+
       img.onload = function () {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
+        const canvas = document.getElementById("canvas");
+        const context = canvas.getContext("2d");
         canvas.width = img.width;
         canvas.height = img.height;
         context.drawImage(img, 0, 0, canvas.width, canvas.height);
-        
-        const qrCodeImage = context.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(qrCodeImage.data, qrCodeImage.width, qrCodeImage.height);
-        
+
+        const qrCodeImage = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        const code = jsQR(
+          qrCodeImage.data,
+          qrCodeImage.width,
+          qrCodeImage.height
+        );
+
         if (code) {
           console.log(`Thông tin từ mã QR: ${code.data}`); // Hiển thị kết quả quét mã QR lên console
-          
-          const [IdCard, userInfo] = code.data.split('||');  // Tách phần trước và phần sau dấu '||'
 
-// Tách phần sau dấu '||' thành các thông tin người dùng
-const [fullname, birthdate, gender, address] = userInfo.split('|');  
+          const [IdCard, userInfo] = code.data.split("||"); // Tách phần trước và phần sau dấu '||'
 
-console.log('ID Card:', IdCard);  // In mã ID
-console.log('Full name:', fullname);  // In tên đầy đủ
-console.log('Birthdate:', birthdate);  // In ngày sinh
-console.log('Gender:', gender);  // In giới tính
-console.log('Address:', address);  // In địa chỉ
+          // Tách phần sau dấu '||' thành các thông tin người dùng
+          const [fullname, birthdate, gender, address] = userInfo.split("|");
 
-  
+          console.log("ID Card:", IdCard); // In mã ID
+          console.log("Full name:", fullname); // In tên đầy đủ
+          console.log("Birthdate:", birthdate); // In ngày sinh
+          console.log("Gender:", gender); // In giới tính
+          console.log("Address:", address); // In địa chỉ
+
           // Bạn có thể điền thông tin vào các trường nếu cần
-          document.getElementById('IdCard').value = IdCard;
-          document.getElementById('fullname').value = fullname;
-          const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(2, 4)}-${birthdate.slice(0, 2)}`;
-          document.getElementById('birthdate').value = formattedBirthdate;
-          document.getElementById('address').value = address;
-          const genderSelect = document.getElementById('gender');
-          genderSelect.value = gender === "Nam" ? "Male" : gender === "Nữ" ? "Female" : "Other";
+          document.getElementById("IdCard").value = IdCard;
+          document.getElementById("fullname").value = fullname;
+          const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(
+            2,
+            4
+          )}-${birthdate.slice(0, 2)}`;
+          document.getElementById("birthdate").value = formattedBirthdate;
+          document.getElementById("address").value = address;
+          const genderSelect = document.getElementById("gender");
+          genderSelect.value =
+            gender === "Nam" ? "Male" : gender === "Nữ" ? "Female" : "Other";
         } else {
-          console.log('Không tìm thấy mã QR.'); // Nếu không tìm thấy mã QR
+          console.log("Không tìm thấy mã QR."); // Nếu không tìm thấy mã QR
         }
       };
-      
+
       img.src = event.target.result;
       setImageSrc(event.target.result); // Set the image source (nếu cần hiển thị ảnh)
     };
-  
+
     reader.readAsDataURL(file);
   };
-  
 
   const addPassword = (event) => {
     event.preventDefault();
@@ -196,10 +207,6 @@ console.log('Address:', address);  // In địa chỉ
                   <p className="footer-list-title account-form-title">
                     Thông tin cá nhân
                   </p>
-                  <button
-                    type="button"
-                    className="edit-profile-btn navbar-link bi bi-pencil-square"
-                  ></button>
                 </div>
 
                 <div className="input-wrapper">

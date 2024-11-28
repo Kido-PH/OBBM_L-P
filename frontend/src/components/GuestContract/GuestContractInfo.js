@@ -80,7 +80,7 @@ const ContractInfo = () => {
   };
 
   const autoScroll = (status) => {
-    console.log("status:",status)
+    console.log("status:", status);
     if (status !== "Pending" && status !== "Completed") {
       // Cuộn xuống 500px từ vị trí hiện tại
       window.scrollTo({
@@ -88,10 +88,8 @@ const ContractInfo = () => {
         behavior: "smooth", // Cuộn mượt mà
       });
     } else {
-
     }
   };
-  
 
   const handleServicesTotalCost = (cost) => {
     setTotalServicesCost(cost);
@@ -450,6 +448,8 @@ const ContractInfo = () => {
                     ? "Chờ xác nhận"
                     : contractInfo.status === "Approved"
                     ? "Đã xác nhận"
+                    : contractInfo.status === "Actived"
+                    ? "Đang hoạt động"
                     : "Đã hoàn thành"}
                 </span>
               </h3>

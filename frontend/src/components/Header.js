@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate để điều hướng
 import Tooltip from "@mui/material/Tooltip";
-import { RiContractLine } from "react-icons/ri";
+import { RiFileList2Fill } from "react-icons/ri";
 import { BiSolidFoodMenu } from "react-icons/bi";
 import { BiUser } from "react-icons/bi";
 
@@ -33,7 +33,7 @@ const Header = () => {
         setUserDetails(data.result);
         // Kiểm tra nếu vai trò người dùng là "ADMIN"
         const roles = data.result.roles;
-        const adminRole = roles.find(role => role.name === "ADMIN");
+        const adminRole = roles.find((role) => role.name === "ADMIN");
         if (adminRole) {
           setIsAdmin(true); // Nếu có vai trò ADMIN, set isAdmin là true
           navigate("/admin"); // Điều hướng đến trang Admin ngay khi đăng nhập nếu là Admin
@@ -116,7 +116,10 @@ const Header = () => {
             {/* Hiển thị nút "Admin" chỉ khi người dùng có vai trò Admin */}
             {isAdmin && (
               <li>
-                <button onClick={() => navigate("/admin")} className="navbar-link">
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="navbar-link"
+                >
                   Admin
                 </button>
               </li>
@@ -129,17 +132,24 @@ const Header = () => {
             <ion-icon name="search-outline"></ion-icon>
           </button>
 
-          <Tooltip title="Menu">
+          <Tooltip title="Thực đơn">
             <a href="/menu" className="navbar-link header-icon">
               <BiSolidFoodMenu />
             </a>
           </Tooltip>
 
-          <Tooltip title="Account">
+          <Tooltip title="Tài khoản">
             <a href="/account" className="navbar-link header-icon">
               <BiUser />
             </a>
           </Tooltip>
+          {isLoggedIn && (
+            <Tooltip title="Danh sách hợp đồng">
+              <a href="/user/contract-list" className="navbar-link header-icon">
+                <RiFileList2Fill />
+              </a>
+            </Tooltip>
+          )}
 
           {/* Ẩn nút "Sign In" nếu đã đăng nhập */}
           {!isLoggedIn && (
@@ -151,7 +161,8 @@ const Header = () => {
           <button
             className="nav-toggle-btn"
             aria-label="Toggle Menu"
-            data-menu-toggle-btn>
+            data-menu-toggle-btn
+          >
             <span className="line top"></span>{" "}
             <span className="line middle"></span>{" "}
             <span className="line bottom"></span>
