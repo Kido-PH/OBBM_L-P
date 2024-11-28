@@ -14,6 +14,7 @@ const RegisterForm = ({ toggleForm }) => {
     document.getElementById("registerStep2").style.display = "block";
   };
   const navigate = useNavigate();
+  const [currentForm, setCurrentForm] = useState('login');
   useEffect(() => {
     const accessToken = getToken();
 
@@ -57,11 +58,9 @@ const RegisterForm = ({ toggleForm }) => {
           reverseButtons: true,
         }).then((result) => {
           if (result.isConfirmed) {
-            // Điều hướng tới trang đăng nhập
-            navigate("/login");
+            navigate('/login'); // Navigate to the login page
           } else if (result.dismiss === Swal.DismissReason.cancel) {
-            // Điều hướng tới trang chủ
-            navigate("/");
+            navigate('/');
           }
         });
       })
