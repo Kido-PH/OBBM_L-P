@@ -20,11 +20,27 @@ import { logOut } from "../services/authenticationService";
 const AccountSection = () => {
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState(null);
-  const [userDetails, setUserDetails] = useState({});
+  const [userDetails, setUserDetails] = useState({
+    gender: null,
+  });
   const [password, setPassword] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("error");
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    fullname: userDetails.fullname || "",
+    gender: userDetails.gender ? "Male" : "Female",
+    residence: userDetails.residence || "",
+    email: userDetails.email || "",
+    phone: userDetails.phone || "",
+    citizenIdentity: userDetails.citizenIdentity || "",
+    dob: userDetails.dob || "",
+  });
+
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -88,33 +104,40 @@ const AccountSection = () => {
         );
 
         if (code) {
-          console.log(`Thông tin từ mã QR: ${code.data}`); // Hiển thị kết quả quét mã QR lên console
+          console.log(`Thông tin từ mã QR: ${code.data}`);
 
           const [IdCard, userInfo] = code.data.split("||"); // Tách phần trước và phần sau dấu '||'
-
-          // Tách phần sau dấu '||' thành các thông tin người dùng
           const [fullname, birthdate, gender, address] = userInfo.split("|");
 
-          console.log("ID Card:", IdCard); // In mã ID
-          console.log("Full name:", fullname); // In tên đầy đủ
-          console.log("Birthdate:", birthdate); // In ngày sinh
-          console.log("Gender:", gender); // In giới tính
-          console.log("Address:", address); // In địa chỉ
+          console.log("ID Card:", IdCard);
+          console.log("Full name:", fullname);
+          console.log("Birthdate:", birthdate);
+          console.log("Gender:", gender);
+          console.log("Address:", address);
 
-          // Bạn có thể điền thông tin vào các trường nếu cần
+          // Cập nhật giá trị vào form
           document.getElementById("IdCard").value = IdCard;
           document.getElementById("fullname").value = fullname;
+
+          // Định dạng lại ngày sinh
           const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(
             2,
             4
           )}-${birthdate.slice(0, 2)}`;
           document.getElementById("birthdate").value = formattedBirthdate;
           document.getElementById("address").value = address;
+
+          // Xử lý gender và gán giá trị boolean
+          const genderValue =
+            gender === "Nam" ? true : gender === "Nữ" ? false : null;
+
+          // Cập nhật giá trị vào trường select (Nam -> true, Nữ -> false)
           const genderSelect = document.getElementById("gender");
-          genderSelect.value =
-            gender === "Nam" ? "Male" : gender === "Nữ" ? "Female" : "Other";
+          genderSelect.value = genderValue;
+
+          // Tại đây bạn có thể gọi API để gửi userData vào backend hoặc CSDL
         } else {
-          console.log("Không tìm thấy mã QR."); // Nếu không tìm thấy mã QR
+          console.log("Không tìm thấy mã QR.");
         }
       };
 
@@ -177,6 +200,59 @@ const AccountSection = () => {
       }
     };
   }, []);
+
+  const handleUpdate = async (event) => {
+    event.preventDefault();
+
+    // Chuẩn bị dữ liệu cần gửi
+    const updatedData = {
+      fullname: document.getElementById("fullname").value,
+      email: document.getElementById("email_address").value,
+      phone: document.getElementById("phone").value,
+      residence: document.getElementById("address").value,
+      dob: document.getElementById("birthdate").value,
+      gender: document.getElementById("gender").value,
+      citizenIdentity: document.getElementById("IdCard").value,
+    };
+    console.log("data gửi đi API:", updatedData);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/obbm/users/user/${userDetails.userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        alert("Cập nhật thông tin thành công!");
+        console.log(data);
+      } else {
+        alert("Cập nhật không thành công.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật thông tin:", error);
+      alert("Đã xảy ra lỗi trong quá trình cập nhật.");
+    }
+  };
+
+  const handleGenderChange = (event) => {
+    // Cập nhật userDetail.gender theo lựa chọn của người dùng
+    const genderValue =
+      event.target.value === "true"
+        ? true
+        : event.target.value === "false"
+        ? false
+        : null;
+    setUserDetails({ ...userDetails, gender: genderValue });
+  };
+
   const handleLogout = (event) => {
     logOut();
     window.location.href = "/login";
@@ -217,8 +293,11 @@ const AccountSection = () => {
                     placeholder="Your Name"
                     aria-label="Full Name:"
                     className="input-field"
-                    disabled
+                    disabled={!isEditing}
                     value={userDetails.fullname || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullname: e.target.value })
+                    }
                   />
                   <input
                     type="text"
@@ -229,7 +308,7 @@ const AccountSection = () => {
                     aria-label="UserName"
                     className="input-field"
                     value={userDetails.username || ""}
-                    disabled
+                    disabled={!isEditing}
                   />
                 </div>
                 <div className="input-wrapper">
@@ -242,7 +321,7 @@ const AccountSection = () => {
                     aria-label="Email"
                     className="input-field"
                     value={userDetails.email || ""}
-                    disabled
+                    disabled={!isEditing}
                   />
                   <input
                     type="text"
@@ -253,7 +332,7 @@ const AccountSection = () => {
                     aria-label="Phone Number"
                     className="input-field"
                     value={userDetails.phone || ""}
-                    disabled
+                    disabled={!isEditing}
                   />
                 </div>
 
@@ -265,8 +344,8 @@ const AccountSection = () => {
                     placeholder="Address"
                     aria-label="Address"
                     className="input-field"
-                    // value={userDetails.address || ""}
-                    disabled
+                    value={userDetails.residence || ""}
+                    disabled={!isEditing}
                   />
                   <input
                     type="date"
@@ -276,7 +355,7 @@ const AccountSection = () => {
                     aria-label="Date of Birth"
                     className="input-field"
                     value={userDetails.dob || ""}
-                    disabled
+                    disabled={!isEditing}
                   />
                 </div>
 
@@ -287,13 +366,19 @@ const AccountSection = () => {
                     id="gender"
                     style={{ height: "40px" }}
                     className="input-field"
+                    onChange={handleGenderChange} // Gọi hàm khi người dùng chọn giới tính
+                    value={
+                      userDetails.gender === null
+                        ? ""
+                        : userDetails.gender.toString()
+                    } // Đảm bảo giá trị của select phù hợp với state
                   >
-                    <option value="" disabled>
+                    <option value="" disabled={false}>
                       -- Chọn giới tính --
                     </option>
-                    <option value="Male">Nam</option>
-                    <option value="Female">Nữ</option>
-                    <option value="Other">Khác</option>
+                    <option value="true">Nam</option>
+                    <option value="false">Nữ</option>
+                    <option value="null">Khác</option>
                   </select>
 
                   <div className="input-wrapper" style={{ marginTop: "7px" }}>
@@ -342,8 +427,8 @@ const AccountSection = () => {
                       placeholder="Căn cước công dân"
                       aria-label="IdCard"
                       className="input-field"
-                      // value={userDetails.address || ""}
-                      disabled
+                      value={userDetails.citizenIdentity || ""}
+                      disabled={!isEditing}
                     />
                   </div>
                 </div>
@@ -353,9 +438,16 @@ const AccountSection = () => {
                     type="submit"
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
                     style={{ margin: "10px auto" }}
-                    disabled
+                    onClick={handleUpdate}
                   >
                     Lưu
+                  </button>
+                  <button
+                    type="button"
+                    className="edit-profile-btn navbar-link bi bi-pencil-square"
+                    onClick={toggleEdit}
+                  >
+                    {isEditing ? "Hủy" : "Chỉnh sửa"}
                   </button>
                 </div>
               </form>

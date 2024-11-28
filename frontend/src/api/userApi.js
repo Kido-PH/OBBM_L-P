@@ -9,6 +9,10 @@ const userApi = {
     const url = `/users/${userId}`;
     return axiosClient.get(url);
   },
+  getAllUser() {
+    const url = `/users`;
+    return axiosClient.get(url);
+  },
 };
 
 export default userApi;

@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import "../assets/css/DashboardPage.css";
 import {
-  UserOutlined,
   LogoutOutlined,
   CustomerServiceOutlined,
   EnvironmentOutlined,
@@ -16,32 +15,38 @@ import {
   CoffeeOutlined,
 } from "@ant-design/icons";
 import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
-import { Avatar, Col, Layout, Menu, Row, theme } from "antd";
-import { MdHome } from "react-icons/md";
+import { Col, Layout, Menu, Row, theme } from "antd";
 import ManageContracts from "../components/Admin/Admin-Contracts";
-import ManageStockRequests from "../components/Admin/Admin-StockRequests";
+import AdminUserAvatar from "components/Admin/Admin-UserAvatar";
 import { logOut } from "../services/authenticationService";
+
 const { Header, Sider, Content, Footer } = Layout;
 
 function DashboardPage() {
   const [marginLeft, setMarginLeft] = useState(200);
   const [collapsed, setCollapsed] = useState(false);
+
   const handleLogout = (event) => {
     logOut();
     window.location.href = "/login";
   };
-  const navigate = useNavigate();
 
+  const navigate = useNavigate();
   const siteLayoutStyle = { marginLeft: marginLeft };
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
   const menuItems = [
-    { key: "1", icon: <BarChartOutlined />, label: "TỔNG QUAN", path: "/admin" },
+    {
+      key: "1",
+      icon: <BarChartOutlined />,
+      label: "TỔNG QUAN",
+      path: "/admin",
+    },
     {
       key: "2",
-      icon: <FileDoneOutlined /> ,
+      icon: <FileDoneOutlined />,
       label: "HỢP ĐỒNG",
       path: "/admin/ManageContracts",
     },
@@ -156,21 +161,25 @@ function DashboardPage() {
         >
           <Row>
             <Col md={21}>
-              {React.createElement(
-                collapsed ? MenuOutlined : MenuOutlined,
-                {
-                  className: "trigger",
-                  onClick: () => {
-                    const sts = !collapsed;
-                    setCollapsed(sts);
-                    setMarginLeft(sts ? 80 : 200);
-                  },
-                }
-              )}
+              {React.createElement(collapsed ? MenuOutlined : MenuOutlined, {
+                className: "trigger",
+                onClick: () => {
+                  const sts = !collapsed;
+                  setCollapsed(sts);
+                  setMarginLeft(sts ? 80 : 200);
+                },
+              })}
             </Col>
-            <Col md={3}>
-              <div style={{ paddingRight: 16, textAlign: "right" }}>
-                Admin <Avatar size="default" icon={<UserOutlined />}></Avatar> 
+            <Col
+              md={3}
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                alignItems: "center",
+              }}
+            >
+              <div style={{ paddingRight: 16 }}>
+                <AdminUserAvatar />
               </div>
             </Col>
           </Row>
@@ -179,9 +188,10 @@ function DashboardPage() {
         {/* Content */}
         <Content
           style={{
-            marginTop: 65 /* Đẩy nội dung xuống dưới Header */,
-            padding: 24 /* Padding để tạo khoảng cách */,
-            minHeight: "100%" /* Chiếm toàn bộ chiều cao còn lại trừ Header và Footer */,
+            marginTop: 66 /* Đẩy nội dung xuống dưới Header */,
+            padding: 10 /* Padding để tạo khoảng cách */,
+            minHeight:
+              "100%" /* Chiếm toàn bộ chiều cao còn lại trừ Header và Footer */,
             background: colorBgContainer,
             borderRadius: 0,
             overflow: "auto" /* Đảm bảo cuộn khi nội dung dài */,
@@ -193,35 +203,29 @@ function DashboardPage() {
                 path="/admin/ManageContracts"
                 element={<ManageContracts />}
               />
-              <Route
-                path="/admin/ManageStockRequests"
-                element={<ManageStockRequests />}
-              />
-              {/* Các Route khác */}
             </Routes>
             <Outlet />
           </div>
         </Content>
-
-        {/* Footer */}
-        <Footer
-          style={{
-            textAlign: "center",
-            fontFamily: "circular std book, sans-serif",
-            color: "#858796",
-            height: "0px" /* Chiều cao cố định của Footer */,
-            background: colorBgContainer /* Màu nền nhẹ cho Footer */,
-            position: "fixed" /* Cố định Footer */,
-            bottom: 0,
-            width: `calc(100% - ${
-              marginLeft + 32
-            }px)` /* Đảm bảo căn giữa với phần content */,
-            left: marginLeft + 16,
-          }}
-        >
-          OBBM ©{new Date().getFullYear()} Created by L&P
-        </Footer>
       </Layout>
+      {/* Footer */}
+      <Footer
+        style={{
+          textAlign: "center",
+          fontFamily: "circular std book, sans-serif",
+          color: "#858796",
+          height: "0px" /* Chiều cao cố định của Footer */,
+          background: colorBgContainer /* Màu nền nhẹ cho Footer */,
+          position: "fixed" /* Cố định Footer */,
+          bottom: 0,
+          width: `calc(100% - ${
+            marginLeft + 32
+          }px)` /* Đảm bảo căn giữa với phần content */,
+          left: marginLeft + 16,
+        }}
+      >
+        OBBM ©{new Date().getFullYear()} Created by L&P
+      </Footer>
     </Layout>
   );
 }

@@ -141,14 +141,8 @@ const Content = () => {
     setEvents(EventsList.result.content);
   };
   useEffect(() => {
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTczMjQzNjUwNiwiaWF0IjoxNzMyNDM2NTA2LCJqdGkiOiIzOGFkMWNhZC0yYjFkLTQxOGUtYmI5Yi0wMDM1ZmM2NTgxYmUiLCJzY29wZSI6IlJPTEVfQURNSU4gREVMRVRFX0RJU0ggQ1JFQVRFX1VTRVIgVVBEQVRFX1NFUlZJQ0VTIERFTEVURV9FVkVOVCBERUxFVEVfTE9DQVRJT04gUkVBRF9TRVJWSUNFUyBSRUFEX0VWRU5UIENSRUFURV9DT05UUkFDVCBSRUFEX0xPQ0FUSU9OIFJFQURfSU5HUkVESUVOVCBERUxFVEVfVVNFUiBDUkVBVEVfTUVOVSBERUxFVEVfU0VSVklDRVMgQ1JFQVRFX0xPQ0FUSU9OIENSRUFURV9FVkVOVCBSRUFEX0NPTlRSQUNUIFVQREFURV9NRU5VIFJFQURfRElTSCBDUkVBVEVfU0VSVklDRVMgREVMRVRFX01FTlUgVVBEQVRFX0VWRU5UIENSRUFURV9ESVNIIFJFQURfVVNFUiBVUERBVEVfTE9DQVRJT04gVVBEQVRFX0NPTlRSQUNUIFVQREFURV9JTkdSRURJRU5UIENSRUFURV9JTkdSRURJRU5UIERFTEVURV9JTkdSRURJRU5UIERFTEVURV9DT05UUkFDVCBSRUFEX01FTlUgVVBEQVRFX0RJU0ggVVBEQVRFX1VTRVIifQ.kaLopBa7E2vF75Eo_9wEKr82jCRfkkOB84-5FvrK5Cmtd2HMTm8nCtkkF-TkcqdOmdVbruCxApS-iB8EtZzO5Q";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-
     fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
-
     fetchEvent();
-
 
   }, [activeCategoryId]);
 
@@ -347,7 +341,7 @@ const Content = () => {
                     }`}
                     onClick={() => handleFilter(1)}
                   >
-                    Khai vị
+                    Khai vị và thức uống
                   </button>
                 </li>
 
@@ -370,17 +364,6 @@ const Content = () => {
                     onClick={() => handleFilter(3)}
                   >
                     Tráng miệng
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    className={`filter-btn ${
-                      activeCategoryId === 4 ? "active" : ""
-                    }`}
-                    onClick={() => handleFilter(4)}
-                  >
-                    Đồ uống
                   </button>
                 </li>
               </ul>

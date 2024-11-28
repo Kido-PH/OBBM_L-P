@@ -21,7 +21,6 @@ import ServiceManager from "./components/Admin/Admin-Services";
 import EventManager from "./components/Admin/Admin-Events";
 import LocationManager from "./components/Admin/Admin-Location";
 import AccountManager from "./components/Admin/Admin-Account";
-import InvoiceManager from "./components/Admin/Admin-Invoices";
 import AdminAnalytics from "./components/Admin/Admin-Analytics";
 import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
@@ -33,8 +32,6 @@ import PaymentCoordinatorPage from "views/PaymentCoordinator";
 
 const App = () => {
   const location = useLocation();
-
-  // Kiểm tra nếu trang không phải là admin hoặc các trang cần ẩn Header/Footer
   const shouldShowHeaderFooter =
     !location.pathname.startsWith("/admin") &&
     location.pathname !== "/login" &&
@@ -51,6 +48,7 @@ const App = () => {
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract/info/:id" element={<GuestContractInfo />} />
         <Route path="/obbm/payment/status" element={<PaymentCoordinatorPage />} />
+        <Route path="/payment/success" element={<PaymentCoordinatorPage />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
         <Route path="/account" element={<Account />} />   
@@ -67,7 +65,6 @@ const App = () => {
           <Route path="ManageEvents" element={<EventManager />} />
           <Route path="ManageLocation" element={<LocationManager />} />
           <Route path="ManageAccounts" element={<AccountManager />} />
-          <Route path="ManageInvoice" element={<InvoiceManager />} />
           <Route path="" element={<AdminAnalytics />} />
           <Route path="AccessControl" element={<AccessControl />} />
           <Route path="login" element={<Login />} />

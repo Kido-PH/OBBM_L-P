@@ -3,10 +3,10 @@ import '../assets/css/style.css';
 import LoginForm from './_login';
 import RegisterForm from './_register';
 import ResetPasswordForm from './_resetpassword';
-
+import { useNavigate } from 'react-router-dom';
 const Login = () => {
   const [currentForm, setCurrentForm] = useState('login');
-
+  const navigate = useNavigate();
   useEffect(() => {
     const loginImage = document.querySelector(".login-image");
 
@@ -21,25 +21,23 @@ const Login = () => {
     } else {
       loginImage.removeEventListener("click", handleClick);
     }
+    if (currentForm === 'login') {
+      navigate('/login');
+    } else if (currentForm === 'register') {
+      navigate('/register');
+    } else if (currentForm === 'forgotPassword') {
+      navigate('/resetpassword');
+    }
 
     return () => {
       loginImage.removeEventListener("click", handleClick);
     };
-  }, [currentForm]);
+  }, [currentForm,navigate]);
 
   const toggleForm = (targetForm) => {
-    if (!targetForm) {
-      if (currentForm === 'register') {
-        targetForm = 'login';
-      } else if (currentForm === 'login') {
-        targetForm = 'forgotPassword';
-      } else {
-        targetForm = 'register';
-      }
-    }
-
-    setCurrentForm(targetForm);
+    setCurrentForm(targetForm);  // Update the form displayed
   };
+
 
   return (
     <body className='body-login'>

@@ -2,10 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   Button,
   TextField,
-  Select,
-  MenuItem,
-  InputLabel,
-  FormControl,
   Box,
   Table,
   TableBody,
@@ -18,323 +14,88 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  TablePagination,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ReactPaginate from "react-paginate"; // Import ReactPaginate
-import dishApi from "../../api/dishApi";
+import ingredientApi from "api/ingredientApi";
+import toast, { Toaster } from "react-hot-toast";
 
 const formatDate = (dateString) => {
   if (!dateString) return "";
-  const date = new Date(dateString);
-  const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  const year = date.getFullYear();
-  return `${day}/${month}/${year}`;
-};
-const sampleIngredients = {
-  1: [ // Salad Trái Cây
-    {
-      ingredientId: 1,
-      name: "Táo",
-      quantity: "100g",
-      unit: "g",
-      transndate: "2024-11-10",
-      description: "Táo tươi ngon."
-    },
-    {
-      ingredientId: 2,
-      name: "Dưa hấu",
-      quantity: "150g",
-      unit: "g",
-      transndate: "2024-11-10",
-      description: "Dưa hấu ngọt mát."
-    },
-    {
-      ingredientId: 3,
-      name: "Nho",
-      quantity: "50g",
-      unit: "g",
-      transndate: "2024-11-10",
-      description: "Nho xanh tươi."
-    },
-    {
-      ingredientId: 4,
-      name: "Cam",
-      quantity: "1 quả",
-      unit: "quả",
-      transndate: "2024-11-10",
-      description: "Cam ngọt."
-    },
-  ],
-  2: [ // Món bò
-    {
-      ingredientId: 5,
-      name: "Thịt bò",
-      quantity: "200g",
-      unit: "g",
-      transndate: "2024-11-11",
-      description: "Thịt bò tươi ngon."
-    },
-    {
-      ingredientId: 6,
-      name: "Tỏi",
-      quantity: "5g",
-      unit: "g",
-      transndate: "2024-11-11",
-      description: "Tỏi thơm."
-    },
-    {
-      ingredientId: 7,
-      name: "Hành tây",
-      quantity: "50g",
-      unit: "g",
-      transndate: "2024-11-11",
-      description: "Hành tây tươi."
-    },
-    {
-      ingredientId: 8,
-      name: "Gia vị",
-      quantity: "5g",
-      unit: "g",
-      transndate: "2024-11-11",
-      description: "Gia vị cho món ăn thêm đậm đà."
-    },
-  ],
-  3: [ // Bánh Kem
-    {
-      ingredientId: 9,
-      name: "Bột mì",
-      quantity: "100g",
-      unit: "g",
-      transndate: "2024-11-12",
-      description: "Bột mì cao cấp."
-    },
-    {
-      ingredientId: 10,
-      name: "Trứng",
-      quantity: "2 quả",
-      unit: "quả",
-      transndate: "2024-11-12",
-      description: "Trứng gà tươi."
-    },
-    {
-      ingredientId: 11,
-      name: "Đường",
-      quantity: "50g",
-      unit: "g",
-      transndate: "2024-11-12",
-      description: "Đường cát trắng."
-    },
-    {
-      ingredientId: 12,
-      name: "Kem tươi",
-      quantity: "100g",
-      unit: "g",
-      transndate: "2024-11-12",
-      description: "Kem tươi ngon, mịn."
-    },
-  ],
-  4: [ // Mì Ý Bò Bằm
-    {
-      ingredientId: 13,
-      name: "Mì Ý",
-      quantity: "150g",
-      unit: "g",
-      transndate: "2024-11-13",
-      description: "Mì Ý tươi ngon."
-    },
-    {
-      ingredientId: 14,
-      name: "Thịt bò bằm",
-      quantity: "100g",
-      unit: "g",
-      transndate: "2024-11-13",
-      description: "Thịt bò xay nhuyễn."
-    },
-    {
-      ingredientId: 15,
-      name: "Cà chua",
-      quantity: "50g",
-      unit: "g",
-      transndate: "2024-11-13",
-      description: "Cà chua tươi."
-    },
-    {
-      ingredientId: 16,
-      name: "Hành tây",
-      quantity: "30g",
-      unit: "g",
-      transndate: "2024-11-13",
-      description: "Hành tây thái mỏng."
-    },
-  ],
-  5: [ // Gà Chiên Giòn
-    {
-      ingredientId: 17,
-      name: "Gà",
-      quantity: "200g",
-      unit: "g",
-      transndate: "2024-11-14",
-      description: "Gà tươi, thịt ngon."
-    },
-    {
-      ingredientId: 18,
-      name: "Bột chiên giòn",
-      quantity: "100g",
-      unit: "g",
-      transndate: "2024-11-14",
-      description: "Bột chiên giòn cao cấp."
-    },
-    {
-      ingredientId: 19,
-      name: "Dầu ăn",
-      quantity: "50ml",
-      unit: "ml",
-      transndate: "2024-11-14",
-      description: "Dầu ăn tinh khiết."
-    },
-    {
-      ingredientId: 20,
-      name: "Muối",
-      quantity: "3g",
-      unit: "g",
-      transndate: "2024-11-14",
-      description: "Muối biển tự nhiên."
-    },
-  ],
-  6: [ // Cá Hấp Xì Dầu
-    {
-      ingredientId: 21,
-      name: "Cá",
-      quantity: "200g",
-      unit: "g",
-      transndate: "2024-11-15",
-      description: "Cá tươi, không xương."
-    },
-    {
-      ingredientId: 22,
-      name: "Xì dầu",
-      quantity: "20ml",
-      unit: "ml",
-      transndate: "2024-11-15",
-      description: "Xì dầu đậm đà."
-    },
-    {
-      ingredientId: 23,
-      name: "Gừng",
-      quantity: "5g",
-      unit: "g",
-      transndate: "2024-11-15",
-      description: "Gừng tươi, gọt vỏ."
-    },
-    {
-      ingredientId: 24,
-      name: "Hành lá",
-      quantity: "10g",
-      unit: "g",
-      transndate: "2024-11-15",
-      description: "Hành lá tươi."
-    },
-  ],
-  7: [ // Súp Bông Cải
-    {
-      ingredientId: 25,
-      name: "Bông cải",
-      quantity: "150g",
-      unit: "g",
-      transndate: "2024-11-16",
-      description: "Bông cải tươi."
-    },
-    {
-      ingredientId: 26,
-      name: "Sữa tươi",
-      quantity: "50ml",
-      unit: "ml",
-      transndate: "2024-11-16",
-      description: "Sữa tươi nguyên chất."
-    },
-    {
-      ingredientId: 27,
-      name: "Bơ",
-      quantity: "20g",
-      unit: "g",
-      transndate: "2024-11-16",
-      description: "Bơ mềm, thơm."
-    },
-    {
-      ingredientId: 28,
-      name: "Hành tây",
-      quantity: "30g",
-      unit: "g",
-      transndate: "2024-11-16",
-      description: "Hành tây thái mỏng."
-    },
-  ],
-  // Các món ăn khác tiếp theo theo cách thức tương tự...
+  const [day, month, year] = dateString.split("/");
+  return `${day.padStart(2, "0")}/${month.padStart(2, "0")}/${year}`;
 };
 
+const removeAccents = (str) => {
+  return str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+};
 
 const IngredientManager = () => {
-  const [dishes, setDishes] = useState([]);
   const [ingredients, setIngredients] = useState([]);
-  const [selectedDish, setSelectedDish] = useState("");
-  const [filteredIngredients, setFilteredIngredients] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [openDeleteDialogState, setOpenDeleteDialogState] = useState(false);
   const [currentIngredient, setCurrentIngredient] = useState(null);
-  const [currentPage, setCurrentPage] = useState(0); // Current page state
-  const itemsPerPage = 5; // Number of items per page
+  const [currentPage, setCurrentPage] = useState(0); // Current page
+  const [totalPages, setTotalPages] = useState(0); // Total pages
+  const [rowsPerPage, setRowsPerPage] = useState(5); // Items per page
+  const [searchTerm, setSearchTerm] = useState(""); // Search term
+  const [openDialog, setOpenDialog] = useState(false);
+  const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
-  const handleIngredientSelection = (ingredient) => {
-    setCurrentIngredient(ingredient);
-    setOpenDialog(true);
-  };
-
-  const fetchDishes = async () => {
+  // Fetch ingredients with optional search term
+  const fetchIngredients = async (page = 0, size = rowsPerPage) => {
     try {
-      const params = { page: 1, size: 100 };
-      const response = await dishApi.getAll(params);
-      const dishesData = response.result?.content || [];
-      setDishes(dishesData);
+      const response = await ingredientApi.getPaginate(page + 1, size);
+      const { content, totalPages } = response.result;
+      setIngredients(content); // Cập nhật danh sách nguyên liệu
+      setTotalPages(totalPages); // Tổng số trang
     } catch (error) {
-      console.error("Failed to fetch dishes: ", error);
+      console.error("Error fetching ingredients:", error);
+      toast.error("Không thể tải danh sách nguyên liệu.");
     }
   };
 
   useEffect(() => {
-    fetchDishes();
-  }, []);
-
-  const handleDishChange = (event) => {
-    const selectedDishId = event.target.value;
-    setSelectedDish(selectedDishId);
-    const selectedIngredients = sampleIngredients[selectedDishId] || [];
-    setIngredients(selectedIngredients);
-    setFilteredIngredients(selectedIngredients);
-  };
+    fetchIngredients(currentPage, rowsPerPage);
+  }, [currentPage, rowsPerPage]);
 
   const handleSearchChange = (event) => {
-    const searchValue = event.target.value.toLowerCase();
-    setSearchTerm(searchValue);
+  setSearchTerm(event.target.value); // Cập nhật giá trị tìm kiếm trực tiếp
+};
 
-    const filteredDishes = dishes.filter((dish) =>
-      dish.name.toLowerCase().includes(searchValue)
-    );
-
-    if (filteredDishes.length > 0) {
-      const selectedDishId = filteredDishes[0].dishId;
-      setSelectedDish(selectedDishId);
-      const selectedIngredients = sampleIngredients[selectedDishId] || [];
-      setIngredients(selectedIngredients);
-      setFilteredIngredients(selectedIngredients);
-    } else {
-      setSelectedDish("");
-      setIngredients([]);
-      setFilteredIngredients([]);
+  useEffect(() => {
+    if (!searchTerm) {
+      fetchIngredients(currentPage, rowsPerPage);
+      return;
     }
+
+    const normalizedSearchTerm = removeAccents(searchTerm.trim());
+
+    const isNumber = /^\d+$/.test(normalizedSearchTerm);
+
+    const filtered = ingredients.filter((ingredient) => {
+      if (isNumber) {
+        return ingredient.ingredientId.toString().includes(normalizedSearchTerm);
+      }
+      const normalizedName = removeAccents(ingredient.name);
+      return normalizedName.includes(normalizedSearchTerm);
+    });
+
+    setIngredients(filtered);
+    setCurrentPage(0);
+  }, [searchTerm]);
+
+
+  const handlePageChange = (event, newPage) => {
+    setCurrentPage(newPage); // Update the current page
+  };
+
+  const handleRowsPerPageChange = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setCurrentPage(0); // Reset to the first page
   };
 
   const openIngredientDialog = (ingredient = null) => {
@@ -347,145 +108,138 @@ const IngredientManager = () => {
     setCurrentIngredient(null);
   };
 
-  const handleChange = (field, value) => {
-    setCurrentIngredient({ ...currentIngredient, [field]: value });
-  };
-
-  const handleSaveIngredient = () => {
-    if (!currentIngredient) {
-      return; // Early return if no ingredient is selected
+  const handleDeleteIngredient = async () => {
+    if (!currentIngredient?.ingredientId) {
+      toast.error("Không tìm thấy nguyên liệu để xóa!");
+      return;
     }
 
-    const { ingredientId, name, quantity, unit, transndate, description } = currentIngredient;
+    try {
+      const response = await ingredientApi.delete(currentIngredient.ingredientId);
 
-    if (ingredientId) {
-      // Update existing ingredient
-      const updatedIngredients = ingredients.map((ingredient) =>
-        ingredient.ingredientId === ingredientId
-          ? { ...ingredient, name, quantity, unit, transndate, description }
-          : ingredient
-      );
-      setIngredients(updatedIngredients);
-      setFilteredIngredients(updatedIngredients);
-    } else {
-      // Add new ingredient
-      const newIngredient = {
-        ingredientId: ingredients.length + 1,
-        name,
-        quantity,
-        unit,
-        transndate,
-        description,
-      };
-      setIngredients([...ingredients, newIngredient]);
-      setFilteredIngredients([...ingredients, newIngredient]);
+      if (response.code === 1000) {
+        toast.success("Xóa nguyên liệu thành công!");
+        fetchIngredients(currentPage, rowsPerPage, searchTerm); // Tải lại danh sách nguyên liệu
+        closeDeleteDialog(); // Đóng popup xóa
+      } else {
+        toast.error("Xóa nguyên liệu thất bại!");
+      }
+    } catch (error) {
+      console.error("Error deleting ingredient:", error);
+      toast.error("Có lỗi xảy ra khi xóa nguyên liệu!");
     }
-
-    closeIngredientDialog(); // Close the dialog after saving
-  };
-
-  const handleOpenDeleteDialog = (ingredient) => {
-    setCurrentIngredient(ingredient);
-    setOpenDeleteDialogState(true);
   };
 
   const closeDeleteDialog = () => {
-    setOpenDeleteDialogState(false);
+    setOpenDeleteDialog(false);
     setCurrentIngredient(null);
   };
 
-  const handleDeleteIngredient = () => {
-    const updatedIngredients = ingredients.filter(
-      (ingredient) => ingredient.ingredientId !== currentIngredient.ingredientId
-    );
-    setIngredients(updatedIngredients);
-    setFilteredIngredients(updatedIngredients);
-    closeDeleteDialog();
-  };
+  const handleSaveIngredient = async () => {
+  if (!currentIngredient?.name || !currentIngredient?.unit) {
+    toast.error("Vui lòng điền đầy đủ thông tin!");
+    return;
+  }
 
-  // Handle page click
-  const handlePageClick = (event) => {
-    setCurrentPage(event.selected); // Set current page
-  };
+  try {
+    if (currentIngredient.ingredientId) {
+      // Cập nhật nguyên liệu
+      const response = await ingredientApi.update(currentIngredient.ingredientId, {
+        name: currentIngredient.name,
+        unit: currentIngredient.unit,
+        desc: currentIngredient.desc || "",
+      });
 
-  // Calculate the ingredients to display based on current page
-  const displayedIngredients = filteredIngredients.slice(
-    currentPage * itemsPerPage,
-    (currentPage + 1) * itemsPerPage
-  );
+      if (response.code === 1000) {
+        toast.success("Cập nhật nguyên liệu thành công!");
+        fetchIngredients(currentPage, rowsPerPage, searchTerm); // Tải lại danh sách nguyên liệu
+        closeIngredientDialog(); // Đóng popup
+      } else {
+        toast.error("Cập nhật nguyên liệu thất bại!");
+      }
+    } else {
+      // Thêm mới nguyên liệu
+      const response = await ingredientApi.add({
+        name: currentIngredient.name,
+        unit: currentIngredient.unit,
+        desc: currentIngredient.desc || "",
+      });
 
-  // Calculate total pages
-  const pageCount = Math.ceil(filteredIngredients.length / itemsPerPage);
+      if (response.code === 1000) {
+        toast.success("Thêm nguyên liệu thành công!");
+        fetchIngredients(currentPage, rowsPerPage, searchTerm); // Tải lại danh sách nguyên liệu
+        closeIngredientDialog(); // Đóng popup
+      } else {
+        toast.error("Thêm nguyên liệu thất bại!");
+      }
+    }
+  } catch (error) {
+    console.error("Error saving ingredient:", error);
+    toast.error("Có lỗi xảy ra khi lưu nguyên liệu!");
+  }
+};
 
   return (
     <div>
-      <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mt: 2, mb: 2 }}>
+      <Toaster position="top-center" reverseOrder={false} />
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mt: 2,
+          mb: 2,
+        }}
+      >
         <TextField
           variant="outlined"
-          placeholder="Tìm kiếm món ăn hoặc nguyên liệu..."
-          sx={{ mx: 1, width: "200px" }}
+          placeholder="Tìm kiếm nguyên liệu (ID hoặc Tên)..."
+          sx={{ mx: 1, width: "300px" }}
           value={searchTerm}
           onChange={handleSearchChange}
         />
 
-        <FormControl fullWidth margin="dense" sx={{ mx: 1, width: "200px" }}>
-          <InputLabel shrink>Món ăn</InputLabel>
-          <Select
-            value={selectedDish || ""}
-            onChange={handleDishChange}
-            label="Món ăn"
-            displayEmpty
-          >
-            <MenuItem value="">
-              <em>Chọn món ăn</em>
-            </MenuItem>
-
-            {dishes
-              .filter((dish) =>
-                dish.name.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map((dish) => (
-                <MenuItem key={dish.dishId} value={dish.dishId}>
-                  {dish.name}
-                </MenuItem>
-              ))}
-          </Select>
-        </FormControl>
-
         <Button
-          sx={{ fontSize: "10px", display: "flex", alignItems: "center", padding: "6px 12px" }}
+          sx={{
+            fontSize: "10px",
+            display: "flex",
+            alignItems: "center",
+            padding: "6px 12px",
+          }}
           variant="contained"
           color="primary"
           onClick={() => openIngredientDialog()}
         >
           <AddIcon sx={{ marginRight: "5px", fontSize: "16px" }} />
-          Add Ingredient
+          Thêm Nguyên Liệu
         </Button>
       </Box>
 
-      <TableContainer component={Paper}>
-        <Table className="table-container">
+      <TableContainer 
+        component={Paper}
+        sx={{ mt: 1 }}
+        className="table-container"
+      >
+        <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Mã nguyên liệu</TableCell>
+              <TableCell>STT</TableCell>
               <TableCell>Tên nguyên liệu</TableCell>
-              <TableCell>Số lượng</TableCell>
               <TableCell>Đơn vị</TableCell>
-              <TableCell>Ngày thay đổi</TableCell>
+              <TableCell>Ngày tạo</TableCell>
               <TableCell>Mô tả</TableCell>
               <TableCell>Hành động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {displayedIngredients.length > 0 ? (
-              displayedIngredients.map((ingredient, index) => (
+            {ingredients.length > 0 ? (
+              ingredients.map((ingredient) => (
                 <TableRow key={ingredient.ingredientId}>
-                  <TableCell>{index + 1 + currentPage * itemsPerPage}</TableCell>
+                  <TableCell>{ingredient.ingredientId}</TableCell>
                   <TableCell>{ingredient.name}</TableCell>
-                  <TableCell>{ingredient.quantity}</TableCell>
                   <TableCell>{ingredient.unit}</TableCell>
-                  <TableCell>{formatDate(ingredient.transndate)}</TableCell>
-                  <TableCell>{ingredient.description}</TableCell>
+                  <TableCell>{formatDate(ingredient.createdAt)}</TableCell>
+                  <TableCell>{ingredient.desc}</TableCell>
                   <TableCell>
                     <Button
                       onClick={() => openIngredientDialog(ingredient)}
@@ -496,7 +250,10 @@ const IngredientManager = () => {
                       <EditIcon fontSize="small" />
                     </Button>
                     <Button
-                      onClick={() => handleOpenDeleteDialog(ingredient)}
+                      onClick={() => {
+                        setCurrentIngredient(ingredient);
+                        setOpenDeleteDialog(true);
+                      }}
                       variant="outlined"
                       color="error"
                       size="small"
@@ -508,8 +265,8 @@ const IngredientManager = () => {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={7} align="center">
-                  Không có nguyên liệu phù hợp
+                <TableCell colSpan={6} align="center">
+                  Không tìm thấy kết quả phù hợp
                 </TableCell>
               </TableRow>
             )}
@@ -517,50 +274,84 @@ const IngredientManager = () => {
         </Table>
       </TableContainer>
 
-      {/* Pagination Component */}
-   
+      <TablePagination
+        rowsPerPageOptions={[5, 10, 25]}
+        component="div"
+        count={totalPages * rowsPerPage} // Total items = pages * items per page
+        rowsPerPage={rowsPerPage}
+        page={currentPage}
+        onPageChange={handlePageChange}
+        onRowsPerPageChange={handleRowsPerPageChange}
+        sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "1.2rem",
+            padding: "16px",
+            color: "#333", // Đổi màu chữ thành màu tối hơn
+            backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
+            borderRadius: "8px", // Thêm bo góc
+            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+              {
+                fontSize: "1.2rem",
+              },
+            "& .MuiTablePagination-actions > button": {
+              fontSize: "1.2rem",
+              margin: "0 8px", // Thêm khoảng cách giữa các nút
+              backgroundColor: "#1976d2", // Màu nền của các nút
+              color: "#fff", // Màu chữ của các nút
+              borderRadius: "50%", // Nút bấm hình tròn
+              padding: "8px", // Tăng kích thước nút
+              transition: "background-color 0.3s", // Hiệu ứng hover
+              "&:hover": {
+                backgroundColor: "#1565c0", // Đổi màu khi hover
+              },
+            },
+          }}
+      />
 
       {/* Dialog Thêm/Sửa Nguyên Liệu */}
       <Dialog open={openDialog} onClose={closeIngredientDialog}>
-        <DialogTitle>{currentIngredient ? "Sửa nguyên liệu" : "Thêm nguyên liệu"}</DialogTitle>
+        <DialogTitle>
+          {currentIngredient ? "Sửa nguyên liệu" : "Thêm nguyên liệu"}
+        </DialogTitle>
         <DialogContent>
           <TextField
+            autoFocus
+            margin="dense"
+            name="name"
             label="Tên nguyên liệu"
+            type="text"
             fullWidth
-            value={currentIngredient ? currentIngredient.name : ""}
-            onChange={(e) => handleChange("name", e.target.value)}
-            margin="normal"
+            variant="outlined"
+            value={currentIngredient?.name || ""}
+            onChange={(e) =>
+              setCurrentIngredient({ ...currentIngredient, name: e.target.value })
+            }
           />
           <TextField
-            label="Số lượng"
-            fullWidth
-            value={currentIngredient ? currentIngredient.quantity : ""}
-            onChange={(e) => handleChange("quantity", e.target.value)}
-            margin="normal"
-          />
-          <TextField
+            margin="dense"
+            name="unit"
             label="Đơn vị"
+            type="text"
             fullWidth
-            value={currentIngredient ? currentIngredient.unit : ""}
-            onChange={(e) => handleChange("unit", e.target.value)}
-            margin="normal"
+            variant="outlined"
+            value={currentIngredient?.unit || ""}
+            onChange={(e) =>
+              setCurrentIngredient({ ...currentIngredient, unit: e.target.value })
+            }
           />
           <TextField
-            label="Ngày thay đổi"
-            fullWidth
-            type="datetime-local"
-            value={currentIngredient ? currentIngredient.transndate : ""}
-            onChange={(e) => handleChange("transndate", e.target.value)}
-            margin="normal"
-          />
-          <TextField
+            margin="dense"
+            name="desc"
             label="Mô tả"
+            type="text"
             fullWidth
-            multiline
-            rows={4}
-            value={currentIngredient ? currentIngredient.description : ""}
-            onChange={(e) => handleChange("description", e.target.value)}
-            margin="normal"
+            variant="outlined"
+            value={currentIngredient?.desc || ""}
+            onChange={(e) =>
+              setCurrentIngredient({ ...currentIngredient, desc: e.target.value })
+            }
           />
         </DialogContent>
         <DialogActions>
@@ -574,7 +365,7 @@ const IngredientManager = () => {
       </Dialog>
 
       {/* Dialog Xóa Nguyên Liệu */}
-      <Dialog open={openDeleteDialogState} onClose={closeDeleteDialog}>
+      <Dialog open={openDeleteDialog} onClose={closeDeleteDialog}>
         <DialogTitle>Xác nhận xóa nguyên liệu</DialogTitle>
         <DialogContent>
           Bạn có chắc chắn muốn xóa nguyên liệu "{currentIngredient?.name}" không?

@@ -739,7 +739,7 @@ body.active { overflow: hidden; }
 .food-menu-list {
   display: grid;
   gap: 30px;
-  width: 700px;
+  width: 100%;
 }
 
 .food-menu-card {
@@ -1607,7 +1607,7 @@ textarea.input-field {
    * FOOD MENU
    */
 
-  .food-menu-list { grid-template-columns: repeat(4, 1fr); }
+  .food-menu-list { grid-template-columns: repeat(6, 1fr); }
 
   .food-menu-card { height: 100%; }
 
@@ -1767,5 +1767,3 @@ textarea.input-field {
   background-color: hsl(25, 100%, 48%);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
 }
-
-
