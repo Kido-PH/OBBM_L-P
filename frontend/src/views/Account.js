@@ -17,6 +17,7 @@ import {
 } from "@mui/material";
 
 import { logOut } from "../services/authenticationService";
+import Swal from "sweetalert2";
 const AccountSection = () => {
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState(null);
@@ -234,10 +235,22 @@ const AccountSection = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert("Cập nhật thông tin thành công!");
+        Swal.fire({
+          icon: "success",
+          title: "Thành công",
+          text: "Cập nhật thông tin thành công",
+          timer: 2000,
+          showConfirmButton: true,
+        });
         console.log(data);
       } else {
-        alert("Cập nhật không thành công.");
+        Swal.fire({
+          icon: "error",
+          title: "Thất bại",
+          text: "Lỗi không rõ",
+          timer: 2000,
+          showConfirmButton: true,
+        });
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin:", error);

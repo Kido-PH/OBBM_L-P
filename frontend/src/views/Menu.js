@@ -46,6 +46,8 @@ const Menu = () => {
   };
   const pushEventIdtoMenu = (newEventId) => {
     // Điều hướng đến trang menu mới với eventId thay đổi
+    localStorage.setItem("currentEventId", newEventId);
+
     navigate(`/menu/${newEventId}`);
   };
 
@@ -203,7 +205,7 @@ const Menu = () => {
   const handleCreateMenu = async () => {
     try {
       const userId = localStorage.getItem("userId");
-  
+
       // Check if user is not logged in
       if (!userId) {
         // Show SweetAlert with Login button
@@ -221,13 +223,14 @@ const Menu = () => {
             window.location.href = "/login"; // or you can use navigate('/login') if using react-router-dom
           }
         });
+
         return; // Prevent further execution of the function if user is not logged in
       }
-  
+
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
         .reduce((total, dish) => total + (dish.price || 0), 0);
-  
+
       // Remove duplicate dishes from selectedMenuDishes
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
@@ -235,7 +238,7 @@ const Menu = () => {
         }
         return acc;
       }, []);
-  
+
       // Check if there are no dishes selected
       if (uniqueDishes.length === 0) {
         Swal.fire({
@@ -245,7 +248,7 @@ const Menu = () => {
         });
         return; // Stop execution if there are no dishes
       }
-  
+
       // Prepare the data to send to the server
       const dataToSave = {
         name: selectedMenu.name,
@@ -254,20 +257,24 @@ const Menu = () => {
         userId: userId, // Get userId from localStorage
         eventId: selectedMenu.events.eventId,
       };
-  
+
       console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
-  
+
       // Save the data to localStorage
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
       localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-      localStorage.setItem("MenuDishesDetail", JSON.stringify(selectedMenu.groupedDishes));
-  
+      localStorage.setItem(
+        "MenuDishesDetail",
+        JSON.stringify(selectedMenu.groupedDishes)
+      );
+
       console.log("dữ liệu menu", selectedMenu.listMenuDish);
       Swal.fire({
         icon: "success",
         title: "Thành công!",
         text: "Thực đơn và món ăn đã được tạo thành công!",
       });
+      navigate("/contract");
     } catch (error) {
       console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
       Swal.fire({
@@ -277,7 +284,6 @@ const Menu = () => {
       });
     }
   };
-  
 
   const toggleListFood = (id) => {
     setSelectedId(id);
@@ -287,7 +293,6 @@ const Menu = () => {
   const closeListFood = () => {
     setShowListFood(false);
   };
-
 
   const handleAddDish = (dish) => {
     // Kiểm tra xem món ăn đã tồn tại trong selectedMenuDishes hay chưa
@@ -338,12 +343,12 @@ const Menu = () => {
             dishes: {
               ...dish, // Lưu tất cả thông tin chi tiết của món ăn
               categories: dish.categories, // Lưu thông tin categories của món ăn
-              existing: 'Còn hàng', // Thêm trạng thái của món ăn
+              existing: "Còn hàng", // Thêm trạng thái của món ăn
             },
             menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
           },
         ];
-        
+
         return updatedDetails;
       });
       console.log(menuDishesDetails);
@@ -476,66 +481,70 @@ const Menu = () => {
                         <h4 style={{ textAlign: "center" }}>{category.name}</h4>
 
                         {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
-                        {categoriesOrder.map((categoryName) =>
-                          // Kiểm tra xem categoryName có tồn tại trong groupedDishes không
-                          category.groupedDishes[categoryName] ? (
-                            <div key={categoryName} className="menu-category">
-                              <h6>
-                                {categoryName === "Appetizers"
-                                  ? "Khai vị và đồ uống"
-                                  : categoryName === "Main Courses"
-                                  ? "Món chính"
-                                  : categoryName === "Desserts"
-                                  ? "Tráng miệng"
-                                  : categoryName}
-                              </h6>
+                        {categoriesOrder.map(
+                          (categoryName) =>
+                            // Kiểm tra xem categoryName có tồn tại trong groupedDishes không
+                            category.groupedDishes[categoryName] ? (
+                              <div key={categoryName} className="menu-category">
+                                <h6>
+                                  {categoryName === "Appetizers"
+                                    ? "Khai vị và đồ uống"
+                                    : categoryName === "Main Courses"
+                                    ? "Món chính"
+                                    : categoryName === "Desserts"
+                                    ? "Tráng miệng"
+                                    : categoryName}
+                                </h6>
 
-                              <div className="menu-category-dish">
-                                <ul
-                                  className="promo-list has-scrollbar"
-                                  style={{ paddingTop: "10px" }}
-                                >
-                                  {category.groupedDishes[categoryName].map(
-                                    (dish, index) => (
-                                      <li key={index} style={{ width: "77px" }}>
-                                        <img
-                                          src={dish.image}
-                                          alt={dish.name}
-                                          style={{
-                                            width: "63px",
-                                            height: "50px",
-                                            marginLeft: "7px",
-                                          }}
-                                        />
-                                        <p
-                                          style={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            textAlign: "center",
-                                            fontWeight: "bold",
-                                            marginTop: "5px",
-                                          }}
+                                <div className="menu-category-dish">
+                                  <ul
+                                    className="promo-list has-scrollbar"
+                                    style={{ paddingTop: "10px" }}
+                                  >
+                                    {category.groupedDishes[categoryName].map(
+                                      (dish, index) => (
+                                        <li
+                                          key={index}
+                                          style={{ width: "77px" }}
                                         >
-                                          {dish.name}
-                                        </p>
-                                        <p
-                                          style={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {dish.price.toLocaleString()} VND
-                                        </p>
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
+                                          <img
+                                            src={dish.image}
+                                            alt={dish.name}
+                                            style={{
+                                              width: "63px",
+                                              height: "50px",
+                                              marginLeft: "7px",
+                                            }}
+                                          />
+                                          <p
+                                            style={{
+                                              overflow: "hidden",
+                                              textOverflow: "ellipsis",
+                                              whiteSpace: "nowrap",
+                                              textAlign: "center",
+                                              fontWeight: "bold",
+                                              marginTop: "5px",
+                                            }}
+                                          >
+                                            {dish.name}
+                                          </p>
+                                          <p
+                                            style={{
+                                              overflow: "hidden",
+                                              textOverflow: "ellipsis",
+                                              whiteSpace: "nowrap",
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {dish.price.toLocaleString()} VND
+                                          </p>
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                </div>
                               </div>
-                            </div>
-                          ) : null // Nếu không có món ăn trong danh mục này, không hiển thị
+                            ) : null // Nếu không có món ăn trong danh mục này, không hiển thị
                         )}
 
                         <div
