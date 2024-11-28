@@ -6,7 +6,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ListFood from "../components/Menu/listfood";
 import menuApi from "../api/menuApi.js";
-import axios from 'axios';
+import axios from "axios";
 import eventApi from "../api/eventApi.js";
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
@@ -22,6 +22,7 @@ import Swal from "sweetalert2";
 const Menu = () => {
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
   const categoriesOrder = ["Appetizers", "Main Courses", "Desserts"];
+  const [menuDishesDetails, setMenuDishesDetails] = useState([]);
   const [latestMenuId, setLatestMenuId] = useState(0);
   const [selectedId, setSelectedId] = useState(null); // Lưu sectionId
   const [menuList, setMenuList] = useState([]);
@@ -47,22 +48,22 @@ const Menu = () => {
     // Điều hướng đến trang menu mới với eventId thay đổi
     navigate(`/menu/${newEventId}`);
   };
-  
 
-const fetchEvent = async () => {
-  try {
-    const response = await fetch('http://localhost:8080/obbm/event?page=1&size=100');
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+  const fetchEvent = async () => {
+    try {
+      const response = await fetch(
+        "http://localhost:8080/obbm/event?page=1&size=100"
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json(); // Chuyển đổi kết quả thành JSON
+      setEvents(data.result.content); // Cập nhật state
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error); // Xử lý lỗi
     }
-    const data = await response.json(); // Chuyển đổi kết quả thành JSON
-    setEvents(data.result.content); // Cập nhật state
-  } catch (error) {
-    console.error('Lỗi khi gọi API:', error); // Xử lý lỗi
-  }
-};
+  };
 
-  
   React.useEffect(() => {
     if (EventToMenuUrl) {
       navigate(EventToMenuUrl);
@@ -101,39 +102,42 @@ const fetchEvent = async () => {
         menuId: null,
       };
     });
+    console.log("dữ liệu menu", menu);
     setSelectedMenuDishes(menuDishesList);
   };
 
   useEffect(() => {
     const fetchMenu = async () => {
       try {
-        const response = await fetch('http://localhost:8080/obbm/menu/getAllMenuAdmin?page=1&size=100');
+        const response = await fetch(
+          "http://localhost:8080/obbm/menu/getAllMenuAdmin?page=1&size=100"
+        );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-    
+
         const data = await response.json(); // Chuyển đổi kết quả thành JSON
-        const menuData = (data.result.content); // Lấy dữ liệu menu từ API
-    
+        const menuData = data.result.content; // Lấy dữ liệu menu từ API
+
         // console.log("Menu Data from API:", menuData);
-    
+
         if (id) {
           const filteredMenuData = menuData.filter(
             (menu) => menu.events.eventId === parseInt(id, 10)
           );
-    
+
           // console.log("Filtered Menu Data:", filteredMenuData);
           setMenu(filteredMenuData); // Cập nhật state với menu đã lọc
         }
-    
+
         if (!id && location.pathname === "/menu") {
           handleOpenModalEvents(); // Mở modal nếu không có id và đang ở trang "/menu"
         }
       } catch (error) {
-        console.error('Lỗi khi gọi API:', error); // Xử lý lỗi
+        console.error("Lỗi khi gọi API:", error); // Xử lý lỗi
       }
     };
-    
+
     const fetchMenuList = async () => {
       try {
         const response = await menuApi.getAll(); // Gọi API lấy danh sách menu
@@ -197,65 +201,69 @@ const fetchEvent = async () => {
   const groupedMenuArray = Object.values(groupedMenu);
 
   const handleCreateMenu = async () => {
-  try {
-    const userId = localStorage.getItem("userId");
+    try {
+      const userId = localStorage.getItem("userId");
 
-    if (!userId) {
-      throw new Error("Người dùng chưa đăng nhập.");
-    }
-
-    const totalCost = Object.values(selectedMenu.groupedDishes)
-      .flat()
-      .reduce((total, dish) => total + (dish.price || 0), 0);
-
-    // Loại bỏ các món ăn trùng lặp trong selectedMenuDishes
-    const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
-      if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
-        acc.push(currentDish);
+      if (!userId) {
+        throw new Error("Người dùng chưa đăng nhập.");
       }
-      return acc;
-    }, []);
 
-    // Kiểm tra nếu không có món ăn nào
-    if (uniqueDishes.length === 0) {
+      const totalCost = Object.values(selectedMenu.groupedDishes)
+        .flat()
+        .reduce((total, dish) => total + (dish.price || 0), 0);
+
+      // Loại bỏ các món ăn trùng lặp trong selectedMenuDishes
+      const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
+        if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
+          acc.push(currentDish);
+        }
+        return acc;
+      }, []);
+
+      // Kiểm tra nếu không có món ăn nào
+      if (uniqueDishes.length === 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Thất bại!",
+          text: "Thực đơn phải có ít nhất 1 món ăn.",
+        });
+        return; // Dừng hàm nếu không có món ăn
+      }
+
+      // Chuẩn bị dữ liệu để gửi lên server
+      const dataToSave = {
+        name: selectedMenu.name,
+        totalcost: totalCost,
+        description: selectedMenu.description,
+        userId: userId, // Lấy userId từ localStorage
+        eventId: selectedMenu.events.eventId,
+      };
+
+      console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
+
+      // Lưu dữ liệu đã được loại bỏ trùng lặp vào localStorage
+      localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+      localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
+      localStorage.setItem(
+        "MenuDishesDetail",
+        JSON.stringify(selectedMenu.groupedDishes)
+      );
+
+      console.log("dữ liệu menu", selectedMenu.listMenuDish);
+      Swal.fire({
+        icon: "success",
+        title: "Thành công!",
+        text: "Thực đơn và món ăn đã được tạo thành công!",
+      });
+    } catch (error) {
+      console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
       Swal.fire({
         icon: "error",
         title: "Thất bại!",
-        text: "Thực đơn phải có ít nhất 1 món ăn.",
+        text: "Không thể tạo thực đơn hoặc món ăn. Vui lòng thử lại.",
       });
-      return; // Dừng hàm nếu không có món ăn
     }
-
-    // Chuẩn bị dữ liệu để gửi lên server
-    const dataToSave = {
-      name: selectedMenu.name,
-      totalcost: totalCost,
-      description: selectedMenu.description,
-      userId: userId, // Lấy userId từ localStorage
-      eventId: selectedMenu.events.eventId,
-    };
-
-    console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
-
-    // Lưu dữ liệu đã được loại bỏ trùng lặp vào localStorage
-    localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
-    localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-
-    Swal.fire({
-      icon: "success",
-      title: "Thành công!",
-      text: "Thực đơn và món ăn đã được tạo thành công!",
-    });
-  } catch (error) {
-    console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
-    Swal.fire({
-      icon: "error",
-      title: "Thất bại!",
-      text: "Không thể tạo thực đơn hoặc món ăn. Vui lòng thử lại.",
-    });
-  }
-};
-
+  };
 
   const toggleListFood = (id) => {
     setSelectedId(id);
@@ -266,14 +274,6 @@ const fetchEvent = async () => {
     setShowListFood(false);
   };
 
-  const addDishToCategory = (dish) => {
-    const updatedMenu = { ...selectedMenu };
-    const categoryName = Object.keys(updatedMenu.groupedDishes)[
-      setSelectedId - 1
-    ];
-    updatedMenu.groupedDishes[categoryName].push(dish);
-    setSelectedMenu(updatedMenu);
-  };
 
   const handleAddDish = (dish) => {
     // Kiểm tra xem món ăn đã tồn tại trong selectedMenuDishes hay chưa
@@ -317,6 +317,22 @@ const fetchEvent = async () => {
           menuId: null,
         },
       ]);
+      setMenuDishesDetails((prevDetails) => {
+        const updatedDetails = [
+          ...prevDetails,
+          {
+            dishes: {
+              ...dish, // Lưu tất cả thông tin chi tiết của món ăn
+              categories: dish.categories, // Lưu thông tin categories của món ăn
+              existing: 'Còn hàng', // Thêm trạng thái của món ăn
+            },
+            menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
+          },
+        ];
+        
+        return updatedDetails;
+      });
+      console.log(menuDishesDetails);
       return {
         ...prevMenu,
         groupedDishes: updatedGroupedDishes,
@@ -418,111 +434,128 @@ const fetchEvent = async () => {
                   Thực đơn gợi ý
                 </h3>
                 <Swiper
-      effect={"coverflow"}
-      grabCursor={true}
-      centeredSlides={true}
-      loop={groupedMenuArray.length > 1}
-      slidesPerView={"auto"}
-      coverflowEffect={{
-        rotate: 0,
-        stretch: 0,
-        depth: 100,
-        modifier: 2.5,
-      }}
-      pagination={{ el: ".swiper-pagination", clickable: true }}
-      navigation={{
-        nextEl: ".swiper-button-next",
-        prevEl: ".swiper-button-prev",
-      }}
-      modules={[EffectCoverflow, Pagination, Navigation]}
-      className="swiper-container"
-    >
-      {groupedMenuArray.map((category, index) => (
-        <SwiperSlide key={index} onClick={() => handleSelectMenu(category)}>
-          <div className="food-category">
-            <h4 style={{ textAlign: "center" }}>{category.name}</h4>
+                  effect={"coverflow"}
+                  grabCursor={true}
+                  centeredSlides={true}
+                  loop={groupedMenuArray.length > 1}
+                  slidesPerView={"auto"}
+                  coverflowEffect={{
+                    rotate: 0,
+                    stretch: 0,
+                    depth: 100,
+                    modifier: 2.5,
+                  }}
+                  pagination={{ el: ".swiper-pagination", clickable: true }}
+                  navigation={{
+                    nextEl: ".swiper-button-next",
+                    prevEl: ".swiper-button-prev",
+                  }}
+                  modules={[EffectCoverflow, Pagination, Navigation]}
+                  className="swiper-container"
+                >
+                  {groupedMenuArray.map((category, index) => (
+                    <SwiperSlide
+                      key={index}
+                      onClick={() => handleSelectMenu(category)}
+                    >
+                      <div className="food-category">
+                        <h4 style={{ textAlign: "center" }}>{category.name}</h4>
 
-            {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
-            {categoriesOrder.map((categoryName) => (
-              // Kiểm tra xem categoryName có tồn tại trong groupedDishes không
-              category.groupedDishes[categoryName] ? (
-                <div key={categoryName} className="menu-category">
-                  <h6>
-                    {categoryName === "Appetizers"
-                      ? "Khai vị và đồ uống"
-                      : categoryName === "Main Courses"
-                      ? "Món chính"
-                      : categoryName === "Desserts"
-                      ? "Tráng miệng"
-                      : categoryName}
-                  </h6>
+                        {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
+                        {categoriesOrder.map((categoryName) =>
+                          // Kiểm tra xem categoryName có tồn tại trong groupedDishes không
+                          category.groupedDishes[categoryName] ? (
+                            <div key={categoryName} className="menu-category">
+                              <h6>
+                                {categoryName === "Appetizers"
+                                  ? "Khai vị và đồ uống"
+                                  : categoryName === "Main Courses"
+                                  ? "Món chính"
+                                  : categoryName === "Desserts"
+                                  ? "Tráng miệng"
+                                  : categoryName}
+                              </h6>
 
-                  <div className="menu-category-dish">
-                    <ul className="promo-list has-scrollbar" style={{ paddingTop: "10px" }}>
-                      {category.groupedDishes[categoryName].map((dish, index) => (
-                        <li key={index} style={{ width: "77px" }}>
-                          <img
-                            src={dish.image}
-                            alt={dish.name}
-                            style={{
-                              width: "63px",
-                              height: "60px",
-                              marginLeft: "7px",
-                            }}
-                          />
-                          <p
-                            style={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              textAlign: "center",
-                              fontWeight: "bold",
-                              marginTop: "5px",
-                            }}
-                          >
-                            {dish.name}
+                              <div className="menu-category-dish">
+                                <ul
+                                  className="promo-list has-scrollbar"
+                                  style={{ paddingTop: "10px" }}
+                                >
+                                  {category.groupedDishes[categoryName].map(
+                                    (dish, index) => (
+                                      <li key={index} style={{ width: "77px" }}>
+                                        <img
+                                          src={dish.image}
+                                          alt={dish.name}
+                                          style={{
+                                            width: "63px",
+                                            height: "60px",
+                                            marginLeft: "7px",
+                                          }}
+                                        />
+                                        <p
+                                          style={{
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            textAlign: "center",
+                                            fontWeight: "bold",
+                                            marginTop: "5px",
+                                          }}
+                                        >
+                                          {dish.name}
+                                        </p>
+                                        <p
+                                          style={{
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                            whiteSpace: "nowrap",
+                                            textAlign: "center",
+                                          }}
+                                        >
+                                          {/* {dish.price.toLocaleString()} VND */}
+                                        </p>
+                                      </li>
+                                    )
+                                  )}
+                                </ul>
+                              </div>
+                            </div>
+                          ) : null // Nếu không có món ăn trong danh mục này, không hiển thị
+                        )}
+
+                        <div
+                          style={{
+                            textAlign: "center",
+                            fontWeight: "bold",
+                            paddingTop: "10px",
+                          }}
+                        >
+                          <p style={{ color: "rgb(66 66 66)" }}>
+                            Tổng tiền:{" "}
+                            {Object.values(category.groupedDishes)
+                              .flat()
+                              .reduce(
+                                (total, dish) => total + (dish.price || 0),
+                                0
+                              )
+                              .toLocaleString()}{" "}
+                            VND
                           </p>
-                          <p
-                            style={{
-                              overflow: "hidden",
-                              textOverflow: "ellipsis",
-                              whiteSpace: "nowrap",
-                              textAlign: "center",
-                            }}
-                          >
-                            {/* {dish.price.toLocaleString()} VND */}
-                          </p>
-                        </li>
-                      ))}
-                    </ul>
+                        </div>
+                      </div>
+                    </SwiperSlide>
+                  ))}
+
+                  <div className="slider-controler">
+                    <div className="swiper-button-prev slider-arrow">
+                      <ion-icon name="arrow-back-outline"></ion-icon>
+                    </div>
+                    <div className="swiper-button-next slider-arrow">
+                      <ion-icon name="arrow-forward-outline"></ion-icon>
+                    </div>
                   </div>
-                </div>
-              ) : null // Nếu không có món ăn trong danh mục này, không hiển thị
-            ))}
-
-            <div style={{ textAlign: "center", fontWeight: "bold", paddingTop: "10px" }}>
-              <p style={{ color: "rgb(66 66 66)" }}>
-                Tổng tiền:{" "}
-                {Object.values(category.groupedDishes)
-                  .flat()
-                  .reduce((total, dish) => total + (dish.price || 0), 0)
-                  .toLocaleString()}{" "}
-                VND
-              </p>
-            </div>
-          </div>
-        </SwiperSlide>
-      ))}
-
-      <div className="slider-controler">
-        <div className="swiper-button-prev slider-arrow">
-          <ion-icon name="arrow-back-outline"></ion-icon>
-        </div>
-        <div className="swiper-button-next slider-arrow">
-          <ion-icon name="arrow-forward-outline"></ion-icon>
-        </div>
-      </div>
-    </Swiper>
+                </Swiper>
                 <div
                   className="choose-button-container"
                   style={{ display: "flex", justifyContent: "flex-end" }}
@@ -635,139 +668,143 @@ const fetchEvent = async () => {
         )}
 
         {/* Menu Right */}
-        
 
-<div className="menu-right">
-  <h2 style={{ marginBottom: "0px" }}>Thực đơn</h2>
-  {selectedMenu ? (
-    <div>
-      {/* Sắp xếp các category theo thứ tự trong categoriesOrder */}
-      {Object.keys(selectedMenu.groupedDishes)
-        .sort((a, b) => categoriesOrder.indexOf(a) - categoriesOrder.indexOf(b)) // Sắp xếp
-        .map((categoryName, index) => (
-          <div key={categoryName} className="menu-category-dish">
-            <h4>
-              {index === 0
-                ? "Khai vị và đồ uống"
-                : index === 1
-                ? "Món chính"
-                : index === 2
-                ? "Tráng miệng"
-                : "Đồ uống"}
-              <button
-                onClick={() => toggleListFood(index + 1)}
-                className="add-button"
-                style={{ color: "#02AF55" }}
+        <div className="menu-right">
+          <h2 style={{ marginBottom: "0px" }}>Thực đơn</h2>
+          {selectedMenu ? (
+            <div>
+              {/* Sắp xếp các category theo thứ tự trong categoriesOrder */}
+              {Object.keys(selectedMenu.groupedDishes)
+                .sort(
+                  (a, b) =>
+                    categoriesOrder.indexOf(a) - categoriesOrder.indexOf(b)
+                ) // Sắp xếp
+                .map((categoryName, index) => (
+                  <div key={categoryName} className="menu-category-dish">
+                    <h4>
+                      {index === 0
+                        ? "Khai vị và đồ uống"
+                        : index === 1
+                        ? "Món chính"
+                        : index === 2
+                        ? "Tráng miệng"
+                        : "Đồ uống"}
+                      <button
+                        onClick={() => toggleListFood(index + 1)}
+                        className="add-button"
+                        style={{ color: "#02AF55" }}
+                      >
+                        <FaPlus style={{ width: "14px", marginLeft: "20px" }} />{" "}
+                      </button>
+                    </h4>
+                    <ul
+                      className="promo-list has-scrollbar"
+                      style={{ paddingBottom: "10px" }}
+                    >
+                      {selectedMenu.groupedDishes[categoryName].map(
+                        (dish, index) => (
+                          <li key={index} style={{ width: "119px" }}>
+                            <button
+                              onClick={() =>
+                                handleRemoveDish(categoryName, dish.dishId)
+                              }
+                              style={{
+                                color: "red",
+                                marginLeft: "90px",
+                                width: "10px",
+                              }}
+                              title="Xóa món ăn"
+                            >
+                              <FaMinus style={{ width: "10px" }} />
+                            </button>
+                            <img
+                              src={dish.image}
+                              alt={dish.name}
+                              style={{
+                                width: "63px",
+                                height: "60px",
+                                marginLeft: "25px",
+                                borderRadius: "2rem",
+                              }}
+                            />
+                            <p
+                              style={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                textAlign: "center",
+                                fontWeight: "bold",
+                                marginTop: "5px",
+                                fontSize: "10px",
+                                color: "#1e1e1e",
+                              }}
+                            >
+                              {dish.name}
+                            </p>
+                            <p
+                              style={{
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                                textAlign: "center",
+                                fontSize: "10px",
+                                color: "#1e1e1e",
+                              }}
+                            >
+                              {dish.price.toLocaleString()} VND
+                            </p>
+                          </li>
+                        )
+                      )}
+                    </ul>
+                  </div>
+                ))}
+              <div style={{ textAlign: "right", fontWeight: "bold" }}>
+                Tổng tiền:{" "}
+                {Object.values(selectedMenu.groupedDishes)
+                  .flat()
+                  .reduce((total, dish) => total + (dish.price || 0), 0)
+                  .toLocaleString()}{" "}
+                VND
+              </div>
+            </div>
+          ) : (
+            <p>Chọn một thực đơn để hiển thị chi tiết.</p>
+          )}
+          <div>
+            {selectedMenu && (
+              <div
+                className="button-container d-flex"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                }}
               >
-                <FaPlus style={{ width: "14px", marginLeft: "20px" }} />{" "}
-              </button>
-            </h4>
-            <ul
-              className="promo-list has-scrollbar"
-              style={{ paddingBottom: "10px" }}
-            >
-              {selectedMenu.groupedDishes[categoryName].map((dish, index) => (
-                <li key={index} style={{ width: "119px" }}>
-                  <button
-                    onClick={() =>
-                      handleRemoveDish(categoryName, dish.dishId)
-                    }
-                    style={{
-                      color: "red",
-                      marginLeft: "90px",
-                      width: "10px",
-                    }}
-                    title="Xóa món ăn"
-                  >
-                    <FaMinus style={{ width: "10px" }} />
-                  </button>
-                  <img
-                    src={dish.image}
-                    alt={dish.name}
-                    style={{
-                      width: "63px",
-                      height: "60px",
-                      marginLeft: "25px",
-                      borderRadius: "2rem",
-                    }}
-                  />
-                  <p
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      textAlign: "center",
-                      fontWeight: "bold",
-                      marginTop: "5px",
-                      fontSize: "10px",
-                      color: "#1e1e1e",
-                    }}
-                  >
-                    {dish.name}
-                  </p>
-                  <p
-                    style={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      textAlign: "center",
-                      fontSize: "10px",
-                      color: "#1e1e1e",
-                    }}
-                  >
-                    {dish.price.toLocaleString()} VND
-                  </p>
-                </li>
-              ))}
-            </ul>
+                <button
+                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
+                  onClick={handleShowMenuPopup}
+                  style={{ width: "100%", height: "35px" }}
+                >
+                  <a style={{ fontSize: "10px" }}>Xem thực đơn</a>
+                </button>
+                <button
+                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
+                  onClick={handleCreateMenu}
+                  style={{ width: "100%", height: "35px" }}
+                >
+                  <a style={{ fontSize: "10px" }}>Tạo thực đơn</a>
+                </button>
+                <button
+                  className="btn btn-refresh-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
+                  onClick={handleRefreshMenu}
+                  style={{ width: "100%", height: "35px" }}
+                >
+                  <a style={{ fontSize: "10px" }}>Làm mới thực đơn</a>
+                </button>
+              </div>
+            )}
           </div>
-        ))}
-      <div style={{ textAlign: "right", fontWeight: "bold" }}>
-        Tổng tiền:{" "}
-        {Object.values(selectedMenu.groupedDishes)
-          .flat()
-          .reduce((total, dish) => total + (dish.price || 0), 0)
-          .toLocaleString()}{" "}
-        VND
-      </div>
-    </div>
-  ) : (
-    <p>Chọn một thực đơn để hiển thị chi tiết.</p>
-  )}
-  <div>
-    {selectedMenu && (
-      <div
-        className="button-container d-flex"
-        style={{
-          display: "flex",
-          justifyContent: "center",
-        }}
-      >
-        <button
-          className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
-          onClick={handleShowMenuPopup}
-          style={{ width: "100%", height: "35px" }}
-        >
-          <a style={{ fontSize: "10px" }}>Xem thực đơn</a>
-        </button>
-        <button
-          className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
-          onClick={handleCreateMenu}
-          style={{ width: "100%", height: "35px" }}
-        >
-          <a style={{ fontSize: "10px" }}>Tạo thực đơn</a>
-        </button>
-        <button
-          className="btn btn-refresh-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"
-          onClick={handleRefreshMenu}
-          style={{ width: "100%", height: "35px" }}
-        >
-          <a style={{ fontSize: "10px" }}>Làm mới thực đơn</a>
-        </button>
-      </div>
-    )}
-  </div>
-</div>
+        </div>
 
         {/* Modal hiển thị thông tin thực đơn */}
         <Modal show={showModal} onHide={handleCloseModal}>
@@ -784,10 +821,6 @@ const fetchEvent = async () => {
                 {/* X icon for "Remove" */}
               </button>
               <div className="chiTietThucDon">
-                {/* <h2>Chi Tiết thực đơn</h2> */}
-                {/* <h2>{selectedMenu.name}</h2> */}
-                {/* <p>Mô tả: {selectedMenu.description}</p> */}
-                {/* <p>Tổng chi phí: {selectedMenu.totalcost.toLocaleString()} VND</p> */}
                 <div className="menu-view-control">
                   {Object.keys(selectedMenu.groupedDishes).map(
                     (categoryName, index) => (
