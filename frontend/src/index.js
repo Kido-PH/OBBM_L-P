@@ -21,7 +21,6 @@ import ServiceManager from "./components/Admin/Admin-Services";
 import EventManager from "./components/Admin/Admin-Events";
 import LocationManager from "./components/Admin/Admin-Location";
 import AccountManager from "./components/Admin/Admin-Account";
-import InvoiceManager from "./components/Admin/Admin-Invoices";
 import AdminAnalytics from "./components/Admin/Admin-Analytics";
 import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
@@ -65,7 +64,6 @@ const App = () => {
           <Route path="ManageEvents" element={<EventManager />} />
           <Route path="ManageLocation" element={<LocationManager />} />
           <Route path="ManageAccounts" element={<AccountManager />} />
-          <Route path="ManageInvoice" element={<InvoiceManager />} />
           <Route path="" element={<AdminAnalytics />} />
           <Route path="AccessControl" element={<AccessControl />} />
           <Route path="login" element={<Login />} />

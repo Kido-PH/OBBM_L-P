@@ -15,11 +15,10 @@ import {
   DialogTitle,
   MenuItem,
   Select,
-  InputLabel,
   FormControl,
   Box,
-  IconButton,
   Tooltip,
+  TablePagination,
 } from "@mui/material";
 
 import dishApi from "../../api/dishApi";
@@ -30,7 +29,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import toast, { Toaster } from "react-hot-toast";
-import ReactPaginate from "react-paginate";
+import DishDetailPopup from "./DishDetailPopup";
+import { Typography } from "antd";
+import ingredientApi from "api/ingredientApi";
 
 const DishManager = () => {
   const [categories, setCategories] = useState([]); // State cho danh mục
@@ -49,13 +50,28 @@ const DishManager = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [dishToDelete, setDishToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [pageCount, setPageCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const SIZE_DISH = 5;
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
+  const [totalElements, setTotalElements] = useState(0);
   const [errors, setErrors] = useState({
     name: "",
     price: "",
   });
+
+  const [detailPopupOpen, setDetailPopupOpen] = useState(false); // State mở/đóng popup
+  const [selectedDish, setSelectedDish] = useState(null); // Lưu món ăn được chọn
+  const [allIngredients, setAllIngredients] = useState([]);
+
+  const handleViewDetails = (dish) => {
+    setSelectedDish(dish); // Gán món ăn được chọn
+    setDetailPopupOpen(true); // Mở popup
+  };
+
+  const handleCloseDetailPopup = () => {
+    setDetailPopupOpen(false); // Đóng popup
+    setSelectedDish(null); // Reset món ăn
+  };
+
   const validateForm = () => {
     let tempErrors = { name: "", price: "", categoryId: "" };
     let isValid = true;
@@ -109,14 +125,15 @@ const DishManager = () => {
   // Nạp danh sách danh mục một lần khi component được mount
   useEffect(() => {
     fetchAllCategories();
+    fetchIngredients();
   }, []);
 
   // Hàm để nạp món ăn theo trang
   const fetchDishesWithPaginate = async (page) => {
     try {
-      const res = await dishApi.getPaginate(page, SIZE_DISH);
+      const res = await dishApi.getPaginate(page, rowsPerPage);
       setDishes(res.result.content || []);
-      setPageCount(res.result.totalPages);
+      setTotalElements(res.result?.totalElements);
       console.log("Món ăn:", res.result.content);
     } catch (error) {
       console.error("Không tìm nạp được món ăn: ", error);
@@ -125,8 +142,20 @@ const DishManager = () => {
 
   // Nạp danh sách danh mục và món ăn khi component được mount
   useEffect(() => {
-    fetchDishesWithPaginate(page);
-  }, [page, dishData]);
+    fetchDishesWithPaginate(page + 1);
+  }, [page, rowsPerPage]);
+
+  // Hàm lấy danh sách nguyên liệu
+  const fetchIngredients = async () => {
+    try {
+      const response = await ingredientApi.getAll(); 
+      if (response?.result?.content) {
+        setAllIngredients(response.result.content); 
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách nguyên liệu:", error);
+    }
+  };
 
   const handleOpen = () => {
     setOpen(true);
@@ -147,15 +176,39 @@ const DishManager = () => {
   };
 
   const handleChange = (e) => {
-    const { name, value, files } = e.target;
+    const { type, name, value, files } = e.target;
+
+    // Xử lý ảnh
     if (name === "image" && files && files.length > 0) {
       const file = files[0];
-      // Lấy tên file và gán cứng vào thư mục /images/dish
-      const imageName = file.name;
-      const imagePath = `/images/dish/${imageName}`; // Đường dẫn hình ảnh
-      setDishData({ ...dishData, image: imagePath });
+
+      // Tạo URL tạm thời cho ảnh (preview)
+      const imagePreviewUrl = URL.createObjectURL(file);
+
+      setDishData({
+        ...dishData,
+        image: imagePreviewUrl,
+      });
+
+      // Xóa lỗi nếu người dùng chọn ảnh
+      setErrors((prevErrors) => ({
+        ...prevErrors,
+        image: undefined,
+      }));
     } else {
-      setDishData({ ...dishData, [name]: value });
+      // Xử lý các trường khác
+      setDishData({
+        ...dishData,
+        [name]: type === "number" ? Number(value) : value,
+      });
+
+      // Xóa lỗi nếu người dùng nhập đúng
+      if (typeof value === "string" && value.trim() !== "") {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: undefined,
+        }));
+      }
     }
 
     // Xóa lỗi khi người dùng nhập dữ liệu hợp lệ
@@ -178,10 +231,9 @@ const DishManager = () => {
     });
   };
 
+
   const handleAddDish = async () => {
     try {
-      console.log("Dish data being sent: ", dishData);
-
       if (!dishData.name || !dishData.price || !dishData.categoryId) {
         toast.error("Vui lòng điền đầy đủ thông tin món ăn!");
         return;
@@ -202,7 +254,7 @@ const DishManager = () => {
   };
 
   // Xử lý fill thông tin món ăn để chỉnh sửa
-  const handleEditDish = (dishId) => {
+  const handleEditDish = async (page, rowsPerPage, dishId) => {
     const dishToEdit = dishes.find((dish) => dish.dishId === dishId);
 
     if (dishToEdit) {
@@ -276,7 +328,7 @@ const DishManager = () => {
     } catch (error) {
       console.error("Lỗi khi cập nhật món ăn:", error);
       if (error.response) {
-        console.log("Response error data:", error.response.data); // Kiểm tra dữ liệu lỗi trả về từ server
+        console.log("Response error data:", error.response.data); 
       }
       toast.error("Có lỗi xảy ra khi cập nhật món ăn!");
     }
@@ -324,12 +376,19 @@ const DishManager = () => {
     setDeleteDialogOpen(false);
   };
 
-  // Hàm xử lý phân trang
-  const handlePageClick = (event) => {
-    const selectedPage = +event.selected + 1;
-    setPage(selectedPage);
-    console.log(`User requested page number ${event.selected}`);
+  const handleChangePage = (event, newPage) => {
+    console.log("check page: ", newPage);
+    setPage(newPage);
   };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset về trang đầu tiên khi thay đổi số mục trên mỗi trang
+  };
+
+  const handleRemoveImage = () => {
+    setDishData((prev) => ({ ...prev, image: "" }));
+  }; 
 
   return (
     <Box>
@@ -417,18 +476,34 @@ const DishManager = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={open} onClose={handleClose}>
-        <DialogTitle
-          sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight: "bold" }}
-        >
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
+        <DialogTitle sx={{ fontSize: "1.7rem" }}>
           {editMode ? "Cập nhật món ăn" : "Thêm món ăn mới"}
         </DialogTitle>
-        <DialogContent className="custom-input">
+        <DialogContent className="custom-input" dividers>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Tên món ăn</Typography>
+          </div>
           <TextField
+            size="small"
             margin="dense"
             name="name"
-            label="Tên món ăn"
             type="text"
+            placeholder="Tên món ăn"
             fullWidth
             value={dishData.name}
             onChange={handleChange}
@@ -441,77 +516,34 @@ const DishManager = () => {
               },
             }}
           />
-          <TextField
-            margin="dense"
-            name="price"
-            label="Giá"
-            type="number"
-            fullWidth
-            value={dishData.price}
-            onChange={handleChange}
-            error={Boolean(errors.price)}
-            helperText={errors.price}
-            FormHelperTextProps={{
-              sx: {
-                fontSize: "1rem",
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
                 color: "red",
-              },
-            }}
-          />
-
-          {dishData.image && (
-            <img
-              src={dishData.image}
-              alt="Dish"
-              style={{ width: "100%", height: "250px", marginBottom: "1em" }}
-            />
-          )}
-
-          <input
-            type="file"
-            name="image"
-            onChange={handleChange}
-            style={{ display: "none" }}
-            id="file-upload"
-          />
-          <label htmlFor="file-upload">
-            <Button variant="contained" component="span" sx={{ mb: "5px" }}>
-              <AddAPhotoIcon sx={{ mr: "3px" }} />
-              Chọn ảnh
-            </Button>
-          </label>
-          <TextField
-            margin="dense"
-            name="description"
-            label="Mô tả"
-            type="text"
-            fullWidth
-            multiline
-            rows={3}
-            maxRows={10}
-            value={dishData.description}
-            onChange={handleChange}
-            error={Boolean(errors.description)}
-            helperText={errors.description}
-            sx={{
-              "& .MuiFormHelperText-root": {
-                fontSize: "1rem", // Tăng kích thước chữ của helper text
-              },
-            }}
-          />
-
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Danh mục</Typography>
+          </div>
           <FormControl
             fullWidth
             margin="dense"
             error={Boolean(errors.categoryId)}
+            size="small"
           >
-            <InputLabel id="category-label">Danh mục</InputLabel>
             <Select
               labelId="category-label"
               name="categoryId"
               value={dishData.categoryId || ""}
               onChange={handleChange}
-              label="Danh mục"
             >
               {categories.length > 0 ? (
                 categories.map((category) => (
@@ -527,14 +559,157 @@ const DishManager = () => {
               )}
             </Select>
           </FormControl>
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Giá</Typography>
+          </div>
+          <TextField
+            size="small"
+            margin="dense"
+            name="price"
+            type="number"
+            placeholder="Giá"
+            fullWidth
+            value={dishData.price}
+            onChange={handleChange}
+            error={Boolean(errors.price)}
+            helperText={errors.price}
+            FormHelperTextProps={{
+              sx: {
+                fontSize: "1rem",
+                color: "red",
+              },
+            }}
+          />
+
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "2px dashed #ccc",
+              borderRadius: "8px",
+              padding: "1em",
+              marginBottom: "1em",
+              cursor: "pointer",
+              position: "relative",
+              overflow: "hidden",
+              textAlign: "center",
+            }}
+            onClick={() => document.getElementById("file-upload").click()}
+          >
+            {dishData.image ? (
+              <Box
+                component="img"
+                src={dishData.image}
+                alt="Món ăn"
+                sx={{
+                  width: "100%",
+                  height: "250px",
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                }}
+              />
+            ) : (
+              <>
+                <AddAPhotoIcon sx={{ fontSize: 48, color: "#aaa", mb: 1 }} />
+                <Typography variant="body2" sx={{ color: "#aaa" }}>
+                  Nhấn để chọn ảnh
+                </Typography>
+              </>
+            )}
+
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={handleChange}
+              style={{ display: "none" }}
+              id="file-upload"
+            />
+            {dishData.image && (
+              <Button
+                variant="contained"
+                sx={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  backgroundColor: "#dc3545",
+                  color: "#fff",
+                  "&:hover": {
+                    backgroundColor: "#c82333",
+                  },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveImage();
+                }}
+              >
+                Xóa ảnh
+              </Button>
+            )}
+          </Box>
+
+          <TextField
+            margin="dense"
+            name="description"
+            placeholder="Mô tả"
+            type="text"
+            fullWidth
+            multiline
+            minRows={4}
+            maxRows={10}
+            value={dishData.description}
+            onChange={handleChange}
+            error={Boolean(errors.description)}
+            helperText={errors.description}
+            sx={{
+              "& .MuiFormHelperText-root": {
+                fontSize: "1rem", // Tăng kích thước chữ của helper text
+              },
+            }}
+          />
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Món ăn này còn hàng không ?</Typography>
+          </div>
+
           <FormControl fullWidth margin="dense">
-            <InputLabel id="dish-existing-label">Còn món ăn không?</InputLabel>
             <Select
               labelId="dish-existing-label"
               name="existing"
               value={dishData.existing}
               onChange={handleChange}
-              label="Còn món ăn không?"
+              size="small"
             >
               <MenuItem value={"Còn hàng"}>Còn hàng</MenuItem>
               <MenuItem value={"Hết hàng"}>Hết hàng</MenuItem>
@@ -542,16 +717,46 @@ const DishManager = () => {
           </FormControl>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleClose} sx={{ fontSize: "1.3rem" }}>
-            Hủy
+          <Button
+            onClick={handleClose}
+            variant="outlined"
+            sx={{
+              fontSize: "1.3rem",
+              fontWeight: "bold",
+              borderColor: "#f44336",
+              color: "#f44336",
+              borderRadius: "8px",
+              transition: "all 0.3s ease-in-out",
+              marginRight: "8px",
+              "&:hover": {
+                backgroundColor: "#fdecea",
+                borderColor: "#d32f2f",
+              },
+            }}
+          >
+            HỦY
           </Button>
-          <Button onClick={handleSaveDish} sx={{ fontSize: "1.3rem" }}>
+          <Button
+            onClick={handleSaveDish}
+            variant="outlined"
+            sx={{
+              fontSize: "1.3rem",
+              fontWeight: "bold",
+              color: "primary",
+              borderRadius: "8px",
+              transition: "all 0.3s ease-in-out",
+              marginRight: "8px",
+              "&:hover": {
+                background: "linear-gradient(45deg, #87CEFA 30%, #66BB6A 90%)",
+              },
+            }}
+          >
             {editMode ? "Cập nhật" : "Thêm"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+      <TableContainer component={Paper}>
         <Table className="table-container">
           <TableHead>
             <TableRow>
@@ -561,7 +766,16 @@ const DishManager = () => {
               <TableCell>Hình ảnh</TableCell>
               <TableCell>Mô tả</TableCell>
               <TableCell>Trạng thái</TableCell>
-              <TableCell>Hành động</TableCell>
+              <TableCell
+                sx={{
+                  position: "sticky",
+                  right: 0,
+                  backgroundColor: "white",
+                  zIndex: 1,
+                }}
+              >
+                Hành động
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -581,62 +795,107 @@ const DishManager = () => {
                 <TableCell>{dish.description}</TableCell>
                 <TableCell>{dish.existing}</TableCell>
                 <TableCell>
-                  <IconButton
-                    onClick={() => handleEditDish(dish.dishId)}
+                  <Button
+                    variant="outlined"
+                    onClick={() => handleEditDish(page + 1, rowsPerPage, dish.dishId)}
                     color="primary"
+                    style={{ marginRight: "8px" }}
                   >
                     <Tooltip
-                      title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>Sửa món ăn</span>
+                      }
                       placement="top"
                     >
                       <EditIcon />
                     </Tooltip>
-                  </IconButton>
-                  <IconButton
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    onClick={() => handleViewDetails(dish)} // Gọi hàm mở popup
+                    color="info"
+                    style={{ marginRight: "8px" }}
+                  >
+                    <Tooltip
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>
+                          Xem chi tiết
+                        </span>
+                      }
+                      placement="top"
+                    >
+                      <ErrorOutlineIcon />
+                    </Tooltip>
+                  </Button>
+                  <Button
+                    variant="outlined"
                     onClick={() => handleDeleteDish(dish.dishId)}
                     color="secondary"
                     sx={{
                       fontSize: "1.5rem",
                       color: "#d32f2f",
                       "&:hover": {
-                        color: "#f44336", 
-                        transform: "scale(1.1)", 
+                        color: "#f44336",
+                        transform: "scale(1.1)",
                       },
                     }}
                   >
                     <Tooltip
-                      title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>Xóa món ăn</span>
+                      }
                       placement="top"
                     >
                       <DeleteIcon />
                     </Tooltip>
-                  </IconButton>
+                  </Button>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-        <ReactPaginate
-          nextLabel="next >"
-          onPageChange={handlePageClick}
-          pageRangeDisplayed={3}
-          marginPagesDisplayed={2}
-          pageCount={pageCount}
-          previousLabel="< previous"
-          pageClassName="page-item"
-          pageLinkClassName="page-link"
-          previousClassName="page-item"
-          previousLinkClassName="page-link"
-          nextClassName="page-item"
-          nextLinkClassName="page-link"
-          breakLabel="..."
-          breakClassName="page-item"
-          breakLinkClassName="page-link"
-          containerClassName="pagination"
-          activeClassName="active"
-          renderOnZeroPageCount={null}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalElements}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "1.2rem",
+            padding: "16px",
+            color: "#333", // Đổi màu chữ thành màu tối hơn
+            backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
+            borderRadius: "8px", // Thêm bo góc
+            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+              {
+                fontSize: "1.2rem",
+              },
+            "& .MuiTablePagination-actions > button": {
+              fontSize: "1.2rem",
+              margin: "0 8px", // Thêm khoảng cách giữa các nút
+              backgroundColor: "#1976d2", // Màu nền của các nút
+              color: "#fff", // Màu chữ của các nút
+              borderRadius: "50%", // Nút bấm hình tròn
+              padding: "8px", // Tăng kích thước nút
+              transition: "background-color 0.3s", // Hiệu ứng hover
+              "&:hover": {
+                backgroundColor: "#1565c0", // Đổi màu khi hover
+              },
+            },
+          }}
         />
       </TableContainer>
+      <DishDetailPopup
+        open={detailPopupOpen}
+        handleClose={handleCloseDetailPopup}
+        dish={selectedDish}
+        allIngredients={allIngredients}
+      />
     </Box>
   );
 };

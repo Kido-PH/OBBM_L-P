@@ -30,6 +30,11 @@ const dishApi = {
         const url = `/dish?page=${page}&size=${size}`;
         return axiosClient.get(url);
     },
+    
+    getIngredientsByDish(page, size, menuId) {
+        const url = `/dishingredient/byDish?menuId=${menuId}&page=${page}&size=${size}`;
+        return axiosClient.get(url);
+    }
 };
 
 export default dishApi;
