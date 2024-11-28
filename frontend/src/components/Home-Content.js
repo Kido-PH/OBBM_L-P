@@ -375,48 +375,44 @@ const Content = () => {
               </ul>
 
               {filteredCategories.map((category) => (
-                <div key={category.categoryId} style={{display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center"}}>
-                  <ul className="food-menu-list">
-                    {category.listDish.map((dish) => (
-                      <li key={dish.dishId}>
-                        <div className="food-menu-card">
-                          <div className="card-banner-home-dish">
-                            <img
-                              src={dish.image}
-                              alt={dish.name}
-                              style={{ width: "100%", height: "120px" }}
-                              loading="lazy"
-                              className="w-100"
-                            />
+  <div key={category.categoryId} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <ul className="food-menu-list">
+      {category.listDish.slice(0, 6).map((dish) => (  // Limit to the first 6 dishes
+        <li key={dish.dishId}>
+          <div className="food-menu-card">
+            <div className="card-banner-home-dish">
+              <img
+                src={dish.image}
+                alt={dish.name}
+                style={{ width: "100%", height: "120px" }}
+                loading="lazy"
+                className="w-100"
+              />
 
-                            <button className="btn food-menu-btn">
-                              <a href="/menu">Thêm vào Thực đơn</a>
-                            </button>
-                          </div>
+              <button className="btn food-menu-btn">
+                <a href="/menu">Thêm vào Thực đơn</a>
+              </button>
+            </div>
 
-                          <div className="wrapper">
-                            <p className="category">{category.description}</p>
-                          </div>
+            <div className="wrapper">
+              <p className="category">{category.description}</p>
+            </div>
 
-                          <h4
-                            className=" card-title"
-                            style={{ textAlign: "center" }}
-                          >
-                            {dish.name}
-                          </h4>
+            <h4 className="card-title" style={{ textAlign: "center" }}>
+              {dish.name}
+            </h4>
 
-                          {/* <div className="price-wrapper">
-                            <p className="price-text">Giá:</p>
-                            {dish.price.toLocaleString()} VND
-                          </div> */}
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
+            {/* <div className="price-wrapper">
+              <p className="price-text">Giá:</p>
+              {dish.price.toLocaleString()} VND
+            </div> */}
+          </div>
+        </li>
+      ))}
+    </ul>
+  </div>
+))}
+
             </div>
           </section>
 

@@ -149,11 +149,11 @@ const LoginForm = ({ toggleForm }) => {
 
   return (
     <div className="login-form" id="loginForm">
-      <h1>Log in</h1>
+      <h1>Đăng nhập</h1>
       <form component="form" onSubmit={handleLogin}>
         <input
           type="text"
-          placeholder="Username"
+          placeholder="Tên đăng nhập"
           name="username"
           
           style={{ height: "41.2px" }}
@@ -163,7 +163,7 @@ const LoginForm = ({ toggleForm }) => {
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Mật khẩu"
           name="password"
           
           style={{ height: "41.2px" }}
@@ -172,7 +172,7 @@ const LoginForm = ({ toggleForm }) => {
           onFocus={() => setError("")} 
         />
          {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
-        <input type="submit" value="Log in"/>
+        <input type="submit" value="Đăng nhập"/>
     
       </form>
   
@@ -180,21 +180,27 @@ const LoginForm = ({ toggleForm }) => {
   
       <div className="social-login">
         <a href="#" className="google-login" onClick={handleContinueWithGoogle}>
-          Sign in with Google
+          Tiếp tục với Google
         </a>
       </div>
       <div
         className="forgot-password"
         onClick={() => toggleForm("forgotPassword")}
       >
-        <a href="#">Reset Password</a>
+        <a href="#">Đổi mật khẩu</a>
       </div>
       <div
         className="register-link"
         onClick={() => toggleForm("register")}
         style={{ color: "#3d4fc8" }}
       >
-        Don't have an account? <strong>Create one</strong> 
+        Bạn chưa có tài khoản? Hãy <strong>tạo tài khoản</strong> 
+      </div>
+      <div
+        
+        style={{ color: "hsl(32, 100%, 59%)", textAlign: "center", marginTop:"15px", fontSize:"15px" }}
+      >
+        <a href="/">Về trang chủ</a>
       </div>
     </div>
   );
