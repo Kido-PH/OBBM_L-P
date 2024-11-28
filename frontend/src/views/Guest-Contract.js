@@ -14,19 +14,6 @@ const Contract = () => {
     import("../assets/css/mainStyle.css");
     import("../assets/css/contractGuestStyle.css");
     window.scrollTo({ top: 0, behavior: "smooth" });
-
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6InRpbnRyYW4iLCJleHAiOjE3MzMzODYxMDcsImlhdCI6MTczMTU4NjEwNywianRpIjoiOGI4YTI1OGEtOGRmNy00MTI2LWI2ZTItY2EyZWM2M2NhZjY0Iiwic2NvcGUiOiJST0xFX1VTRVIifQ.09BbIjB_kS2u-HJ3CWRYfYuJAM5H5YO-n7nb5EoY2FLrWDQgpB7OgYNKnssI3hzUS9XU6JruFI9bPAbTmBpQIg";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    const currentUserID = "98fc9a36-5a51-4c7f-b308-fc6f8f408b5d";
-    const currentEvent = {
-      eventId: 1,
-      event_name: "Tiệc đầy tháng",
-      event_totalcost: 1000000,
-    };
-
-    localStorage.setItem("currentEvent", JSON.stringify(currentEvent));
-    sessionStorage.setItem("currentUserId", JSON.stringify(currentUserID));
   }, []);
 
   const steps = [
