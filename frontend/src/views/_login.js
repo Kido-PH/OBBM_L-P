@@ -81,16 +81,6 @@ const LoginForm = ({ toggleForm }) => {
       return;
     }
 
-    if (username.length < 3 || username.length > 20) {
-      setError("Username phải từ 3 đến 20 ký tự!");
-      return;
-    }
-
-    if (password.length < 6) {
-      setError("Password phải có ít nhất 6 ký tự!");
-      return;
-    }
-
     const data = {
       username: username,
       password: password,
@@ -171,7 +161,6 @@ const LoginForm = ({ toggleForm }) => {
           onChange={(e) => setUsername(e.target.value)}
           onFocus={() => setError("")} 
         />
-         {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
         <input
           type="password"
           placeholder="Password"
