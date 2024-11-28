@@ -161,7 +161,6 @@ const LoginForm = ({ toggleForm }) => {
           onChange={(e) => setUsername(e.target.value)}
           onFocus={() => setError("")} 
         />
-         {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
         <input
           type="password"
           placeholder="Password"

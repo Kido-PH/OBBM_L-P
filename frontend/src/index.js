@@ -32,8 +32,6 @@ import PaymentCoordinatorPage from "views/PaymentCoordinator";
 
 const App = () => {
   const location = useLocation();
-
-  // Kiểm tra nếu trang không phải là admin hoặc các trang cần ẩn Header/Footer
   const shouldShowHeaderFooter =
     !location.pathname.startsWith("/admin") &&
     location.pathname !== "/login" &&
