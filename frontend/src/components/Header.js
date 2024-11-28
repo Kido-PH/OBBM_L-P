@@ -141,6 +141,13 @@ const Header = () => {
             </a>
           </Tooltip>
 
+          {/* Hiển thị tên người dùng khi đã đăng nhập */}
+          {isLoggedIn && userDetails && (
+            <div className="user-name" >
+              <p style={{color:"hsl(23, 61%, 86%)"}}>Chào, {userDetails.username}</p> {/* Hiển thị tên người dùng */}
+            </div>
+          )}
+
           {/* Ẩn nút "Sign In" nếu đã đăng nhập */}
           {!isLoggedIn && (
             <a href="/login" className="btn btn-hover align-middle">
