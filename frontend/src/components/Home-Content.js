@@ -167,6 +167,7 @@ const Content = () => {
   const pushEventIdtoMenu = async (eventId) => {
     try {
       const Id = eventId;
+      localStorage.setItem("currentEventId", Id);
       setMenuIdUrl(Id);
     } catch (error) {
       console.error("Lỗi khi lấy event Id:", error);

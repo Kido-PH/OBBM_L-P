@@ -135,12 +135,6 @@ const Header = () => {
             </a>
           </Tooltip>
 
-          <Tooltip title="contact">
-            <a href="/contact" className="navbar-link header-icon">
-              <RiContractLine />
-            </a>
-          </Tooltip>
-
           <Tooltip title="Account">
             <a href="/account" className="navbar-link header-icon">
               <BiUser />
