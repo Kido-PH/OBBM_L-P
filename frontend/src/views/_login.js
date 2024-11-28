@@ -19,7 +19,7 @@ import { getToken, setToken } from "../services/localStorageService";
 
 const LoginForm = ({ toggleForm }) => {
   const navigate = useNavigate();
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const handleContinueWithGoogle = () => {
     const callbackUrl = OAuthConfig.redirectUri;
     const authUrl = OAuthConfig.authUri;
@@ -47,6 +47,7 @@ const LoginForm = ({ toggleForm }) => {
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("error");
+  const [error, setError] = useState("");
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -70,12 +71,32 @@ const LoginForm = ({ toggleForm }) => {
 
   const handleLogin = (event) => {
     event.preventDefault();
-  
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    setError(""); // Reset lỗi khi bắt đầu đăng nhập
+
+    // Kiểm tra dữ liệu người dùng nhập vào
+    if (!username.trim() || !password.trim()) {
+      setError("Username và Password không được để trống!");
+      return;
+    }
+
+    if (username.length < 3 || username.length > 20) {
+      setError("Username phải từ 3 đến 20 ký tự!");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password phải có ít nhất 6 ký tự!");
+      return;
+    }
+
     const data = {
       username: username,
       password: password,
     };
-  
+
+    // Gửi yêu cầu đăng nhập tới server
     fetch("http://localhost:8080/obbm/auth/token", {
       method: "POST",
       headers: {
@@ -85,25 +106,38 @@ const LoginForm = ({ toggleForm }) => {
     })
       .then((response) => response.json())
       .then((data) => {
-        if (data.code !== 1000) throw new Error(data.message);
-  
+        if (data.code !== 1000) {
+          // Kiểm tra nếu thông báo lỗi liên quan đến tài khoản hoặc mật khẩu sai
+          if (data.message.includes("Invalid credentials")) {
+            setError("Tài khoản hoặc mật khẩu không đúng!");
+          } else {
+            setError(data.message || "Đăng nhập không thành công");
+          }
+          return;
+        }
+        
         const accessToken = data.result?.accessToken;
-        setToken(accessToken);
-  
-        // Lấy thông tin người dùng
+        setToken(accessToken); // Lưu token vào localStorage
+
+        // Lấy thông tin người dùng nếu token hợp lệ
         return getUserDetails(accessToken);
       })
       .then((userDetails) => {
-        // Lưu userId vào localStorage
+        if (!userDetails) {
+          setError("Không thể lấy thông tin người dùng.");
+          return;
+        }
+        // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("userId", userDetails.userId);
-  
-        navigate("/");
+        navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
       })
       .catch((error) => {
-        showError(error.message);
+        setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
+      })
+      .finally(() => {
+        setIsSubmitting(false); // Đặt lại trạng thái submitting khi kết thúc
       });
   };
-  
   const getUserDetails = async (accessToken) => {
     const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
       method: "GET",
@@ -111,16 +145,16 @@ const LoginForm = ({ toggleForm }) => {
         Authorization: `Bearer ${accessToken}`,
       },
     });
-  
+
     const data = await response.json();
-  
+
     if (data.code !== 1000) {
       throw new Error(data.message);
     }
-  
-    console.log("User details:", data.result);
-    return data.result; // Trả về thông tin người dùng
+
+    return data.result;
   };
+
   
 
   return (
@@ -131,22 +165,30 @@ const LoginForm = ({ toggleForm }) => {
           type="text"
           placeholder="Username"
           name="username"
-          required
+          
           style={{ height: "41.2px" }}
           value={username}
           onChange={(e) => setUsername(e.target.value)}
+          onFocus={() => setError("")} 
         />
+         {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
         <input
           type="password"
           placeholder="Password"
           name="password"
-          required
+          
           style={{ height: "41.2px" }}
           value={password}
           onChange={(e) => setPassword(e.target.value)}
+          onFocus={() => setError("")} 
         />
-        <input type="submit" value="Log in" onClick={handleLogin}/>
+         {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
+        <input type="submit" value="Log in"/>
+    
       </form>
+  
+      
+  
       <div className="social-login">
         <a href="#" className="google-login" onClick={handleContinueWithGoogle}>
           Sign in with Google
@@ -167,6 +209,8 @@ const LoginForm = ({ toggleForm }) => {
       </div>
     </div>
   );
+  
+  
 };
 
 export default LoginForm;

@@ -347,7 +347,7 @@ const Content = () => {
                     }`}
                     onClick={() => handleFilter(1)}
                   >
-                    Khai vị
+                    Khai vị và thức uống
                   </button>
                 </li>
 
@@ -370,17 +370,6 @@ const Content = () => {
                     onClick={() => handleFilter(3)}
                   >
                     Tráng miệng
-                  </button>
-                </li>
-
-                <li>
-                  <button
-                    className={`filter-btn ${
-                      activeCategoryId === 4 ? "active" : ""
-                    }`}
-                    onClick={() => handleFilter(4)}
-                  >
-                    Đồ uống
                   </button>
                 </li>
               </ul>
