@@ -25,6 +25,8 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { toast, Toaster } from "react-hot-toast";
 import eventsApi from "../../api/eventsApi";
 import { message, Typography } from "antd";
+import EventDetailPopup from "./EventDetailPopup";
+import serviceApi from "api/serviceApi";
 
 const EventManager = () => {
   const [events, setEvents] = useState([]);
@@ -46,10 +48,26 @@ const EventManager = () => {
   const [errors, setErrors] = useState({});
   const [userId, setUserId] = useState(null);
 
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [detailPopupOpen, setDetailPopupOpen] = useState(false);
+  const [allService, setAlllServices] = useState([]);
+  
+  const handleOpenServicePopup = (event) => {
+    setSelectedEvent(event);
+    setDetailPopupOpen(true);
+  };
+
+  const handleCloseDetailPopup = () => {
+    setDetailPopupOpen(false);
+    setSelectedEvent(null); 
+  };
+
+
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     fetchEventsWithPaginate(page + 1);
     fetchUserData();
+    fetchServiceEvent();
   }, [page, rowsPerPage]);
 
   const fetchEventsWithPaginate = async (page) => {
@@ -62,6 +80,21 @@ const EventManager = () => {
       console.error("Không tìm nạp được danh mục: ", error);
     }
   };
+
+
+  // Hàm lấy danh sách service
+  const fetchServiceEvent = async () => {
+    try {
+      const response = await serviceApi.getAll(); 
+      console.log("Data serivce: ", response);
+      if (response?.result?.content) {
+        setAlllServices(response?.result?.content); 
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách dịch vụ:", error);
+    }
+  };
+
 
   // Fetch thông tin người dùng từ API
   const fetchUserData = async () => {
@@ -397,6 +430,23 @@ const EventManager = () => {
                         <DeleteIcon />
                       </Tooltip>
                     </Button>
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleOpenServicePopup(event)}
+                      color="info"
+                      style={{ marginLeft: "8px" }}
+                    >
+                      <Tooltip
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Xem chi tiết
+                          </span>
+                        }
+                        placement="top"
+                      >
+                        <ErrorOutlineIcon />
+                      </Tooltip>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -671,6 +721,12 @@ const EventManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <EventDetailPopup
+        open={detailPopupOpen}
+        handleClose={handleCloseDetailPopup}
+        event={selectedEvent}
+        allService={allService}
+      />
     </div>
   );
 };

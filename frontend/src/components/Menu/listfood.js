@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
-import "../assets/css/listFood.css";
-import danhMucApi from "../api/danhMucApi";
-import { FaPlus, FaEye } from "react-icons/fa"; // Import icons
+
+import danhMucApi from "api/danhMucApi";
+import { FaPlus, FaEye, FaTimes } from "react-icons/fa"; // Import icons
 
 const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -10,17 +10,22 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   const [selectedDish, setSelectedDish] = useState(null);
 
   useEffect(() => {
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTczMTIyNTkzMSwiaWF0IjoxNzMxMjI1OTMxLCJqdGkiOiIzZGY3ZTAzNC1hZjdmLTQwNjctODMwMi1mYTFiOWI2OWYxMzIiLCJzY29wZSI6IlJPTEVfQURNSU4ifQ.3IzNC6ISK3PX1hWM31mg07Q-eFkFIH7HpK0bOcTAxoE2Oz7Oqi4CBx87P2Dsc71p7NV39K1BfkLlHGWTIVXVtg";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-
     const fetchDanhMuc = async () => {
-      const danhMucList = await danhMucApi.getAll();
-      setCategories(danhMucList.result.content); // Cập nhật state
+      try {
+        const response = await fetch('http://localhost:8080/obbm/category?page=1&size=5');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json(); // Chuyển đổi kết quả thành JSON
+        setCategories(data.result.content); // Cập nhật state
+      } catch (error) {
+        console.error('Lỗi khi gọi API:', error); // Xử lý lỗi
+      }
     };
-
+  
     fetchDanhMuc();
   }, []);
+  
 
   const filteredCategories = categories.filter(
     (category) => category.categoryId === categoryId
@@ -58,8 +63,8 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
             className="search-input"
           />
           {/* Nút đóng ListFood */}
-          <button className="add-button" onClick={closeListFood}>
-            x
+          <button className="add-button" onClick={closeListFood} style={{marginLeft:"20px"}}>
+          <FaTimes style={{color:"red"}} /> {/* X icon for "Remove" */}
           </button>
         </div>
       </div>
@@ -71,12 +76,12 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
           style={{ marginTop: "70px" }}
         >
           <h3>
-            {category.name} - {category.description}
+           {category.description}
           </h3>
           <ul className="foodList">
             {category.listDish.length > 0 ? (
-              category.listDish.map((dish) => (
-                <li key={dish.dishId} className="food-item">
+              category.listDish.map((dish, index) => (
+                <li key={index} className="food-item">
                   <div className="food-details">
                     <img
                       src={dish.image}
@@ -85,14 +90,16 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
                     />
                     <span className="food-name">{dish.name}</span>
                     <span className="food-price">
-                      {dish.price.toLocaleString()} VND
+                      {/* {dish.price.toLocaleString()} VND */}
                     </span>
                   </div>
                   <button
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
-                    onClick={() => onAddDish(dish)} // Call function to add dish
                     title="Thêm"
+                    onClick={() => onAddDish(dish)}
+                    
                   >
+                    
                     <FaPlus /> {/* Plus icon for "Add" */}
                   </button>
                   <button
@@ -118,7 +125,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
             onClick={(e) => e.stopPropagation()}
           >
             <span className="close" onClick={() => setShowPopup(false)}>
-              &times;
+              <FaTimes  style={{color:"red"}}/> {/* X icon for "Remove" */}
             </span>
             <h2>{selectedDish.name}</h2>
             <img

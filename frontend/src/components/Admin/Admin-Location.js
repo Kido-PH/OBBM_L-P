@@ -14,13 +14,13 @@ import {
   DialogContent,
   DialogTitle,
   Box,
-  IconButton,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
   Tooltip,
   Grid,
+  TablePagination,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -28,7 +28,6 @@ import AddIcon from "@mui/icons-material/Add";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import locationApi from "../../api/locationApi";
-import ReactPaginate from "react-paginate";
 import toast, { Toaster } from "react-hot-toast";
 import userApi from "../../api/userApi";
 
@@ -52,21 +51,18 @@ const LocationManager = () => {
   const [locationToDelete, setLocationToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
   const [filteredLocations, setFilteredLocations] = useState([]);
-  const SIZE_LOCATION = 5;
-  const [page, setPage] = useState(1);
-  const [pageCount, setPageCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    fetchDanhMucWithPaginate(page); // Lấy trang đầu tiên
-  }, [page]);
+    fetchDanhMucWithPaginate(page + 1, rowsPerPage);
+  }, [page, rowsPerPage]);
 
-  const fetchDanhMucWithPaginate = async (page) => {
+  const fetchDanhMucWithPaginate = async (page, rowsPerPage) => {
     try {
-      const resLocation = await locationApi.getPaginate(page, SIZE_LOCATION);
+      const resLocation = await locationApi.getPaginate(page, rowsPerPage);
       const locations = resLocation.result?.content || [];
 
       // Gọi API để lấy danh sách người dùng
@@ -107,7 +103,7 @@ const LocationManager = () => {
       });
 
       setLocations(updatedLocations);
-      setPageCount(resLocation.result?.totalPages);
+      setTotalElements(resLocation.result?.totalElements);
     } catch (error) {
       console.error("Lỗi khi nạp dữ liệu:", error);
       toast.error("Không thể nạp dữ liệu!");
@@ -374,14 +370,6 @@ const LocationManager = () => {
     }
   };
 
-  const handleAdd = () => {
-    addLocation();
-  };
-
-  const handleUpdate = () => {
-    updateLocation();
-  };
-
   const handleDeleteClick = (locationId) => {
     setLocationToDelete(locationId);
     setOpenConfirmDialog(true);
@@ -420,9 +408,13 @@ const LocationManager = () => {
     setLocationToDelete(null);
   };
 
-  const handlePageClick = (event) => {
-    const selectedPage = +event.selected + 1;
-    setPage(selectedPage);
+  const handleChangePage = (event, newPage) => {
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0);
   };
 
   // Hàm tìm kiếm
@@ -451,43 +443,46 @@ const LocationManager = () => {
   return (
     <div>
       <Toaster position="top-center" reverseOrder={false} />
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mt: 2,
-          mb: 2,
-        }}
-      >
-        <div className="admin-group">
-          <input
-            placeholder="Tìm kiếm"
-            type="search"
-            className="admin-input-search"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-          />
+      <Box>
+        <div className="admin-toolbar">
+          <div className="admin-group">
+            <svg
+              className="admin-icon-search"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+            >
+              <g>
+                <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path>
+              </g>
+            </svg>
+            <input
+              placeholder="Tìm kiếm"
+              type="search"
+              className="admin-input-search"
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+            />
+          </div>
+          <Button
+            sx={{ fontSize: "10px" }}
+            variant="contained"
+            color="primary"
+            onClick={() => handleOpenDialog("add")}
+          >
+            <AddIcon
+              sx={{
+                marginRight: "5px",
+                fontSize: "16px",
+                verticalAlign: "middle",
+              }}
+            />
+            Thêm địa điểm
+          </Button>
         </div>
-        <Button
-          sx={{ fontSize: "10px" }}
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenDialog("add")}
-        >
-          <AddIcon
-            sx={{
-              marginRight: "5px",
-              fontSize: "16px",
-              verticalAlign: "middle",
-            }}
-          />
-          Thêm địa điểm
-        </Button>
       </Box>
 
-      <TableContainer component={Paper} sx={{ mt: 1 }}>
-        <Table className="table-container">
+      <TableContainer component={Paper} className="table-container">
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell>STT</TableCell>
@@ -496,12 +491,21 @@ const LocationManager = () => {
               <TableCell>Loại</TableCell>
               <TableCell>Địa chỉ</TableCell>
               <TableCell>Sức chứa</TableCell>
-              {/* <TableCell>Bàn</TableCell>
+              <TableCell>Bàn</TableCell>
               <TableCell>Chi phí</TableCell>
               <TableCell>Mô tả</TableCell>
               <TableCell>Người tạo</TableCell>
-              <TableCell>Vai trò</TableCell> */}
-              <TableCell>Hành động</TableCell>
+              <TableCell>Vai trò</TableCell>
+              <TableCell
+                sx={{
+                  position: "sticky",
+                  right: 0,
+                  backgroundColor: "white",
+                  zIndex: 1,
+                }}
+              >
+                Hành động
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -515,60 +519,98 @@ const LocationManager = () => {
                   </TableCell>
                   <TableCell>{location.type}</TableCell>
                   <TableCell>{location.address}</TableCell>
-                  <TableCell>{location.capacity}</TableCell>
-                  {/* <TableCell>{location.table}</TableCell>
+                  <TableCell>
+                    {location.capacity
+                      ? `${location.capacity} người`
+                      : "Không xác định"}
+                  </TableCell>
+                  <TableCell>{location.table}</TableCell>
                   <TableCell>{location.cost}</TableCell>
                   <TableCell>{location.description}</TableCell>
                   <TableCell>{location.creatorName}</TableCell>
-                  <TableCell>{location.creatorRole}</TableCell> */}
-                  <TableCell>
-                    <IconButton
+                  <TableCell>{location.creatorRole}</TableCell>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      right: 0,
+                      backgroundColor: "white",
+                      zIndex: 1,
+                    }}
+                  >
+                    <Button
+                      variant="outlined"
                       color="primary"
+                      sx={{ mr: 1 }}
                       onClick={() => handleOpenDialog("edit", location)}
                     >
                       <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Sửa địa điểm
+                          </span>
+                        }
                         placement="top"
                       >
                         <EditIcon />
                       </Tooltip>
-                    </IconButton>
-                    <IconButton
+                    </Button>
+                    <Button
+                      variant="outlined"
                       color="error"
                       onClick={() => handleDeleteClick(location.locationId)}
                     >
                       <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Xóa địa điểm
+                          </span>
+                        }
                         placement="top"
                       >
                         <DeleteIcon />
                       </Tooltip>
-                    </IconButton>
+                    </Button>
                   </TableCell>
                 </TableRow>
               )
             )}
           </TableBody>
         </Table>
-        <ReactPaginate
-          nextLabel="next >"
-          onPageChange={handlePageClick}
-          pageRangeDisplayed={3}
-          marginPagesDisplayed={2}
-          pageCount={pageCount}
-          previousLabel="< previous"
-          pageClassName="page-item"
-          pageLinkClassName="page-link"
-          previousClassName="page-item"
-          previousLinkClassName="page-link"
-          nextClassName="page-item"
-          nextLinkClassName="page-link"
-          breakLabel="..."
-          breakClassName="page-item"
-          breakLinkClassName="page-link"
-          containerClassName="pagination"
-          activeClassName="active"
-          renderOnZeroPageCount={null}
+        {/* Phân trang */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalElements}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "1.2rem",
+            padding: "16px",
+            color: "#333", // Đổi màu chữ thành màu tối hơn
+            backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
+            borderRadius: "8px", // Thêm bo góc
+            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+              {
+                fontSize: "1.2rem",
+              },
+            "& .MuiTablePagination-actions > button": {
+              fontSize: "1.2rem",
+              margin: "0 8px", // Thêm khoảng cách giữa các nút
+              backgroundColor: "#1976d2", // Màu nền của các nút
+              color: "#fff", // Màu chữ của các nút
+              borderRadius: "50%", // Nút bấm hình tròn
+              padding: "8px", // Tăng kích thước nút
+              transition: "background-color 0.3s", // Hiệu ứng hover
+              "&:hover": {
+                backgroundColor: "#1565c0", // Đổi màu khi hover
+              },
+            },
+          }}
         />
       </TableContainer>
 

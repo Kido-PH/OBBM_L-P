@@ -14,7 +14,7 @@ const menuApi = {
     },
 
     add(data) {
-        const url = `/menu`;
+        const url = `/menu/user`;
         return axiosClient.post(url, data);
     },
 
@@ -26,6 +26,12 @@ const menuApi = {
     delete(id) {
         const url = `/menu/${id}`;
         return axiosClient.delete(url);
+    },
+
+    getAllMenuAdmin(params){
+        const url = "/menu/getAllMenuAdmin?page=1&size=100";
+
+        return axiosClient.get(url, {params});
     },
 
     getPaginate(page, size) {

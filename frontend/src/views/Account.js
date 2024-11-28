@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import jsQR from 'jsqr';
-import '../assets/css/customStyle.css';
-import '../assets/css/mainStyle.css';
-import { logOut } from "../services/authenticationService";
+import { useEffect, useState } from "react";
+import jsQR from "jsqr";
+import "../assets/css/customStyle.css";
+import "../assets/css/mainStyle.css";
+
 import { useNavigate } from "react-router-dom";
 import { getToken } from "../services/localStorageService";
-
 import {
   Alert,
   Box,
@@ -16,13 +15,32 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+
+import { logOut } from "../services/authenticationService";
 const AccountSection = () => {
   const navigate = useNavigate();
-  const [userDetails, setUserDetails] = useState({});
+  const [imageSrc, setImageSrc] = useState(null);
+  const [userDetails, setUserDetails] = useState({
+    gender: null,
+  });
   const [password, setPassword] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("error");
+  const [isEditing, setIsEditing] = useState(false);
+  const [formData, setFormData] = useState({
+    fullname: userDetails.fullname || "",
+    gender: userDetails.gender ? "Male" : "Female",
+    residence: userDetails.residence || "",
+    email: userDetails.email || "",
+    phone: userDetails.phone || "",
+    citizenIdentity: userDetails.citizenIdentity || "",
+    dob: userDetails.dob || "",
+  });
+
+  const toggleEdit = () => {
+    setIsEditing(!isEditing);
+  };
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -57,6 +75,77 @@ const AccountSection = () => {
     console.log(data);
 
     setUserDetails(data.result);
+  };
+
+  const handleFile = (event) => {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function (event) {
+      const img = new Image();
+
+      img.onload = function () {
+        const canvas = document.getElementById("canvas");
+        const context = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        const qrCodeImage = context.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height
+        );
+        const code = jsQR(
+          qrCodeImage.data,
+          qrCodeImage.width,
+          qrCodeImage.height
+        );
+
+        if (code) {
+          console.log(`Thông tin từ mã QR: ${code.data}`);
+
+          const [IdCard, userInfo] = code.data.split("||"); // Tách phần trước và phần sau dấu '||'
+          const [fullname, birthdate, gender, address] = userInfo.split("|");
+
+          console.log("ID Card:", IdCard);
+          console.log("Full name:", fullname);
+          console.log("Birthdate:", birthdate);
+          console.log("Gender:", gender);
+          console.log("Address:", address);
+
+          // Cập nhật giá trị vào form
+          document.getElementById("IdCard").value = IdCard;
+          document.getElementById("fullname").value = fullname;
+
+          // Định dạng lại ngày sinh
+          const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(
+            2,
+            4
+          )}-${birthdate.slice(0, 2)}`;
+          document.getElementById("birthdate").value = formattedBirthdate;
+          document.getElementById("address").value = address;
+
+          // Xử lý gender và gán giá trị boolean
+          const genderValue =
+            gender === "Nam" ? true : gender === "Nữ" ? false : null;
+
+          // Cập nhật giá trị vào trường select (Nam -> true, Nữ -> false)
+          const genderSelect = document.getElementById("gender");
+          genderSelect.value = genderValue;
+
+          // Tại đây bạn có thể gọi API để gửi userData vào backend hoặc CSDL
+        } else {
+          console.log("Không tìm thấy mã QR.");
+        }
+      };
+
+      img.src = event.target.result;
+      setImageSrc(event.target.result); // Set the image source (nếu cần hiển thị ảnh)
+    };
+
+    reader.readAsDataURL(file);
   };
 
   const addPassword = (event) => {
@@ -97,299 +186,293 @@ const AccountSection = () => {
 
     getUserDetails(accessToken);
   }, [navigate]);
-  const handleLogout = (event) => {
-    logOut();
-    window.location.href = "/login";
-  };
-  const [imageSrc, setImageSrc] = useState(null);
 
   useEffect(() => {
-    const fileInput = document.getElementById('avatar-upload');
+    const fileInput = document.getElementById("avatar-upload");
     if (fileInput) {
-      fileInput.addEventListener('change', handleFile);
+      fileInput.addEventListener("change", handleFile);
     }
 
+    // Cleanup function to remove the event listener
     return () => {
       if (fileInput) {
-        fileInput.removeEventListener('change', handleFile);
+        fileInput.removeEventListener("change", handleFile);
       }
     };
   }, []);
 
-  const handleFile = (event) => {
-    const file = event.target.files[0];
-    const reader = new FileReader();
-    reader.onload = function (event) {
-      const img = new Image();
-      img.onload = function () {
-        const canvas = document.getElementById('canvas');
-        const context = canvas.getContext('2d');
-        canvas.width = img.width;
-        canvas.height = img.height;
-        context.drawImage(img, 0, 0, canvas.width, canvas.height);
+  const handleUpdate = async (event) => {
+    event.preventDefault();
 
-        const qrCodeImage = context.getImageData(0, 0, canvas.width, canvas.height);
-        const code = jsQR(qrCodeImage.data, qrCodeImage.width, qrCodeImage.height);
-        if (code) {
-          document.getElementById('result').innerText = `Thông tin từ mã QR: ${code.data}`;
-          
-          const userInfo = code.data.split('||')[1].split('|');
-          const [fullname, birthdate, gender, address] = userInfo;
-          document.getElementById('fullname').value = fullname;
-
-          const formattedBirthdate = `${birthdate.slice(4)}-${birthdate.slice(2, 4)}-${birthdate.slice(0, 2)}`;
-          document.getElementById('birthdate').value = formattedBirthdate;
-          document.getElementById('address').value = address;
-
-          const genderSelect = document.getElementById('gender');
-          genderSelect.value = gender === "Nam" ? "Male" : gender === "Nữ" ? "Female" : "Other";
-        } else {
-          document.getElementById('result').innerText = 'Không tìm thấy mã QR.';
-        }
-      };
-      img.src = event.target.result;
-      setImageSrc(event.target.result); // Set the image source
+    // Chuẩn bị dữ liệu cần gửi
+    const updatedData = {
+      fullname: document.getElementById("fullname").value,
+      username: document.getElementById("user_name").value,
+      email: document.getElementById("email_address").value,
+      phone: document.getElementById("phone").value,
+      residence: document.getElementById("address").value,
+      dob: document.getElementById("birthdate").value,
+      gender: document.getElementById("gender").value,
+      citizenIdentity: document.getElementById("IdCard").value,
     };
-    reader.readAsDataURL(file);
+
+    try {
+      const response = await fetch(
+        `http://localhost:8080/obbm/users/user/${userDetails.userId}`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${getToken()}`,
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        alert("Cập nhật thông tin thành công!");
+        console.log(data);
+      } else {
+        alert("Cập nhật không thành công.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi cập nhật thông tin:", error);
+      alert("Đã xảy ra lỗi trong quá trình cập nhật.");
+    }
   };
 
+  const handleGenderChange = (event) => {
+    // Cập nhật userDetail.gender theo lựa chọn của người dùng
+    const genderValue =
+      event.target.value === "true"
+        ? true
+        : event.target.value === "false"
+        ? false
+        : null;
+    setUserDetails({ ...userDetails, gender: genderValue });
+  };
+
+  const handleLogout = (event) => {
+    logOut();
+    window.location.href = "/login";
+  };
   return (
-    <main style={{ marginTop: '50px' }}>
-      <section
-        className="section section-divider white account-section"
-        id="blog"
-        style={{ paddingTop: '60px', paddingBottom: '60px' }}
-      >
-        <div className="container pt-4">
-          <p className="section-subtitle">Account</p>
-          <div className="profile-container">
-            <div className="profile-photo">
-              <img
-                src="https://pbs.twimg.com/profile_images/1674815862879178752/nTGMV1Eo_400x400.jpg"
-                alt="Profile"
-              />
-            </div>
-            <p className="profile-name">Bill Gates</p>
-            <p className="join-date section-title">
+    <main style={{ marginTop: "50px" }}>
+      {userDetails ? (
+        <section
+          className="section section-divider white account-section"
+          id="blog"
+          style={{ paddingTop: "60px", paddingBottom: "60px" }}
+        >
+          <div className="container pt-4">
+            <p className="section-subtitle">Tài khoản</p>
+            <div className="profile-container">
+              <div className="profile-photo">
+                <img src={userDetails.image} />
+              </div>
+              <p className="profile-name">{`${userDetails.fullname}`}</p>
+              {/* <p className="join-date section-title">
               Registration Date: <span className="span">26/05/2024</span>
-            </p>
-          </div>
+            </p> */}
+            </div>
 
-          <div className="container w-75">
-            <form id="userInfoForm" className="footer-form form-account">
-              <div className="d-flex align-items-center justify-content-between mb-3">
-                <p className="footer-list-title account-form-title">Profile info</p>
-                <button
-                  type="button"
-                  className="edit-profile-btn navbar-link bi bi-pencil-square"
-                ></button>
-              </div>
+            <div className="container w-75">
+              <form id="userInfoForm" className="footer-form form-account">
+                <div className="d-flex align-items-center justify-content-between mb-3">
+                  <p className="footer-list-title account-form-title">
+                    Thông tin cá nhân
+                  </p>
+                  <button
+                    type="button"
+                    className="edit-profile-btn navbar-link bi bi-pencil-square"
+                  ></button>
+                </div>
 
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  name="fullname"
-                  id="fullname"
-                  placeholder="Your Name"
-                  aria-label="Full Name:"
-                  className="input-field"
-                  disabled
-                />
-                <input
-                  type="text"
-                  name="user_name"
-                  id="user_name"
-                  required
-                  placeholder="UserName"
-                  aria-label="UserName"
-                  className="input-field"
-                  disabled
-                />
-              </div>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    name="fullname"
+                    id="fullname"
+                    placeholder="Your Name"
+                    aria-label="Full Name:"
+                    className="input-field"
+                    disabled={!isEditing}
+                    value={userDetails.fullname || ""}
+                    onChange={(e) =>
+                      setFormData({ ...formData, fullname: e.target.value })
+                    }
+                  />
+                  <input
+                    type="text"
+                    name="user_name"
+                    id="user_name"
+                    required
+                    placeholder="UserName"
+                    aria-label="UserName"
+                    className="input-field"
+                    value={userDetails.username || ""}
+                    disabled={!isEditing}
+                  />
+                </div>
+                <div className="input-wrapper">
+                  <input
+                    type="email"
+                    name="email_address"
+                    id="email_address"
+                    required
+                    placeholder="Email"
+                    aria-label="Email"
+                    className="input-field"
+                    value={userDetails.email || ""}
+                    disabled={!isEditing}
+                  />
+                  <input
+                    type="text"
+                    name="phone"
+                    id="phone"
+                    required
+                    placeholder="Phone Number"
+                    aria-label="Phone Number"
+                    className="input-field"
+                    value={userDetails.phone || ""}
+                    disabled={!isEditing}
+                  />
+                </div>
 
-              <div className="input-wrapper">
-                <input
-                  type="email"
-                  name="email_address"
-                  id="email_address"
-                  required
-                  placeholder="Email"
-                  aria-label="Email"
-                  className="input-field"
-                  disabled
-                />
-                <input
-                  type="text"
-                  name="phone"
-                  id="phone"
-                  required
-                  placeholder="Phone Number"
-                  aria-label="Phone Number"
-                  className="input-field"
-                  disabled
-                />
-              </div>
+                <div className="input-wrapper">
+                  <input
+                    type="text"
+                    id="address"
+                    name="address"
+                    placeholder="Address"
+                    aria-label="Address"
+                    className="input-field"
+                    value={userDetails.residence || ""}
+                    disabled={!isEditing}
+                  />
+                  <input
+                    type="date"
+                    name="birthdate"
+                    id="birthdate"
+                    placeholder="Birthdate"
+                    aria-label="Date of Birth"
+                    className="input-field"
+                    value={userDetails.dob || ""}
+                    disabled={!isEditing}
+                  />
+                </div>
 
-              <div className="input-wrapper">
-                <input
-                  type="text"
-                  id="address"
-                  name="address"
-                  placeholder="Address"
-                  aria-label="Address"
-                  className="input-field"
-                  disabled
-                />
-                <input
-                  type="date"
-                  name="birthdate"
-                  id="birthdate"
-                  placeholder="Birthdate"
-                  aria-label="Date of Birth"
-                  className="input-field"
-                  disabled
-                />
-              </div>
+                <div className="input-wrapper">
+                  <select
+                    name="gender"
+                    aria-label="Total person"
+                    id="gender"
+                    style={{ height: "40px" }}
+                    className="input-field"
+                    onChange={handleGenderChange} // Gọi hàm khi người dùng chọn giới tính
+                    value={
+                      userDetails.gender === null
+                        ? ""
+                        : userDetails.gender.toString()
+                    } // Đảm bảo giá trị của select phù hợp với state
+                  >
+                    <option value="" disabled={false}>
+                      -- Chọn giới tính --
+                    </option>
+                    <option value="true">Nam</option>
+                    <option value="false">Nữ</option>
+                    <option value="null">Khác</option>
+                  </select>
 
-              <div className="input-wrapper">
-                <select
-                  name="gender"
-                  aria-label="Total person"
-                  id="gender"
-                  style={{ height: '40px' }}
-                  className="input-field"
-                >
-                  <option value="" disabled>
-                    -- Choose your gender --
-                  </option>
-                  <option value="Male">Male</option>
-                  <option value="Female">Female</option>
-                  <option value="Other">Other</option>
-                </select>
+                  <div className="input-wrapper" style={{ marginTop: "7px" }}>
+                    <div className="upload-wrapper">
+                      <label
+                        style={{
+                          paddingTop: "10px",
+                          paddingBottom: "10px",
+                          borderRadius: "3px",
+                        }}
+                        htmlFor="avatar-upload"
+                        className="custom-file-upload btn btn-secondary "
+                      >
+                        Căn cước công dân
+                      </label>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        id="avatar-upload"
+                        className="file-input"
+                        style={{ display: "none" }}
+                      />
+                    </div>
 
-                <div className="input-wrapper" style={{ marginTop: '7px' }}>
-                  <div className="upload-wrapper">
-                    <label
-                      style={{ paddingTop: '10px', paddingBottom: '10px', borderRadius: '3px' }}
-                      htmlFor="avatar-upload"
-                      className="custom-file-upload btn btn-secondary"
-                    >
-                      ID card image
-                    </label>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      id="avatar-upload"
-                      className="file-input"
-                      style={{ display: 'none' }}
-                    />
+                    {imageSrc && (
+                      <img
+                        src={imageSrc}
+                        alt="Selected"
+                        style={{ maxWidth: "300px", marginTop: "10px" }}
+                      />
+                    )}
+
+                    <canvas id="canvas" style={{ display: "none" }}></canvas>
+                    <div
+                      id="result"
+                      className="mt-3"
+                      style={{ display: "none" }}
+                    ></div>
                   </div>
 
-                   {/* New Image Preview */}
-              {imageSrc && (
-                <img
-                  src={imageSrc}
-                  alt="Selected"
-                  style={{ maxWidth: '300px', marginTop: '10px' }}
-                />
-              )}
-
-                  <canvas id="canvas" style={{ display: 'none' }}></canvas>
-                  <div id="result" className="mt-3" style={{ display: 'none' }}></div>
+                  <div className="input-wrapper">
+                    <input
+                      type="text"
+                      id="IdCard"
+                      name="IdCard"
+                      placeholder="Căn cước công dân"
+                      aria-label="IdCard"
+                      className="input-field"
+                      value={userDetails.citizenIdentity || ""}
+                      disabled={!isEditing}
+                    />
+                  </div>
                 </div>
-              </div>
-              <Snackbar
-        open={snackBarOpen}
-        onClose={handleCloseSnackBar}
-        autoHideDuration={6000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleCloseSnackBar}
-          severity={snackType}
-          variant="filled"
-          sx={{ width: "100%" }}
-        >
-          {snackBarMessage}
-        </Alert>
-      </Snackbar>
-              {userDetails ? (
-        <Box
-          display="flex"
-          flexDirection="column"
-          alignItems="center"
-          justifyContent="center"
-          height="100vh"
-          bgcolor={"#f0f2f5"}
-        >
-          <Card
-            sx={{
-              minWidth: 400,
-              maxWidth: 500,
-              boxShadow: 4,
-              borderRadius: 2,
-              padding: 4,
-            }}
-          >
-            <Box
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                width: "100%", // Ensure content takes full width
-              }}
-            >
-              <img
-                src={userDetails.image}
-                alt={`${userDetails.fullname}'s profile`}
-                className="profile-pic"
-              />
-              <p>Welcome back to Kido, {userDetails.fullname}</p>
-              <h1 className="name">{`${userDetails.fullname}`}</h1>
-              <p className="email">{userDetails.dob}</p>
-              <ul>
-                User's roles:
-                {userDetails.roles?.map((item, index) => (
-                  <li className="email" key={index}>
-                    {item.name}
-                  </li>
-                ))}
-              </ul>
-              {userDetails.noPassword && (
-                <Box
-                  component="form"
-                  onSubmit={addPassword}
-                  sx={{
-                    display: "flex",
-                    flexDirection: "column",
-                    gap: "10px",
-                    width: "100%",
-                  }}
-                >
-                  <Typography>Do you want to create password?</Typography>
-                  <TextField
-                    label="Password"
-                    type="password"
-                    variant="outlined"
-                    fullWidth
-                    margin="normal"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                  />
-                  <Button
+
+                <div style={{ textAlign: "center" }}>
+                  <button
                     type="submit"
-                    variant="contained"
-                    color="primary"
-                    size="large"
-                    fullWidth
+                    className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
+                    style={{ margin: "10px auto" }}
+                    onClick={handleUpdate}
                   >
-                    Create password
-                  </Button>
-                </Box>
-              )}
-            </Box>
-          </Card>
-        </Box>
+                    Lưu
+                  </button>
+                  <button
+                    type="button"
+                    className="edit-profile-btn navbar-link bi bi-pencil-square"
+                    onClick={toggleEdit}
+                  >
+                    {isEditing ? "Hủy" : "Chỉnh sửa"}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <div className="d-flex justify-content-center align-items-center">
+              <button
+                onClick={handleLogout}
+                className="d-flex align-items-center me-5 mb-2 btn btn-hover"
+                style={{
+                  fontSize: "14px",
+                  margin: "10px auto",
+                  marginTop: "10px",
+                  borderRadius: "3px",
+                }}
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </div>
+        </section>
       ) : (
         <Box
           sx={{
@@ -405,35 +488,6 @@ const AccountSection = () => {
           <Typography>Loading ...</Typography>
         </Box>
       )}
-
-             
-
-              <div style={{ textAlign: 'center' }}>
-                <button
-                  type="submit"
-                  className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
-                  style={{ margin: '10px auto' }}
-                  disabled
-                >
-                  Save
-                </button>
-              </div>
-            </form>
-          </div>
-
-          <div className="d-flex flex-wrap fw-bold fs-3 mt-4 pe-2 justify-content-center">
-            <a
-              href="/login"
-              className="d-flex align-items-center me-5 mb-2 btn btn-hover"
-              style={{ marginLeft: '54px', width: '160px', fontSize: '14px', paddingTop: '10px', paddingLeft: '47px', paddingRight: '47px', marginTop: '10px', borderRadius: '3px' }}
-              onClick={handleLogout}
-            >
-              <i className="bi bi-door-open me-3"></i>
-              Log out
-            </a>
-          </div>
-        </div>
-      </section>
     </main>
   );
 };
