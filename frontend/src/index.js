@@ -26,10 +26,9 @@ import AccessControl from "./components/Admin/Admin-AccessControl";
 import DishManager from "./components/Admin/Admin-Dish";
 import CategoryDish from "./components/Admin/Admin-CategoryDish";
 import IngredientManager from "./components/Admin/Admin-Ingredient";
+import MenuManagement from "./components/Admin/Admin-Menu";
 import Authenticate from "./views/Authenticate";
 import PaymentCoordinatorPage from "views/PaymentCoordinator";
-
-
 const App = () => {
   const location = useLocation();
   const shouldShowHeaderFooter =
@@ -47,7 +46,7 @@ const App = () => {
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract/info/:id" element={<GuestContractInfo />} />
-        <Route path="/obbm/payment/status" element={<PaymentCoordinatorPage />} />
+        <Route path="/payment/cancle" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/success" element={<PaymentCoordinatorPage />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
@@ -65,6 +64,7 @@ const App = () => {
           <Route path="ManageEvents" element={<EventManager />} />
           <Route path="ManageLocation" element={<LocationManager />} />
           <Route path="ManageAccounts" element={<AccountManager />} />
+          <Route path="MenuManagement" element={<MenuManagement />} />
           <Route path="" element={<AdminAnalytics />} />
           <Route path="AccessControl" element={<AccessControl />} />
           <Route path="login" element={<Login />} />

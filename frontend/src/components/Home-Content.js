@@ -113,23 +113,40 @@ const banners = [
   },
 ];
 
-
-
 const Content = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const currentToken = localStorage.getItem("accessToken");
   const [categories, setCategories] = useState([]);
   const [activeCategoryId, setActiveCategoryId] = useState(2); // Gán mặc định là 2
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [Events, setEvents] = useState([]);
   const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
 
-  
   React.useEffect(() => {
     if (EventToMenuUrl) {
       navigate(EventToMenuUrl);
     }
   }, [EventToMenuUrl, navigate]);
+
+  React.useEffect(() => {
+    if (currentToken) {
+      const ham = async () => {
+        const response = await fetch(
+          `http://localhost:8080/obbm/users/myInfo`,
+          {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${currentToken}`,
+            },
+          }
+        );
+        const data = await response.json();
+        localStorage.setItem("userId", data?.result?.userId); // Kiểm tra dữ liệu trả về
+      };
+      ham();
+    }
+  }, []);
 
   const fetchDanhMuc = async () => {
     const danhMucList = await danhMucApi.getAll();
@@ -143,7 +160,6 @@ const Content = () => {
   useEffect(() => {
     fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
     fetchEvent();
-
   }, [activeCategoryId]);
 
   const handleFilter = (categoryId) => {
@@ -207,8 +223,6 @@ const Content = () => {
             </div>
           </section>
 
-          
-
           <section className="section section-divider gray about" id="about">
             <div className="container">
               <div className="about-banner">
@@ -271,16 +285,24 @@ const Content = () => {
             </div>
           </section>
 
-
           <section className="section section-divider white promo" id="events">
             <div className="container">
-              <h2 className="h2 section-title" style={{textAlign:"center", marginBottom:"20px"}}>Sự kiện</h2>
+              <h2
+                className="h2 section-title"
+                style={{ textAlign: "center", marginBottom: "20px" }}
+              >
+                Sự kiện
+              </h2>
               <ul className="promo-list has-scrollbar">
                 {Events.map((event) => (
                   <li
                     key={event.eventId}
                     className="promo-item"
-                    style={{ width: "285px", height: "443px", marginRight:"30px" }}
+                    style={{
+                      width: "285px",
+                      height: "443px",
+                      marginRight: "30px",
+                    }}
                   >
                     <button
                       onClick={() => {
@@ -369,44 +391,57 @@ const Content = () => {
               </ul>
 
               {filteredCategories.map((category) => (
-  <div key={category.categoryId} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-    <ul className="food-menu-list">
-      {category.listDish.slice(0, 6).map((dish) => (  // Limit to the first 6 dishes
-        <li key={dish.dishId}>
-          <div className="food-menu-card">
-            <div className="card-banner-home-dish">
-              <img
-                src={dish.image}
-                alt={dish.name}
-                style={{ width: "100%", height: "120px" }}
-                loading="lazy"
-                className="w-100"
-              />
+                <div
+                  key={category.categoryId}
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
+                  <ul className="food-menu-list">
+                    {category.listDish.slice(0, 6).map(
+                      (
+                        dish // Limit to the first 6 dishes
+                      ) => (
+                        <li key={dish.dishId}>
+                          <div className="food-menu-card">
+                            <div className="card-banner-home-dish">
+                              <img
+                                src={dish.image}
+                                alt={dish.name}
+                                style={{ width: "100%", height: "120px" }}
+                                loading="lazy"
+                                className="w-100"
+                              />
 
-              <button className="btn food-menu-btn">
-                <a href="/menu">Thêm vào Thực đơn</a>
-              </button>
-            </div>
+                              <button className="btn food-menu-btn">
+                                <a href="/menu">Thêm vào Thực đơn</a>
+                              </button>
+                            </div>
 
-            <div className="wrapper">
-              <p className="category">{category.description}</p>
-            </div>
+                            <div className="wrapper">
+                              <p className="category">{category.description}</p>
+                            </div>
 
-            <h4 className="card-title" style={{ textAlign: "center" }}>
-              {dish.name}
-            </h4>
+                            <h4
+                              className="card-title"
+                              style={{ textAlign: "center" }}
+                            >
+                              {dish.name}
+                            </h4>
 
-            {/* <div className="price-wrapper">
+                            {/* <div className="price-wrapper">
               <p className="price-text">Giá:</p>
               {dish.price.toLocaleString()} VND
             </div> */}
-          </div>
-        </li>
-      ))}
-    </ul>
-  </div>
-))}
-
+                          </div>
+                        </li>
+                      )
+                    )}
+                  </ul>
+                </div>
+              ))}
             </div>
           </section>
 
@@ -471,8 +506,6 @@ const Content = () => {
               </figure>
             </div>
           </section>
-
-          
 
           <section className="section section-divider gray banner">
             <div className="container">
@@ -568,14 +601,12 @@ const Content = () => {
             </div>
           </section>
 
-
           <section className="section section-divider white testi" id="contact">
             <div className="container">
               <p className="section-subtitle">Liên hệ</p>
 
               <h2 className="h2 section-title">
-                Những <span className="span">Đầu bếp</span> Của Chúng
-                Tôi
+                Những <span className="span">Đầu bếp</span> Của Chúng Tôi
               </h2>
 
               <p className="section-text">

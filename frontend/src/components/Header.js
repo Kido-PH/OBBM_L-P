@@ -25,7 +25,6 @@ const Header = () => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
       const data = await response.json();
       console.log(data); // Kiểm tra dữ liệu trả về
 
@@ -49,7 +48,7 @@ const Header = () => {
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken"); // Lấy token từ localStorage
 
-    if (userId && accessToken) {
+    if (accessToken) {
       setIsLoggedIn(true); // Đã đăng nhập
       getUserDetails(accessToken); // Lấy thông tin người dùng
     }
@@ -137,12 +136,7 @@ const Header = () => {
               <BiSolidFoodMenu />
             </a>
           </Tooltip>
-
-          <Tooltip title="Tài khoản">
-            <a href="/account" className="navbar-link header-icon">
-              <BiUser />
-            </a>
-          </Tooltip>
+          
           {isLoggedIn && (
             <Tooltip title="Danh sách hợp đồng">
               <a href="/user/contract-list" className="navbar-link header-icon">
@@ -151,10 +145,19 @@ const Header = () => {
             </Tooltip>
           )}
 
+          <Tooltip title="Tài khoản">
+            <a href="/account" className="navbar-link header-icon">
+              <BiUser />
+            </a>
+          </Tooltip>
+
           {/* Hiển thị tên người dùng khi đã đăng nhập */}
           {isLoggedIn && userDetails && (
-            <div className="user-name" >
-              <p style={{color:"hsl(23, 61%, 86%)"}}>Chào, {userDetails.username}</p> {/* Hiển thị tên người dùng */}
+            <div className="user-name">
+              <p style={{ color: "hsl(23, 61%, 86%)" }}>
+                Chào, {userDetails.username}
+              </p>{" "}
+              {/* Hiển thị tên người dùng */}
             </div>
           )}
 
