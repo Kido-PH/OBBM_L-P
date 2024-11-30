@@ -20,6 +20,7 @@ import { getToken, setToken } from "../services/localStorageService";
 const LoginForm = ({ toggleForm }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const handleContinueWithGoogle = () => {
     const callbackUrl = OAuthConfig.redirectUri;
     const authUrl = OAuthConfig.authUri;
@@ -77,7 +78,7 @@ const LoginForm = ({ toggleForm }) => {
 
     // Kiểm tra dữ liệu người dùng nhập vào
     if (!username.trim() || !password.trim()) {
-      setError("Username và Password không được để trống!");
+      setError("Tài khoản và mật khẩu không được để trống!");
       return;
     }
 

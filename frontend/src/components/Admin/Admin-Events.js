@@ -51,7 +51,7 @@ const EventManager = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [detailPopupOpen, setDetailPopupOpen] = useState(false);
   const [allService, setAlllServices] = useState([]);
-  
+
   const handleOpenServicePopup = (event) => {
     setSelectedEvent(event);
     setDetailPopupOpen(true);
@@ -59,7 +59,7 @@ const EventManager = () => {
 
   const handleCloseDetailPopup = () => {
     setDetailPopupOpen(false);
-    setSelectedEvent(null); 
+    setSelectedEvent(null);
   };
 
 
@@ -85,10 +85,10 @@ const EventManager = () => {
   // Hàm lấy danh sách service
   const fetchServiceEvent = async () => {
     try {
-      const response = await serviceApi.getAll(); 
+      const response = await serviceApi.getAll();
       console.log("Data serivce: ", response);
       if (response?.result?.content) {
-        setAlllServices(response?.result?.content); 
+        setAlllServices(response?.result?.content);
       }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách dịch vụ:", error);
@@ -414,22 +414,21 @@ const EventManager = () => {
                         <EditIcon />
                       </Tooltip>
                     </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleDeleteClick(event.eventId)}
+                    <Tooltip
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>Xóa sự kiện</span>
+                      }
+                      placement="top"
                     >
-                      <Tooltip
-                        title={
-                          <span style={{ fontSize: "1.25rem" }}>
-                            Xóa sự kiện
-                          </span>
-                        }
-                        placement="top"
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDeleteClick(event.eventId)}
                       >
                         <DeleteIcon />
-                      </Tooltip>
-                    </Button>
+                      </Button>
+                    </Tooltip>
+
                     <Button
                       variant="outlined"
                       onClick={() => handleOpenServicePopup(event)}

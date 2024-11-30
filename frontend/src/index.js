@@ -46,7 +46,8 @@ const App = () => {
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract/info/:id" element={<GuestContractInfo />} />
-        <Route path="/obbm/payment/status" element={<PaymentCoordinatorPage />} />
+        <Route path="/payment/cancle" element={<PaymentCoordinatorPage />} />
+        <Route path="/payment/success" element={<PaymentCoordinatorPage />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
         <Route path="/account" element={<Account />} />   

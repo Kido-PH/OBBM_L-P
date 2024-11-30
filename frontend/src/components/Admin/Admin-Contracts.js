@@ -46,7 +46,7 @@ const ManageContracts = () => {
   const fetchContractWithPaginate = async (page, rowsPerPage) => {
     try {
       const res = await contractApi.getPaginate(page, rowsPerPage);
-      setContracts(res.result?.content);
+      setContracts(res.result?.content.reverse());
       setTotalElements(res.result?.totalElements);
       console.log(res.result?.content);
     } catch (error) {
@@ -81,33 +81,39 @@ const ManageContracts = () => {
   const handleConfirmContract = async (contract) => {
     // Kiểm tra trạng thái hợp đồng "Chờ duyệt" và "Chưa thanh toán"
     if (contract.status === "Pending" && contract.paymentstatus === "Unpaid") {
-      toast.error("Hợp đồng chưa được thanh toán, không thể kích hoạt.");
-      return;
+      contract.status = "Approved";
+      toast.success(
+        `Hợp đồng đã được duyệt: ${translateStatus(contract.paymentstatus)}`
+      );
     }
-  
+
     // Kiểm tra trạng thái "Chờ duyệt" với thanh toán trước một phần (50% hoặc 70%)
-    if (contract.status === "Pending" && (contract.paymentstatus === "Prepay 50%" || contract.paymentstatus === "Prepay 70%")) {
+    if (
+      contract.status === "Approved" &&
+      (contract.paymentstatus === "Prepay 50%" ||
+        contract.paymentstatus === "Prepay 70%")
+    ) {
       contract.status = "Actived"; // Đổi trạng thái thành "Đang hoạt động"
-      toast.success(`Hợp đồng đã được kích hoạt với phần trăm thanh toán: ${translateStatus(contract.paymentstatus)}`);
+      toast.success(
+        `Hợp đồng đã được kích hoạt với phần trăm thanh toán: ${translateStatus(
+          contract.paymentstatus
+        )}`
+      );
     }
-  
+
     // Trường hợp hợp đồng "Đã duyệt" và "Đã thanh toán"
-    else if (contract.status === "Approved" && contract.paymentstatus === "Paid") {
+    if (contract.status === "Actived" && contract.paymentstatus === "Paid") {
       contract.status = "Completed"; // Đổi trạng thái thành "Đã hoàn thành"
       toast.success("Hợp đồng đã được xác nhận và hoàn thành!");
     }
-  
+
     // Trường hợp hợp đồng đã hoàn thành và đã thanh toán đầy đủ
-    else if (contract.status === "Completed" && contract.paymentstatus === "Paid") {
+    if (contract.status === "Completed" && contract.paymentstatus === "Paid") {
       toast.success("Hợp đồng đã hoàn thành và đã được xác nhận trước đó!");
     }
-  
+
     // Trường hợp không thỏa mãn các điều kiện trên
-    else {
-      toast.error("Phải thanh toán đầy đủ hoặc hợp đồng phải được duyệt mới có thể xác nhận!");
-      return;
-    }
-  
+
     // Chuẩn bị dữ liệu gửi lên API để cập nhật
     const data = {
       name: contract.name,
@@ -126,14 +132,14 @@ const ManageContracts = () => {
       eventId: contract.events.eventId,
       menuId: contract.menus.menuId,
     };
-  
+
     console.log("Dữ liệu gửi lên API:", data);
-  
+
     try {
       // Gọi API PUT để cập nhật hợp đồng
       const res = await contractApi.update(contract.contractId, data);
       console.log("Phản hồi từ API:", res);
-      
+
       // Kiểm tra mã trạng thái trả về từ server
       if (res.code === 1000) {
         fetchContractWithPaginate(page); // Làm mới danh sách hợp đồng sau khi cập nhật
@@ -149,7 +155,6 @@ const ManageContracts = () => {
       toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
     }
   };
-  
 
   // Hàm hủy hợp đồng
   const handleCancelContract = async (contract) => {

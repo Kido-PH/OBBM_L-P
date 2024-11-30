@@ -67,7 +67,7 @@ const ContractCreateStep3 = () => {
       setContractData((prevData) => ({
         ...prevData,
         name:
-          "Hợp đồng" +
+          "Hợp đồng " +
           (currentEvent?.result.name?.toLowerCase() || "") +
           " của " +
           contractData.custname,
