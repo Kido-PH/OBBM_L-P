@@ -43,11 +43,17 @@ const Menu = () => {
   };
   const setMenuIdUrl = (eventId) => {
     setEventToMenuUrl(`menu/${eventId}`);
+    // Lưu eventId vào localStorage
+    localStorage.setItem("currentEventId", eventId);
   };
   const pushEventIdtoMenu = (newEventId) => {
-    // Điều hướng đến trang menu mới với eventId thay đổi
+    // Lưu eventId vào localStorage
+    localStorage.setItem("currentEventId", newEventId);
+  
+    // Điều hướng đến trang menu mới với eventId
     navigate(`/menu/${newEventId}`);
   };
+  
 
   const fetchEvent = async () => {
     try {
@@ -168,7 +174,31 @@ const Menu = () => {
 
     // console.log("selectedMenu Menu Data:", selectedMenu);
   }, [id, location]);
-
+  useEffect(() => {
+    const createdMenu = localStorage.getItem("createdMenu");
+    const createdMenuDishes = localStorage.getItem("createdMenuDishes");
+    const menuDishesDetail = localStorage.getItem("MenuDishesDetail");
+    
+  
+    if (createdMenu && createdMenuDishes && menuDishesDetail) {
+      const parsedMenu = JSON.parse(createdMenu);
+      const parsedDishes = JSON.parse(createdMenuDishes);
+      const parsedDetails = JSON.parse(menuDishesDetail);
+  
+      // Đổ dữ liệu vào `selectedMenu`
+      setSelectedMenu({
+        ...parsedMenu,
+        groupedDishes: parsedDetails,
+        listMenuDish: parsedDishes,
+      });
+  
+      // Xóa dữ liệu cũ khỏi localStorage sau khi nạp
+      localStorage.removeItem("createdMenu");
+      localStorage.removeItem("createdMenuDishes");
+      localStorage.removeItem("MenuDishesDetail");
+    }
+  }, []);
+  
   useEffect(() => {
     // console.log("Current Path:", location.pathname);
     // console.log("ID:", id);
@@ -204,31 +234,10 @@ const Menu = () => {
     try {
       const userId = localStorage.getItem("userId");
   
-      // Check if user is not logged in
-      if (!userId) {
-        // Show SweetAlert with Login button
-        Swal.fire({
-          icon: "warning",
-          title: "Chưa đăng nhập",
-          text: "Bạn cần đăng nhập để tạo thực đơn.",
-          showCancelButton: true,
-          confirmButtonText: "Đăng nhập ngay",
-          cancelButtonText: "Hủy",
-          reverseButtons: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Navigate to the login page if the user clicks "Đăng nhập ngay"
-            window.location.href = "/login"; // or you can use navigate('/login') if using react-router-dom
-          }
-        });
-        return; // Prevent further execution of the function if user is not logged in
-      }
-  
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
         .reduce((total, dish) => total + (dish.price || 0), 0);
   
-      // Remove duplicate dishes from selectedMenuDishes
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
           acc.push(currentDish);
@@ -236,38 +245,54 @@ const Menu = () => {
         return acc;
       }, []);
   
-      // Check if there are no dishes selected
       if (uniqueDishes.length === 0) {
         Swal.fire({
           icon: "error",
           title: "Thất bại!",
           text: "Thực đơn phải có ít nhất 1 món ăn.",
         });
-        return; // Stop execution if there are no dishes
+        return;
       }
   
-      // Prepare the data to send to the server
+      // Chuẩn bị dữ liệu để lưu
       const dataToSave = {
         name: selectedMenu.name,
         totalcost: totalCost,
         description: selectedMenu.description,
-        userId: userId, // Get userId from localStorage
+        userId: userId || "guest",
         eventId: selectedMenu.events.eventId,
       };
   
-      console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
-  
-      // Save the data to localStorage
+      // Lưu dữ liệu vào localStorage
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
       localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-      localStorage.setItem("MenuDishesDetail", JSON.stringify(selectedMenu.groupedDishes));
+      localStorage.setItem(
+        "MenuDishesDetail",
+        JSON.stringify(selectedMenu.groupedDishes)
+      );
   
-      console.log("dữ liệu menu", selectedMenu.listMenuDish);
-      Swal.fire({
-        icon: "success",
-        title: "Thành công!",
-        text: "Thực đơn và món ăn đã được tạo thành công!",
-      });
+      if (!userId) {
+        Swal.fire({
+          icon: "warning",
+          title: "Chưa đăng nhập",
+          text: "Bạn cần đăng nhập để hoàn tất tạo thực đơn.",
+          showCancelButton: true,
+          confirmButtonText: "Đăng nhập ngay",
+          cancelButtonText: "Hủy",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+            window.location.href = "/login";
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: "success",
+          title: "Thành công!",
+          text: "Thực đơn và món ăn đã được tạo thành công!",
+        });
+      }
     } catch (error) {
       console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
       Swal.fire({
@@ -287,7 +312,6 @@ const Menu = () => {
   const closeListFood = () => {
     setShowListFood(false);
   };
-
 
   const handleAddDish = (dish) => {
     // Kiểm tra xem món ăn đã tồn tại trong selectedMenuDishes hay chưa
@@ -338,12 +362,12 @@ const Menu = () => {
             dishes: {
               ...dish, // Lưu tất cả thông tin chi tiết của món ăn
               categories: dish.categories, // Lưu thông tin categories của món ăn
-              existing: 'Còn hàng', // Thêm trạng thái của món ăn
+              existing: "Còn hàng", // Thêm trạng thái của món ăn
             },
             menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
           },
         ];
-        
+
         return updatedDetails;
       });
       console.log(menuDishesDetails);
@@ -476,66 +500,70 @@ const Menu = () => {
                         <h4 style={{ textAlign: "center" }}>{category.name}</h4>
 
                         {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
-                        {categoriesOrder.map((categoryName) =>
-                          // Kiểm tra xem categoryName có tồn tại trong groupedDishes không
-                          category.groupedDishes[categoryName] ? (
-                            <div key={categoryName} className="menu-category">
-                              <h6>
-                                {categoryName === "Appetizers"
-                                  ? "Khai vị và đồ uống"
-                                  : categoryName === "Main Courses"
-                                  ? "Món chính"
-                                  : categoryName === "Desserts"
-                                  ? "Tráng miệng"
-                                  : categoryName}
-                              </h6>
+                        {categoriesOrder.map(
+                          (categoryName) =>
+                            // Kiểm tra xem categoryName có tồn tại trong groupedDishes không
+                            category.groupedDishes[categoryName] ? (
+                              <div key={categoryName} className="menu-category">
+                                <h6>
+                                  {categoryName === "Appetizers"
+                                    ? "Khai vị và đồ uống"
+                                    : categoryName === "Main Courses"
+                                    ? "Món chính"
+                                    : categoryName === "Desserts"
+                                    ? "Tráng miệng"
+                                    : categoryName}
+                                </h6>
 
-                              <div className="menu-category-dish">
-                                <ul
-                                  className="promo-list has-scrollbar"
-                                  style={{ paddingTop: "10px" }}
-                                >
-                                  {category.groupedDishes[categoryName].map(
-                                    (dish, index) => (
-                                      <li key={index} style={{ width: "77px" }}>
-                                        <img
-                                          src={dish.image}
-                                          alt={dish.name}
-                                          style={{
-                                            width: "63px",
-                                            height: "50px",
-                                            marginLeft: "7px",
-                                          }}
-                                        />
-                                        <p
-                                          style={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            textAlign: "center",
-                                            fontWeight: "bold",
-                                            marginTop: "5px",
-                                          }}
+                                <div className="menu-category-dish">
+                                  <ul
+                                    className="promo-list has-scrollbar"
+                                    style={{ paddingTop: "10px" }}
+                                  >
+                                    {category.groupedDishes[categoryName].map(
+                                      (dish, index) => (
+                                        <li
+                                          key={index}
+                                          style={{ width: "77px" }}
                                         >
-                                          {dish.name}
-                                        </p>
-                                        <p
-                                          style={{
-                                            overflow: "hidden",
-                                            textOverflow: "ellipsis",
-                                            whiteSpace: "nowrap",
-                                            textAlign: "center",
-                                          }}
-                                        >
-                                          {dish.price.toLocaleString()} VND
-                                        </p>
-                                      </li>
-                                    )
-                                  )}
-                                </ul>
+                                          <img
+                                            src={dish.image}
+                                            alt={dish.name}
+                                            style={{
+                                              width: "63px",
+                                              height: "50px",
+                                              marginLeft: "7px",
+                                            }}
+                                          />
+                                          <p
+                                            style={{
+                                              overflow: "hidden",
+                                              textOverflow: "ellipsis",
+                                              whiteSpace: "nowrap",
+                                              textAlign: "center",
+                                              fontWeight: "bold",
+                                              marginTop: "5px",
+                                            }}
+                                          >
+                                            {dish.name}
+                                          </p>
+                                          <p
+                                            style={{
+                                              overflow: "hidden",
+                                              textOverflow: "ellipsis",
+                                              whiteSpace: "nowrap",
+                                              textAlign: "center",
+                                            }}
+                                          >
+                                            {/* {dish.price.toLocaleString()} VND */}
+                                          </p>
+                                        </li>
+                                      )
+                                    )}
+                                  </ul>
+                                </div>
                               </div>
-                            </div>
-                          ) : null // Nếu không có món ăn trong danh mục này, không hiển thị
+                            ) : null // Nếu không có món ăn trong danh mục này, không hiển thị
                         )}
 
                         <div
@@ -549,10 +577,12 @@ const Menu = () => {
                             Tổng tiền:{" "}
                             {Object.values(category.groupedDishes)
                               .flat()
-                              .reduce(
-                                (total, dish) => total + (dish.price || 0),
-                                0
-                              )
+                              .reduce((total, dish) => {
+                                const profitMargin = 0.2; 
+                                const sellingPrice =
+                                  dish.price / (1 - profitMargin);
+                                return total + (sellingPrice || 0);
+                              }, 0)
                               .toLocaleString()}{" "}
                             VND
                           </p>
@@ -765,7 +795,7 @@ const Menu = () => {
                                 color: "#1e1e1e",
                               }}
                             >
-                              {dish.price.toLocaleString()} VND
+                              {/* {dish.price.toLocaleString()} VND */}
                             </p>
                           </li>
                         )
@@ -777,7 +807,12 @@ const Menu = () => {
                 Tổng tiền:{" "}
                 {Object.values(selectedMenu.groupedDishes)
                   .flat()
-                  .reduce((total, dish) => total + (dish.price || 0), 0)
+                  .reduce((total, dish) => {
+                    // Giả sử `dish.cost` là giá cost và `profitMargin` là tỷ lệ lợi nhuận mong muốn (ví dụ 0.2 cho 20%)
+                    const profitMargin = 0.2; // Thay đổi theo tỷ lệ lợi nhuận mong muốn
+                    const sellingPrice = dish.price / (1 - profitMargin); // Tính giá bán theo công thức
+                    return total + (sellingPrice || 0); // Cộng dồn tổng tiền
+                  }, 0)
                   .toLocaleString()}{" "}
                 VND
               </div>

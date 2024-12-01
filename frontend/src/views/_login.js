@@ -74,10 +74,16 @@ const LoginForm = ({ toggleForm }) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setError(""); // Reset lỗi khi bắt đầu đăng nhập
-
+    const createdMenu = localStorage.getItem("createdMenu");
+    const savedEventId = localStorage.getItem("currentEventId");
+    if (createdMenu && savedEventId) {
+      navigate(`/menu/${savedEventId}`);
+    } else {
+    navigate("/"); // Chuyển hướng mặc định
+  }
     // Kiểm tra dữ liệu người dùng nhập vào
     if (!username.trim() || !password.trim()) {
-      setError("Username và Password không được để trống!");
+      setError("Tên đăng nhập và Mật khẩu không được để trống!");
       return;
     }
 

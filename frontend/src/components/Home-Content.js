@@ -151,7 +151,16 @@ const Content = () => {
 
 
   }, [activeCategoryId]);
-
+  const handleScroll = (direction, categoryId) => {
+    const menuList = document.querySelector(`#category-${categoryId} .food-menu-list`);
+    const scrollAmount = 120; // Số pixel muốn cuộn mỗi lần
+    if (direction === "left") {
+      menuList.scrollLeft -= scrollAmount;
+    } else if (direction === "right") {
+      menuList.scrollLeft += scrollAmount;
+    }
+  };
+  
   const handleFilter = (categoryId) => {
     const filtered = categories.filter(
       (category) => category.categoryId === categoryId
@@ -376,6 +385,12 @@ const Content = () => {
 
               {filteredCategories.map((category) => (
   <div key={category.categoryId} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <button
+          className="scroll-btn left"
+          onClick={() => handleScroll("left", category.categoryId)}
+        >
+          &lt;
+        </button>
     <ul className="food-menu-list">
       {category.listDish.slice(0, 6).map((dish) => (  // Limit to the first 6 dishes
         <li key={dish.dishId}>
@@ -410,6 +425,12 @@ const Content = () => {
         </li>
       ))}
     </ul>
+    <button
+          className="scroll-btn right"
+          onClick={() => handleScroll("right", category.categoryId)}
+        >
+          &gt;
+        </button>
   </div>
 ))}
 
