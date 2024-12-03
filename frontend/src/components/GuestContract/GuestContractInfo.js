@@ -87,7 +87,7 @@ const ContractInfo = () => {
     if (status !== "Pending" && status !== "Completed" && pStatus !== "Paid") {
       // Cuộn xuống 500px từ vị trí hiện tại
       window.scrollTo({
-        top: 600,
+        top: 720,
         behavior: "smooth", // Cuộn mượt mà
       });
     } else {
@@ -504,7 +504,7 @@ const ContractInfo = () => {
           contractInfo.paymentstatus === "Prepay 50%" ||
           contractInfo.paymentstatus === "Prepay 70%") &&
           contractInfo.status !== "Pending" && (
-            <PaymentCard onHide={handlePayment} contractInfo={contractInfo} />
+            <PaymentCard onHide={handlePayment} contractInfo={contractInfo}/>
           )}
       </div>
 

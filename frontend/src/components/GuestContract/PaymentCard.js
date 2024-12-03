@@ -85,6 +85,7 @@ function PaymentCard({ contractInfo }) {
           justifyContent: "center",
           alignItems: "center",
           flexDirection: "column",
+          marginTop: "9rem"
         }}
       >
         <Card
