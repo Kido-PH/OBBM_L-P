@@ -33,6 +33,7 @@ const ContractCreateStep3 = () => {
   const createdMenuDishes = JSON.parse(
     localStorage.getItem("createdMenuDishes")
   );
+  const menuDishesDetail = JSON.parse(localStorage.getItem("MenuDishesDetail"));
   const currentUserId = JSON.parse(sessionStorage.getItem("currentUserId")); // Parse chuỗi JSON thành đối tượng
   const currentEventId = JSON.parse(localStorage.getItem("currentEventId")); // Parse chuỗi JSON thành đối tượng
   const currentLocation = JSON.parse(localStorage.getItem("currentLocation")); // UserId có thể là chuỗi
@@ -390,7 +391,11 @@ const ContractCreateStep3 = () => {
                     className="fw-bold"
                     style={{ color: "var(--deep-saffron)" }}
                   >
-                    {formatCurrency(createdMenu.totalcost * contractData.guest)}{" "}
+                    {formatCurrency(
+                      contractData.totalcost -
+                        totalServicesCost -
+                        currentLocation?.cost
+                    )}{" "}
                     VND
                   </span>
                 </div>
@@ -433,12 +438,18 @@ const ContractCreateStep3 = () => {
         </div>
       </div>
 
-      {/* <ModalInfoMenu show={showModalMenu} onClose={handleCloseModalMenu} /> */}
       <ModalInfoServices
         show={showModalServices}
         onClose={handleCloseModalServices}
         onTotalCost={handleServicesTotalCost}
         servicesList={tempServicesData}
+      />
+
+      <ModalInfoMenu
+        show={showModalMenu}
+        onClose={handleCloseModalMenu}
+        menuDishes={menuDishesDetail}
+        status={false}
       />
 
       <Modal

@@ -3,6 +3,7 @@ import { Card, Container, Row, Col, Form, Button } from "react-bootstrap";
 import PrivacyPolicyModal from "./PrivacyPolicyModal"; // Import Modal từ file riêng
 import paymentApi from "api/paymentApi";
 import LoadingPage from "components/LoadingPage";
+import Swal from "sweetalert2";
 
 function PaymentCard({ contractInfo }) {
   const [loading, setLoading] = React.useState(false);
@@ -49,10 +50,26 @@ function PaymentCard({ contractInfo }) {
     const currentPath = window.location.href;
     localStorage.setItem("previousPath", currentPath);
 
-    const paymentCreateRespone = await paymentApi.createUrl(duLieuGuiDi);
-
-    if (paymentCreateRespone?.error === 0) {
-      window.location.href = paymentCreateRespone.checkoutUrl;
+    let paymentCreateRespone;
+    if (selectedBank === "vnpay") {
+      paymentCreateRespone = await paymentApi.createVNPayUrl(duLieuGuiDi);
+      if (paymentCreateRespone?.code === 1000) {
+        window.location.href = paymentCreateRespone.result.paymentUrl;
+      } else {
+        Swal.fire({
+          icon: "error",
+          title: "Đến trang thanh toán thất bại",
+          text: "Vui lòng kiểm tra lại kết nối",
+          timer: 3000, // Tự động đóng sau 8 giây
+          showConfirmButton: true,
+        });
+      }
+    }
+    if (selectedBank === "vietqr") {
+      paymentCreateRespone = await paymentApi.createPayOSUrl(duLieuGuiDi);
+      if (paymentCreateRespone?.error === 0) {
+        window.location.href = paymentCreateRespone.checkoutUrl;
+      }
     }
   };
 
@@ -119,7 +136,7 @@ function PaymentCard({ contractInfo }) {
 
           {/* Radio Buttons */}
           <Row className="mt-4">
-            {/* <Col xs={6} className="d-flex justify-content-center">
+            <Col xs={6} className="d-flex justify-content-center">
               <label
                 className={`bank-option ${
                   selectedBank === "vnpay" ? "selected" : ""
@@ -132,7 +149,6 @@ function PaymentCard({ contractInfo }) {
                   checked={selectedBank === "vnpay"}
                   onChange={() => handleBankChange("vnpay")}
                   style={{ display: "none" }}
-                  disabled
                 />
                 <div className="bank-content">
                   <img
@@ -142,7 +158,7 @@ function PaymentCard({ contractInfo }) {
                   <p>VN Pay</p>
                 </div>
               </label>
-            </Col> */}
+            </Col>
             <Col xs={6} className="d-flex justify-content-center m-auto">
               <label
                 className={`bank-option ${

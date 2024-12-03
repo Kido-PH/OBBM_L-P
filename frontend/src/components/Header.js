@@ -36,7 +36,7 @@ const Header = () => {
         if (adminRole) {
           setIsAdmin(true); // Nếu có vai trò ADMIN, set isAdmin là true
           navigate("/admin"); // Điều hướng đến trang Admin ngay khi đăng nhập nếu là Admin
-        }
+        } 
       }
     } catch (error) {
       console.error("Error fetching user details:", error);

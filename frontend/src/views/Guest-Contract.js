@@ -5,7 +5,6 @@ import { multiStepContext } from "../StepContext";
 import FirstStep from "../components/GuestContract/ContractCreateStep1";
 import SecondStep from "../components/GuestContract/ContractCreateStep2";
 import ThirdStep from "../components/GuestContract/ContractCreateStep3";
-import danhMucApi from "../api/danhMucApi";
 
 const Contract = () => {
   React.useEffect(() => {
