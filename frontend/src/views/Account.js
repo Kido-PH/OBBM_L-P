@@ -39,6 +39,7 @@ const AccountSection = () => {
     citizenIdentity: userDetails.citizenIdentity || "",
     dob: userDetails.dob || "",
   });
+  
 
   const toggleEdit = () => {
     setIsEditing(!isEditing);
@@ -78,8 +79,6 @@ const AccountSection = () => {
 
     setUserDetails(data.result);
   };
-
-  
 
   const handleFile = (event) => {
     const file = event.target.files[0];
@@ -272,14 +271,14 @@ const AccountSection = () => {
   const handleLogout = (event) => {
     // Clear all data in localStorage
     localStorage.clear();
-  
+
     // Call your logout function if you have one
     logOut();
-  
+
     // Redirect the user to the login page
     window.location.href = "/login";
   };
-  
+
   return (
     <main style={{ marginTop: "50px" }}>
       {userDetails ? (
@@ -329,7 +328,6 @@ const AccountSection = () => {
                     className="input-field"
                     value={userDetails.username || ""}
                     disabled={!isEditing}
-                    
                   />
                 </div>
                 <div className="input-wrapper">
@@ -354,7 +352,9 @@ const AccountSection = () => {
                     className="input-field"
                     value={userDetails.phone || ""}
                     disabled={!isEditing}
-                    onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
+                    onChange={(e) =>
+                      setUserDetails({ ...userDetails, phone: e.target.value })
+                    }
                   />
                 </div>
 
@@ -470,6 +470,28 @@ const AccountSection = () => {
                   >
                     {isEditing ? "Hủy" : "Chỉnh sửa"}
                   </button>
+                  {userDetails.noPassword && (
+                    <div style={{ textAlign: "left" }}>
+                      <p style={{ display: "inline", marginRight: "4px" }}>
+                        Chú ý: Tài khoản bạn chưa có mật khẩu,
+                      </p>
+                      <button
+                        onClick={() => {navigate("/create-password")}}
+                        style={{
+                          display: "inline",
+                          background: "none",
+                          border: "none",
+                          color: "var(--dark-orange)",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Tạo mật khẩu
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="d-flex justify-content-center align-items-center"></div>
                 </div>
               </form>
             </div>

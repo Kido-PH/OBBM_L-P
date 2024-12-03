@@ -13,6 +13,10 @@ const userApi = {
     const url = `/users`;
     return axiosClient.get(url);
   },
+  createPassword(password) {
+    const url = `/users/create-password`;
+    return axiosClient.post(url, password);
+  }
 };
 
 export default userApi;

@@ -120,6 +120,7 @@ const LoginForm = ({ toggleForm }) => {
         }
         // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("userId", userDetails.userId);
+        
         navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
       })
       .catch((error) => {

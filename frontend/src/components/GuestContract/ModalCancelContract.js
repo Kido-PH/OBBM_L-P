@@ -111,7 +111,7 @@ const ConfirmCancelModal = ({ show, onHide, onConfirm }) => {
                 cursor: "pointer",
               }}
             >
-              Tôi đổi ý :(
+              Tôi đổi ý rồi
             </label>
           </div>
         </div>
