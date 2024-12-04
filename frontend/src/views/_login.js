@@ -17,11 +17,56 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken, setToken } from "../services/localStorageService";
 import Cookies from "js-cookie";
+import axios from "axios";
 
 const LoginForm = ({ toggleForm }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const apiClient = axios.create({
+    baseURL: "http://localhost:8080/obbm",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  apiClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      console.log("Interceptor Error:", error); // Log lỗi
+      if (error.response?.status === 401) {
+        try {
+          const refreshToken = Cookies.get("refreshToken");
+          if (!refreshToken) {
+            console.error("Refresh token không tồn tại.");
+            throw new Error("Vui lòng đăng nhập lại.");
+          }
   
+          const { data } = await axios.post(
+            "http://localhost:8080/obbm/auth/refresh",
+            { refreshToken },
+            {
+              headers: { "Content-Type": "application/json" },
+            }
+          );
+  
+          console.log("Làm mới token thành công:", data);
+  
+          const newAccessToken = data.result.accessToken;
+          setToken(newAccessToken);
+          error.config.headers.Authorization = `Bearer ${newAccessToken}`;
+          return axios(error.config);
+        } catch (refreshError) {
+          console.error("Làm mới token thất bại:", refreshError.message);
+          return Promise.reject(refreshError);
+        }
+      }
+  
+      return Promise.reject(error);
+    }
+  );
+  
+
   const handleContinueWithGoogle = () => {
     const callbackUrl = OAuthConfig.redirectUri;
     const authUrl = OAuthConfig.authUri;
@@ -36,21 +81,13 @@ const LoginForm = ({ toggleForm }) => {
     window.location.href = targetUrl;
   };
 
-  useEffect(() => {
-    const accessToken = getToken();
-
-    if (accessToken) {
-      navigate("/account");
-    }
-  }, [navigate]);
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("error");
   const [error, setError] = useState("");
-
+  const getRefreshToken = () => Cookies.get("refreshToken");
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -80,6 +117,7 @@ const LoginForm = ({ toggleForm }) => {
     // Kiểm tra dữ liệu người dùng nhập vào
     if (!username.trim() || !password.trim()) {
       setError("Tài khoản và mật khẩu không được để trống!");
+      setIsSubmitting(false); // Dừng trạng thái submitting
       return;
     }
 
@@ -89,26 +127,24 @@ const LoginForm = ({ toggleForm }) => {
     };
 
     // Gửi yêu cầu đăng nhập tới server
-    fetch("http://localhost:8080/obbm/auth/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.code !== 1000) {
-          // Kiểm tra nếu thông báo lỗi liên quan đến tài khoản hoặc mật khẩu sai
-          if (data.message.includes("Invalid credentials")) {
-            setError("Tài khoản hoặc mật khẩu không đúng!");
-          } else {
-            setError(data.message || "Đăng nhập không thành công");
-          }
+    apiClient
+      .post("/auth/token", data)
+      .then((response) => {
+        const responseData = response.data;
+
+        if (responseData.code !== 1000) {
+          setError(responseData.message || "Đăng nhập không thành công");
           return;
         }
-        
-        const accessToken = data.result?.accessToken;
+
+        const refreshToken = responseData.result?.refreshToken;
+        if (refreshToken) {
+          document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
+            7 * 24 * 60 * 60
+          }; secure`;
+        }
+
+        const accessToken = responseData.result?.accessToken;
         setToken(accessToken); // Lưu token vào localStorage
 
         // Lấy thông tin người dùng nếu token hợp lệ
@@ -119,10 +155,20 @@ const LoginForm = ({ toggleForm }) => {
           setError("Không thể lấy thông tin người dùng.");
           return;
         }
+
         // Lưu thông tin người dùng vào localStorage
+        sessionStorage.setItem("userId", userDetails.userId);
         localStorage.setItem("userId", userDetails.userId);
-        
-        navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
+
+        // Lấy `currentEventId` từ localStorage
+        const currentEventId = sessionStorage.getItem("currentEventId");
+
+        // Chuyển hướng sau khi đăng nhập
+        if (currentEventId) {
+          navigate(`/menu/${currentEventId}`);
+        } else {
+          navigate("/account"); // Nếu không có `currentEventId`, chuyển hướng mặc định
+        }
       })
       .catch((error) => {
         setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
@@ -131,57 +177,18 @@ const LoginForm = ({ toggleForm }) => {
         setIsSubmitting(false); // Đặt lại trạng thái submitting khi kết thúc
       });
   };
+
   const getUserDetails = async (accessToken) => {
-    const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    console.log("Sử dụng accessToken:", accessToken); // Log accessToken
+    const response = await apiClient.get("/users/myInfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-
-    const data = await response.json();
-
+  
+    const data = response.data;
     if (data.code !== 1000) {
       throw new Error(data.message);
     }
-
     return data.result;
-  };
-
-  const refreshAccessToken = async () => {
-    const refreshToken = Cookies.get("refreshToken"); // Lấy refreshToken từ cookies
-  
-    if (!refreshToken) {
-      throw new Error("Không có refreshToken.");
-    }
-  
-    try {
-      // Gửi yêu cầu đến API /refresh để lấy accessToken mới
-      const response = await fetch("http://localhost:8080/obbm/auth/refresh", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }), // Gửi refreshToken
-      });
-  
-      const data = await response.json();
-  
-      // Nếu API trả về accessToken mới, lưu nó vào localStorage
-      if (data.code === 1000 && data.result?.accessToken) {
-        const newAccessToken = data.result.accessToken;
-  
-        setToken(newAccessToken); // Lưu accessToken mới vào localStorage
-        console.log("Mới nhận accessToken:", newAccessToken); // Log accessToken mới
-        return newAccessToken; // Trả về accessToken mới
-      }
-  
-      throw new Error("Không thể lấy accessToken mới.");
-  
-    } catch (error) {
-      console.error("Lỗi khi làm mới accessToken:", error.message);
-      throw error;
-    }
   };
   
 
@@ -242,8 +249,6 @@ const LoginForm = ({ toggleForm }) => {
       </div>
     </div>
   );
-  
-  
 };
 
 export default LoginForm;

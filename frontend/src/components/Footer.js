@@ -17,47 +17,47 @@ import axios from "axios";
 import userApi from "api/userApi";
 
 const Footer = () => {
-  const navigate = useNavigate();
-  useEffect(() => {
-    const accessToken = getToken();
-    refreshAccessToken();
-    if (accessToken) {
-      navigate("/account");
-    }
-  }, [navigate]);
-  const refreshAccessToken = async () => {
-    const refreshToken = Cookies.get("refreshToken"); // Lấy refreshToken từ cookies
+  // const navigate = useNavigate();
+  // useEffect(() => {
+  //   const accessToken = getToken();
+  //   refreshAccessToken();
+  //   if (accessToken) {
+  //     navigate("/account");
+  //   }
+  // }, [navigate]);
+  // const refreshAccessToken = async () => {
+  //   const refreshToken = Cookies.get("refreshToken"); // Lấy refreshToken từ cookies
   
-    if (!refreshToken) {
-      throw new Error("Không có refreshToken.");
-    }
+  //   if (!refreshToken) {
+  //     throw new Error("Không có refreshToken.");
+  //   }
   
-    try {
-      const refreshToken = Cookies.get("refreshToken");
-      console.log("refreshToken",refreshToken); // Lấy refreshToken từ cookies
-      // Gửi yêu cầu đến API /refresh để lấy accessToken mới
-      try {
-        const response = await userApi.refreshToken(refreshToken);
-        console.log("response", response);
+  //   try {
+  //     const refreshToken = Cookies.get("refreshToken");
+  //     console.log("refreshToken",refreshToken); // Lấy refreshToken từ cookies
+  //     // Gửi yêu cầu đến API /refresh để lấy accessToken mới
+  //     try {
+  //       const response = await userApi.refreshToken(refreshToken);
+  //       console.log("response", response);
 
-              // Nếu API trả về accessToken mới, lưu nó vào localStorage
-      if (response.code === 1000 && response.result?.accessToken) {
-        const newAccessToken = response.result.accessToken;
+  //             // Nếu API trả về accessToken mới, lưu nó vào localStorage
+  //     if (response.code === 1000 && response.result?.accessToken) {
+  //       const newAccessToken = response.result.accessToken;
         
-        setToken(newAccessToken); // Lưu accessToken mới vào localStorage
-        console.log("Mới nhận accessToken:", newAccessToken); // Log accessToken mới
-        return newAccessToken; // Trả về accessToken mới
-      }
-      } catch (e){
-        console.error("Lỗi khi gửi yêu cầu đến API /refresh:", e);
-      }
+  //       setToken(newAccessToken); // Lưu accessToken mới vào localStorage
+  //       console.log("Mới nhận accessToken:", newAccessToken); // Log accessToken mới
+  //       return newAccessToken; // Trả về accessToken mới
+  //     }
+  //     } catch (e){
+  //       console.error("Lỗi khi gửi yêu cầu đến API /refresh:", e);
+  //     }
 
     
 
   
-    } catch (error) {
-      console.error("Lỗi khi làm mới accessToken:", error);    }
-  };
+  //   } catch (error) {
+  //     console.error("Lỗi khi làm mới accessToken:", error);    }
+  // };
   return (
     <footer className="footer">
       <div className="footer-top">
