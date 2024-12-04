@@ -29,36 +29,49 @@ import IngredientManager from "./components/Admin/Admin-Ingredient";
 import MenuManagement from "./components/Admin/Admin-Menu";
 import Authenticate from "./views/Authenticate";
 import PaymentCoordinatorPage from "views/PaymentCoordinator";
+
 import AdminRoute from "components/Admin/AdminRouter";
+
+import CreatePasswordForm from "views/_createPassword";
+
 const App = () => {
   const location = useLocation();
+  const isAdmin = JSON.parse(localStorage.getItem("isAdmin"));
   const shouldShowHeaderFooter =
     !location.pathname.startsWith("/admin") &&
     location.pathname !== "/login" &&
     location.pathname !== "/register" &&
-    location.pathname !== "/resetpassword";
-    const isAdmin = JSON.parse(localStorage.getItem("isAdmin"));
+    location.pathname !== "/resetpassword" &&
+    location.pathname !== "/create-password";
+
   return (
     <>
       {shouldShowHeaderFooter && <Header />}
 
       <Routes>
-        <Route path="/"  element={<Home />} />
+        <Route path="/" element={<Home />} />
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
         <Route path="/contract/info/:id" element={<GuestContractInfo />} />
+        <Route path="/payment/cancel" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/cancle" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/success" element={<PaymentCoordinatorPage />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
-        <Route path="/account" element={<Account />} />   
+        <Route path="/account" element={<Account />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Login />} />
         <Route path="/resetpassword" element={<Login />} />
+        <Route path="/create-password" element={<Login />} />
         <Route path="/authenticate" element={<Authenticate />} />
-        <Route path="/admin/*" element={<AdminRoute isAdmin={isAdmin}>
+        <Route
+          path="/admin/*"
+          element={
+            <AdminRoute isAdmin={isAdmin}>
               <DashboardPage />
-            </AdminRoute> }>
+            </AdminRoute>
+          }
+        >
           <Route path="ManageContracts" element={<ManageContracts />} />
           <Route path="ManageCategoryDish" element={<CategoryDish />} />
           <Route path="ManageDish" element={<DishManager />} />

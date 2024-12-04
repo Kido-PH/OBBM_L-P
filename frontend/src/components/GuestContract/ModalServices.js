@@ -7,6 +7,7 @@ import Modal from "react-bootstrap/Modal";
 import { multiStepContext } from "../../StepContext";
 import serviceApi from "api/serviceApi";
 import guestEventServiceApi from "api/guestEventServicesApi";
+import AudioRecorderWithAPI from "./SpeechToTextInput";
 
 function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
   const {
@@ -149,6 +150,8 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
     console.log("Services còn lại gửi đi API:", updatedEventServicesData);
   };
 
+  const handleSearch = () => {}
+
   // Lấy style cho từng card
   const getCardStyle = (service) => {
     return tempServicesData.some(
@@ -212,28 +215,7 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
             {/* Ô tìm kiếm */}
             <Row lg={2} sm={2} className="d-flex align-items-center">
               <Col className="p-2">
-                <div className="input-group input-group-sm">
-                  <input
-                    className="fs-4 form-control"
-                    placeholder="Tìm kiếm dịch vụ"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                      borderRadius: "0.5rem",
-                      border: "1px solid #ced4da",
-                    }}
-                  />
-                  <button
-                    variant="outline-secondary"
-                    className="btn btn-modal-search"
-                    style={{
-                      borderRadius: "0.5rem",
-                      border: "1px solid #ced4da",
-                    }}
-                  >
-                    <CiSearch size={24} />
-                  </button>
-                </div>
+               <AudioRecorderWithAPI onSearch={handleSearch}/>
               </Col>
             </Row>
 
@@ -294,34 +276,43 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
                 <Card>
                   <Card.Body>
                     <h2>Dịch vụ hiện tại</h2>
-                    <Row lg={1} sm={1}>
-                      {tempServicesData.length > 0 ? (
-                        tempServicesData.map((service, index) => (
-                          <Col key={index} className="p-2">
-                            <Card className="h-100 p-0 card-select">
-                              <Card.Body className="d-flex align-items-center justify-content-between">
-                                <div>
-                                  <Card.Title className="fs-3 mb-0">
-                                    {service.name}{" "}
-                                    <span className="text-success fw-bold mb-0">
-                                      {formatCurrency(service.price)} VND
-                                    </span>
-                                  </Card.Title>
-                                </div>
-                                <Button
-                                  variant="danger"
-                                  onClick={() => handleDeselect(service)}
-                                >
-                                  Bỏ chọn
-                                </Button>
-                              </Card.Body>
-                            </Card>
-                          </Col>
-                        ))
-                      ) : (
-                        <p>Chưa có dịch vụ nào được chọn</p>
-                      )}
-                    </Row>
+                    <div
+                      style={{
+                        maxHeight: "320px", // Chiều cao tối đa
+                        overflowY: "auto", // Kích hoạt cuộn dọc
+                        padding: "1rem", // Thêm khoảng cách bên trong nếu cần
+                      }}
+                    >
+                      <Row lg={1} sm={1}>
+                        {tempServicesData.length > 0 ? (
+                          tempServicesData.map((service, index) => (
+                            <Col key={index} className="p-2">
+                              <Card className="h-100 p-0 card-select">
+                                <Card.Body className="d-flex align-items-center justify-content-between">
+                                  <div>
+                                    <Card.Title className="fs-3 mb-0">
+                                      {service.name}{" "}
+                                      <span className="text-success fw-bold mb-0">
+                                        {formatCurrency(service.price)} VND
+                                      </span>
+                                    </Card.Title>
+                                  </div>
+                                  <Button
+                                    variant="danger"
+                                    onClick={() => handleDeselect(service)}
+                                  >
+                                    Bỏ chọn
+                                  </Button>
+                                </Card.Body>
+                              </Card>
+                            </Col>
+                          ))
+                        ) : (
+                          <p>Chưa có dịch vụ nào được chọn</p>
+                        )}
+                      </Row>
+                    </div>
+
                     <div className="mb-3 d-flex align-items-center">
                       <label className="form-label fw-bold mb-0 me-2 fs-3">
                         Tổng chi phí dịch vụ:

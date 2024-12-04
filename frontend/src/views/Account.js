@@ -44,6 +44,7 @@ const AccountSection = () => {
     citizenIdentity: userDetails.citizenIdentity || "",
     dob: userDetails.dob || "",
   });
+  
 
   const toggleEdit = () => {
     setIsEditing(!isEditing);
@@ -336,7 +337,7 @@ const AccountSection = () => {
                     name="fullname"
                     id="fullname"
                     placeholder="Họ và tên"
-                    className="input-field"
+                    className={`input-field ${isEditing ? "highlight" : ""}`}
                     value={userDetails.fullname}
                     disabled={!isEditing}
                     onChange={(e) => {
@@ -346,7 +347,7 @@ const AccountSection = () => {
                         fullname: fullnameValue,
                       });
                     }}
-                    style={{ border: "1px solid var(--cultured)" }}
+                    // style={{ border: "1px solid var(--cultured)" }}
                   />
 
                   <input
@@ -410,7 +411,8 @@ const AccountSection = () => {
                     }}
                     pattern="\d{10}" // Optional, for additional HTML5 validation
                     title="Please enter a valid 10-digit phone number"
-                    style={{ border: "1px solid var(--cultured)" }}
+                    // style={{ border: "1px solid var(--cultured)" }}
+
                   />
                   <select
                     name="gender"
@@ -500,6 +502,28 @@ const AccountSection = () => {
                   >
                     {isEditing ? "Hủy" : "Chỉnh sửa"}
                   </button>
+                  {userDetails.noPassword && (
+                    <div style={{ textAlign: "left" }}>
+                      <p style={{ display: "inline", marginRight: "4px" }}>
+                        Chú ý: Tài khoản bạn chưa có mật khẩu,
+                      </p>
+                      <button
+                        onClick={() => {navigate("/create-password")}}
+                        style={{
+                          display: "inline",
+                          background: "none",
+                          border: "none",
+                          color: "var(--dark-orange)",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Tạo mật khẩu
+                      </button>
+                    </div>
+                  )}
+
+                  <div className="d-flex justify-content-center align-items-center"></div>
                 </div>
               </form>
             </div>

@@ -7,6 +7,7 @@ import Swal from "sweetalert2";
 import eventApi from "api/eventApi";
 import guestEventServiceApi from "api/guestEventServicesApi";
 import menudishApi from "api/menudishApi";
+import ContractInfo from "components/GuestContract/GuestContractInfo";
 
 export const multiStepContext = React.createContext();
 const StepContext = () => {
@@ -197,6 +198,7 @@ const StepContext = () => {
         }}
       >
         <GuestContract />
+        <ContractInfo />
       </multiStepContext.Provider>
     </div>
   );

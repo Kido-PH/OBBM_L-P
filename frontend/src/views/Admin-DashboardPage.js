@@ -40,6 +40,7 @@ function DashboardPage() {
   const userRole = localStorage.getItem("roles") ? JSON.parse(localStorage.getItem("roles")).name : null;
 
   const menuItems = [
+
     { key: "1", icon: <BarChartOutlined />, label: "TỔNG QUAN", path: "/admin" },
     { key: "2", icon: <FileDoneOutlined />, label: "HỢP ĐỒNG", path: "/admin/ManageContracts" },
     { key: "3", icon: <UnorderedListOutlined />, label: "DANH MỤC MÓN ĂN", path: "/admin/ManageCategoryDish" },
@@ -164,13 +165,13 @@ function DashboardPage() {
           textAlign: "center",
           fontFamily: "circular std book, sans-serif",
           color: "#858796",
-          height: "0px" /* Chiều cao cố định của Footer */,
-          background: colorBgContainer /* Màu nền nhẹ cho Footer */,
-          position: "fixed" /* Cố định Footer */,
+          height: "60px",
+          background: colorBgContainer,
+          position: "fixed",
           bottom: 0,
           width: `calc(100% - ${
             marginLeft + 32
-          }px)` /* Đảm bảo căn giữa với phần content */,
+          }px)`,
           left: marginLeft + 16,
         }}
       >
