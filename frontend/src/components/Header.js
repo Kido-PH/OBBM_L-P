@@ -8,6 +8,7 @@ import { BiUser } from "react-icons/bi";
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import "../assets/css/headerStyle.css";
+import { getToken } from "services/localStorageService";
 
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
@@ -36,7 +37,7 @@ const Header = () => {
         if (adminRole) {
           setIsAdmin(true); // Nếu có vai trò ADMIN, set isAdmin là true
           navigate("/admin"); // Điều hướng đến trang Admin ngay khi đăng nhập nếu là Admin
-        }
+        } 
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
@@ -46,7 +47,7 @@ const Header = () => {
   useEffect(() => {
     // Kiểm tra trạng thái đăng nhập từ localStorage
     const userId = localStorage.getItem("userId");
-    const accessToken = localStorage.getItem("accessToken"); // Lấy token từ localStorage
+    const accessToken = getToken(); // Lấy token từ localStorage
 
     if (accessToken) {
       setIsLoggedIn(true); // Đã đăng nhập
