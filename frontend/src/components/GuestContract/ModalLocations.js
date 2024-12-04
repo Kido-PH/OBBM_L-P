@@ -9,6 +9,7 @@ import guestLocationApi from "../../api/guestLocationApi";
 import FormCreateLocation from "./FormLocationCreate";
 import ModalDelete from "./ModalDelete";
 import FormUpdateLocation from "./FormLocationUpdate";
+import AudioRecorder from "./SpeechToTextInput";
 
 function Example() {
   const { contractData, setContractData } = React.useContext(multiStepContext);
@@ -30,6 +31,9 @@ function Example() {
   const [selectedLocationName, setSelectedLocationName] = React.useState(null);
   const [selectedEditLocation, setSelectedEditLocation] = React.useState(null);
 
+  const [searchResults, setSearchResults] = React.useState([]);
+  const [isSearching, setIsSearching] = React.useState(false);
+
   // Hàm xử lý nhấn nút sửa
   const handleEditClick = (location) => {
     setSelectedEditLocation(location); // Lưu location vào state
@@ -41,7 +45,7 @@ function Example() {
 
   //fetch dữ liệu mặc định cho
   const fetchLocations = async () => {
-    const List = await guestLocationApi.getPage(1, 100);
+    const List = await guestLocationApi.getPage(1, 1000);
 
     setLocationList(List.result.content); //set state
     console.log("List fetch:", List);
@@ -65,7 +69,7 @@ function Example() {
     setUserLocationShow(true);
   };
 
-  const closeModalAll = () => { 
+  const closeModalAll = () => {
     handleClose();
     setUserLocationShow(false);
   };
@@ -106,6 +110,26 @@ function Example() {
     closeModalAll();
   };
 
+  const handleSearch = (value) => {
+    if (!value.trim()) {
+      setIsSearching(false); // Nếu chuỗi rỗng, quay về danh sách gốc
+      return;
+    }
+    const results = locationList.filter((location) =>
+      location.name.toLowerCase().includes(value.toLowerCase())
+    );
+    setSearchResults(results);
+    setIsSearching(true);
+  };
+
+  const locationsToDisplay = isSearching ? searchResults : locationList;
+
+  const formatCurrency = (amount) => {
+    return amount
+      ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+      : "0";
+  };
+
   React.useEffect(() => {
     console.log("Updated contractData:", contractData);
   }, [contractData]);
@@ -122,12 +146,6 @@ function Example() {
       : { width: "100%" /* các thuộc tính mặc định khác */ };
   };
 
-  const formatCurrency = (amount) => {
-    return amount
-      ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
-      : "0";
-  };
-
   React.useEffect(() => {
     fetchLocations();
   }, []);
@@ -136,7 +154,10 @@ function Example() {
     <>
       <div
         className="form-control fs-4 input-hienthi-popup"
-        onClick={() => setLgShow(true)}
+        onClick={() => {
+          setIsSearching(false);
+          setLgShow(true);
+        }}
         style={{ cursor: "pointer" }}
       >
         <p
@@ -164,32 +185,19 @@ function Example() {
         </Modal.Header>
         <Modal.Body>
           <Container>
-            <Row lg={2} sm={2} className="d-flex align-items-center">
+            <Row
+              lg={2}
+              sm={2}
+              className="d-flex align-items-center justify-content-between"
+            >
               <Col className="p-2">
                 <div className="input-group input-group-sm">
-                  <input
-                    className="fs-4 form-control"
-                    placeholder="Search Location"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    style={{
-                      borderRadius: "0.5rem", // Border radius cho ô input
-                      border: "1px solid #ced4da", // Màu viền (tuỳ chọn)
-                    }}
-                  />
-                  <button
-                    variant="outline-secondary"
-                    className="btn btn-modal-search"
-                    style={{
-                      borderRadius: "0.5rem", // Border radius cho nút
-                      border: "1px solid #ced4da", // Màu viền (tuỳ chọn)
-                    }}
-                  >
-                    <CiSearch size={24} />
-                  </button>
+                  <AudioRecorder onSearch={handleSearch} />
                 </div>
               </Col>
-              <Col>
+              <Col className="text-end">
+                {" "}
+                {/* Thêm class text-end */}
                 <button
                   variant="outline-secondary"
                   className="btn btn-modal-search"
@@ -205,51 +213,58 @@ function Example() {
             </Row>
 
             <Row lg={3} sm={2} xs={1}>
-              {locationList
-                .filter((location) => !location.isCustom) // Lọc các phần tử có isCustom = false
-                .map((location, index) => (
-                  <Col key={index} className="p-2">
-                    <Card
-                      className="h-100 card-select"
-                      style={getCardStyle(location)}
-                    >
-                      <Card.Img
-                        variant="top"
-                        style={{ maxWidth: "200px" }}
-                        src={location.locationImage}
-                      />
-                      <Card.Body className="d-flex flex-column">
-                        <Card.Title className="fs-2">
-                          {location.name}
-                        </Card.Title>
-                        <div>
-                          <div>{location.address}</div>{" "}
-                          <div className="text-success fw-bold fs-3">
-                            {formatCurrency(location.cost)} VND
+              {locationsToDisplay.filter((location) => !location.isCustom)
+                .length === 0 ? (
+                <div className="w-100 text-center py-4 fs-4">
+                  Không có địa điểm bạn tìm
+                </div>
+              ) : (
+                locationsToDisplay
+                  .filter((location) => !location.isCustom)
+                  .map((location, index) => (
+                    <Col key={index} className="p-2">
+                      <Card
+                        className="h-100 card-select"
+                        style={getCardStyle(location)}
+                      >
+                        <Card.Img
+                          variant="top"
+                          style={{ maxWidth: "300px", height: 150 }}
+                          src={location.image}
+                        />
+                        <Card.Body className="d-flex flex-column">
+                          <Card.Title className="fs-2">
+                            {location.name}
+                          </Card.Title>
+                          <div>
+                            <div>{location.address}</div>{" "}
+                            <div className="text-success fw-bold fs-3">
+                              {formatCurrency(location.cost)} VND
+                            </div>
+                            <div>Sức chứa: {location.capacity} người</div>
                           </div>
-                          <div>Sức chứa: {location.capacity} người</div>
-                        </div>
 
-                        <Button
-                          variant="primary"
-                          onClick={() => handleSelect(location)}
-                          className="mt-auto"
-                        >
-                          {selectedLocation &&
-                          selectedLocation.locationId === location.locationId
-                            ? "Đã chọn"
-                            : "Chọn"}
-                        </Button>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                ))}
+                          <Button
+                            variant="primary"
+                            onClick={() => handleSelect(location)}
+                            className="mt-auto"
+                          >
+                            {selectedLocation &&
+                            selectedLocation.locationId === location.locationId
+                              ? "Đã chọn"
+                              : "Chọn"}
+                          </Button>
+                        </Card.Body>
+                      </Card>
+                    </Col>
+                  ))
+              )}
             </Row>
           </Container>
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={handleClose}>
-            Close
+            Đóng
           </Button>
         </Modal.Footer>
       </Modal>
@@ -271,7 +286,7 @@ function Example() {
                 <div className="input-group input-group-sm">
                   <input
                     className="fs-4 form-control"
-                    placeholder="Search Location"
+                    placeholder="Tìm kiếm địa điểm của bạn"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     style={{
@@ -370,7 +385,7 @@ function Example() {
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={userLocationClose}>
-            Close
+            Đóng
           </Button>
         </Modal.Footer>
       </Modal>

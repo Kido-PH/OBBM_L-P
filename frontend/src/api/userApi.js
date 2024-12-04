@@ -19,6 +19,10 @@ const userApi = {
     const url = axios.post(
       `http://localhost:8080/obbm/auth/refresh`, refreshToken
     );
+  createPassword(password) {
+    const url = `/users/create-password`;
+    return axiosClient.post(url, password);
+
   }
 };
 

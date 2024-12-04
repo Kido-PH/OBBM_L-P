@@ -7,9 +7,13 @@ import { GiKnifeFork } from "react-icons/gi";
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import "../assets/css/headerStyle.css";
+
 import { FiLogOut } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 import { AiFillLock } from "react-icons/ai";
+
+import { getToken } from "services/localStorageService";
+
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -37,6 +41,7 @@ const Header = () => {
           (role) => role.name === "ADMIN" || role.name === "STAFF"
         );
         if (adminRole) {
+
           setIsAdmin(true);
           localStorage.setItem("isAdmin", true); // Lưu trạng thái vào localStorage
           localStorage.setItem("roles", JSON.stringify(adminRole));
@@ -45,6 +50,7 @@ const Header = () => {
           setIsAdmin(false);
           localStorage.setItem("isAdmin", false); // Nếu không phải Admin
         }
+
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
@@ -54,7 +60,7 @@ const Header = () => {
   useEffect(() => {
     // Kiểm tra trạng thái đăng nhập từ localStorage
     const userId = localStorage.getItem("userId");
-    const accessToken = localStorage.getItem("accessToken"); // Lấy token từ localStorage
+    const accessToken = getToken(); // Lấy token từ localStorage
 
     if (accessToken) {
       setIsLoggedIn(true); // Đã đăng nhập

@@ -35,9 +35,9 @@ const ManageContracts = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
   const [totalElements, setTotalElements] = useState(0);
-
   const [selectedContractStatus, setSelectedContractStatus] = useState("");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
+
 
   useEffect(() => {
     fetchContractWithPaginate(page + 1, rowsPerPage);
@@ -301,7 +301,6 @@ const ManageContracts = () => {
             <TableRow>
               <TableCell>STT</TableCell>
               <TableCell>Tên hợp đồng</TableCell>
-              <TableCell>Loại tiệc</TableCell>
               <TableCell>Tổng chi phí</TableCell>
               <TableCell>
                 <Box display="flex" alignItems="center">
@@ -346,7 +345,6 @@ const ManageContracts = () => {
               <TableRow key={contract.contractId}>
                 <TableCell>{index + 1}</TableCell>
                 <TableCell>{contract.name}</TableCell>
-                <TableCell>{contract.type}</TableCell>
                 <TableCell>
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
@@ -404,9 +402,6 @@ const ManageContracts = () => {
                 <TableCell
                   sx={{
                     display: "flex",
-                    gap: 1,
-                    flexWrap: "nowrap",
-                    position: "sticky",
                     right: 0,
                     backgroundColor: "white",
                     zIndex: 1,

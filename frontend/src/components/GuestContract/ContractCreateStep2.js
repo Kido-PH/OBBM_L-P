@@ -26,6 +26,8 @@ const ContractCreateStep2 = () => {
   const [totalServicesCost, setTotalServicesCost] = React.useState(0);
 
   const [guestPerTable, setGuestPerTable] = React.useState(10);
+  const [minTableCount, setMinTableCount] = React.useState(0);
+
   const [showModalMenu, setShowModalMenu] = React.useState(false);
 
   // const getCurrentMenuDishes = () => {
@@ -53,19 +55,17 @@ const ContractCreateStep2 = () => {
   React.useEffect(() => {
     const guestCount = parseInt(contractData.guest) || 0; // Số khách mặc định là 0 nếu không nhập
     const guestPerTableLocal = guestPerTable || 1; // Số khách trên một bàn mặc định là 1
-    const tableCount = Math.ceil(guestCount / guestPerTableLocal); // Chia cho số khách trên một bàn và làm tròn lên
-    setContractData((prevData) => ({
-      ...prevData,
-      table: tableCount,
-    }));
-  }, [contractData.guest, guestPerTable, setContractData]); // Theo dõi khi `guest` hoặc `guestPerTable` thay đổi
+    const minTableCount = Math.ceil(guestCount / guestPerTableLocal); // Tính số bàn tối thiểu
+
+    setMinTableCount(minTableCount); // Gán giá trị tối thiểu (không set trực tiếp vào contractData)
+  }, [contractData.guest, guestPerTable]);
 
   React.useEffect(() => {
     const guestCount = parseInt(contractData.guest) || 0;
     const menuCost = parseInt(createdMenu.totalcost);
 
     //set total cost của contract
-    const totalMenuCost = menuCost * guestCount;
+    const totalMenuCost = menuCost * (guestPerTable * contractData.table);
     setTotalMenuCost(totalMenuCost);
 
     const totalCost =
@@ -82,7 +82,14 @@ const ContractCreateStep2 = () => {
       ...contractData,
       totalCost: totalCost,
     });
-  }, [contractData.guest, setContractData, location?.cost, totalServicesCost]);
+  }, [
+    setContractData,
+    location?.cost,
+    totalServicesCost,
+    guestPerTable,
+    contractData.guest,
+    contractData.table,
+  ]);
 
   React.useEffect(() => {
     fetchEvent();
@@ -141,7 +148,8 @@ const ContractCreateStep2 = () => {
     contractData.guest !== undefined &&
     contractData.guest > 10 &&
     contractData.locationId !== undefined &&
-    contractData.organizdate !== undefined;
+    contractData.organizdate !== undefined &&
+    !Number.isNaN(contractData.totalcost);
 
   return (
     <div>
@@ -279,16 +287,29 @@ const ContractCreateStep2 = () => {
             <div className="col">
               <div className="mb-3">
                 <label className="form-label fw-bold">Số bàn</label>
-                <div
+                <span className="text-danger d-inline-block">*</span>
+                <input
                   type="number"
                   name="table"
                   id="table"
-                  className="form-control input-hienthi fs-4"
-                  readOnly // Để chỉ đọc
+                  className="form-control input-hienthi-popup fs-4"
+                  value={contractData.table}
+                  min={minTableCount} // Đặt giá trị tối thiểu
+                  max={1000} // Đặt giá trị tối thiểu
+                  readOnly={false} // Cho phép chỉnh sửa nếu cần
+                  placeholder={minTableCount}
                   required
-                >
-                  {contractData["table"]}
-                </div>
+                  onChange={(e) => {
+                    const value = Math.max(
+                      parseInt(e.target.value) || 0,
+                      minTableCount
+                    ); // Không cho nhập nhỏ hơn minTableCount
+                    setContractData((prevData) => ({
+                      ...prevData,
+                      table: value,
+                    }));
+                  }}
+                />
               </div>
             </div>
           </div>
@@ -363,6 +384,13 @@ const ContractCreateStep2 = () => {
             >
               Tiếp theo
             </button>
+            <p
+              className="text-secondary fw-bold"
+              style={{ textAlign: "left", marginBottom: "0px" }}
+            >
+              Lưu ý: Nhập số bàn và chọn số người / bàn để tính tổng giá trị
+              thực đơn.
+            </p>
           </div>
         </Form>
       </Card>

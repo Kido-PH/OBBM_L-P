@@ -19,6 +19,8 @@ import ctabanner from "../assets/images/hero-banner-bg.png";
 import danhMucApi from "../api/danhMucApi";
 import eventApi from "../api/eventApi.js";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { getToken, setToken } from "../services/localStorageService";
+import LoadingPage from "./LoadingPage";
 
 const blogPosts = [
   {
@@ -114,9 +116,10 @@ const banners = [
 ];
 
 const Content = () => {
+  const [loading, setLoading] = React.useState(false);
+
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const currentToken = localStorage.getItem("accessToken");
   const [categories, setCategories] = useState([]);
   const [activeCategoryId, setActiveCategoryId] = useState(2); // Gán mặc định là 2
   const [filteredCategories, setFilteredCategories] = useState([]);
@@ -130,21 +133,25 @@ const Content = () => {
   }, [EventToMenuUrl, navigate]);
 
   React.useEffect(() => {
-    if (currentToken) {
-      const ham = async () => {
-        const response = await fetch(
-          `http://localhost:8080/obbm/users/myInfo`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${currentToken}`,
-            },
-          }
-        );
-        const data = await response.json();
-        localStorage.setItem("userId", data?.result?.userId); // Kiểm tra dữ liệu trả về
-      };
-      ham();
+    const accessToken = getToken();
+    if (accessToken) {
+      setLoading(false);
+      if (accessToken) {
+        const ham = async () => {
+          const response = await fetch(
+            `http://localhost:8080/obbm/users/myInfo`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+          const data = await response.json();
+          localStorage.setItem("userId", data?.result?.userId); // Kiểm tra dữ liệu trả về
+        };
+        ham();
+      }
     }
   }, []);
 
@@ -194,6 +201,7 @@ const Content = () => {
   };
   return (
     <div>
+      {loading && <LoadingPage />}
       <main>
         <article>
           <section className="hero" id="home">
