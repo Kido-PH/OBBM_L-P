@@ -19,6 +19,8 @@ import ctabanner from "../assets/images/hero-banner-bg.png";
 import danhMucApi from "../api/danhMucApi";
 import eventApi from "../api/eventApi.js";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
+import { getToken, setToken } from "../services/localStorageService";
+import LoadingPage from "./LoadingPage";
 
 const blogPosts = [
   {
@@ -114,9 +116,10 @@ const banners = [
 ];
 
 const Content = () => {
+  const [loading, setLoading] = React.useState(false);
+
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
-  const currentToken = localStorage.getItem("accessToken");
   const [categories, setCategories] = useState([]);
   const [activeCategoryId, setActiveCategoryId] = useState(2); // Gán mặc định là 2
   const [filteredCategories, setFilteredCategories] = useState([]);
@@ -130,21 +133,25 @@ const Content = () => {
   }, [EventToMenuUrl, navigate]);
 
   React.useEffect(() => {
-    if (currentToken) {
-      const ham = async () => {
-        const response = await fetch(
-          `http://localhost:8080/obbm/users/myInfo`,
-          {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${currentToken}`,
-            },
-          }
-        );
-        const data = await response.json();
-        localStorage.setItem("userId", data?.result?.userId); // Kiểm tra dữ liệu trả về
-      };
-      ham();
+    const accessToken = getToken();
+    if (accessToken) {
+      setLoading(false);
+      if (accessToken) {
+        const ham = async () => {
+          const response = await fetch(
+            `http://localhost:8080/obbm/users/myInfo`,
+            {
+              method: "GET",
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+          const data = await response.json();
+          localStorage.setItem("userId", data?.result?.userId); // Kiểm tra dữ liệu trả về
+        };
+        ham();
+      }
     }
   }, []);
 
@@ -161,7 +168,16 @@ const Content = () => {
     fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
     fetchEvent();
   }, [activeCategoryId]);
-
+  const handleScroll = (direction, categoryId) => {
+    const menuList = document.querySelector(`#category-${categoryId} .food-menu-list`);
+    const scrollAmount = 120; // Số pixel muốn cuộn mỗi lần
+    if (direction === "left") {
+      menuList.scrollLeft -= scrollAmount;
+    } else if (direction === "right") {
+      menuList.scrollLeft += scrollAmount;
+    }
+  };
+  
   const handleFilter = (categoryId) => {
     const filtered = categories.filter(
       (category) => category.categoryId === categoryId
@@ -185,6 +201,7 @@ const Content = () => {
   };
   return (
     <div>
+      {loading && <LoadingPage />}
       <main>
         <article>
           <section className="hero" id="home">
@@ -391,29 +408,25 @@ const Content = () => {
               </ul>
 
               {filteredCategories.map((category) => (
-                <div
-                  key={category.categoryId}
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <ul className="food-menu-list">
-                    {category.listDish.slice(0, 6).map(
-                      (
-                        dish // Limit to the first 6 dishes
-                      ) => (
-                        <li key={dish.dishId}>
-                          <div className="food-menu-card">
-                            <div className="card-banner-home-dish">
-                              <img
-                                src={dish.image}
-                                alt={dish.name}
-                                style={{ width: "100%", height: "120px" }}
-                                loading="lazy"
-                                className="w-100"
-                              />
+  <div key={category.categoryId} style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <button
+          className="scroll-btn left"
+          onClick={() => handleScroll("left", category.categoryId)}
+        >
+          &lt;
+        </button>
+    <ul className="food-menu-list">
+      {category.listDish.slice(0, 6).map((dish) => (  // Limit to the first 6 dishes
+        <li key={dish.dishId}>
+          <div className="food-menu-card">
+            <div className="card-banner-home-dish">
+              <img
+                src={dish.image}
+                alt={dish.name}
+                style={{ width: "100%", height: "120px" }}
+                loading="lazy"
+                className="w-100"
+              />
 
                               <button className="btn food-menu-btn">
                                 <a href="/menu">Thêm vào Thực đơn</a>
@@ -435,13 +448,19 @@ const Content = () => {
               <p className="price-text">Giá:</p>
               {dish.price.toLocaleString()} VND
             </div> */}
-                          </div>
-                        </li>
-                      )
-                    )}
-                  </ul>
-                </div>
-              ))}
+          </div>
+        </li>
+      ))}
+    </ul>
+    <button
+          className="scroll-btn right"
+          onClick={() => handleScroll("right", category.categoryId)}
+        >
+          &gt;
+        </button>
+  </div>
+))}
+
             </div>
           </section>
 
