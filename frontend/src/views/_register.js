@@ -75,10 +75,10 @@ const RegisterForm = ({ toggleForm }) => {
 
   return (
     <div className="login-form" id="registerForm">
-      <h1>Register</h1>
+      <h1>Đăng ký</h1>
       <form id="registerForm" method="post" onSubmit={handleRegister}>
         <div id="registerStep1">
-          <input type="text" placeholder="Username"
+          <input type="text" placeholder="Tên đăng nhập"
           name="username"
           required
           style={{ height: "41.2px" }}
@@ -93,7 +93,7 @@ const RegisterForm = ({ toggleForm }) => {
           onChange={(e) => setEmail(e.target.value)} />
           <input
             type="button"
-            value="Receive Code"
+            value="Nhận mã xác thực"
             onClick={goToRegisterStep2}
           />
         </div>
@@ -109,7 +109,7 @@ const RegisterForm = ({ toggleForm }) => {
           /> */}
           <input
         type="password"
-        placeholder="Password"
+        placeholder="Mật khẩu"
         name="password"
         required
         style={{ height: "41.2px" }}
@@ -121,7 +121,7 @@ const RegisterForm = ({ toggleForm }) => {
       />
       <input
         type="password"
-        placeholder="Confirm Password"
+        placeholder="Xác nhận mật khẩu"
         name="confirm-password"
         required
         value={confirmPassword}
@@ -131,7 +131,7 @@ const RegisterForm = ({ toggleForm }) => {
         }}
       />
       {error && <p style={{ color: "red", fontSize: "14px" }}>{error}</p>}
-          <input type="submit" value="Register" />
+          <input type="submit" value="Đăng ký" />
         </div>
       </form>
       {/* <div className="social-login">
@@ -139,7 +139,7 @@ const RegisterForm = ({ toggleForm }) => {
         <a href="#" className="facebook-login">Sign up with Facebook</a>
       </div> */}
       <div className="register-link" onClick={() => toggleForm("login")}>
-        Return to Login
+        Về đăng nhập
       </div>
     </div>
   );

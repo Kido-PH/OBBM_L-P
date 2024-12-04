@@ -19,6 +19,8 @@ import {
   Box,
   Tooltip,
   TablePagination,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 
 import dishApi from "../../api/dishApi";
@@ -61,6 +63,24 @@ const DishManager = () => {
   const [detailPopupOpen, setDetailPopupOpen] = useState(false); // State mở/đóng popup
   const [selectedDish, setSelectedDish] = useState(null); // Lưu món ăn được chọn
   const [allIngredients, setAllIngredients] = useState([]);
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   const handleViewDetails = (dish) => {
     setSelectedDish(dish); // Gán món ăn được chọn
@@ -175,26 +195,70 @@ const DishManager = () => {
     setDishId(null); // Clear dish id sau khi sửa hoặc thêm
   };
 
-  const handleChange = (e) => {
-    const { type, name, value, files } = e.target;
-
+  const handleChange = async (e) => {
+    const {type, name, files, value} = e.target;
+  
     // Xử lý ảnh
     if (name === "image" && files && files.length > 0) {
       const file = files[0];
-
+  
       // Tạo URL tạm thời cho ảnh (preview)
       const imagePreviewUrl = URL.createObjectURL(file);
-
+  
+      // Cập nhật ảnh vào state để hiển thị preview
       setDishData({
         ...dishData,
         image: imagePreviewUrl,
       });
+  
+      try {
+        // Tạo FormData để gửi file
+        const formData = new FormData();
+        formData.append('file', file);
+  
+        // Gửi yêu cầu lên API để tải ảnh lên
+        const response = await fetch('http://localhost:8080/obbm/upload/image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: formData, // Đưa formData vào body
+        });
+  
+        const data = await response.json();
+        console.log('Response Data:', data);
+  
+        if (response.ok) {
+          console.log("Upload thành công:", data);
 
-      // Xóa lỗi nếu người dùng chọn ảnh
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        image: undefined,
-      }));
+          // Lấy URL từ API Cloudinary
+          const imageUrl = data.result;  // Kết quả trả về là URL của ảnh đã được upload
+
+          // Cập nhật URL ảnh trả về từ server vào dishData
+          setDishData({
+            ...dishData,
+            image: imageUrl, // Lấy URL ảnh từ trường fileUrl của API
+          });
+  
+          // Xóa lỗi nếu ảnh được tải lên thành công
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            image: undefined,
+          }));
+        } else {
+          console.error("Lỗi tải ảnh:", data);
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            image: 'Không thể tải ảnh lên',
+          }));
+        }
+      } catch (error) {
+        console.error('Lỗi tải ảnh:', error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          image: 'Không thể tải ảnh lên',
+        }));
+      } 
     } else {
       // Xử lý các trường khác
       setDishData({
@@ -202,35 +266,35 @@ const DishManager = () => {
         [name]: type === "number" ? Number(value) : value,
       });
 
-      // Xóa lỗi nếu người dùng nhập đúng
-      if (typeof value === "string" && value.trim() !== "") {
+       // Xóa lỗi nếu người dùng nhập đúng
+       if (typeof value === "string" && value.trim() !== "") {
         setErrors((prevErrors) => ({
           ...prevErrors,
           [name]: undefined,
         }));
       }
     }
-
+  
     // Xóa lỗi khi người dùng nhập dữ liệu hợp lệ
     setErrors((prevErrors) => {
       const updatedErrors = { ...prevErrors };
-
+  
       if (name === "name" && value.trim()) {
         updatedErrors.name = "";
       }
-
+  
       if (name === "price" && value && Number(value) > 0) {
         updatedErrors.price = "";
       }
-
+  
       if (name === "categoryId" && value) {
         updatedErrors.categoryId = "";
       }
-
+  
       return updatedErrors;
     });
   };
-
+  
 
   const handleAddDish = async () => {
     try {
@@ -241,7 +305,7 @@ const DishManager = () => {
 
       const response = await dishApi.add(dishData);
 
-      toast.success("Món ăn đã được thêm thành công!");
+      showSuccess("Món ăn đã được thêm thành công!");
 
       console.log("Món ăn mới thêm:", response.result);
 
@@ -321,7 +385,7 @@ const DishManager = () => {
       // Gửi yêu cầu PUT để cập nhật món ăn
       await dishApi.update(dishId, updatedDishData);
 
-      toast.success("Món ăn đã được cập nhật thành công!");
+      showSuccess("Món ăn đã được cập nhật thành công!");
 
       // Lấy lại danh sách món ăn của trang hiện tại
       fetchDishesWithPaginate(page);
@@ -364,7 +428,7 @@ const DishManager = () => {
       await dishApi.delete(dishToDelete.dishId);
 
       // Hiển thị thông báo thành công
-      toast.success("Món ăn đã được xóa thành công!");
+      showSuccess("Món ăn đã được xóa thành công!");
 
       fetchDishesWithPaginate(page);
     } catch (error) {
@@ -392,6 +456,22 @@ const DishManager = () => {
 
   return (
     <Box>
+      <Snackbar
+        open={snackBarOpen}
+        onClose={handleCloseSnackBar}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackBar}
+          severity={snackType}
+          variant="filled"
+          sx={{ width: "100%", fontSize: "1.5rem" }}
+        >
+          {snackBarMessage}
+        </Alert>
+      </Snackbar>
+
       <Toaster position="top-center" reverseOrder={false} />
       {/* Ô tìm kiếm */}
       <div className="admin-toolbar">

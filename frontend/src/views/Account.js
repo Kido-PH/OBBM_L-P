@@ -17,10 +17,12 @@ import {
 } from "@mui/material";
 
 import { logOut } from "../services/authenticationService";
+import Swal from "sweetalert2";
 const AccountSection = () => {
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState(null);
   const [userDetails, setUserDetails] = useState({
+    fullname: "",
     gender: null,
   });
   const [password, setPassword] = useState("");
@@ -76,6 +78,8 @@ const AccountSection = () => {
 
     setUserDetails(data.result);
   };
+
+  
 
   const handleFile = (event) => {
     const file = event.target.files[0];
@@ -207,7 +211,6 @@ const AccountSection = () => {
     // Chuẩn bị dữ liệu cần gửi
     const updatedData = {
       fullname: document.getElementById("fullname").value,
-      username: document.getElementById("user_name").value,
       email: document.getElementById("email_address").value,
       phone: document.getElementById("phone").value,
       residence: document.getElementById("address").value,
@@ -215,6 +218,7 @@ const AccountSection = () => {
       gender: document.getElementById("gender").value,
       citizenIdentity: document.getElementById("IdCard").value,
     };
+    console.log("data gửi đi API:", updatedData);
 
     try {
       const response = await fetch(
@@ -231,10 +235,22 @@ const AccountSection = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert("Cập nhật thông tin thành công!");
+        Swal.fire({
+          icon: "success",
+          title: "Thành công",
+          text: "Cập nhật thông tin thành công",
+          timer: 2000,
+          showConfirmButton: true,
+        });
         console.log(data);
       } else {
-        alert("Cập nhật không thành công.");
+        Swal.fire({
+          icon: "error",
+          title: "Thất bại",
+          text: "Lỗi không rõ",
+          timer: 2000,
+          showConfirmButton: true,
+        });
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin:", error);
@@ -254,9 +270,16 @@ const AccountSection = () => {
   };
 
   const handleLogout = (event) => {
+    // Clear all data in localStorage
+    localStorage.clear();
+  
+    // Call your logout function if you have one
     logOut();
+  
+    // Redirect the user to the login page
     window.location.href = "/login";
   };
+  
   return (
     <main style={{ marginTop: "50px" }}>
       {userDetails ? (
@@ -283,10 +306,6 @@ const AccountSection = () => {
                   <p className="footer-list-title account-form-title">
                     Thông tin cá nhân
                   </p>
-                  <button
-                    type="button"
-                    className="edit-profile-btn navbar-link bi bi-pencil-square"
-                  ></button>
                 </div>
 
                 <div className="input-wrapper">
@@ -297,11 +316,8 @@ const AccountSection = () => {
                     placeholder="Your Name"
                     aria-label="Full Name:"
                     className="input-field"
-                    disabled={!isEditing}
                     value={userDetails.fullname || ""}
-                    onChange={(e) =>
-                      setFormData({ ...formData, fullname: e.target.value })
-                    }
+                    disabled={!isEditing}
                   />
                   <input
                     type="text"
@@ -313,6 +329,7 @@ const AccountSection = () => {
                     className="input-field"
                     value={userDetails.username || ""}
                     disabled={!isEditing}
+                    
                   />
                 </div>
                 <div className="input-wrapper">
@@ -337,6 +354,7 @@ const AccountSection = () => {
                     className="input-field"
                     value={userDetails.phone || ""}
                     disabled={!isEditing}
+                    onChange={(e) => setUserDetails({ ...userDetails, phone: e.target.value })}
                   />
                 </div>
 
@@ -370,7 +388,6 @@ const AccountSection = () => {
                     id="gender"
                     style={{ height: "40px" }}
                     className="input-field"
-                    onChange={handleGenderChange} // Gọi hàm khi người dùng chọn giới tính
                     value={
                       userDetails.gender === null
                         ? ""

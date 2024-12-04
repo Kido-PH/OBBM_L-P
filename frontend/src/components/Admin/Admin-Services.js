@@ -34,6 +34,7 @@ const ServiceManager = () => {
     name: "",
     type: "",
     price: 0,
+    image: "",
     description: "",
     status: true,
   });
@@ -90,7 +91,7 @@ const ServiceManager = () => {
   };
 
   // Xử lý thay đổi input
-  const handleInputChange = (e) => {
+  const handleInputChange = async (e) => {
     const { type, name, value, files } = e.target;
 
     // Xử lý ảnh
@@ -100,16 +101,62 @@ const ServiceManager = () => {
       // Tạo URL tạm thời cho ảnh (preview)
       const imagePreviewUrl = URL.createObjectURL(file);
 
+      // Cập nhật ảnh vào state để hiển thị prview
       setCurrentService({
         ...currentService,
         image: imagePreviewUrl,
       });
 
-      // Xóa lỗi nếu người dùng chọn ảnh
-      setErrors((prevErrors) => ({
-        ...prevErrors,
-        image: undefined,
-      }));
+      try {
+        // Tạo FormData để gửi file
+        const formData = new FormData();
+        formData.append('file', file);
+
+        // Gửi yêu cầu lên API để tải ảnh lên
+        const response = await fetch('http://localhost:8080/obbm/upload/image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: formData, // Đưa formData vào body
+        });
+
+        const data = await response.json();
+        console.log('Response Data:', data);
+
+        if(response.ok) {
+          console.log("Upload thành công: ", data);
+
+          // Lấy URL từ API Cloudinary
+          const imageUrl = data.result; // Kết quả trả về là URL của ảnh đã được upload
+
+          // Cập nhật URL ảnh trả về từ server vào currentService
+          setCurrentService({
+            ...currentService,
+            image: imageUrl, // Lấy URL ảnh từ trường fileUrl của API
+          })
+
+          // Xóa lỗi nếu người dùng chọn ảnh
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          image: undefined,
+        }));
+
+        } else {
+          console.error("Lỗi tải ảnh:", data);
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            image: 'Không thể tải ảnh lên',
+          }));
+        }
+
+      } catch (error) {
+        console.error('Lỗi tải ảnh:', error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          image: 'Không thể tải ảnh lên',
+        }));
+      } 
     } else {
       // Xử lý các trường khác
       setCurrentService({

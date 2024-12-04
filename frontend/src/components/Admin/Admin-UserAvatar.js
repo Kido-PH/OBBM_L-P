@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Avatar, Dropdown, Modal, Button, Input, message, Divider } from "antd";
+import { Avatar, Dropdown, Modal, Button, Input, message, Divider, Row, Col, Select } from "antd";
 import {
   SettingOutlined,
   LogoutOutlined,
@@ -9,6 +9,8 @@ import {
   EditOutlined,
   SolutionOutlined,
 } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
+import { EmailOutlined } from "@mui/icons-material";
 
 const AdminUserAvatar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -17,6 +19,8 @@ const AdminUserAvatar = () => {
     userId: "",
     username: "",
     fullname: "",
+    gender: null,
+    residence: "",
     dob: "",
     email: "",
     phone: "",
@@ -26,6 +30,7 @@ const AdminUserAvatar = () => {
     roles: [],
   });
   const [editData, setEditData] = useState({});
+  const navigate = useNavigate(); // Khai báo hook navigate
 
   // Fetch thông tin người dùng từ API
   const fetchUserData = async () => {
@@ -63,6 +68,8 @@ const AdminUserAvatar = () => {
           image: result.image,
           password: result.noPassword,
           citizenIdentity: result.citizenIdentity,
+          gender: result.gender,
+          residence: result.residence,
           roles: result.roles || [],
         });
       } else {
@@ -82,6 +89,9 @@ const AdminUserAvatar = () => {
       fullname: userData.fullname,
       phone: userData.phone,
       dob: userData.dob,
+      email: userData.email,
+      gender: userData.gender,
+      residence: userData.residence,
     });
     setIsEditing(true);
   };
@@ -95,28 +105,31 @@ const AdminUserAvatar = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const userId = userData.userId;
-
-      // Kiểm tra nếu không có `token`
+  
       if (!token) {
         throw new Error("Token không tồn tại trong sessionStorage.");
       }
-
+  
       const formattedDob = new Date(editData.dob || userData.dob)
         .toISOString()
         .split("T")[0];
-
-      // Chuẩn bị `request body`
+  
+      // Chuẩn bị request body
       const requestBody = {
         fullname: editData.fullname || userData.fullname,
+        gender: editData.gender === true ? 1 : 0, // Chuyển true => 1 (Nam), false => 0 (Nữ)
+        residence: editData.residence || userData.residence,
+        email: editData.email || userData.email,
+        phone: editData.phone || userData.phone,
+        image: editData.image || userData.image,
+        citizenIdentity: userData.citizenIdentity,
         dob: formattedDob,
-        roles: userData.roles.map((role) => role.name),
-        password: userData.noPassword || "admin",
       };
-
+  
       console.log("Request Body:", requestBody);
-
+  
       const response = await fetch(
-        `http://localhost:8080/obbm/users/${userId}`,
+        `http://localhost:8080/obbm/users/user/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -126,23 +139,26 @@ const AdminUserAvatar = () => {
           body: JSON.stringify(requestBody),
         }
       );
-
-      // Kiểm tra trạng thái của phản hồi
+  
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-
+  
       const data = await response.json();
       console.log("Phản hồi API:", data);
-
-      // Nếu phản hồi thành công
+  
       if (response.ok) {
         message.success("Cập nhật thông tin thành công.");
         setUserData((prev) => ({
           ...prev,
           fullname: requestBody.fullname,
           dob: requestBody.dob,
-          password: requestBody.password,
+          gender: requestBody.gender === 1, // Convert từ 1 thành true (Nam), 0 thành false (Nữ)
+          residence: requestBody.residence,
+          email: requestBody.email,
+          image: requestBody.image,
+          citizenIdentity: requestBody.citizenIdentity,
+          phone: requestBody.phone,
         }));
         setIsEditing(false);
       } else {
@@ -152,10 +168,44 @@ const AdminUserAvatar = () => {
       message.error("Không thể cập nhật thông tin.");
     }
   };
+  
 
   const handleInputChange = (e, field) => {
     setEditData((prev) => ({ ...prev, [field]: e.target.value }));
   };
+
+  // Hàm xử lý logout
+  const handleLogout = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+
+      // Nếu không có token
+      if(!token) {
+        message.error("Không tìm thấy token.");
+        return;
+      }
+
+      const response = await fetch("http://localhost:8080/obbm/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if(response.ok) {
+        // Xóa token và điều hướng tới trang đăng nhập
+        localStorage.removeItem("accessToken");
+        message.success("Đăng xuất thành công.");
+        navigate("/login");
+      } else {
+        message.error("Đăng xuất thất bại.");
+      }
+
+    } catch (error) {
+      message.error("Đã xảy ra lỗi khi đăng xuất.");
+    }
+  }
 
   return (
     <>
@@ -165,9 +215,9 @@ const AdminUserAvatar = () => {
             {
               key: "settings",
               icon: <SettingOutlined />,
-              label: "Account Settings",
+              label: "Cài đặt tài khoản",
             },
-            { key: "logout", icon: <LogoutOutlined />, label: "Logout" },
+            { key: "logout", icon: <LogoutOutlined />, label: "Đăng xuất" },
           ],
           onClick: (e) => {
             if (e.key === "settings") {
@@ -199,6 +249,7 @@ const AdminUserAvatar = () => {
         open={isSettingsOpen}
         onCancel={() => setIsSettingsOpen(false)}
         footer={null}
+        width={1000}  // Tăng độ rộng modal
       >
         <Divider />
 
@@ -212,61 +263,119 @@ const AdminUserAvatar = () => {
             style={{
               marginRight: 16,
               cursor: "pointer",
-              width: "50px",
-              height: "50px",
+              width: "100px",
+              height: "100px",
             }}
           />
           <div>
-            <h3>{userData.fullname}</h3>
+            <h1>{userData.fullname}</h1>
             <p style={{ color: "gray" }}>Thông tin tài khoản</p>
           </div>
         </div>
 
         {/* Form chỉnh sửa thông tin người dùng */}
         <div style={{ marginBottom: 20 }}>
-          <div style={{ marginBottom: 10 }}>
-            <span>
-              <UserSwitchOutlined /> Họ và tên:
-            </span>
-            {isEditing ? (
-              <Input
-                value={editData.fullname}
-                onChange={(e) => handleInputChange(e, "fullname")}
-                style={{ marginTop: 5 }}
-              />
-            ) : (
-              <span style={{ marginLeft: 10 }}>{userData.fullname}</span>
-            )}
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <span>
-              <PhoneOutlined /> Số điện thoại:
-            </span>
-            {isEditing ? (
-              <Input
-                value={editData.phone}
-                onChange={(e) => handleInputChange(e, "phone")}
-                style={{ marginTop: 5 }}
-                disabled
-              />
-            ) : (
-              <span style={{ marginLeft: 10 }}>{userData.phone}</span>
-            )}
-          </div>
-          <div style={{ marginBottom: 10 }}>
-            <span>
-              <SolutionOutlined /> Ngày tháng năm sinh:
-            </span>
-            {isEditing ? (
-              <Input
-                value={editData.dob}
-                onChange={(e) => handleInputChange(e, "dob")}
-                style={{ marginTop: 5 }}
-              />
-            ) : (
-              <span style={{ marginLeft: 10 }}>{userData.dob}</span>
-            )}
-          </div>
+          <Row gutter={16}>
+            <Col span={12}>
+              <div style={{ marginBottom: 10 }}>
+                <span>
+                  <UserSwitchOutlined /> Họ và tên:
+                </span>
+                {isEditing ? (
+                  <Input
+                    value={editData.fullname}
+                    onChange={(e) => handleInputChange(e, "fullname")}
+                    style={{ marginTop: 5 }}
+                  />
+                ) : (
+                  <span style={{ marginLeft: 10 }}>{userData.fullname}</span>
+                )}
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ marginBottom: 10 }}>
+                <span>
+                  <PhoneOutlined /> Số điện thoại:
+                </span>
+                {isEditing ? (
+                  <Input
+                    value={editData.phone}
+                    onChange={(e) => handleInputChange(e, "phone")}
+                    style={{ marginTop: 5 }}
+                  />
+                ) : (
+                  <span style={{ marginLeft: 10 }}>{userData.phone}</span>
+                )}
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ marginBottom: 10 }}>
+                <span>
+                  <SolutionOutlined /> Ngày tháng năm sinh:
+                </span>
+                {isEditing ? (
+                  <Input
+                    value={editData.dob}
+                    onChange={(e) => handleInputChange(e, "dob")}
+                    style={{ marginTop: 5 }}
+                  />
+                ) : (
+                  <span style={{ marginLeft: 10 }}>{userData.dob}</span>
+                )}
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ marginBottom: 10 }}>
+                <span>
+                  <EmailOutlined /> Email:
+                </span>
+                {isEditing ? (
+                  <Input
+                    value={editData.email}
+                    onChange={(e) => handleInputChange(e, "email")}
+                    style={{ marginTop: 5 }}
+                  />
+                ) : (
+                  <span style={{ marginLeft: 10 }}>{userData.email}</span>
+                )}
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ marginBottom: 10 }}>
+                <span>
+                  <UserOutlined /> Giới tính:
+                </span>
+                {isEditing ? (
+                  <Select
+                    value={editData.gender} 
+                    onChange={(value) => handleInputChange({ target: { value } }, "gender")}
+                    style={{ marginTop: 5 }}
+                  >
+                    <Select.Option value={true}>Nam</Select.Option>
+                    <Select.Option value={false}>Nữ</Select.Option>
+                  </Select>
+                ) : (
+                  <span style={{ marginLeft: 10 }}>{userData.gender === true ? "Nam" : "Nữ"}</span>
+                )}
+              </div>
+            </Col>
+            <Col span={12}>
+              <div style={{ marginBottom: 10 }}>
+                <span>
+                  <SolutionOutlined /> Nơi cư trú:
+                </span>
+                {isEditing ? (
+                  <Input
+                    value={editData.residence}
+                    onChange={(e) => handleInputChange(e, "residence")}
+                    style={{ marginTop: 5 }}
+                  />
+                ) : (
+                  <span style={{ marginLeft: 10 }}>{userData.residence}</span>
+                )}
+              </div>
+            </Col>
+          </Row>
         </div>
 
         {isEditing ? (

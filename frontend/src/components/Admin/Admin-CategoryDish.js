@@ -16,6 +16,8 @@ import {
   Box,
   Tooltip,
   TablePagination,
+  Snackbar,
+  Alert,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -40,6 +42,24 @@ const CategoryDish = () => {
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [nameError, setNameError] = useState("");
   const [descriptionError, setDescriptionError] = useState("");
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
@@ -109,7 +129,7 @@ const CategoryDish = () => {
       setCategories((prevCategories) => [response.result, ...prevCategories]);
 
       // Show success message
-      toast.success("Danh mục đã được thêm thành công!");
+      showSuccess("Danh mục đã được thêm thành công!");
 
       handleClose();
     } catch (error) {
@@ -185,7 +205,7 @@ const CategoryDish = () => {
         fetchDanhMucWithPaginate(page);
 
         // Hiển thị toast thông báo chỉnh sửa thành công
-        toast.success("Danh mục đã được chỉnh sửa thành công!");
+        showSuccess("Danh mục đã được chỉnh sửa thành công!");
 
         handleClose(); // Đóng modal sau khi sửa xong
       } catch (error) {
@@ -217,7 +237,7 @@ const CategoryDish = () => {
       // Tải lại danh mục ở trang hiện tại
       fetchDanhMucWithPaginate(page);
 
-      toast.success("Danh mục đã được xóa thành công!");
+      showSuccess("Danh mục đã được xóa thành công!");
 
       setCurrentIndex(null); // Đặt lại currentIndex sau khi xóa xong
     } catch (error) {
@@ -261,7 +281,22 @@ const CategoryDish = () => {
 
   return (
     <Box>
-      <Toaster position="top-center" reverseOrder={false} />
+      <Snackbar
+        open={snackBarOpen}
+        onClose={handleCloseSnackBar}
+        autoHideDuration={6000}
+        anchorOrigin={{ vertical: "top", horizontal: "right" }}
+      >
+        <Alert
+          onClose={handleCloseSnackBar}
+          severity={snackType}
+          variant="filled"
+          sx={{ width: "100%", fontSize: "1.5rem" }}
+        >
+          {snackBarMessage}
+        </Alert>
+      </Snackbar>
+      {/* <Toaster position="top-center" reverseOrder={false} /> */}
       <div className="admin-toolbar">
         {/* Ô tìm kiếm */}
         <div className="admin-group">

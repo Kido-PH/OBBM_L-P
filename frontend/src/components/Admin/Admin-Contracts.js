@@ -38,7 +38,6 @@ const ManageContracts = () => {
   const [selectedContractStatus, setSelectedContractStatus] = useState("");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
 
-
   useEffect(() => {
     fetchContractWithPaginate(page + 1, rowsPerPage);
   }, [page, rowsPerPage]);
@@ -47,7 +46,7 @@ const ManageContracts = () => {
   const fetchContractWithPaginate = async (page, rowsPerPage) => {
     try {
       const res = await contractApi.getPaginate(page, rowsPerPage);
-      setContracts(res.result?.content);
+      setContracts(res.result?.content.reverse());
       setTotalElements(res.result?.totalElements);
       console.log(res.result?.content);
     } catch (error) {
@@ -73,6 +72,8 @@ const ManageContracts = () => {
         return "Trả trước 70%";
       case "Paid":
         return "Đã thanh toán";
+      case "Cancelled":
+        return "Đã hủy";
       default:
         return status; // Nếu không có giá trị hợp lệ, trả lại trạng thái gốc
     }
@@ -82,33 +83,30 @@ const ManageContracts = () => {
   const handleConfirmContract = async (contract) => {
     // Kiểm tra trạng thái hợp đồng "Chờ duyệt" và "Chưa thanh toán"
     if (contract.status === "Pending" && contract.paymentstatus === "Unpaid") {
-      toast.error("Hợp đồng chưa được thanh toán, không thể kích hoạt.");
-      return;
+      contract.status = "Approved";
+      toast.success("Hợp đồng đã được phê duyệt thành công.")
     }
-  
-    // Kiểm tra trạng thái "Chờ duyệt" với thanh toán trước một phần (50% hoặc 70%)
-    if (contract.status === "Pending" && (contract.paymentstatus === "Prepay 50%" || contract.paymentstatus === "Prepay 70%")) {
+
+    // Kiểm tra trạng thái "Đã duyệt" với thanh toán trước một phần (50% hoặc 70%)
+    if (
+      contract.status === "Approved" &&
+      (contract.paymentstatus === "Prepay 50%" ||
+        contract.paymentstatus === "Prepay 70%")
+    ) {
       contract.status = "Actived"; // Đổi trạng thái thành "Đang hoạt động"
-      toast.success(`Hợp đồng đã được kích hoạt với phần trăm thanh toán: ${translateStatus(contract.paymentstatus)}`);
+      toast.success(
+        `Hợp đồng đã được kích hoạt với phần trăm thanh toán: ${translateStatus(
+          contract.paymentstatus
+        )}`
+      );
     }
-  
+
     // Trường hợp hợp đồng "Đã duyệt" và "Đã thanh toán"
-    else if (contract.status === "Approved" && contract.paymentstatus === "Paid") {
+    if (contract.status === "Actived" && contract.paymentstatus === "Paid") {
       contract.status = "Completed"; // Đổi trạng thái thành "Đã hoàn thành"
       toast.success("Hợp đồng đã được xác nhận và hoàn thành!");
     }
-  
-    // Trường hợp hợp đồng đã hoàn thành và đã thanh toán đầy đủ
-    else if (contract.status === "Completed" && contract.paymentstatus === "Paid") {
-      toast.success("Hợp đồng đã hoàn thành và đã được xác nhận trước đó!");
-    }
-  
-    // Trường hợp không thỏa mãn các điều kiện trên
-    else {
-      toast.error("Phải thanh toán đầy đủ hoặc hợp đồng phải được duyệt mới có thể xác nhận!");
-      return;
-    }
-  
+
     // Chuẩn bị dữ liệu gửi lên API để cập nhật
     const data = {
       name: contract.name,
@@ -127,18 +125,24 @@ const ManageContracts = () => {
       eventId: contract.events.eventId,
       menuId: contract.menus.menuId,
     };
-  
+
     console.log("Dữ liệu gửi lên API:", data);
-  
+
     try {
       // Gọi API PUT để cập nhật hợp đồng
       const res = await contractApi.update(contract.contractId, data);
       console.log("Phản hồi từ API:", res);
-      
+
       // Kiểm tra mã trạng thái trả về từ server
       if (res.code === 1000) {
-        fetchContractWithPaginate(page); // Làm mới danh sách hợp đồng sau khi cập nhật
-        toast.success("Cập nhật hợp đồng thành công!");
+       // Cập nhật lại dữ liệu hợp đồng trong state để không cần tải lại trang
+      setContracts((prevContracts) =>
+        prevContracts.map((contractItem) =>
+          contractItem.contractId === contract.contractId
+            ? { ...contractItem, status: contract.status, paymentstatus: contract.paymentstatus }
+            : contractItem
+        )
+      );
       } else {
         toast.error("Cập nhật hợp đồng không thành công. Vui lòng thử lại.");
       }
@@ -150,7 +154,6 @@ const ManageContracts = () => {
       toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
     }
   };
-  
 
   // Hàm hủy hợp đồng
   const handleCancelContract = async (contract) => {
@@ -194,7 +197,7 @@ const ManageContracts = () => {
         contract.paymentstatus.toLowerCase().includes(searchTerm.toLowerCase())
       : true;
 
-    const matchesContractStatus = selectedContractStatus
+      const matchesContractStatus = selectedContractStatus
       ? contract.status.toLowerCase() === selectedContractStatus.toLowerCase()
       : true;
 
@@ -359,6 +362,17 @@ const ManageContracts = () => {
                           ? "#17a2b8"
                           : "#dc3545",
                       fontWeight: "bold",
+                      backgroundColor:
+              contract.status === "Completed"
+                ? "#28a7451a" // Màu xanh nhẹ cho "Đã hoàn thành"
+                : contract.status === "Pending"
+                ? "#ffc1071a" // Màu vàng nhẹ cho "Chờ duyệt"
+                : contract.status === "Actived"
+                ? "#17a2b81a" // Màu xanh dương nhẹ cho "Đang hoạt động"
+                : "#dc35451a", // Màu đỏ nhẹ cho "Đã hủy"
+            padding: "3px 8px", // Thêm padding cho các thẻ trạng thái
+            borderRadius: "5px", // Bo tròn các góc để mềm mại
+            display: "inline-block",
                     }}
                   >
                     {translateStatus(contract.status)}{" "}
@@ -377,6 +391,17 @@ const ManageContracts = () => {
                           ? "#ff851b"
                           : "#dc3545",
                       fontWeight: "bold",
+                      backgroundColor:
+              contract.paymentstatus === "Paid"
+                ? "#28a7451a" // Màu xanh nhẹ cho "Đã thanh toán"
+                : contract.paymentstatus === "Prepay 50%"
+                ? "#ffc1071a" // Màu vàng nhẹ cho "Trả trước 50%"
+                : contract.paymentstatus === "Prepay 70%"
+                ? "#ff851b1a" // Màu cam nhẹ cho "Trả trước 70%"
+                : "#dc35451a", // Màu đỏ nhẹ cho "Chưa thanh toán"
+            padding: "3px 8px", // Thêm padding cho các thẻ thanh toán
+            borderRadius: "5px", // Bo tròn các góc
+            display: "inline-block",
                     }}
                   >
                     {translateStatus(contract.paymentstatus)}{" "}
@@ -542,9 +567,15 @@ const ManageContracts = () => {
         </DialogTitle>
 
         <DialogContent
-          className="custom-input"
           dividers
-          sx={{ width: "600px" }}
+          style={{
+            width: "100%", // Chiều rộng tự động (cho phép nó co giãn)
+            maxWidth: "793px", // Chiều rộng tối đa (tương đương với chiều rộng A4)
+            maxHeight: "1122px", // Chiều cao tối đa (tương đương với chiều cao A4)
+            aspectRatio: "793 / 1122", // Tỉ lệ của giấy A4
+            padding: "16px", // Padding cho nội dung
+            margin: "0 auto", // Canh giữa
+          }}
         >
           <div
             id="contract-content"

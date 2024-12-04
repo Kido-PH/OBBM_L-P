@@ -7,12 +7,16 @@ import {
   CardContent,
   Tabs,
   Tab,
-  FormControl,
-  Select,
-  MenuItem,
   IconButton,
   Button,
   Modal,
+  TextField,
+  TableHead,
+  TableRow,
+  TableCell,
+  TableBody,
+  MenuItem,
+  FormControl,
 } from "@mui/material";
 import { Bar } from "react-chartjs-2";
 import {
@@ -30,10 +34,12 @@ import {
 import WarningIcon from "@mui/icons-material/Warning";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
-import LaptopIcon from "@mui/icons-material/Laptop";
-import CloseIcon from "@mui/icons-material/Close";
-import CheckCircleIcon from "@mui/icons-material/CheckCircle"; // Icon cho nút Xác nhận
-import LogoutIcon from "@mui/icons-material/Logout"; // Icon cho nút Đăng xuất
+// import LaptopIcon from "@mui/icons-material/Laptop";
+// import CloseIcon from "@mui/icons-material/Close";
+// import CheckCircleIcon from "@mui/icons-material/CheckCircle"; 
+// import LogoutIcon from "@mui/icons-material/Logout"; 
+import { DatePicker, message, Select, Table } from "antd";
+import SearchIcon from "@mui/icons-material/Search";
 
 // Đăng ký các thành phần của biểu đồ
 ChartJS.register(
@@ -52,91 +58,202 @@ const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth");
   const [openModal, setOpenModal] = useState(false);
+  const [pendingContracts, setPendingContracts] = useState([]);
 
   const handleOpenModal = () => setOpenModal(true);
   const handleCloseModal = () => setOpenModal(false);
+
+  // Định nghĩa state cho ngày bắt đầu và ngày kết thúc
+  const [startDate, setStartDate] = useState(null);
+  const [endDate, setEndDate] = useState(null);
+  const [apiData, setApiData] = useState({
+    activePaid: { count: 0, total: 0 },
+    completedToday: { count: 0, total: 0 },
+    revenueByDay: {},
+    cancelled: { count: 0, total: 0 },
+    pendingApproval: { count: 0, total: 0 },
+  });
+
+  const handleDateChange = (field, value) => {
+    if (field === "start") {
+      setStartDate(value);
+    } else {
+      setEndDate(value);
+    }
+  };
+
+  // Hàm gọi API để lấy tất cả hợp đồng
+  const handlePendingClick = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/obbm/contract?page=1&size=100", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+  
+      const data = await response.json();
+      console.log("Dữ liệu hợp đồng:", data);
+  
+      if (data.code === 1000) {
+        const pendingContracts = data.result?.content?.filter(contract => contract.status === "Pending");
+  
+        console.log("Hợp đồng chờ duyệt:", pendingContracts); // Kiểm tra lại hợp đồng
+  
+        if (pendingContracts.length > 0) {
+          setPendingContracts(pendingContracts); // Cập nhật state hợp đồng chờ duyệt
+          setOpenModal(true); // Mở modal
+        } else {
+          message.info("Không có hợp đồng chờ duyệt.");
+        }
+      } else {
+        message.error("Không thể lấy dữ liệu hợp đồng.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu hợp đồng:", error);
+      message.error("Có lỗi khi lấy dữ liệu hợp đồng.");
+    }
+  };
+  
+  // Gửi API khi chọn ngày
+  const fetchDataByDateRange = async () => {
+    if (!startDate || !endDate) {
+      message.error("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc.");
+      return;
+    }
+
+    try {
+      // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
+      const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
+      const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
+
+      // Gửi yêu cầu GET với query parameters
+      const response = await fetch(
+        `http://localhost:8080/obbm/contract/statistics?startDate=${startDateFormatted}&endDate=${endDateFormatted}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      console.log("Dữ liệu thống kê: ", data);
+
+      // Cập nhật state với dữ liệu trả về từ API
+      if (data.code === 1000) {
+        setApiData(data.result);
+      } else {
+        message.error("Không thể tải dữ liệu.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu:", error);
+      message.error("Có lỗi xảy ra khi lấy dữ liệu.");
+    }
+  };
 
   const handleTimeRangeChange = (event) => {
     setSelectedTimeRange(event.target.value);
   };
 
   // Dữ liệu mẫu cho từng tab
-  const dailyRevenueData = {
-    labels: ["01", "02", "03", "04", "05", "06", "07"],
-    datasets: [
-      {
-        label: "Doanh thu (VND)",
-        data: [3000000, 2500000, 4000000, 3500000, 4200000, 5000000, 6000000],
-        backgroundColor: "rgba(0, 123, 255, 0.8)", // Màu xanh nước biển
-        borderColor: "rgba(0, 123, 255, 1)",
-        borderWidth: 1,
-        barThickness: 50, // Điều chỉnh độ rộng của cột
-      },
-      {
-        label: "Số lượng hợp đồng",
-        data: [3, 5, 6, 4, 7, 8, 5],
-        type: "line",
-        borderColor: "rgba(0, 123, 255, 1)",
-        backgroundColor: "rgba(0, 123, 255, 0.2)",
-        borderWidth: 2,
-        pointBackgroundColor: "rgba(0, 123, 255, 1)",
-      },
-    ],
-  };
+  // const dailyRevenueData = {
+  //   labels: ["01", "02", "03", "04", "05", "06", "07"],
+  //   datasets: [
+  //     {
+  //       label: "Doanh thu (VND)",
+  //       data: [3000000, 2500000, 4000000, 3500000, 4200000, 5000000, 6000000],
+  //       backgroundColor: "rgba(0, 123, 255, 0.8)", // Màu xanh nước biển
+  //       borderColor: "rgba(0, 123, 255, 1)",
+  //       borderWidth: 1,
+  //       barThickness: 50, // Điều chỉnh độ rộng của cột
+  //     },
+  //     {
+  //       label: "Số lượng hợp đồng",
+  //       data: [3, 5, 6, 4, 7, 8, 5],
+  //       type: "line",
+  //       borderColor: "rgba(0, 123, 255, 1)",
+  //       backgroundColor: "rgba(0, 123, 255, 0.2)",
+  //       borderWidth: 2,
+  //       pointBackgroundColor: "rgba(0, 123, 255, 1)",
+  //     },
+  //   ],
+  // };
 
-  const hourlyRevenueData = {
-    labels: ["8:00", "10:00", "11:00", "12:00", "13:00"], // Theo các giờ trong ngày
-    datasets: [
-      {
-        label: "Doanh thu (VND)",
-        data: [500000, 800000, 1000000, 750000, 900000],
-        borderColor: "rgba(0, 123, 255, 1)",
-        borderWidth: 1,
-        barThickness: 50, // Điều chỉnh độ rộng của cột
-      },
-      {
-        label: "Số lượng hợp đồng",
-        data: [1, 2, 3, 2, 3],
-        type: "line",
-        borderColor: "rgba(0, 123, 255, 1)",
-        backgroundColor: "rgba(0, 123, 255, 0.2)",
-        borderWidth: 2,
-        pointBackgroundColor: "rgba(0, 123, 255, 1)",
-      },
-    ],
-  };
+  // const hourlyRevenueData = {
+  //   labels: ["8:00", "10:00", "11:00", "12:00", "13:00"], // Theo các giờ trong ngày
+  //   datasets: [
+  //     {
+  //       label: "Doanh thu (VND)",
+  //       data: [500000, 800000, 1000000, 750000, 900000],
+  //       borderColor: "rgba(0, 123, 255, 1)",
+  //       borderWidth: 1,
+  //       barThickness: 50, // Điều chỉnh độ rộng của cột
+  //     },
+  //     {
+  //       label: "Số lượng hợp đồng",
+  //       data: [1, 2, 3, 2, 3],
+  //       type: "line",
+  //       borderColor: "rgba(0, 123, 255, 1)",
+  //       backgroundColor: "rgba(0, 123, 255, 0.2)",
+  //       borderWidth: 2,
+  //       pointBackgroundColor: "rgba(0, 123, 255, 1)",
+  //     },
+  //   ],
+  // };
 
-  const weeklyRevenueData = {
-    labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"], // Theo các thứ trong tuần
+  // const weeklyRevenueData = {
+  //   labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"], // Theo các thứ trong tuần
+  //   datasets: [
+  //     {
+  //       label: "Doanh thu (VND)",
+  //       data: [
+  //         10000000, 15000000, 12000000, 18000000, 16000000, 17000000, 20000000,
+  //       ],
+  //       borderColor: "rgba(0, 123, 255, 1)",
+  //       borderWidth: 1,
+  //       barThickness: 50, // Điều chỉnh độ rộng của cột
+  //     },
+  //     {
+  //       label: "Số lượng hợp đồng",
+  //       data: [10, 12, 15, 17, 13, 18, 20],
+  //       type: "line",
+  //       borderColor: "rgba(0, 123, 255, 1)",
+  //       backgroundColor: "rgba(0, 123, 255, 0.2)",
+  //       borderWidth: 2,
+  //       pointBackgroundColor: "rgba(0, 123, 255, 1)",
+  //     },
+  //   ],
+  // };
+
+  const revenueByDay = apiData?.revenueByDay || {};
+
+  const chartData = {
+    labels: Object.keys(revenueByDay).map(date => date.split("-")[2].padStart(2, '0'))
+    .sort((a, b) => a - b),
     datasets: [
       {
         label: "Doanh thu (VND)",
-        data: [
-          10000000, 15000000, 12000000, 18000000, 16000000, 17000000, 20000000,
-        ],
+        data: Object.values(revenueByDay).sort((a, b) => a - b), 
+        backgroundColor: "rgba(0, 123, 255, 0.8)",
         borderColor: "rgba(0, 123, 255, 1)",
         borderWidth: 1,
-        barThickness: 50, // Điều chỉnh độ rộng của cột
-      },
-      {
-        label: "Số lượng hợp đồng",
-        data: [10, 12, 15, 17, 13, 18, 20],
-        type: "line",
-        borderColor: "rgba(0, 123, 255, 1)",
-        backgroundColor: "rgba(0, 123, 255, 0.2)",
-        borderWidth: 2,
-        pointBackgroundColor: "rgba(0, 123, 255, 1)",
+        barThickness: 50,
       },
     ],
   };
 
   // Chọn dữ liệu dựa trên tab đang chọn
-  const revenueData =
-    activeTab === 0
-      ? dailyRevenueData
-      : activeTab === 1
-      ? hourlyRevenueData
-      : weeklyRevenueData;
+  // const revenueData =
+  //   activeTab === 0
+  //     ? dailyRevenueData
+  //     : activeTab === 1
+  //     ? hourlyRevenueData
+  //     : weeklyRevenueData;
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -144,6 +261,48 @@ const AdminAnalytics = () => {
 
   return (
     <Grid container spacing={2} sx={{ minHeight: "100vh" }}>
+
+<Modal
+  open={openModal}
+  onClose={handleCloseModal}
+  title="Danh sách hợp đồng đang chờ duyệt"
+  sx={{
+    width: "80%",
+    maxHeight: "80vh",
+    overflowY: "auto",
+    margin: "0 auto",
+  }}
+>
+  <Box sx={{ padding: "20px" }}>
+    {console.log("Rendering contracts:", pendingContracts)} {/* Log dữ liệu trước khi render */}
+
+    {pendingContracts && pendingContracts.length > 0 ? (
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>Số hợp đồng</TableCell>
+            <TableCell>Ngày tạo</TableCell>
+            <TableCell>Số tiền</TableCell>
+            <TableCell>Trạng thái</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {pendingContracts.map((contract) => (
+            <TableRow key={contract.contractId}>
+              <TableCell>{contract.contractId}</TableCell>
+              <TableCell>{contract.organizdate}</TableCell>
+              <TableCell>{contract.totalcost.toLocaleString()} VND</TableCell>
+              <TableCell>{contract.status}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    ) : (
+      <Typography>Không có hợp đồng chờ duyệt.</Typography>
+    )}
+  </Box>
+</Modal>
+
       {/* Cột bên trái - Phần biểu đồ và dashboard */}
       <Grid item xs={9}>
         <Box
@@ -185,7 +344,9 @@ const AdminAnalytics = () => {
                     variant="h5"
                     sx={{ fontWeight: "bold", color: "#1976d2" }}
                   >
-                    {Math.max(...revenueData.datasets[0].data).toLocaleString()}{" "}
+                    {apiData?.activePaid?.total
+                      ? apiData.activePaid.total.toLocaleString()
+                      : "0"}{" "}
                     VND
                   </Typography>
                 </CardContent>
@@ -199,6 +360,7 @@ const AdminAnalytics = () => {
                   borderRadius: "8px",
                   boxShadow: 1,
                 }}
+                onClick={handlePendingClick}  // Gọi hàm khi click vào thẻ
               >
                 <CardContent
                   sx={{
@@ -215,7 +377,7 @@ const AdminAnalytics = () => {
                     variant="h5"
                     sx={{ fontWeight: "bold", color: "#1976d2" }}
                   >
-                    {Math.max(...revenueData.datasets[1].data)} hợp đồng
+                    {apiData?.pendingApproval?.count} hợp đồng
                   </Typography>
                 </CardContent>
               </Card>
@@ -244,7 +406,7 @@ const AdminAnalytics = () => {
                     variant="h5"
                     sx={{ fontWeight: "bold", color: "#d32f2f" }}
                   >
-                    0 hợp đồng
+                    {apiData?.cancelled?.count} hợp đồng
                   </Typography>
                 </CardContent>
               </Card>
@@ -266,8 +428,91 @@ const AdminAnalytics = () => {
               variant="h5"
               sx={{ marginBottom: "10px", fontWeight: "bold" }}
             >
-              Doanh thu thuần tháng này
+              Doanh thu theo ngày
             </Typography>
+
+            {/* Lọc từ ngày bắt đầu đến ngày kết thúc */}
+            <Box
+              sx={{
+                marginBottom: "20px",
+                display: "flex",
+                gap: "16px",
+                position: "absolute",
+                top: "6px",
+                right: "250px",
+                alignItems: "center",
+              }}
+            >
+              <Grid container spacing={2} sx={{ alignItems: "center" }}>
+                {/* Cột cho ngày bắt đầu */}
+                <Grid item>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#1976d2",
+                      fontWeight: "bold",
+                      fontSize: "11px",
+                    }}
+                  >
+                    Từ ngày
+                  </Typography>
+                  <DatePicker
+                    size="small"
+                    value={startDate}
+                    onChange={(date) => handleDateChange("start", date)}
+                    renderInput={(params) => <TextField {...params} />}
+                    sx={{
+                      width: 160, // Đảm bảo chiều rộng cố định
+                      fontSize: "1rem",
+                      borderRadius: "5px",
+                    }}
+                  />
+                </Grid>
+
+                {/* Cột cho ngày kết thúc */}
+                <Grid item>
+                  <Typography
+                    variant="caption"
+                    sx={{
+                      color: "#1976d2",
+                      fontWeight: "bold",
+                      fontSize: "11px",
+                    }}
+                  >
+                    Đến ngày
+                  </Typography>
+                  <DatePicker
+                    size="small"
+                    value={endDate}
+                    onChange={(date) => handleDateChange("end", date)}
+                    renderInput={(params) => <TextField {...params} />}
+                    sx={{
+                      width: 160, // Đảm bảo chiều rộng cố định
+                      fontSize: "1rem",
+                      borderRadius: "5px",
+                    }}
+                  />
+                </Grid>
+
+                {/* Nút lọc */}
+                <Grid item>
+                  <IconButton
+                    onClick={fetchDataByDateRange}
+                    sx={{
+                      backgroundColor: "#1976d2", // Màu nền cho button
+                      color: "#fff", // Màu icon
+                      padding: "12px 30px",
+                      height: "22px",
+                      marginTop: "17px",
+                      borderRadius: "5px",
+                      "&:hover": { backgroundColor: "#1565c0" },
+                    }}
+                  >
+                    <SearchIcon />
+                  </IconButton>
+                </Grid>
+              </Grid>
+            </Box>
 
             {/* Combobox chọn thời gian */}
             <FormControl
@@ -315,13 +560,13 @@ const AdminAnalytics = () => {
               sx={{ marginBottom: "10px" }}
             >
               <Tab label="Theo ngày" sx={{ fontSize: "1rem" }} />
-              <Tab label="Theo giờ" sx={{ fontSize: "1rem" }} />
-              <Tab label="Theo thứ" sx={{ fontSize: "1rem" }} />
+              {/* <Tab label="Theo giờ" sx={{ fontSize: "1rem" }} />
+              <Tab label="Theo thứ" sx={{ fontSize: "1rem" }} /> */}
             </Tabs>
 
             <Box sx={{ width: "100%", height: "350px" }}>
               <Bar
-                data={revenueData}
+                data={chartData}
                 options={{
                   maintainAspectRatio: false,
                   responsive: true,
@@ -330,8 +575,8 @@ const AdminAnalytics = () => {
                       const index = element[0].index;
                       alert(
                         `Chi tiết doanh thu cho ${
-                          revenueData.labels[index]
-                        }: ${revenueData.datasets[0].data[
+                          chartData.labels[index]
+                        }: ${chartData.datasets[0].data[
                           index
                         ].toLocaleString()} VND`
                       );
@@ -673,132 +918,7 @@ const AdminAnalytics = () => {
                 </Typography>
               </Box>
             </Box>
-          </Box>
-
-          {/* Modal hiển thị chi tiết đăng nhập bất thường */}
-          <Modal
-            open={openModal}
-            onClose={handleCloseModal}
-            aria-labelledby="modal-title"
-            aria-describedby="modal-description"
-          >
-            <Box
-              sx={{
-                maxWidth: 500,
-                margin: "100px auto",
-                padding: "20px",
-                backgroundColor: "#fff",
-                borderRadius: "8px",
-                boxShadow: 24,
-                position: "relative",
-              }}
-            >
-              {/* Nút đóng modal (dấu X) */}
-              <IconButton
-                onClick={handleCloseModal}
-                sx={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                  color: "#000",
-                }}
-              >
-                <CloseIcon />
-              </IconButton>
-
-              <Typography
-                id="modal-title"
-                variant="h6"
-                sx={{
-                  fontWeight: "bold",
-                  marginBottom: "10px",
-                  fontSize: "1.3rem",
-                }}
-              >
-                Kiểm tra hoạt động đăng nhập
-              </Typography>
-              <Typography
-                id="modal-description"
-                sx={{ marginBottom: "20px", fontSize: "1.25rem" }}
-              >
-                Chúng tôi nhận thấy một lượt đăng nhập mới vào gian hàng từ
-                thiết bị lạ. Bạn có nhận ra hoạt động này?
-              </Typography>
-
-              {/* Thông tin đăng nhập */}
-              <Box
-                sx={{
-                  display: "flex",
-                  alignItems: "center",
-                  marginBottom: "20px",
-                  padding: "15px",
-                  border: "1px solid #e0e0e0",
-                  borderRadius: "8px",
-                  backgroundColor: "#f9f9f9",
-                }}
-              >
-                <LaptopIcon sx={{ fontSize: "40px", marginRight: "10px" }} />
-                <Box>
-                  <Typography
-                    variant="body1"
-                    sx={{ fontWeight: "bold", fontSize: "1.25rem" }}
-                  >
-                    0394920946
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontSize: "1.25rem" }}>
-                    Máy tính Windows
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    sx={{ fontSize: "1.25rem" }}
-                  >
-                    07/11/2024 22:32
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="textSecondary"
-                    sx={{ fontSize: "1.25rem" }}
-                  >
-                    Chrome
-                  </Typography>
-                </Box>
-              </Box>
-
-              {/* Nút hành động */}
-              <Box
-                sx={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  gap: "8px",
-                }}
-              >
-                <Button
-                  variant="contained"
-                  color="success"
-                  onClick={handleCloseModal}
-                  sx={{
-                    fontSize: "0.95rem",
-                    backgroundColor: "#4CAF50",
-                    padding: "6px 16px",
-                    marginLeft: "220px",
-                  }}
-                  startIcon={<CheckCircleIcon />}
-                >
-                  Xác nhận
-                </Button>
-                <Button
-                  variant="outlined"
-                  color="secondary"
-                  onClick={handleCloseModal}
-                  sx={{ fontSize: "0.95rem", padding: "6px 16px" }}
-                  startIcon={<LogoutIcon />}
-                >
-                  Đăng xuất
-                </Button>
-              </Box>
-            </Box>
-          </Modal>
+          </Box>         
         </Box>
       </Grid>
     </Grid>
