@@ -41,6 +41,7 @@ function DashboardPage() {
 
   const menuItems = [
 
+
     { key: "1", icon: <BarChartOutlined />, label: "TỔNG QUAN", path: "/admin" },
     { key: "2", icon: <FileDoneOutlined />, label: "HỢP ĐỒNG", path: "/admin/ManageContracts" },
     { key: "3", icon: <UnorderedListOutlined />, label: "DANH MỤC MÓN ĂN", path: "/admin/ManageCategoryDish" },
