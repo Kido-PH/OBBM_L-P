@@ -57,7 +57,7 @@
 .listfood-category {
   margin-bottom: 30px; /* Khoảng cách giữa các danh mục món ăn */
   padding-top: 20px;
-  margin-left: 50px;
+  margin-left: 30px;
 }
 
 .listfood-category h2 {
@@ -100,7 +100,7 @@
   width: 100%;
   height: 150px;
   border-radius: 20px !important;
-  padding-left: 0px !important; 
+  padding: 10px !important; 
 }
 
 
@@ -117,7 +117,7 @@
   padding: 5px; /* Khoảng cách bên trong ô tìm kiếm */
   border: 1px solid #ccc; /* Đường viền */
   border-radius: 4px; /* Bo góc cho ô tìm kiếm */
-  width: 200px; /* Chiều rộng của ô tìm kiếm */
+  width: 300px; /* Chiều rộng của ô tìm kiếm */
   height: 80%;
   font-size: 20px;
 }
@@ -156,10 +156,10 @@
 }
 
 .food-item {
-  margin-right: 25px;
-  margin-left: 16px;  
+  /* margin-right: 25px;
+  margin-left: 16px;   */
   flex: 1 1 calc(23% - 10px); /* Đảm bảo món chiếm đúng 20% */
-  max-width: calc(20% - 10px); /* Giới hạn tối đa chiều rộng */
+  max-width: calc(23% - 10px); /* Giới hạn tối đa chiều rộng */
   box-sizing: border-box; /* Đảm bảo padding không làm tăng kích thước */
   list-style: none;
   text-align: center;
