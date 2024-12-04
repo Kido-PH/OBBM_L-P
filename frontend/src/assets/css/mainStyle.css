@@ -629,7 +629,7 @@ body.active { overflow: hidden; }
 }
 
 .promo-item {
-  min-width: 100%;
+  /* min-width: 100%; */
   scroll-snap-align: start;
 }
 
@@ -1248,7 +1248,7 @@ body.active { overflow: hidden; }
 .input-field {
   color: var(--spanish-gray);
   font-size: var(--fs-4);
-  border: 1px solid var(--cultured);
+  /* border: 1px solid var(--cultured); */
   padding: 8px 12px;
 }
 
@@ -1289,6 +1289,69 @@ textarea.input-field {
  * responsive for larger than 480px screen
  */
 
+ .input-field.highlight {
+  background-color: hsl(33deg 100% 98.06%); /* Màu nền nhạt để nổi bật */
+  font-weight: bold; /* Chữ đậm */
+  border: 1px solid hsl(32, 100%, 59%); /* Đường viền nổi bật */
+}
+
+ @media (max-width: 430px) {
+  .promo{
+    margin-top: 150px !important;
+  }
+  .filter-btn{
+    font-size: 13px;
+  }
+  .footer-top{
+    margin-left: 20px;
+    margin-right: 20px;
+  }
+  .food-menu-list {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto; /* Hiển thị thanh cuộn ngang khi cần */
+    padding-bottom: 10px;
+  }
+
+  .food-menu-card {
+    width: 160px; /* Thu nhỏ kích thước món ăn */
+    margin-right: 10px;
+  }
+
+  .card-banner-home-dish img {
+    height: 100px; /* Thu nhỏ hình ảnh món ăn */
+  }
+
+  .scroll-btn {
+    display: block; /* Hiển thị các nút điều hướng */
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: white;
+    border: none;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 1;
+  }
+
+  .scroll-btn.left {
+    left: 0;
+  }
+
+  .scroll-btn.right {
+    right: 0;
+  }
+}
+.food-menu-card .card-title {
+  white-space: nowrap; /* Ngăn không cho chữ xuống dòng */
+  overflow: hidden; /* Ẩn phần văn bản vượt quá chiều rộng */
+  text-overflow: ellipsis; /* Hiển thị dấu ba chấm '...' khi văn bản bị cắt */
+  width: 100%; /* Hoặc set width cụ thể nếu cần */
+  text-align: center; /* Căn giữa nếu cần */
+  display: block; /* Đảm bảo element chiếm không gian đầy đủ */
+}
+
 @media (min-width: 480px) {
 
   /**
@@ -1300,6 +1363,8 @@ textarea.input-field {
     --bg-color: var(--dark-orange);
     align-items: center;
   }
+
+  
   
 }
 

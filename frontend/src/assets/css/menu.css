@@ -17,6 +17,30 @@
   
 }
 
+.promo-list-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.scroll-button {
+  background-color: transparent;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #333;
+}
+
+.scroll-button:hover {
+  color: hsl(32, 100%, 59%);
+}
+
+.promo-list {
+  display: flex;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
 
 
 .menu-item:last-child {
