@@ -34,7 +34,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   const filteredCategories = categories.filter(
     (category) => category.categoryId === categoryId
   );
-
+  
   const handleSearch = (value) => {
     setIsSearching(true);
     if (!value.trim()) {
@@ -63,7 +63,6 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
       }`}
     >
       <div className="listfood-header">
-
         <h1>Danh mục món ăn</h1>
         <div className="action-buttons">
           
@@ -80,7 +79,6 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
           {/* Nút đóng ListFood */}
           <button className="add-button" onClick={closeListFood} style={{marginLeft:"20px"}}>
           <FaTimes style={{color:"red"}} /> {/* X icon for "Remove" */}
-
           </button>
         </div>
       </div>
