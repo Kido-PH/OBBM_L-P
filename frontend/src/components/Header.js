@@ -11,7 +11,6 @@ import "../assets/css/headerStyle.css";
 import { FiLogOut } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 import { AiFillLock } from "react-icons/ai";
-
 import { getToken } from "services/localStorageService";
 
 const Header = () => {
@@ -41,7 +40,6 @@ const Header = () => {
           (role) => role.name === "ADMIN" || role.name === "STAFF"
         );
         if (adminRole) {
-
           setIsAdmin(true);
           localStorage.setItem("isAdmin", true); // Lưu trạng thái vào localStorage
           localStorage.setItem("roles", JSON.stringify(adminRole));
@@ -50,7 +48,6 @@ const Header = () => {
           setIsAdmin(false);
           localStorage.setItem("isAdmin", false); // Nếu không phải Admin
         }
-
       }
     } catch (error) {
       console.error("Error fetching user details:", error);

@@ -362,6 +362,7 @@ const Menu = ({ accessToken }) => {
           title: "Thành công!",
           text: "Thực đơn và món ăn đã được tạo thành công!",
         });
+        navigate("/contract");
       }
     } catch (error) {
       console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);

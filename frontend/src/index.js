@@ -36,13 +36,12 @@ import CreatePasswordForm from "views/_createPassword";
 
 const App = () => {
   const location = useLocation();
-      const isAdmin = JSON.parse(localStorage.getItem("isAdmin"));
-
+  const isAdmin = JSON.parse(localStorage.getItem("isAdmin"));
   const shouldShowHeaderFooter =
     !location.pathname.startsWith("/admin") &&
     location.pathname !== "/login" &&
     location.pathname !== "/register" &&
-    location.pathname !== "/resetpassword"&&
+    location.pathname !== "/resetpassword" &&
     location.pathname !== "/create-password";
 
   return (
@@ -65,9 +64,14 @@ const App = () => {
         <Route path="/resetpassword" element={<Login />} />
         <Route path="/create-password" element={<Login />} />
         <Route path="/authenticate" element={<Authenticate />} />
-        <Route path="/admin/*" element={<AdminRoute isAdmin={isAdmin}>
+        <Route
+          path="/admin/*"
+          element={
+            <AdminRoute isAdmin={isAdmin}>
               <DashboardPage />
-            </AdminRoute> }>
+            </AdminRoute>
+          }
+        >
           <Route path="ManageContracts" element={<ManageContracts />} />
           <Route path="ManageCategoryDish" element={<CategoryDish />} />
           <Route path="ManageDish" element={<DishManager />} />

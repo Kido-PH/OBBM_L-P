@@ -337,7 +337,7 @@ const AccountSection = () => {
                     name="fullname"
                     id="fullname"
                     placeholder="Họ và tên"
-                    className="input-field"
+                    className={`input-field ${isEditing ? "highlight" : ""}`}
                     value={userDetails.fullname}
                     disabled={!isEditing}
                     onChange={(e) => {
@@ -347,7 +347,7 @@ const AccountSection = () => {
                         fullname: fullnameValue,
                       });
                     }}
-                    style={{ border: "1px solid var(--cultured)" }}
+                    // style={{ border: "1px solid var(--cultured)" }}
                   />
 
                   <input
@@ -411,7 +411,7 @@ const AccountSection = () => {
                     }}
                     pattern="\d{10}" // Optional, for additional HTML5 validation
                     title="Please enter a valid 10-digit phone number"
-                    style={{ border: "1px solid var(--cultured)" }}
+                    // style={{ border: "1px solid var(--cultured)" }}
 
                   />
                   <select
