@@ -15,15 +15,16 @@ const userApi = {
     return axiosClient.get(url);
   },
 
-  refreshToken(refreshToken){
+  refreshToken(refreshToken) {
     const url = axios.post(
       `http://localhost:8080/obbm/auth/refresh`, refreshToken
     );
+
+  },
   createPassword(password) {
     const url = `/users/create-password`;
     return axiosClient.post(url, password);
 
-  }
-};
-
-export default userApi;
+  },
+}
+  export default userApi;
