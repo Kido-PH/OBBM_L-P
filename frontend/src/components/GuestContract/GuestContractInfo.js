@@ -80,7 +80,7 @@ const ContractInfo = () => {
   };
 
   const autoScroll = (status) => {
-    console.log("status:",status)
+    console.log("status:", status);
     if (status !== "Pending" && status !== "Completed") {
       // Cuộn xuống 500px từ vị trí hiện tại
       window.scrollTo({
@@ -88,10 +88,8 @@ const ContractInfo = () => {
         behavior: "smooth", // Cuộn mượt mà
       });
     } else {
-
     }
   };
-  
 
   const handleServicesTotalCost = (cost) => {
     setTotalServicesCost(cost);
@@ -198,7 +196,7 @@ const ContractInfo = () => {
     >
       <div className="container" style={{ marginTop: "120px" }}>
         <div className="text-center mb-5 fw-bold">
-          <h1>Thông tin chi tiết hợp dồng</h1>
+          <h1>Thông tin chi tiết hợp đồng</h1>
         </div>
         <Card name="contractInfo" className="p-5" style={{ opacity: 0.9 }}>
           <h2 style={{ color: "hsl(28, 100%, 58%)" }}>Thông tin hợp đồng</h2>
@@ -450,6 +448,8 @@ const ContractInfo = () => {
                     ? "Chờ xác nhận"
                     : contractInfo.status === "Approved"
                     ? "Đã xác nhận"
+                    : contractInfo.status === "Actived"
+                    ? "Đang hoạt động"
                     : "Đã hoàn thành"}
                 </span>
               </h3>
@@ -473,7 +473,7 @@ const ContractInfo = () => {
                     ? "Chưa thanh toán"
                     : contractInfo.paymentstatus === "Prepay 50%"
                     ? "Đã thanh toán 50%"
-                    : contractInfo.paymentstatus === " Prepay 70%"
+                    : contractInfo.paymentstatus === "Prepay 70%"
                     ? "Đã thanh toán 70%"
                     : "Đã thanh toán"}
                 </span>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -23,73 +23,217 @@ import {
   FormControl,
   Select,
   MenuItem,
+  InputLabel,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-
-// Dữ liệu mẫu người dùng
-const initialUsers = [
-  {
-    username: "baotran",
-    name: "Lê Thị Bảo Trân",
-    phone: "0987654321",
-    status: "Đang hoạt động",
-  },
-  {
-    username: "thaihoa",
-    name: "Nguyễn Thị Thái Hòa",
-    phone: "0978654321",
-    status: "Đang hoạt động",
-  },
-];
+import AddUserStaff from "./Admin-AddStaff";
+import toast, { Toaster } from "react-hot-toast";
 
 const AccessControl = () => {
-  const [users] = useState(initialUsers);
+  const [users, setUsers] = useState([]);
   const [expandedUser, setExpandedUser] = useState(null); // Lưu trữ người dùng đã chọn để hiển thị chi tiết
   const [selectedTab, setSelectedTab] = useState(0);
-  const [selectedRole, setSelectedRole] = useState("");
+  const [roles, setRoles] = useState([]); // Dữ liệu vai trò từ API
+  const [perGroups, setPergroups] = useState([]); // Dữ liệu nhóm quyền API
+  const [selectedPermissions, setSelectedPermissions] = useState([]); // Danh sách quyền
+  const [selectedRole, setSelectedRole] = useState(""); // Vai trò hiện tại
+  const [selectedUserId, setSelectedUserId] = useState(""); // ID người dùng được chọn
+
+  // Gọi API để lấy danh sách người dùng
+  useEffect(() => {
+    fetchPergroups();
+    fetchUsers();
+    fetchRoles();
+  }, []);
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/obbm/users", {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          Accept: "application/json",
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log("API response:", data);
+        if (data.result && Array.isArray(data.result)) {
+          const staffUsers = data?.result?.filter((user) =>
+            user.roles.some(
+              (role) => role.name.startsWith("STAFF")
+            )
+          );
+          setUsers(staffUsers);
+        } else {
+          console.error("Dữ liệu không hợp lệ:", data);
+          setUsers([]);
+        }
+      } else {
+        console.error("Lỗi khi gọi API:", response.status);
+      }
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    }
+  };
+
+  const fetchRoles = async () => {
+    try {
+      const response = await fetch("http://localhost:8080/obbm/roles", {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+
+        // Lọc ADMIN và các vai trò liên quan đến STAFF
+        const fillterRoles = data?.result?.filter(
+          (role) => role.name.startsWith("STAFF")
+        );
+
+        setRoles(fillterRoles); // Lưu danh sách vai trò
+      } else {
+        console.error("Failed to fetch roles:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching roles:", error);
+    }
+  };
+
+  const fetchPergroups = async () => {
+    try {
+      const response = await fetch(`http://localhost:8080/obbm/perGroup`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          "Content-Type": "application/json",
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        console.log("Nhóm quyền: ", data);
+        setPergroups(data?.result); // Lưu danh sách pergroup
+      } else {
+        console.error("Failed to fetch pergroup:", response.status);
+      }
+    } catch (error) {
+      console.error("Error fetching pergroup:", error);
+    }
+  };
+
+  // Khi chọn vai trò
+  const handleRoleSelect = (roleName) => {
+    setSelectedRole(roleName);
+
+    // Lấy danh sách quyền của vai trò được chọn
+    const selectedRole = roles.find((role) => role.name === roleName);
+
+    // Cập nhật danh sách quyền đã chọn từ vai trò
+    if (selectedRole && selectedRole.permissions) {
+      setSelectedPermissions(selectedRole.permissions); // Gán toàn bộ quyền của vai trò
+    } else {
+      setSelectedPermissions([]); // Nếu không có quyền nào, reset
+    }
+  };
+
+  // Khi checkbox của permission thay đổi
+  const handlePermissionToggle = (permissionName) => {
+    setSelectedPermissions((prevPermissions) => {
+      const isPermissionSelected = prevPermissions.some(
+        (perm) => perm.name === permissionName
+      );
+
+      if (isPermissionSelected) {
+        // Nếu quyền đã có trong danh sách, loại bỏ nó
+        return prevPermissions.filter((perm) => perm.name !== permissionName);
+      } else {
+        // Nếu quyền chưa có, thêm nó vào danh sách
+        return [...prevPermissions, { name: permissionName }];
+      }
+    });
+  };
 
   // Xử lý khi nhấp vào hàng
   const handleRowClick = (user) => {
     setExpandedUser(expandedUser === user ? null : user); // Đóng lại nếu nhấp vào người dùng đang mở
+    setSelectedUserId(user.userId); // Cập nhật ID người dùng được chọn
     setSelectedTab(0); // Đặt tab mặc định là "Thông tin"
   };
 
   // Xử lý chuyển tab
   const handleTabChange = (event, newValue) => setSelectedTab(newValue);
 
+  // Xử lý cập nhật người dùng
+  const handleUpdateUser = async () => {
+    console.log("User ID:", selectedUserId);
+    console.log("Selected Role:", selectedRole);
+    console.log("Selected Permissions:", selectedPermissions);
+
+    if (!selectedUserId) {
+      alert("Vui lòng chọn người dùng!");
+      return;
+    }
+
+    const payload = {
+      userId: selectedUserId,
+      roleNames: selectedRole ? [selectedRole] : [],
+      permissionNames: selectedPermissions.map((perm) => perm.name),
+    };
+
+    try {
+      const response = await fetch(
+        "http://localhost:8080/obbm/user-role-permission",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(payload),
+        }
+      );
+
+      if (response.ok) {
+        toast.success("Cập nhật quyền cho người dùng thành công!");
+      } else {
+        console.error("Lỗi khi cập nhật quyền:", response.status);
+      }
+    } catch (error) {
+      console.error("Có lỗi xảy ra:", error);
+    }
+  };
+
+  // Hàm cập nhật danh sách người dùng khi thêm
+  const handleUserAdded = (newUser) => {
+    setUsers((prevUsers) => [...prevUsers, newUser]);
+  };
+
   return (
     <Box p={3}>
-      {/* Bảng danh sách người dùng */}
-      <TableContainer
-        component={Paper}
-        className="table-container"
-        sx={{ boxShadow: 3, borderRadius: 2 }}
-      >
+      <Toaster position="top-center" reverseOrder={false} />
+      <Box display="flex" justifyContent="flex-end" mb={2}>
+        <AddUserStaff onUserAdded={handleUserAdded} />
+      </Box>
+
+      <TableContainer component={Paper} className="table-container">
         <Table>
           <TableHead>
-            <TableRow sx={{ backgroundColor: "#f0f0f0" }}>
-              <TableCell>
-                <Checkbox />
-              </TableCell>
-              <TableCell sx={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-                Tên đăng nhập
-              </TableCell>
-              <TableCell sx={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-                Tên người dùng
-              </TableCell>
-              <TableCell sx={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-                Điện thoại
-              </TableCell>
-              <TableCell sx={{ fontWeight: "bold", fontSize: "1.1rem" }}>
-                Trạng thái
-              </TableCell>
+            <TableRow>
+              <TableCell>STT</TableCell>
+              <TableCell>Tên đăng nhập</TableCell>
+              <TableCell>Tên người dùng</TableCell>
+              <TableCell>Điện thoại</TableCell>
+              <TableCell>Ngày sinh</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {users.map((user, index) => (
-              <React.Fragment key={index}>
-                {/* Hàng người dùng */}
+              <React.Fragment key={user.userId}>
+                {/* Hàng chính hiển thị thông tin cơ bản */}
                 <TableRow
+                  key={user.userId || index}
                   onClick={() => handleRowClick(user)}
                   style={{ cursor: "pointer" }}
                   sx={{
@@ -98,32 +242,18 @@ const AccessControl = () => {
                       expandedUser === user ? "#eaf4ff" : "inherit",
                   }}
                 >
-                  <TableCell>
-                    <Checkbox />
-                  </TableCell>
-                  <TableCell sx={{ fontSize: "1.1rem" }}>
-                    {user.username}
-                  </TableCell>
-                  <TableCell sx={{ fontSize: "1.1rem" }}>{user.name}</TableCell>
-                  <TableCell sx={{ fontSize: "1.1rem" }}>
-                    {user.phone}
-                  </TableCell>
-                  <TableCell
-                    sx={{
-                      fontSize: "1.1rem",
-                      fontWeight: "bold",
-                      color: user.status === "Đang hoạt động" ? "green" : "red",
-                    }}
-                  >
-                    {user.status}
-                  </TableCell>
+                  <TableCell>{index + 1}</TableCell>
+                  <TableCell>{user.username}</TableCell>
+                  <TableCell>{user.fullname}</TableCell>
+                  <TableCell>{user.phone || "Không có thông tin"}</TableCell>
+                  <TableCell>{user.dob}</TableCell>
                 </TableRow>
 
-                {/* Hàng chi tiết mở rộng */}
+                {/* Hàng mở rộng hiển thị chi tiết */}
                 {expandedUser === user && (
                   <TableRow>
                     <TableCell
-                      colSpan={5}
+                      colSpan={4}
                       style={{ backgroundColor: "#f9f9f9", padding: 20 }}
                     >
                       <Tabs
@@ -154,28 +284,23 @@ const AccessControl = () => {
                         >
                           <Typography sx={{ fontSize: "1.3rem" }}>
                             <strong>Tên đăng nhập:</strong>{" "}
-                            {user.username.toUpperCase()}
+                            {user?.username?.toUpperCase()}
                           </Typography>
                           <Typography sx={{ fontSize: "1.3rem" }}>
                             <strong>Tên người dùng:</strong>{" "}
-                            {user.name.toUpperCase()}
+                            {user?.fullname?.toUpperCase()}
                           </Typography>
                           <Typography sx={{ fontSize: "1.3rem" }}>
-                            <strong>Điện thoại:</strong> {user.phone}
+                            <strong>Điện thoại:</strong>{" "}
+                            {user.phone || "Không có thông tin"}
                           </Typography>
                           <Typography sx={{ fontSize: "1.3rem" }}>
-                            <strong>Ngày sinh:</strong> 01/01/1990
+                            <strong>Ngày sinh:</strong>{" "}
+                            {user.dob || "Không có thông tin"}
                           </Typography>
                           <Typography sx={{ fontSize: "1.3rem" }}>
-                            <strong>Email:</strong> {user.username}@example.com
-                          </Typography>
-                          <Typography sx={{ fontSize: "1.3rem" }}>
-                            <strong>Trạng thái:</strong>{" "}
-                            <span
-                              style={{ fontWeight: "bold", color: "green" }}
-                            >
-                              {user.status}
-                            </span>
+                            <strong>Email:</strong>{" "}
+                            {user.email || "Không có thông tin"}
                           </Typography>
                         </Box>
                       )}
@@ -200,274 +325,116 @@ const AccessControl = () => {
 
                           {/* Vai trò - ComboBox */}
                           <Box display="flex" alignItems="center" mb={3}>
-                            <Typography
-                              variant="h6"
-                              sx={{ marginRight: "8px" }}
-                            >
-                              Vai trò:
-                            </Typography>
+                            <InputLabel id="role-select-label">
+                              Vai trò: 
+                            </InputLabel>
                             <FormControl size="small" variant="outlined">
                               <Select
                                 value={selectedRole}
-                                onChange={(event) =>
-                                  setSelectedRole(event.target.value)
+                                onChange={(e) =>
+                                  handleRoleSelect(e.target.value)
                                 }
                                 displayEmpty
-                                sx={{
-                                  minWidth: "200px",
-                                  fontSize: "1rem",
+                                renderValue={(selected) => {
+                                  if (!selected) {
+                                    return <em>Chọn vai trò</em>;
+                                  }
+                                  return roles.find(
+                                    (role) => role.name === selected
+                                  )?.description;
                                 }}
                               >
                                 <MenuItem value="">
-                                  <em>Chọn vai trò</em>
+                                  <span>--- Chọn vai trò ---</span>
                                 </MenuItem>
-                                <MenuItem value="admin">Quản trị viên</MenuItem>
-                                <MenuItem value="staff">Nhân viên</MenuItem>
-                                <MenuItem value="user">Người dùng</MenuItem>
+                                {/* Đổ dữ liệu từ state */}
+                                {roles
+                                  .filter(
+                                    (role) =>
+                                      role.name.includes("STAFF") 
+                                  )
+                                  .map((role) => (
+                                    <MenuItem key={role.name} value={role.name}>
+                                      {role.description}
+                                    </MenuItem>
+                                  ))}
                               </Select>
                             </FormControl>
                           </Box>
 
+                          {/* Hiển thị nhóm quyền */}
                           <Box
                             display="grid"
                             gridTemplateColumns="repeat(3, 1fr)"
                             gap={3}
-                            sx={{
-                              padding: "20px",
-                              backgroundColor: "#ffffff",
-                              borderRadius: "16px",
-                              boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-                            }}
                           >
-                            {/* USER Permissions */}
-                            <Accordion
-                              sx={{
-                                boxShadow: 2,
-                                borderRadius: "8px",
-                                backgroundColor: "#e3f2fd",
-                              }}
-                            >
-                              <AccordionSummary
-                                expandIcon={
-                                  <ExpandMoreIcon sx={{ color: "#00796b" }} />
-                                }
-                                sx={{
-                                  padding: "0 16px",
-                                  minHeight: 56,
-                                  display: "flex",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Checkbox
+                            {perGroups.map((group) => (
+                              <Accordion key={group.name}>
+                                <AccordionSummary
+                                  expandIcon={<ExpandMoreIcon />}
                                   sx={{
-                                    color: "#00796b",
-                                    padding: 0,
-                                    marginRight: 1,
+                                    backgroundColor: "#e3f2fd",
+                                    borderRadius: "8px",
+                                    "&:hover": { backgroundColor: "#bbdefb" },
                                   }}
-                                />
-                                <Typography
-                                  variant="h6"
-                                  sx={{ fontWeight: "bold", color: "#00796b" }}
                                 >
-                                  USER
-                                </Typography>
-                              </AccordionSummary>
-                              <AccordionDetails>
-                                <List dense>
-                                  {[
-                                    "Xem DS",
-                                    "Thêm mới người dùng",
-                                    "Cập nhật người dùng",
-                                    "Xóa người dùng",
-                                  ].map((item) => (
-                                    <ListItem
-                                      key={item}
-                                      sx={{ padding: "4px 16px" }}
-                                    >
-                                      <ListItemIcon
-                                        sx={{
-                                          minWidth: "auto",
-                                          paddingRight: 1,
-                                        }}
-                                      >
-                                        <Checkbox sx={{ color: "#00796b" }} />
-                                      </ListItemIcon>
-                                      <ListItemText
-                                        primary={item}
-                                        primaryTypographyProps={{
-                                          sx: { fontSize: "1rem" },
-                                        }}
-                                      />
-                                    </ListItem>
-                                  ))}
-                                </List>
-                              </AccordionDetails>
-                            </Accordion>
-
-                            {/* DISH Permissions */}
-                            <Accordion
-                              sx={{
-                                boxShadow: 2,
-                                borderRadius: "8px",
-                                backgroundColor: "#e8f5e9",
-                              }}
-                            >
-                              <AccordionSummary
-                                expandIcon={
-                                  <ExpandMoreIcon sx={{ color: "#43a047" }} />
-                                }
-                                sx={{
-                                  padding: "0 16px",
-                                  minHeight: 56,
-                                  display: "flex",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Checkbox
-                                  sx={{
-                                    color: "#43a047",
-                                    padding: 0,
-                                    marginRight: 1,
-                                  }}
-                                />
-                                <Typography
-                                  variant="h6"
-                                  sx={{ fontWeight: "bold", color: "#43a047" }}
-                                >
-                                  DISH
-                                </Typography>
-                              </AccordionSummary>
-                              <AccordionDetails>
-                                <List dense>
-                                  {[
-                                    "Xem DS",
-                                    "Thêm mới món ăn",
-                                    "Cập nhật món ăn",
-                                    "Xóa món ăn",
-                                  ].map((item) => (
-                                    <ListItem
-                                      key={item}
-                                      sx={{ padding: "4px 16px" }}
-                                    >
-                                      <ListItemIcon
-                                        sx={{
-                                          minWidth: "auto",
-                                          paddingRight: 1,
-                                        }}
-                                      >
-                                        <Checkbox sx={{ color: "#43a047" }} />
-                                      </ListItemIcon>
-                                      <ListItemText
-                                        primary={item}
-                                        primaryTypographyProps={{
-                                          sx: { fontSize: "1rem" },
-                                        }}
-                                      />
-                                    </ListItem>
-                                  ))}
-                                </List>
-                              </AccordionDetails>
-                            </Accordion>
-
-                            {/* CONTRACT Permissions */}
-                            <Accordion
-                              sx={{
-                                boxShadow: 2,
-                                borderRadius: "8px",
-                                backgroundColor: "#ffebee",
-                              }}
-                            >
-                              <AccordionSummary
-                                expandIcon={
-                                  <ExpandMoreIcon sx={{ color: "#e53935" }} />
-                                }
-                                sx={{
-                                  padding: "0 16px",
-                                  minHeight: 56,
-                                  display: "flex",
-                                  alignItems: "center",
-                                }}
-                              >
-                                <Checkbox
-                                  sx={{
-                                    color: "#e53935",
-                                    padding: 0,
-                                    marginRight: 1,
-                                  }}
-                                />
-                                <Typography
-                                  variant="h6"
-                                  sx={{ fontWeight: "bold", color: "#e53935" }}
-                                >
-                                  CONTRACT
-                                </Typography>
-                              </AccordionSummary>
-                              <AccordionDetails>
-                                <List dense>
-                                  {[
-                                    "Chỉnh sửa hợp đồng",
-                                    "Xác nhận hợp đồng",
-                                    "Hủy hợp đồng",
-                                    "Xem thông tin hợp đồng",
-                                  ].map((item) => (
-                                    <ListItem
-                                      key={item}
-                                      sx={{ padding: "4px 16px" }}
-                                    >
-                                      <ListItemIcon
-                                        sx={{
-                                          minWidth: "auto",
-                                          paddingRight: 1,
-                                        }}
-                                      >
-                                        <Checkbox sx={{ color: "#e53935" }} />
-                                      </ListItemIcon>
-                                      <ListItemText
-                                        primary={item}
-                                        primaryTypographyProps={{
-                                          sx: { fontSize: "1rem" },
-                                        }}
-                                      />
-                                    </ListItem>
-                                  ))}
-                                </List>
-                              </AccordionDetails>
-                            </Accordion>
+                                  <Typography
+                                    variant="h6"
+                                    sx={{
+                                      fontWeight: "bold",
+                                      color: "#1976d2",
+                                      marginBottom: "8px",
+                                    }}
+                                  >
+                                    {group.description}
+                                  </Typography>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                  <List dense>
+                                    {group.listPermission.map((perm) => (
+                                      <ListItem key={perm.name}>
+                                        <ListItemIcon>
+                                          <Checkbox
+                                            checked={selectedPermissions.some(
+                                              (p) => p.name === perm.name
+                                            )}
+                                            onChange={() =>
+                                              handlePermissionToggle(perm.name)
+                                            }
+                                          />
+                                        </ListItemIcon>
+                                        <ListItemText
+                                          primary={perm.description}
+                                        />
+                                      </ListItem>
+                                    ))}
+                                  </List>
+                                </AccordionDetails>
+                              </Accordion>
+                            ))}
                           </Box>
                         </Box>
                       )}
 
+                      {/* Nút hành động */}
                       <Box
                         mt={2}
                         display="flex"
                         justifyContent="flex-start"
-                        gap={1}
+                        gap={2}
                       >
                         <Button
                           variant="contained"
                           color="success"
-                          sx={{ fontSize: "1.4rem", textTransform: "none" }}
+                          sx={{ fontSize: "1.2rem", textTransform: "none" }}
+                          onClick={handleUpdateUser}
                         >
                           Cập nhật
                         </Button>
                         <Button
-                          variant="outlined"
-                          color="success"
-                          sx={{ fontSize: "1.4rem", textTransform: "none" }}
-                        >
-                          Sao chép
-                        </Button>
-                        <Button
-                          variant="contained"
-                          color="secondary"
-                          sx={{ fontSize: "1.4rem", textTransform: "none" }}
-                        >
-                          Ngưng hoạt động
-                        </Button>
-                        <Button
                           variant="contained"
                           color="error"
-                          sx={{ fontSize: "1.4rem", textTransform: "none" }}
+                          sx={{ fontSize: "1.2rem", textTransform: "none" }}
                         >
                           Xóa người dùng
                         </Button>

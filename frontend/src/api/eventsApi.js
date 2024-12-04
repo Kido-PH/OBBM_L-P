@@ -12,7 +12,7 @@ const eventsApi = {
   },
 
   add(data) {
-    const url = `/event`;
+    const url = `/event/admin`;
     return axiosClient.post(url, data);
   },
 

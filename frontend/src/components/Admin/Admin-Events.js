@@ -14,7 +14,6 @@ import {
   DialogContent,
   DialogTitle,
   Box,
-  IconButton,
   TablePagination,
   Tooltip,
 } from "@mui/material";
@@ -25,16 +24,19 @@ import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { toast, Toaster } from "react-hot-toast";
 import eventsApi from "../../api/eventsApi";
+import { message, Typography } from "antd";
+import EventDetailPopup from "./EventDetailPopup";
+import serviceApi from "api/serviceApi";
 
 const EventManager = () => {
   const [events, setEvents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentEvent, setCurrentEvent] = useState({
-    eventId: null,
     name: "",
     totalcost: 0,
     description: "",
     image: "",
+    userId: "",
   });
   const [dialogMode, setDialogMode] = useState("add"); // 'add', 'edit'
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
@@ -44,13 +46,28 @@ const EventManager = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
   const [totalElements, setTotalElements] = useState(0);
   const [errors, setErrors] = useState({});
+  const [userId, setUserId] = useState(null);
+
+  const [selectedEvent, setSelectedEvent] = useState(null);
+  const [detailPopupOpen, setDetailPopupOpen] = useState(false);
+  const [allService, setAlllServices] = useState([]);
+
+  const handleOpenServicePopup = (event) => {
+    setSelectedEvent(event);
+    setDetailPopupOpen(true);
+  };
+
+  const handleCloseDetailPopup = () => {
+    setDetailPopupOpen(false);
+    setSelectedEvent(null);
+  };
+
 
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    fetchEventsWithPaginate(page + 1); // Lấy trang đầu tiên
+    fetchEventsWithPaginate(page + 1);
+    fetchUserData();
+    fetchServiceEvent();
   }, [page, rowsPerPage]);
 
   const fetchEventsWithPaginate = async (page) => {
@@ -61,6 +78,51 @@ const EventManager = () => {
       console.log("res.dt = ", res.result.content);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
+    }
+  };
+
+
+  // Hàm lấy danh sách service
+  const fetchServiceEvent = async () => {
+    try {
+      const response = await serviceApi.getAll();
+      console.log("Data serivce: ", response);
+      if (response?.result?.content) {
+        setAlllServices(response?.result?.content);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách dịch vụ:", error);
+    }
+  };
+
+
+  // Fetch thông tin người dùng từ API
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("accessToken");
+      if (!token) {
+        throw new Error("Token không tìm thấy trong localStorage.");
+      }
+
+      const response = await fetch("http://localhost:8080/obbm/users/myInfo", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Dữ liệu nè: ", data);
+
+      // Lưu userId vào state
+      setUserId(data?.result?.userId);
+    } catch (error) {
+      message.error("Không tải được dữ liệu.");
     }
   };
 
@@ -139,43 +201,64 @@ const EventManager = () => {
       newErrors.totalcost = "Tổng chi phí phải lớn hơn 0.";
     }
 
-    // Kiểm tra ảnh (nếu cần)
-    // if (!currentEvent.image) {
-    //   newErrors.image = "Hình ảnh là bắt buộc.";
-    // }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   // Lưu sự kiện mới hoặc chỉnh sửa sự kiện
   const handleSave = async () => {
-    // Kiểm tra lỗi trước khi lưu
-    if (!validate()) {
+    // Kiểm tra dữ liệu nhập vào có hợp lệ không
+    if (!validate()) return;
+
+    // Kiểm tra `userId` trước khi thực hiện hành động
+    if (!userId) {
+      console.error("userId chưa được khởi tạo:", userId);
+      toast.error("Không thể lưu sự kiện. Vui lòng đăng nhập lại!");
       return;
     }
 
-    if (dialogMode === "add") {
-      delete currentEvent.eventId;
-      const res = await eventsApi.add(currentEvent);
-      if (res.code === 1000) {
-        fetchEventsWithPaginate(page + 1);
-        toast.success("Thêm sự kiện thành công !");
+    try {
+      // Chuẩn bị payload sự kiện
+      const eventPayload = {
+        name: currentEvent.name,
+        totalcost: currentEvent.totalcost,
+        description: currentEvent.description,
+        image: currentEvent.image,
+        userId: userId, // Đảm bảo `userId` được gửi cho cả thêm và sửa
+      };
+
+      console.log("Payload gửi đi:", eventPayload);
+
+      let res; // Kết quả phản hồi từ API
+      if (dialogMode === "add") {
+        // Nếu là thêm mới sự kiện
+        res = await eventsApi.add(eventPayload);
+
+        if (res.code === 1000) {
+          fetchEventsWithPaginate(page + 1); // Load lại danh sách sự kiện
+          toast.success("Thêm sự kiện thành công!");
+        } else {
+          toast.error("Lỗi thêm sự kiện: " + res.message);
+        }
+      } else if (dialogMode === "edit") {
+        // Nếu là sửa sự kiện
+        const updatedPayload = { ...eventPayload }; // Payload cập nhật
+        delete updatedPayload.userId; // Bỏ `userId` nếu backend không yêu cầu khi sửa
+        res = await eventsApi.update(currentEvent.eventId, updatedPayload);
+
+        if (res.code === 1000) {
+          fetchEventsWithPaginate(page + 1); // Load lại danh sách sự kiện
+          toast.success("Sự kiện đã được cập nhật thành công!");
+        } else {
+          toast.error("Lỗi cập nhật sự kiện: " + res.message);
+        }
       }
-    } else if (dialogMode === "edit") {
-      const { name, totalcost, description, image } = currentEvent;
-      const res = await eventsApi.update(currentEvent.eventId, {
-        name,
-        totalcost,
-        description,
-        image,
-      });
-      if (res.code === 1000) {
-        fetchEventsWithPaginate(page + 1);
-        toast.success("Sự kiện đã được cập nhật thành công !");
-      }
+    } catch (error) {
+      console.error("Lỗi khi lưu sự kiện:", error);
+      toast.error("Đã xảy ra lỗi khi lưu sự kiện. Vui lòng thử lại!");
+    } finally {
+      handleCloseDialog(); // Đóng dialog sau khi thực hiện xong
     }
-    handleCloseDialog();
   };
 
   // Xử lý click "Delete" để cập nhật trạng thái "Status" và ẩn sự kiện
@@ -221,60 +304,53 @@ const EventManager = () => {
       return event.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
 
+  const handleRemoveImage = () => {
+    setCurrentEvent((prev) => ({ ...prev, image: "" }));
+  };
+
   return (
     <div>
       <Toaster position="top-center" reverseOrder={false} />
-      <Box
-        sx={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          mt: 2,
-          mb: 2, // margin bottom
-        }}
-      >
+      <Box>
         {/* Ô tìm kiếm */}
-        <div className="admin-group">
-          <svg
-            className="admin-icon-search"
-            aria-hidden="true"
-            viewBox="0 0 24 24"
+        <div className="admin-toolbar">
+          <div className="admin-group">
+            <svg
+              className="admin-icon-search"
+              aria-hidden="true"
+              viewBox="0 0 24 24"
+            >
+              <g>
+                <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path>
+              </g>
+            </svg>
+            <input
+              placeholder="Tìm kiếm"
+              type="search"
+              className="admin-input-search"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+
+          <Button
+            sx={{ fontSize: "10px" }}
+            variant="contained"
+            color="primary"
+            onClick={() => handleOpenDialog("add", null)}
           >
-            <g>
-              <path d="M21.53 20.47l-3.66-3.66C19.195 15.24 20 13.214 20 11c0-4.97-4.03-9-9-9s-9 4.03-9 9 4.03 9 9 9c2.215 0 4.24-.804 5.808-2.13l3.66 3.66c.147.146.34.22.53.22s.385-.073.53-.22c.295-.293.295-.767.002-1.06zM3.5 11c0-4.135 3.365-7.5 7.5-7.5s7.5 3.365 7.5 7.5-3.365 7.5-7.5 7.5-7.5-3.365-7.5-7.5z"></path>
-            </g>
-          </svg>
-          <input
-            placeholder="Tìm kiếm"
-            type="search"
-            className="admin-input-search"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+            <AddIcon
+              sx={{
+                marginRight: "5px",
+                fontSize: "16px",
+                verticalAlign: "middle",
+              }}
+            />
+            Thêm sự kiện
+          </Button>
         </div>
-
-        <Button
-          sx={{ fontSize: "10px" }}
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenDialog("add", null)}
-        >
-          <AddIcon
-            sx={{
-              marginRight: "5px",
-              fontSize: "16px",
-              verticalAlign: "middle",
-            }}
-          />
-          Thêm sự kiện
-        </Button>
       </Box>
-
-      <TableContainer
-        component={Paper}
-        sx={{ mt: 1 }}
-        className="table-container"
-      >
+      <TableContainer component={Paper} className="table-container">
         <Table>
           <TableHead>
             <TableRow>
@@ -283,7 +359,16 @@ const EventManager = () => {
               <TableCell>Mô tả</TableCell>
               <TableCell>Tổng chi phí</TableCell>
               <TableCell>Hình ảnh</TableCell>
-              <TableCell>Hành động</TableCell>
+              <TableCell
+                sx={{
+                  position: "sticky",
+                  right: 0,
+                  backgroundColor: "white",
+                  zIndex: 1,
+                }}
+              >
+                Hành động
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -302,38 +387,65 @@ const EventManager = () => {
                     }).format(event.totalcost)}
                   </TableCell>
                   <TableCell>
-                    <img
-                      src={`${event.image}`}
-                      alt={event.name}
-                      width="70"                      
-                    />
+                    <img src={`${event.image}`} alt={event.name} width="70" />
                   </TableCell>
-                  <TableCell>
-                    <IconButton
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      right: 0,
+                      backgroundColor: "white",
+                      zIndex: 1,
+                    }}
+                  >
+                    <Button
                       variant="outlined"
                       onClick={() => handleOpenDialog("edit", event)}
                       sx={{ mr: 1 }}
                       color="primary"
                     >
                       <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Sửa sự kiện
+                          </span>
+                        }
                         placement="top"
                       >
                         <EditIcon />
                       </Tooltip>
-                    </IconButton>
-                    <IconButton
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleDeleteClick(event.eventId)}
+                    </Button>
+                    <Tooltip
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>Xóa sự kiện</span>
+                      }
+                      placement="top"
                     >
-                      <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
-                        placement="top"
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDeleteClick(event.eventId)}
                       >
                         <DeleteIcon />
+                      </Button>
+                    </Tooltip>
+
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleOpenServicePopup(event)}
+                      color="info"
+                      style={{ marginLeft: "8px" }}
+                    >
+                      <Tooltip
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Xem chi tiết
+                          </span>
+                        }
+                        placement="top"
+                      >
+                        <ErrorOutlineIcon />
                       </Tooltip>
-                    </IconButton>
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))}
@@ -378,18 +490,45 @@ const EventManager = () => {
       </TableContainer>
 
       {/* Dialog thêm/sửa sự kiện */}
-      <Dialog open={openDialog} onClose={handleCloseDialog}>
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="sm"
+        fullWidth
+      >
         <DialogTitle
-          sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight: "bold" }}
+          sx={{
+            fontSize: "1.7rem",
+            fontWeight: "bold",
+            color: "#333",
+          }}
         >
           {dialogMode === "add" ? "Thêm sự kiện" : "Sửa sự kiện"}
         </DialogTitle>
-        <DialogContent className="custom-input">
+        <DialogContent className="custom-input" dividers>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Tên sự kiện</Typography>
+          </div>
           <TextField
+            size="small"
             autoFocus
             margin="dense"
             name="name"
-            label="Tên sự kiện"
+            placeholder="Tên sự kiện"
             type="text"
             fullWidth
             variant="outlined"
@@ -398,22 +537,55 @@ const EventManager = () => {
             error={!!errors.name}
             helperText={errors.name}
           />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginTop: "3px",
+            }}
+          >
+            <Typography>Mô tả</Typography>
+          </div>
           <TextField
+            size="small"
             margin="dense"
             name="description"
-            label="Mô tả"
+            placeholder="Mô tả"
             type="text"
+            minRows={5}
+            maxRows={10}
             fullWidth
+            multiline
             variant="outlined"
             value={currentEvent.description || ""}
             onChange={handleInputChange}
             error={!!errors.description}
             helperText={errors.description}
           />
+
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Tổng chi phí</Typography>
+          </div>
+
           <TextField
+            size="small"
             margin="dense"
             name="totalcost"
-            label="Tổng chi phí"
+            placeholder="Tổng chi phí"
             type="number"
             fullWidth
             variant="outlined"
@@ -422,39 +594,91 @@ const EventManager = () => {
             error={!!errors.totalcost}
             helperText={errors.totalcost}
           />
-          {currentEvent.image && (
-            <img
-              src={currentEvent.image}
-              alt="Sự kiện"
-              style={{ width: "100%", height: "250px", marginBottom: "1em" }}
-            />
-          )}
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              border: "2px dashed #ccc",
+              borderRadius: "8px",
+              padding: "1em",
+              marginBottom: "1em",
+              cursor: "pointer",
+              position: "relative",
+              overflow: "hidden",
+              textAlign: "center",
+            }}
+            onClick={() => document.getElementById("file-upload").click()}
+          >
+            {currentEvent.image ? (
+              <Box
+                component="img"
+                src={currentEvent.image}
+                alt="Dịch vụ"
+                sx={{
+                  width: "100%",
+                  height: "250px",
+                  objectFit: "cover",
+                  borderRadius: "8px",
+                }}
+              />
+            ) : (
+              <>
+                <AddAPhotoIcon sx={{ fontSize: 48, color: "#aaa", mb: 1 }} />
+                <Typography variant="body2" sx={{ color: "#aaa" }}>
+                  Nhấn để chọn ảnh
+                </Typography>
+              </>
+            )}
 
-          <input
-            type="file"
-            name="image"
-            accept="image/*"
-            onChange={handleInputChange}
-            style={{ display: "none" }}
-            id="file-upload"
-          />
-          <label htmlFor="file-upload">
-            <Button variant="contained" component="span" sx={{ mb: "5px" }}>
-              <AddAPhotoIcon sx={{ mr: "5px" }} />
-              Chọn ảnh
-            </Button>
-          </label>
+            <input
+              type="file"
+              name="image"
+              accept="image/*"
+              onChange={handleInputChange}
+              style={{ display: "none" }}
+              id="file-upload"
+            />
+            {currentEvent.image && (
+              <Button
+                variant="contained"
+                sx={{
+                  position: "absolute",
+                  top: "10px",
+                  right: "10px",
+                  backgroundColor: "#dc3545",
+                  color: "#fff",
+                  "&:hover": {
+                    backgroundColor: "#c82333",
+                  },
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRemoveImage();
+                }}
+              >
+                Xóa ảnh
+              </Button>
+            )}
+          </Box>
         </DialogContent>
         <DialogActions>
           <Button
             onClick={handleCloseDialog}
-            color="primary"
-            sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
+            variant="outlined"
+            sx={{
+              fontSize: "1.3rem",
+              fontWeight: "bold",
+              color: "red",
+              borderColor: "red",
+            }}
           >
             Hủy
           </Button>
           <Button
             onClick={handleSave}
+            variant="outlined"
             color="primary"
             sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
           >
@@ -496,6 +720,12 @@ const EventManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      <EventDetailPopup
+        open={detailPopupOpen}
+        handleClose={handleCloseDetailPopup}
+        event={selectedEvent}
+        allService={allService}
+      />
     </div>
   );
 };

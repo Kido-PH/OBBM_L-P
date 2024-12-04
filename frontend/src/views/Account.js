@@ -4,7 +4,6 @@ import "../assets/css/customStyle.css";
 import "../assets/css/mainStyle.css";
 
 import { useNavigate } from "react-router-dom";
-import { getToken } from "../services/localStorageService";
 import {
   Alert,
   Box,
@@ -15,8 +14,10 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-
+import { getToken, setToken } from "../services/localStorageService";
 import { logOut } from "../services/authenticationService";
+import Swal from "sweetalert2";
+import Cookies from "js-cookie";
 const AccountSection = () => {
   const navigate = useNavigate();
   const [imageSrc, setImageSrc] = useState(null);
@@ -27,6 +28,7 @@ const AccountSection = () => {
     address: "",
     citizenIdentity: "",
   });
+  const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
@@ -99,7 +101,52 @@ const AccountSection = () => {
       scanIdCard(file); // Gọi API để quét ảnh CCCD
     }
   };
+  useEffect(() => {
+    const accessToken = getToken();
 
+    if (accessToken) {
+      navigate("/account");
+    }
+  }, [navigate]);
+  const refreshAccessToken = async () => {
+    const refreshToken = Cookies.get("refreshToken"); // Lấy refreshToken từ cookies
+  
+    if (!refreshToken) {
+      throw new Error("Không có refreshToken.");
+    }
+  
+    try {
+      // Gửi yêu cầu đến API /refresh để lấy accessToken mới
+      const response = await fetch("http://localhost:8080/obbm/auth/refresh", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }), // Gửi refreshToken
+      });
+  
+      const data = await response.json();
+  
+      // Nếu API trả về accessToken mới, lưu nó vào localStorage
+      if (data.code === 1000 && data.result?.accessToken) {
+        const newAccessToken = data.result.accessToken;
+        
+        setToken(newAccessToken); // Lưu accessToken mới vào localStorage
+        console.log("Mới nhận accessToken:", newAccessToken); // Log accessToken mới
+        return newAccessToken; // Trả về accessToken mới
+      }
+      if(data.code ===401){
+        const newAccessToken = data.result.accessToken;
+        console.log(newAccessToken);
+      }
+      throw new Error("Không thể lấy accessToken mới.");
+  
+    } catch (error) {
+      console.error("Lỗi khi làm mới accessToken:", error.message);
+      throw error;
+    }
+  };
+  
   const addPassword = (event) => {
     event.preventDefault();
 
@@ -182,6 +229,7 @@ const AccountSection = () => {
   const handleUpdate = async (event) => {
     event.preventDefault();
     const userId = localStorage.getItem("userId");
+
     // Chuẩn bị dữ liệu cần gửi
     const updatedData = {
       fullname: document.getElementById("fullname").value,
@@ -192,6 +240,7 @@ const AccountSection = () => {
       gender: document.getElementById("gender").value,
       citizenIdentity: document.getElementById("IdCard").value,
     };
+    console.log("data gửi đi API:", updatedData);
 
     try {
       const response = await fetch(
@@ -208,10 +257,22 @@ const AccountSection = () => {
 
       if (response.ok) {
         const data = await response.json();
-        alert("Cập nhật thông tin thành công!");
+        Swal.fire({
+          icon: "success",
+          title: "Thành công",
+          text: "Cập nhật thông tin thành công",
+          timer: 2000,
+          showConfirmButton: true,
+        });
         console.log(data);
       } else {
-        alert("Cập nhật không thành công.");
+        Swal.fire({
+          icon: "error",
+          title: "Thất bại",
+          text: "Lỗi không rõ",
+          timer: 2000,
+          showConfirmButton: true,
+        });
       }
     } catch (error) {
       console.error("Lỗi khi cập nhật thông tin:", error);
@@ -267,10 +328,6 @@ const AccountSection = () => {
                   <p className="footer-list-title account-form-title">
                     Thông tin cá nhân
                   </p>
-                  <button
-                    type="button"
-                    className="edit-profile-btn navbar-link bi bi-pencil-square"
-                  ></button>
                 </div>
 
                 <div className="input-wrapper">
@@ -281,7 +338,15 @@ const AccountSection = () => {
                     placeholder="Họ và tên"
                     className="input-field"
                     value={userDetails.fullname}
-                    disabled
+                    disabled={!isEditing}
+                    onChange={(e) => {
+                      const fullnameValue = e.target.value;
+                      setUserDetails({
+                        ...userDetails,
+                        fullname: fullnameValue,
+                      });
+                    }}
+                    style={{ border: "1px solid var(--cultured)" }}
                   />
 
                   <input
@@ -345,6 +410,7 @@ const AccountSection = () => {
                     }}
                     pattern="\d{10}" // Optional, for additional HTML5 validation
                     title="Please enter a valid 10-digit phone number"
+                    style={{ border: "1px solid var(--cultured)" }}
                   />
                   <select
                     name="gender"
@@ -353,7 +419,6 @@ const AccountSection = () => {
                     style={{ height: "40px", color: "hsl(0deg 0% 24.88%)" }}
                     className="input-field"
                     value={userDetails.gender} // Đảm bảo giá trị của select phù hợp với state
-                    
                     disabled
                   >
                     <option value="" disabled={false}>
@@ -383,7 +448,7 @@ const AccountSection = () => {
                   />
 
                   <input
-                  style={{height:"40px"}}
+                    style={{ height: "40px" }}
                     type="text"
                     id="address"
                     name="address"
@@ -397,7 +462,11 @@ const AccountSection = () => {
                     <img
                       src={imageSrc}
                       alt="Selected"
-                      style={{ maxWidth: "300px", marginTop: "10px" , marginLeft:"140px"}}
+                      style={{
+                        maxWidth: "300px",
+                        marginTop: "10px",
+                        marginLeft: "140px",
+                      }}
                     />
                   )}
                 </div>

@@ -1248,7 +1248,7 @@ body.active { overflow: hidden; }
 .input-field {
   color: var(--spanish-gray);
   font-size: var(--fs-4);
-  border: 1px solid var(--cultured);
+  /* border: 1px solid var(--cultured); */
   padding: 8px 12px;
 }
 

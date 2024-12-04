@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../assets/css/menu.css";
 import "../assets/css/listFood.css";
 import "../assets/css/swipermenu.css";
@@ -19,7 +19,8 @@ import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 
-const Menu = () => {
+const Menu = ({ accessToken }) => {
+  const listRef = useRef(null);
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
   const categoriesOrder = ["Appetizers", "Main Courses", "Desserts"];
   const [menuDishesDetails, setMenuDishesDetails] = useState([]);
@@ -35,6 +36,47 @@ const Menu = () => {
   const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
   const location = useLocation();
   const [isModalEventsOpen, setIsModalEventsOpen] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [userDetails, setUserDetails] = useState({});
+  const getUserDetails = async (accessToken) => {
+    try {
+      const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = await response.json();
+      console.log("myInfo", data); // Kiểm tra dữ liệu trả về
+
+      if (data && data.result) {
+        setUserDetails(data.result);
+
+        // Kiểm tra trạng thái isStatus, nếu là false thì hiển thị cảnh báo
+        const isStatusActive = data.result.isStatus;
+
+        if (isStatusActive === false) {
+          setShowWarning(true); // Hiển thị cảnh báo nếu isStatus là false
+        } else {
+          setShowWarning(false); // Ẩn cảnh báo nếu isStatus là true
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Kiểm tra trạng thái đăng nhập từ localStorage
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken"); // Lấy token từ localStorage
+
+    if (accessToken) {
+      getUserDetails(accessToken); // Lấy thông tin người dùng
+    }
+  }, []);
+  // Gọi API khi component được render lần đầu
+
   const handleOpenModalEvents = () => {
     setIsModalEventsOpen(true);
   };
@@ -44,16 +86,15 @@ const Menu = () => {
   const setMenuIdUrl = (eventId) => {
     setEventToMenuUrl(`menu/${eventId}`);
     // Lưu eventId vào localStorage
-    localStorage.setItem("currentEventId", eventId);
+    sessionStorage.setItem("currentEventId", eventId);
   };
   const pushEventIdtoMenu = (newEventId) => {
     // Lưu eventId vào localStorage
-    localStorage.setItem("currentEventId", newEventId);
-  
+    sessionStorage.setItem("currentEventId", newEventId);
+
     // Điều hướng đến trang menu mới với eventId
     navigate(`/menu/${newEventId}`);
   };
-  
 
   const fetchEvent = async () => {
     try {
@@ -94,6 +135,28 @@ const Menu = () => {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
 
   const handleSelectMenu = (menu) => {
+    // Kiểm tra userId trong sessionStorage
+    const userId = sessionStorage.getItem("userId");
+
+    // Nếu không tìm thấy userId trong session, hiển thị cảnh báo
+    if (!userId) {
+      Swal.fire({
+        icon: "warning",
+        title: "Chưa đăng nhập",
+        text: "Bạn cần đăng nhập để hoàn tất tạo thực đơn.",
+        showCancelButton: true,
+        confirmButtonText: "Đăng nhập ngay",
+        cancelButtonText: "Hủy",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/login";
+        }
+      });
+      return; // Dừng hàm nếu không có userId
+    }
+
+    // Nếu có userId, tiếp tục thực hiện hành động
     setSelectedMenu(menu);
     const latestMenuId =
       menuList && menuList.length > 0
@@ -108,6 +171,7 @@ const Menu = () => {
         menuId: null,
       };
     });
+
     console.log("dữ liệu menu", menu);
     setSelectedMenuDishes(menuDishesList);
   };
@@ -175,30 +239,34 @@ const Menu = () => {
     // console.log("selectedMenu Menu Data:", selectedMenu);
   }, [id, location]);
   useEffect(() => {
-    const createdMenu = localStorage.getItem("createdMenu");
-    const createdMenuDishes = localStorage.getItem("createdMenuDishes");
-    const menuDishesDetail = localStorage.getItem("MenuDishesDetail");
-    
-  
+    const createdMenu = sessionStorage.getItem("createdMenu");
+    const createdMenuDishes = sessionStorage.getItem("createdMenuDishes");
+    const menuDishesDetail = sessionStorage.getItem("MenuDishesDetail");
+
+    console.log("createdMenu:", createdMenu);
+    console.log("createdMenuDishes:", createdMenuDishes);
+    console.log("menuDishesDetail:", menuDishesDetail);
+
     if (createdMenu && createdMenuDishes && menuDishesDetail) {
-      const parsedMenu = JSON.parse(createdMenu);
-      const parsedDishes = JSON.parse(createdMenuDishes);
-      const parsedDetails = JSON.parse(menuDishesDetail);
-  
-      // Đổ dữ liệu vào `selectedMenu`
-      setSelectedMenu({
-        ...parsedMenu,
-        groupedDishes: parsedDetails,
-        listMenuDish: parsedDishes,
-      });
-  
-      // Xóa dữ liệu cũ khỏi localStorage sau khi nạp
-      localStorage.removeItem("createdMenu");
-      localStorage.removeItem("createdMenuDishes");
-      localStorage.removeItem("MenuDishesDetail");
+      try {
+        const parsedMenu = JSON.parse(createdMenu);
+        const parsedDishes = JSON.parse(createdMenuDishes);
+        const parsedDetails = JSON.parse(menuDishesDetail);
+
+        setSelectedMenu({
+          ...parsedMenu,
+          groupedDishes: parsedDetails,
+          listMenuDish: parsedDishes,
+        });
+      } catch (error) {
+        console.error("Lỗi khi phân tích dữ liệu từ sessionStorage:", error);
+      }
     }
   }, []);
-  
+  useEffect(() => {
+    console.log("selectedMenu sau khi cập nhật:", selectedMenu);
+  }, [selectedMenu]);
+
   useEffect(() => {
     // console.log("Current Path:", location.pathname);
     // console.log("ID:", id);
@@ -232,19 +300,19 @@ const Menu = () => {
 
   const handleCreateMenu = async () => {
     try {
-      const userId = localStorage.getItem("userId");
-  
+      const userId = sessionStorage.getItem("userId");
+
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
         .reduce((total, dish) => total + (dish.price || 0), 0);
-  
+
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
           acc.push(currentDish);
         }
         return acc;
       }, []);
-  
+
       if (uniqueDishes.length === 0) {
         Swal.fire({
           icon: "error",
@@ -253,24 +321,26 @@ const Menu = () => {
         });
         return;
       }
-  
       // Chuẩn bị dữ liệu để lưu
+
+      const currentEventId = sessionStorage.getItem("currentEventId"); // Lấy giá trị eventId từ sessionStorage
+
       const dataToSave = {
         name: selectedMenu.name,
         totalcost: totalCost,
         description: selectedMenu.description,
         userId: userId || "guest",
-        eventId: selectedMenu.events.eventId,
+        eventId: currentEventId || selectedMenu.events.eventId, // Nếu không có currentEventId trong session, dùng eventId từ selectedMenu
       };
-  
+
       // Lưu dữ liệu vào localStorage
-      localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
-      localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-      localStorage.setItem(
+      sessionStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+      sessionStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
+      sessionStorage.setItem(
         "MenuDishesDetail",
         JSON.stringify(selectedMenu.groupedDishes)
       );
-  
+
       if (!userId) {
         Swal.fire({
           icon: "warning",
@@ -282,7 +352,7 @@ const Menu = () => {
           reverseButtons: true,
         }).then((result) => {
           if (result.isConfirmed) {
-            localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+            sessionStorage.setItem("createdMenu", JSON.stringify(dataToSave));
             window.location.href = "/login";
           }
         });
@@ -302,7 +372,6 @@ const Menu = () => {
       });
     }
   };
-  
 
   const toggleListFood = (id) => {
     setSelectedId(id);
@@ -438,6 +507,16 @@ const Menu = () => {
         groupedDishes: updatedGroupedDishes,
       };
     });
+  };
+  const handleScroll = (direction) => {
+    const list = listRef.current; // Lấy reference của ul
+    const scrollAmount = 120; // Khoảng cách cuộn mỗi lần (tương ứng với chiều rộng 1 món ăn)
+
+    if (direction === "left") {
+      list.scrollLeft -= scrollAmount; // Cuộn sang trái
+    } else if (direction === "right") {
+      list.scrollLeft += scrollAmount; // Cuộn sang phải
+    }
   };
 
   let swiperRef = null;
@@ -578,7 +657,7 @@ const Menu = () => {
                             {Object.values(category.groupedDishes)
                               .flat()
                               .reduce((total, dish) => {
-                                const profitMargin = 0.2; 
+                                const profitMargin = 0.2;
                                 const sellingPrice =
                                   dish.price / (1 - profitMargin);
                                 return total + (sellingPrice || 0);
@@ -725,7 +804,13 @@ const Menu = () => {
                 ) // Sắp xếp
                 .map((categoryName, index) => (
                   <div key={categoryName} className="menu-category-dish">
-                    <h4>
+                    <h4
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "10px", // Khoảng cách giữa các phần tử
+                      }}
+                    >
                       {index === 0
                         ? "Khai vị và đồ uống"
                         : index === 1
@@ -733,74 +818,146 @@ const Menu = () => {
                         : index === 2
                         ? "Tráng miệng"
                         : "Đồ uống"}
+                      <span
+                        style={{
+                          // backgroundColor: "hsl(213, 100%, 67%)",
+                          color: "red",
+                          // borderRadius: "50%",
+                          padding: "3px 6px", // Điều chỉnh padding để tạo khoảng cách xung quanh số
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          display: "inline-block", // Đảm bảo span không bị ép co dãn
+                          textAlign: "center", // Căn giữa nội dung
+                        }}
+                      >
+                        {selectedMenu.groupedDishes[categoryName]?.length || 0}
+                      </span>
+
                       <button
                         onClick={() => toggleListFood(index + 1)}
                         className="add-button"
-                        style={{ color: "#02AF55" }}
+                        style={{ color: "#02AF55", marginLeft: "auto" }} // Đẩy nút sang bên phải nếu cần
                       >
-                        <FaPlus style={{ width: "14px", marginLeft: "20px" }} />{" "}
+                        <FaPlus style={{ width: "14px" }} />
                       </button>
                     </h4>
-                    <ul
-                      className="promo-list has-scrollbar"
-                      style={{ paddingBottom: "10px" }}
+
+                    <div
+                      className="promo-list-container"
+                      style={{ position: "relative" }}
                     >
-                      {selectedMenu.groupedDishes[categoryName].map(
-                        (dish, index) => (
-                          <li key={index} style={{ width: "119px" }}>
-                            <button
-                              onClick={() =>
-                                handleRemoveDish(categoryName, dish.dishId)
-                              }
+                      <button
+                        className="scroll-button left"
+                        onClick={() => handleScroll("left")}
+                        style={{
+                          position: "absolute",
+                          left: "0",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          zIndex: 10,
+                          display:
+                            selectedMenu.groupedDishes[categoryName].length >= 4
+                              ? "block"
+                              : "none", // Hiển thị chỉ khi có ít nhất 4 món
+                        }}
+                      >
+                        &lt;
+                      </button>
+
+                      <ul
+                        className="promo-list has-scrollbar"
+                        style={{
+                          paddingBottom: "10px",
+                          overflowX:
+                            selectedMenu.groupedDishes[categoryName].length >= 4
+                              ? "auto"
+                              : "hidden", // Hiển thị thanh cuộn khi có đủ 4 món
+                          display: "flex",
+                          alignItems: "center",
+                        }}
+                        ref={listRef}
+                      >
+                        {selectedMenu.groupedDishes[categoryName].map(
+                          (dish, index) => (
+                            <li
+                              key={index}
                               style={{
-                                color: "red",
-                                marginLeft: "90px",
-                                width: "10px",
-                              }}
-                              title="Xóa món ăn"
-                            >
-                              <FaMinus style={{ width: "10px" }} />
-                            </button>
-                            <img
-                              src={dish.image}
-                              alt={dish.name}
-                              style={{
-                                width: "63px",
-                                height: "60px",
-                                marginLeft: "25px",
-                                borderRadius: "2rem",
-                              }}
-                            />
-                            <p
-                              style={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                textAlign: "center",
-                                fontWeight: "bold",
-                                marginTop: "5px",
-                                fontSize: "10px",
-                                color: "#1e1e1e",
-                              }}
-                            >
-                              {dish.name}
-                            </p>
-                            <p
-                              style={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                textAlign: "center",
-                                fontSize: "10px",
-                                color: "#1e1e1e",
+                                width: "119px",
+                                display: "inline-block",
                               }}
                             >
-                              {/* {dish.price.toLocaleString()} VND */}
-                            </p>
-                          </li>
-                        )
-                      )}
-                    </ul>
+                              <button
+                                onClick={() =>
+                                  handleRemoveDish(categoryName, dish.dishId)
+                                }
+                                style={{
+                                  color: "red",
+                                  marginLeft: "90px",
+                                  width: "10px",
+                                }}
+                                title="Xóa món ăn"
+                              >
+                                <FaMinus style={{ width: "10px" }} />
+                              </button>
+                              <img
+                                src={dish.image}
+                                alt={dish.name}
+                                style={{
+                                  width: "63px",
+                                  height: "60px",
+                                  marginLeft: "25px",
+                                  borderRadius: "2rem",
+                                }}
+                              />
+                              <p
+                                style={{
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  textAlign: "center",
+                                  fontWeight: "bold",
+                                  marginTop: "5px",
+                                  fontSize: "10px",
+                                  color: "#1e1e1e",
+                                }}
+                              >
+                                {dish.name}
+                              </p>
+                              <p
+                                style={{
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  textAlign: "center",
+                                  fontSize: "10px",
+                                  color: "#1e1e1e",
+                                }}
+                              >
+                                {/* {dish.price.toLocaleString()} VND */}
+                              </p>
+                            </li>
+                          )
+                        )}
+                      </ul>
+
+                      <button
+                        className="scroll-button right"
+                        onClick={() => handleScroll("right")}
+                        style={{
+                          position: "absolute",
+                          right: "0",
+                          top: "50%",
+                          transform: "translateY(-50%)",
+                          zIndex: 10,
+                          display:
+                            selectedMenu.groupedDishes[categoryName].length >= 4
+                              ? "block"
+                              : "none", // Hiển thị chỉ khi có ít nhất 4 món
+                        }}
+                      >
+                        &gt;
+                      </button>
+                    </div>
                   </div>
                 ))}
               <div style={{ textAlign: "right", fontWeight: "bold" }}>
@@ -904,6 +1061,22 @@ const Menu = () => {
           )}
         </Modal>
       </div>
+      {showWarning && (
+        <div
+          style={{
+            color: "red",
+            fontWeight: "bold",
+            marginTop: "10px",
+            marginLeft: "10px",
+          }}
+        >
+          * Bạn cần cập nhật đầy đủ thông tin của tài khoản để có thể tạo hợp
+          đồng.{" "}
+          <a href="/account" style={{ display: "inline" }}>
+            Cập nhật ngay!
+          </a>
+        </div>
+      )}
     </div>
   );
 };

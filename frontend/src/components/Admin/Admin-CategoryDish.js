@@ -15,6 +15,7 @@ import {
   DialogTitle,
   Box,
   Tooltip,
+  TablePagination,
 } from "@mui/material";
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
@@ -22,7 +23,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import danhMucApi from "../../api/danhMucApi";
 import { toast, Toaster } from "react-hot-toast";
-import ReactPaginate from "react-paginate";
+import { Typography } from "antd";
 
 const CategoryDish = () => {
   const [open, setOpen] = useState(false);
@@ -31,29 +32,26 @@ const CategoryDish = () => {
   const [categoryId, setCategoryId] = useState("");
   const [categoryName, setCategoryName] = useState("");
   const [categoryDescription, setCategoryDescription] = useState("");
-  const [categories, setCategories] = useState([]); // Lưu trữ danh sách danh mục
+  const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const SIZE_CATEGORY = 5;
-  const [page, setPage] = useState(1);
-  const [pageCount, setPageCount] = useState(0);
+  const [page, setPage] = useState(0);
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [totalElements, setTotalElements] = useState(0);
   const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [nameError, setNameError] = useState("");
   const [descriptionError, setDescriptionError] = useState("");
 
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
-    const token =
-      "eyJhbGciOiJIUzUxMiJ9.eyJpc3MiOiJraWRvLmNvbSIsInN1YiI6ImFkbWluIiwiZXhwIjoxOTExNjUyOTg0LCJpYXQiOjE3MzE2NTI5ODQsImp0aSI6ImE1YTM4YjY2LTAxMzYtNDc3ZC04MmY5LWFmYjZjZjFlMDFkNCIsInNjb3BlIjoiUk9MRV9BRE1JTiJ9.a2UHLzg_NYYv6IW2HihiGqAHERE0ulix1pMeALQPttb-j-syYQfu53Rha5S6rZG6z11Brcgbgzcj_qvxAi8fCA";
-    sessionStorage.setItem("token", token); // Lưu token vào sessionStorage
-    fetchDanhMucWithPaginate(page); // Lấy trang đầu tiên
-  }, [page]);
+    fetchDanhMucWithPaginate(page + 1);
+  }, [page, rowsPerPage]);
 
   // Hàm đổ dữ liệu & phân trang
   const fetchDanhMucWithPaginate = async (page) => {
     try {
-      const res = await danhMucApi.getPaginate(page, SIZE_CATEGORY);
+      const res = await danhMucApi.getPaginate(page, rowsPerPage);
       setCategories(res.result?.content);
-      setPageCount(res.result?.totalPages);
+      setTotalElements(res.result?.totalElements);
       console.log("res.dt = ", res.result.content);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
@@ -251,11 +249,14 @@ const CategoryDish = () => {
     }
   };
 
-  // Hàm xử lý phân trang
-  const handlePageClick = (event) => {
-    const selectedPage = +event.selected + 1; // Lấy số trang người dùng chọn
-    setPage(selectedPage); // Cập nhật page
-    console.log(`User requested page number ${event.selected}`);
+  const handleChangePage = (event, newPage) => {
+    console.log("check page: ", newPage);
+    setPage(newPage);
+  };
+
+  const handleChangeRowsPerPage = (event) => {
+    setRowsPerPage(parseInt(event.target.value, 10));
+    setPage(0); // Reset về trang đầu tiên khi thay đổi số mục trên mỗi trang
   };
 
   return (
@@ -299,7 +300,8 @@ const CategoryDish = () => {
             sx={{
               marginRight: "5px",
               fontSize: "16px",
-              verticalAlign: "middle",
+              fontWeight: "400px",
+              color: "rgb(255, 255, 255)",
             }}
           />
           Thêm danh mục
@@ -311,6 +313,8 @@ const CategoryDish = () => {
         open={openConfirmDelete}
         onClose={handleCloseConfirmDelete}
         aria-labelledby="confirm-delete-title"
+        maxWidth="sm"
+        fullWidth
       >
         <DialogTitle
           id="confirm-delete-title"
@@ -331,6 +335,7 @@ const CategoryDish = () => {
           <Button
             onClick={handleCloseConfirmDelete}
             color="primary"
+            variant="outlined"
             sx={{ fontSize: "1.3rem" }}
           >
             Hủy
@@ -338,70 +343,156 @@ const CategoryDish = () => {
           <Button
             onClick={() => handleDeleteCategory(currentIndex)}
             color="error"
+            variant="outlined"
             sx={{ fontSize: "1.3rem" }}
           >
-            Xóa
+            Đồng ý
           </Button>
         </DialogActions>
       </Dialog>
 
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle
-          sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight: "bold" }}
+          sx={{
+            fontSize: "1.7rem",
+            fontWeight: "bold",
+            color: "#333",
+          }}
         >
-          {editMode ? "Sửa Danh Mục Món" : "Thêm Danh Mục Món"}
+          {editMode ? "Sửa Danh Mục Món Ăn" : "Thêm Danh Mục Món Ăn"}
         </DialogTitle>
-        <DialogContent className="custom-input">
+        <DialogContent className="custom-input" dividers>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Tên danh mục</Typography>
+          </div>
           <TextField
+            size="small"
             autoFocus
+            placeholder="Tên danh mục"
             margin="dense"
-            label="Tên Danh Mục"
             type="text"
             fullWidth
             value={categoryName}
-            onChange={handleNameChange} // Sử dụng hàm xử lý thay đổi
-            error={!!nameError} // Hiển thị thông báo lỗi nếu có
-            helperText={nameError} // Hiển thị thông báo lỗi dưới trường nhập
+            onChange={handleNameChange}
+            error={!!nameError}
+            helperText={nameError}
+            FormHelperTextProps={{
+              style: {
+                fontSize: "1.2rem",
+                color: "red",
+              },
+            }}
           />
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              marginTop: "20px",
+            }}
+          >
+            <Typography
+              style={{
+                color: "red",
+                fontSize: "1.9rem",
+                marginRight: "5px",
+              }}
+            >
+              *
+            </Typography>
+            <Typography>Mô tả</Typography>
+          </div>
           <TextField
+            size="small"
             margin="dense"
-            label="Mô Tả"
+            placeholder="Mô tả"
             type="text"
             fullWidth
-            multiline 
-            rows={4}
+            multiline
+            minRows={5}
+            maxRows={10}
             value={categoryDescription}
-            onChange={handleDescriptionChange} // Sử dụng hàm xử lý thay đổi
-            error={!!descriptionError} // Hiển thị thông báo lỗi nếu có
-            helperText={descriptionError} // Hiển thị thông báo lỗi dưới trường nhập
+            onChange={handleDescriptionChange}
+            error={!!descriptionError}
+            helperText={descriptionError}
+            FormHelperTextProps={{
+              style: {
+                fontSize: "1.2rem",
+                color: "red",
+              },
+            }}
           />
         </DialogContent>
         <DialogActions>
           <Button
+            variant="outlined"
             onClick={handleClose}
-            color="primary"
-            sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
+            sx={{
+              fontSize: "1.3rem",
+              fontWeight: "bold",
+              borderColor: "#f44336",
+              color: "#f44336",
+              borderRadius: "8px",
+              transition: "all 0.3s ease-in-out",
+              marginRight: "8px",
+              "&:hover": {
+                backgroundColor: "#fdecea",
+                borderColor: "#d32f2f",
+              },
+            }}
           >
             Hủy
           </Button>
           <Button
+            variant="outlined"
             onClick={editMode ? handleUpdateCategory : handleAddCategory}
-            color="primary"
-            sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
+            sx={{
+              fontSize: "1.3rem",
+              fontWeight: "bold",
+              color: "primary",
+              borderRadius: "8px",
+              transition: "all 0.3s ease-in-out",
+              marginRight: "8px",
+              "&:hover": {
+                background: "linear-gradient(45deg, #87CEFA 30%, #66BB6A 90%)",
+              },
+            }}
           >
             {editMode ? "Cập Nhật" : "Thêm"}
           </Button>
         </DialogActions>
       </Dialog>
 
-      <TableContainer component={Paper} style={{ marginTop: "20px" }}>
-        <Table className="table-container">
+      <TableContainer component={Paper} className="table-container">
+        <Table>
           <TableHead>
             <TableRow>
               <TableCell>STT</TableCell>
               <TableCell>Tên danh mục</TableCell>
               <TableCell>Mô tả</TableCell>
-              <TableCell>Hành động</TableCell>
+              <TableCell
+                sx={{
+                  position: "sticky",
+                  right: 0,
+                  backgroundColor: "white",
+                  zIndex: 1,
+                }}
+              >
+                Hành động
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -411,15 +502,34 @@ const CategoryDish = () => {
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{category.name}</TableCell>
                   <TableCell>{category.description}</TableCell>
-                  <TableCell>
+                  <TableCell
+                    sx={{
+                      backgroundColor: "#f9f9f9",
+                      position: "sticky",
+                      right: 0,
+                      zIndex: 1,
+                    }}
+                  >
                     <Button
                       variant="outlined"
-                      color="primary"
                       onClick={() => handleEditCategory(category.categoryId)}
-                      style={{ marginRight: "8px" }}
+                      sx={{
+                        color: "primary",
+                        borderRadius: "8px",
+                        transition: "all 0.3s ease-in-out",
+                        marginRight: "8px",
+                        "&:hover": {
+                          background:
+                            "linear-gradient(45deg, #87CEFA 30%, #66BB6A 90%)",
+                        },
+                      }}
                     >
                       <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Sửa thông tin
+                          </span>
+                        }
                         placement="top"
                       >
                         <EditIcon />
@@ -427,13 +537,27 @@ const CategoryDish = () => {
                     </Button>
                     <Button
                       variant="outlined"
-                      color="error"
+                      sx={{
+                        borderColor: "#f44336",
+                        color: "#f44336",
+                        borderRadius: "8px",
+                        transition: "all 0.3s ease-in-out",
+                        marginRight: "8px",
+                        "&:hover": {
+                          backgroundColor: "#fdecea",
+                          borderColor: "#d32f2f",
+                        },
+                      }}
                       onClick={() =>
                         handleOpenConfirmDelete(category.categoryId)
                       }
                     >
                       <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Xóa dữ liệu
+                          </span>
+                        }
                         placement="top"
                       >
                         <DeleteIcon />
@@ -445,25 +569,41 @@ const CategoryDish = () => {
             })}
           </TableBody>
         </Table>
-        <ReactPaginate
-          nextLabel="next >"
-          onPageChange={handlePageClick}
-          pageRangeDisplayed={3}
-          marginPagesDisplayed={2}
-          pageCount={pageCount}
-          previousLabel="< previous"
-          pageClassName="page-item"
-          pageLinkClassName="page-link"
-          previousClassName="page-item"
-          previousLinkClassName="page-link"
-          nextClassName="page-item"
-          nextLinkClassName="page-link"
-          breakLabel="..."
-          breakClassName="page-item"
-          breakLinkClassName="page-link"
-          containerClassName="pagination"
-          activeClassName="active"
-          renderOnZeroPageCount={null}
+        {/* Phân trang */}
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 25]}
+          component="div"
+          count={totalElements}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            fontSize: "1.2rem",
+            padding: "16px",
+            color: "#333", // Đổi màu chữ thành màu tối hơn
+            backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
+            borderRadius: "8px", // Thêm bo góc
+            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+              {
+                fontSize: "1.2rem",
+              },
+            "& .MuiTablePagination-actions > button": {
+              fontSize: "1.2rem",
+              margin: "0 8px", // Thêm khoảng cách giữa các nút
+              backgroundColor: "#1976d2", // Màu nền của các nút
+              color: "#fff", // Màu chữ của các nút
+              borderRadius: "50%", // Nút bấm hình tròn
+              padding: "8px", // Tăng kích thước nút
+              transition: "background-color 0.3s", // Hiệu ứng hover
+              "&:hover": {
+                backgroundColor: "#1565c0", // Đổi màu khi hover
+              },
+            },
+          }}
         />
       </TableContainer>
     </Box>

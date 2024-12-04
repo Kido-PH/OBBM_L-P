@@ -1,3 +1,4 @@
+import axios from "axios";
 import axiosClient from "../config/axiosClient";
 
 const userApi = {
@@ -9,6 +10,16 @@ const userApi = {
     const url = `/users/${userId}`;
     return axiosClient.get(url);
   },
+  getAllUser() {
+    const url = `/users`;
+    return axiosClient.get(url);
+  },
+
+  refreshToken(refreshToken){
+    const url = axios.post(
+      `http://localhost:8080/obbm/auth/refresh`, refreshToken
+    );
+  }
 };
 
 export default userApi;

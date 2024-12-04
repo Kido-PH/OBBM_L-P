@@ -16,10 +16,12 @@ import { OAuthConfig } from "../configurations/configuration";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken, setToken } from "../services/localStorageService";
+import Cookies from "js-cookie";
 
 const LoginForm = ({ toggleForm }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const handleContinueWithGoogle = () => {
     const callbackUrl = OAuthConfig.redirectUri;
     const authUrl = OAuthConfig.authUri;
@@ -74,16 +76,10 @@ const LoginForm = ({ toggleForm }) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     setError(""); // Reset lỗi khi bắt đầu đăng nhập
-    const createdMenu = localStorage.getItem("createdMenu");
-    const savedEventId = localStorage.getItem("currentEventId");
-    if (createdMenu && savedEventId) {
-      navigate(`/menu/${savedEventId}`);
-    } else {
-    navigate("/"); // Chuyển hướng mặc định
-  }
+
     // Kiểm tra dữ liệu người dùng nhập vào
     if (!username.trim() || !password.trim()) {
-      setError("Tên đăng nhập và Mật khẩu không được để trống!");
+      setError("Tài khoản và mật khẩu không được để trống!");
       return;
     }
 
@@ -125,6 +121,7 @@ const LoginForm = ({ toggleForm }) => {
         }
         // Lưu thông tin người dùng vào localStorage
         localStorage.setItem("userId", userDetails.userId);
+        
         navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
       })
       .catch((error) => {
@@ -151,6 +148,41 @@ const LoginForm = ({ toggleForm }) => {
     return data.result;
   };
 
+  const refreshAccessToken = async () => {
+    const refreshToken = Cookies.get("refreshToken"); // Lấy refreshToken từ cookies
+  
+    if (!refreshToken) {
+      throw new Error("Không có refreshToken.");
+    }
+  
+    try {
+      // Gửi yêu cầu đến API /refresh để lấy accessToken mới
+      const response = await fetch("http://localhost:8080/obbm/auth/refresh", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refreshToken }), // Gửi refreshToken
+      });
+  
+      const data = await response.json();
+  
+      // Nếu API trả về accessToken mới, lưu nó vào localStorage
+      if (data.code === 1000 && data.result?.accessToken) {
+        const newAccessToken = data.result.accessToken;
+  
+        setToken(newAccessToken); // Lưu accessToken mới vào localStorage
+        console.log("Mới nhận accessToken:", newAccessToken); // Log accessToken mới
+        return newAccessToken; // Trả về accessToken mới
+      }
+  
+      throw new Error("Không thể lấy accessToken mới.");
+  
+    } catch (error) {
+      console.error("Lỗi khi làm mới accessToken:", error.message);
+      throw error;
+    }
+  };
   
 
   return (

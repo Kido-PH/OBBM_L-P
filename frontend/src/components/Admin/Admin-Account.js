@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   TextField,
@@ -25,29 +25,37 @@ import EditIcon from "@mui/icons-material/Edit";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
 import { toast } from "react-toastify";
-import { initialAccounts } from "../data";
+import axios from "axios";
+import userApi from "api/userApi";
 
 const AccountManager = () => {
-  const [accounts, setAccounts] = useState(initialAccounts);
+  const [accounts, setAccounts] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
-  const [currentAccount, setCurrentAccount] = useState({
-    Username: "",
-    Password: "",
-    Fullname: "",
-    Email: "",
-    PhoneNumber: "",
-    Image: "",
-    Identity: "",
-    DateCreate: new Date(),
-    AccountStatus: false,
-    IsDeleted: false,
-  });
+  const [currentAccount, setCurrentAccount] = useState({});
   const [dialogMode, setDialogMode] = useState("add");
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [accountToLock, setAccountToLock] = useState(null);
-  const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
+  const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
+  const [rowsPerPage, setRowsPerPage] = useState(5);
+
+  // Fetch users with empty roles
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const response = await userApi.getAllUser();
+        const filteredUsers = response.result?.filter(
+          (user) => user.roles.length === 0
+        );
+        setAccounts(filteredUsers);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        toast.error("Failed to fetch user data.");
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const handleOpenDialog = (mode, account) => {
     setDialogMode(mode);
@@ -176,99 +184,68 @@ const AccountManager = () => {
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>#</TableCell>
-              <TableCell>Username</TableCell>
-              <TableCell>Fullname</TableCell>
-              <TableCell>Email</TableCell>
-              <TableCell>PhoneNumber</TableCell>
-              <TableCell>Image</TableCell>
-              <TableCell>Identity</TableCell>
-              <TableCell>DateCreate</TableCell>
-              <TableCell>Account Status</TableCell>
-
-              <TableCell>Actions</TableCell>
+              <TableCell >#</TableCell>
+              <TableCell >
+                Tên đăng nhập
+              </TableCell>
+              <TableCell >
+                Họ tên
+              </TableCell>
+              <TableCell >
+                Email
+              </TableCell>
+              <TableCell >
+                Số điện thoại
+              </TableCell>
+              <TableCell >
+                Trạng thái
+              </TableCell>
+              <TableCell >
+                Hành động
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
             {filteredAccounts
-              .filter((account) => !account.IsDeleted)
-              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage) // Chỉ lấy các mục cho trang hiện tại
+              .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
               .map((account, index) => (
-                <TableRow key={account.Username}>
-                  <TableCell>{index + 1}</TableCell> 
-                  <TableCell>{account.Username}</TableCell>
-                  <TableCell>{account.Fullname}</TableCell>
-                  <TableCell>{account.Email}</TableCell>
-                  <TableCell>{account.PhoneNumber}</TableCell>
-                  <TableCell>{account.Image}</TableCell>
-                  <TableCell>{account.Identity}</TableCell>
+                <TableRow key={account.userId}>
+                  <TableCell>{index + 1 + page * rowsPerPage}</TableCell>
+                  <TableCell>{account.username}</TableCell>
+                  <TableCell>{account.fullname}</TableCell>
+                  <TableCell>{account.email}</TableCell>
+                  <TableCell>{account.phone}</TableCell>
                   <TableCell>
-                    {new Date(account.DateCreate).toLocaleDateString(
-                      "vi-VN",
-                      {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      }
-                    )}{" "}
-                    {new Date(account.DateCreate).toLocaleTimeString(
-                      "vi-VN",
-                      {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      }
-                    )}
-                  </TableCell>
-
-                  <TableCell
-                    sx={{
-                      color: account.AccountStatus ? "red" : "green",
-                      alignItems: "center",
-                    }}
-                  >
-                    {account.AccountStatus ? (
-                      <>
-                        <CancelIcon sx={{ color: "red" }} />{" "}
-                        <span>Inactive</span>
-                      </>
+                    {account.noPassword ? (
+                      <span style={{ color: "red", fontWeight: "bold" }}>Inactive</span>
                     ) : (
-                      <>
-                        <CheckCircleIcon sx={{ color: "green" }} />{" "}
-                        <span>Active</span>
-                      </>
+                      <span style={{ color: "green", fontWeight: "bold" }}>Active</span>
                     )}
                   </TableCell>
                   <TableCell>
                     <IconButton
-                      size="large"
+                      size="small"
                       color="primary"
-                      variant="outlined"
-                      onClick={() => handleOpenDialog("edit", account)}
-                      style={{ marginRight: "10px" }}
+                      onClick={() => setOpenDialog(true)}
                     >
                       <EditIcon />
                     </IconButton>
                     <IconButton
-                      variant="outlined"
+                      size="small"
                       color="error"
-                      onClick={() => handleLockClick(account.Username)}
+                      onClick={() => setOpenConfirmDialog(true)}
                     >
-                      {account.AccountStatus ? (
-                        <LockOpenIcon sx={{ color: "green" }} /> // Icon mở khóa cho trạng thái hoạt động
-                      ) : (
-                        <LockIcon sx={{ color: "red" }} /> // Icon khóa cho trạng thái không hoạt động
-                      )}
+                      {account.noPassword ? <LockIcon /> : <LockOpenIcon />}
                     </IconButton>
                   </TableCell>
                 </TableRow>
               ))}
           </TableBody>
         </Table>
-        {/* Phân trang */}
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
           component="div"
-          count={accounts.length}
+          count={filteredAccounts.length}
           rowsPerPage={rowsPerPage}
           page={page}
           onPageChange={handleChangePage}

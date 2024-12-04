@@ -49,12 +49,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
       <div className="listfood-header">
         <h1>Danh mục món ăn</h1>
         <div className="action-buttons">
-          <button className="filter-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">
-            Lọc
-          </button>
-          <button className="sort-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">
-            Sắp xếp
-          </button>
+          
           <input
             type="text"
             placeholder="Tìm kiếm..."
@@ -62,6 +57,12 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
             onChange={handleSearchChange}
             className="search-input"
           />
+          <button className="filter-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">
+            Lọc
+          </button>
+          <button className="sort-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover">
+            Sắp xếp
+          </button>
           {/* Nút đóng ListFood */}
           <button className="add-button" onClick={closeListFood} style={{marginLeft:"20px"}}>
           <FaTimes style={{color:"red"}} /> {/* X icon for "Remove" */}
@@ -97,7 +98,6 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
                     title="Thêm"
                     onClick={() => onAddDish(dish)}
-                    
                   >
                     
                     <FaPlus /> {/* Plus icon for "Add" */}

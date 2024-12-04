@@ -1,20 +1,22 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate để điều hướng
 import Tooltip from "@mui/material/Tooltip";
-import { RiContractLine } from "react-icons/ri";
-import { BiSolidFoodMenu } from "react-icons/bi";
+import { RiFileList2Fill } from "react-icons/ri";
 import { BiUser } from "react-icons/bi";
-
+import { GiKnifeFork } from "react-icons/gi";
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import "../assets/css/headerStyle.css";
-
+import { FiLogOut } from "react-icons/fi";
+import { FaUserCircle } from "react-icons/fa";
+import { AiFillLock } from "react-icons/ai";
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false); // Thêm state để kiểm tra vai trò người dùng
   const [userDetails, setUserDetails] = useState(null);
   const navigate = useNavigate(); // Khởi tạo useNavigate
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
 
   // Hàm lấy thông tin người dùng từ API
   const getUserDetails = async (accessToken) => {
@@ -25,18 +27,23 @@ const Header = () => {
           Authorization: `Bearer ${accessToken}`,
         },
       });
-
       const data = await response.json();
       console.log(data); // Kiểm tra dữ liệu trả về
 
       if (data && data.result) {
         setUserDetails(data.result);
-        // Kiểm tra nếu vai trò người dùng là "ADMIN"
         const roles = data.result.roles;
-        const adminRole = roles.find(role => role.name === "ADMIN");
+        const adminRole = roles.find(
+          (role) => role.name === "ADMIN" || role.name === "STAFF"
+        );
         if (adminRole) {
-          setIsAdmin(true); // Nếu có vai trò ADMIN, set isAdmin là true
-          navigate("/admin"); // Điều hướng đến trang Admin ngay khi đăng nhập nếu là Admin
+          setIsAdmin(true);
+          localStorage.setItem("isAdmin", true); // Lưu trạng thái vào localStorage
+          localStorage.setItem("roles", JSON.stringify(adminRole));
+          navigate("/admin");
+        } else {
+          setIsAdmin(false);
+          localStorage.setItem("isAdmin", false); // Nếu không phải Admin
         }
       }
     } catch (error) {
@@ -49,7 +56,7 @@ const Header = () => {
     const userId = localStorage.getItem("userId");
     const accessToken = localStorage.getItem("accessToken"); // Lấy token từ localStorage
 
-    if (userId && accessToken) {
+    if (accessToken) {
       setIsLoggedIn(true); // Đã đăng nhập
       getUserDetails(accessToken); // Lấy thông tin người dùng
     }
@@ -116,7 +123,10 @@ const Header = () => {
             {/* Hiển thị nút "Admin" chỉ khi người dùng có vai trò Admin */}
             {isAdmin && (
               <li>
-                <button onClick={() => navigate("/admin")} className="navbar-link">
+                <button
+                  onClick={() => navigate("/admin")}
+                  className="navbar-link"
+                >
                   Admin
                 </button>
               </li>
@@ -129,22 +139,75 @@ const Header = () => {
             <ion-icon name="search-outline"></ion-icon>
           </button>
 
-          <Tooltip title="Menu">
+          <Tooltip title="Thực đơn">
             <a href="/menu" className="navbar-link header-icon">
-              <BiSolidFoodMenu />
+              <GiKnifeFork />
             </a>
           </Tooltip>
 
-          <Tooltip title="Account">
-            <a href="/account" className="navbar-link header-icon">
-              <BiUser />
-            </a>
+          {isLoggedIn && (
+            <Tooltip title="Danh sách hợp đồng">
+              <a href="/user/contract-list" className="navbar-link header-icon">
+                <RiFileList2Fill />
+              </a>
+            </Tooltip>
+          )}
+
+          <Tooltip>
+            {isLoggedIn && (
+              <div className="navbar-link header-icon account-dropdown">
+                <BiUser />
+                <div className="dropdown-menu">
+                  <a
+                    href="/account"
+                    className="dropdown-item navbar-link"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <FaUserCircle />
+                    Thông tin cá nhân
+                  </a>
+                  <a
+                    href="/#"
+                    className="dropdown-item navbar-link"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <AiFillLock />
+                    Đổi mật khẩu
+                  </a>
+                  <a
+                    className="dropdown-item navbar-link"
+                    onClick={() => {
+                      localStorage.removeItem("accessToken");
+                      localStorage.removeItem("userId");
+                      navigate("/login");
+                    }}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <FiLogOut />
+                    Đăng xuất
+                  </a>
+                </div>
+              </div>
+            )}
           </Tooltip>
 
           {/* Hiển thị tên người dùng khi đã đăng nhập */}
           {isLoggedIn && userDetails && (
-            <div className="user-name" >
-              <p style={{color:"hsl(23, 61%, 86%)"}}>Chào, {userDetails.username}</p> {/* Hiển thị tên người dùng */}
+            <div className="user-name">
+              <p className="navbar-link">Chào, {userDetails.fullname}</p>{" "}
+              {/* Hiển thị tên người dùng */}
             </div>
           )}
 
@@ -158,7 +221,8 @@ const Header = () => {
           <button
             className="nav-toggle-btn"
             aria-label="Toggle Menu"
-            data-menu-toggle-btn>
+            data-menu-toggle-btn
+          >
             <span className="line top"></span>{" "}
             <span className="line middle"></span>{" "}
             <span className="line bottom"></span>
