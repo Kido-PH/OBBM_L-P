@@ -107,7 +107,6 @@ function DashboardPage() {
       label: "PHÂN QUYỀN",
       path: "/admin/AccessControl",
     },
-    { key: "12", icon: <LogoutOutlined />, label: "ĐĂNG XUẤT", onclick: handleLogout},
   ];
 
   return (
@@ -214,13 +213,13 @@ function DashboardPage() {
           textAlign: "center",
           fontFamily: "circular std book, sans-serif",
           color: "#858796",
-          height: "0px" /* Chiều cao cố định của Footer */,
-          background: colorBgContainer /* Màu nền nhẹ cho Footer */,
-          position: "fixed" /* Cố định Footer */,
+          height: "60px",
+          background: colorBgContainer,
+          position: "fixed",
           bottom: 0,
           width: `calc(100% - ${
             marginLeft + 32
-          }px)` /* Đảm bảo căn giữa với phần content */,
+          }px)`,
           left: marginLeft + 16,
         }}
       >
