@@ -284,11 +284,11 @@ const AccessControl = () => {
                         >
                           <Typography sx={{ fontSize: "1.3rem" }}>
                             <strong>Tên đăng nhập:</strong>{" "}
-                            {user.username.toUpperCase()}
+                            {user?.username?.toUpperCase()}
                           </Typography>
                           <Typography sx={{ fontSize: "1.3rem" }}>
                             <strong>Tên người dùng:</strong>{" "}
-                            {user.fullname.toUpperCase()}
+                            {user?.fullname?.toUpperCase()}
                           </Typography>
                           <Typography sx={{ fontSize: "1.3rem" }}>
                             <strong>Điện thoại:</strong>{" "}

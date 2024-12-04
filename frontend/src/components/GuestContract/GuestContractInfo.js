@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Form, Card, Row, Col } from "react-bootstrap";
+import { Card, Row, Col } from "react-bootstrap";
 import { FaEye } from "react-icons/fa6";
 
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -27,6 +27,9 @@ const ContractInfo = () => {
   const [showModalMenu, setShowModalMenu] = React.useState(false);
   const [showModalServices, setShowModalServices] = React.useState(false);
   const [showPaymentCard, setShowPaymentCard] = React.useState(false);
+
+  const finaltotalMenuCost =
+    contractInfo.totalcost - (totalServicesCost + contractInfo.locations?.cost);
 
   // Hàm mở modal
   const handleShowModalCancel = () => {
@@ -59,7 +62,7 @@ const ContractInfo = () => {
   };
 
   const alertPaymentStatus = () => {
-    if (paymentStatus === "CANCELLED") {
+    if (paymentStatus === "CANCELLED" || paymentStatus === "02") {
       Swal.fire({
         icon: "error",
         title: "Thanh toán thất bại",
@@ -68,7 +71,7 @@ const ContractInfo = () => {
         showConfirmButton: false,
       });
     }
-    if (paymentStatus === "PAID") {
+    if (paymentStatus === "PAID" || paymentStatus === "00") {
       Swal.fire({
         icon: "success",
         title: "Thanh toán thành công",
@@ -79,28 +82,26 @@ const ContractInfo = () => {
     }
   };
 
-  const autoScroll = (status) => {
-    console.log("status:",status)
-    if (status !== "Pending" && status !== "Completed") {
+  const autoScroll = (status, pStatus) => {
+    console.log("status:", status);
+    if (status !== "Pending" && status !== "Completed" && pStatus !== "Paid") {
       // Cuộn xuống 500px từ vị trí hiện tại
       window.scrollTo({
-        top: 600,
+        top: 720,
         behavior: "smooth", // Cuộn mượt mà
       });
     } else {
-
     }
   };
-  
 
   const handleServicesTotalCost = (cost) => {
     setTotalServicesCost(cost);
   };
-  const calculateGuestPerTable = (guest, table) => {
-    if (!guest || !table || table === 0) {
+  const calculateGuestPerTable = (totalMenu, finalTotalMenu, table) => {
+    if (!totalMenu || !table || table === 0) {
       return "Không xác định"; // Trả về chuỗi nếu dữ liệu không hợp lệ
     }
-    const guestPerTable = Math.round(guest / table);
+    const guestPerTable = Math.round(finalTotalMenu / (totalMenu * table));
     return guestPerTable;
   };
   // Hàm xóa hợp đồng và thực đơn
@@ -159,7 +160,10 @@ const ContractInfo = () => {
       console.log("Fetch contract thành công", contractInfo);
       console.log("Fetch event Services thành công:", eventServicesInfo);
       console.log("Fetch menu dishes thành công", menuDishesInfo);
-      autoScroll(contractInfoFetch.result.status);
+      autoScroll(
+        contractInfoFetch.result.status,
+        contractInfoFetch.result.paymentstatus
+      );
     } catch (error) {
       console.error("Error fetching user info:", error);
     }
@@ -198,7 +202,7 @@ const ContractInfo = () => {
     >
       <div className="container" style={{ marginTop: "120px" }}>
         <div className="text-center mb-5 fw-bold">
-          <h1>Thông tin chi tiết hợp dồng</h1>
+          <h1>Thông tin chi tiết hợp đồng</h1>
         </div>
         <Card name="contractInfo" className="p-5" style={{ opacity: 0.9 }}>
           <h2 style={{ color: "hsl(28, 100%, 58%)" }}>Thông tin hợp đồng</h2>
@@ -291,7 +295,9 @@ const ContractInfo = () => {
 
               <div className="col">
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Số lượng khách</label>
+                  <label className="form-label fw-bold">
+                    Số lượng khách ước tính
+                  </label>
                   <div className="form-control input-hienthi fs-4">
                     {contractInfo.guest}
                   </div>
@@ -306,7 +312,8 @@ const ContractInfo = () => {
                   </label>
                   <div className="form-control input-hienthi fs-4">
                     {calculateGuestPerTable(
-                      contractInfo.guest,
+                      contractInfo.menus?.totalcost,
+                      finaltotalMenuCost,
                       contractInfo.table
                     )}
                   </div>
@@ -315,7 +322,7 @@ const ContractInfo = () => {
 
               <div className="col">
                 <div className="mb-3">
-                  <label className="form-label fw-bold">Số bàn</label>
+                  <label className="form-label fw-bold">Số bàn cuối cùng</label>
                   <div className="form-control input-hienthi fs-4">
                     {contractInfo.table}
                   </div>
@@ -393,10 +400,7 @@ const ContractInfo = () => {
                     className="fw-bold"
                     style={{ color: "var(--deep-saffron)" }}
                   >
-                    {formatCurrency(
-                      contractInfo.menus?.totalcost * contractInfo.guest
-                    )}{" "}
-                    VND
+                    {formatCurrency(finaltotalMenuCost)} VND
                   </span>
                 </div>
               </div>
@@ -450,6 +454,8 @@ const ContractInfo = () => {
                     ? "Chờ xác nhận"
                     : contractInfo.status === "Approved"
                     ? "Đã xác nhận"
+                    : contractInfo.status === "Actived"
+                    ? "Đang hoạt động"
                     : "Đã hoàn thành"}
                 </span>
               </h3>
@@ -473,7 +479,7 @@ const ContractInfo = () => {
                     ? "Chưa thanh toán"
                     : contractInfo.paymentstatus === "Prepay 50%"
                     ? "Đã thanh toán 50%"
-                    : contractInfo.paymentstatus === " Prepay 70%"
+                    : contractInfo.paymentstatus === "Prepay 70%"
                     ? "Đã thanh toán 70%"
                     : "Đã thanh toán"}
                 </span>
@@ -498,7 +504,7 @@ const ContractInfo = () => {
           contractInfo.paymentstatus === "Prepay 50%" ||
           contractInfo.paymentstatus === "Prepay 70%") &&
           contractInfo.status !== "Pending" && (
-            <PaymentCard onHide={handlePayment} contractInfo={contractInfo} />
+            <PaymentCard onHide={handlePayment} contractInfo={contractInfo}/>
           )}
       </div>
 
@@ -512,6 +518,7 @@ const ContractInfo = () => {
         show={showModalMenu}
         onClose={handleCloseModalMenu}
         menuDishes={menuDishesInfo}
+        status={true}
       />
       <ModalInfoServices
         show={showModalServices}

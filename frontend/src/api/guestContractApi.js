@@ -31,7 +31,7 @@ const guestContractApi = {
     return axiosClient.delete(url);
   },
 
-  deleteMenu(id){
+  deleteMenu(id) {
     const url = `/menu/${id}`;
     return axiosClient.delete(url);
   },
@@ -48,6 +48,11 @@ const guestContractApi = {
 
   getLastestContractId(id) {
     const url = `/contract/lastestContract/${id}`;
+    return axiosClient.get(url);
+  },
+
+  getContractList(userId, page, size) {
+    const url = `/contract/user/${userId}?page=${page}&size=${size}`;
     return axiosClient.get(url);
   },
 };

@@ -93,7 +93,7 @@ function DashboardPage() {
       key: "9",
       icon: <MenuOutlined />,
       label: "THỰC ĐƠN",
-      path: "/admin/Menu",
+      path: "/admin/MenuManagement",
     },
     {
       key: "10",
