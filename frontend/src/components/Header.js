@@ -12,6 +12,7 @@ import { FiLogOut } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 import { AiFillLock } from "react-icons/ai";
 import { getToken } from "services/localStorageService";
+
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);

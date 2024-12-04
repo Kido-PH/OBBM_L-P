@@ -66,7 +66,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
         <h1>Danh mục món ăn</h1>
         <div className="action-buttons">
           
-        <AudioRecorderWithAPI
+          <AudioRecorderWithAPI
             onSearch={handleSearch}
             visibleSearchButton="hidden"
           />
