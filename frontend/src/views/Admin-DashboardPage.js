@@ -107,7 +107,6 @@ function DashboardPage() {
       label: "PHÂN QUYỀN",
       path: "/admin/AccessControl",
     },
-    { key: "12", icon: <LogoutOutlined />, label: "ĐĂNG XUẤT", onclick: handleLogout},
   ];
 
   return (
