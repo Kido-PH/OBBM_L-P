@@ -312,7 +312,7 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
               }}
             >
               <Box flex={1}>
-                <img
+                <img  
                   src={event?.image}
                   alt={event?.name}
                   style={{
