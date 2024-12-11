@@ -24,12 +24,6 @@ const userApi = {
   createPassword(password) {
     const url = `/users/create-password`;
     return axiosClient.post(url, password);
-<<<<<<< HEAD
-  }, 
-};
-=======
->>>>>>> main
-
   },
 }
   export default userApi;
