@@ -22,10 +22,13 @@ const adminMenuApi = {
     // Cập nhật menu
     update: async (menuId, payload) => {
         if (!menuId) {
-          throw new Error("menuId không được xác định!");
+            throw new Error("menuId không được xác định!");
         }
+        console.log("Payload gửi đi:", payload);
         return axiosClient.put(`/menu/${menuId}`, payload);
-      },
+    },
+    
+    
 
     // Xóa menu
     delete(id) {
