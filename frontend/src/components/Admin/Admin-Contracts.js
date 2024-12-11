@@ -15,39 +15,199 @@ import {
   Paper,
   Tooltip,
   TablePagination,
+  TextField,
+  Autocomplete,
+  Grid,
+  IconButton,
 } from "@mui/material";
 import axios from "axios";
 import InfoIcon from "@mui/icons-material/Info";
 import html2pdf from "html2pdf.js";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
+import EditIcon from "@mui/icons-material/Edit";
 import { toast, Toaster } from "react-hot-toast";
 import { format, parse } from "date-fns";
 import contractApi from "../../api/contractApi";
 import ContractFilter from "./ContractFilter";
+import { Divider, Typography } from "antd";
+import SnackBarNotification from "./SnackBarNotification";
+import VisibilityIcon from "@mui/icons-material/Visibility";
 
 const ManageContracts = () => {
   const [contracts, setContracts] = useState([]); // Dữ liệu hợp đồng
   const [showModal, setShowModal] = useState(false); // Hiển thị modal
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
   const [showModalPDF, setShowModalPDF] = useState(false);
-  const [selecterContract, setSelecterContract] = useState();
+  const [selecterContract, setSelecterContract] = useState({
+    name: "",
+    type: "",
+    status: "",
+    paymentstatus: "",
+    guest: 0,
+    table: 0,
+    totalcost: 0,
+    organizdate: "",
+    custname: "",
+    custphone: "",
+    description: "",
+  });
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
   const [totalElements, setTotalElements] = useState(0);
   const [selectedContractStatus, setSelectedContractStatus] = useState("");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
+  const [filteredContracts, setFilteredContracts] = useState(contracts);
 
+  const [contractTypes, setContractTypes] = useState([]);
+  const [contractStatuses, setContractStatuses] = useState([]);
+  const [paymentStatuses, setPaymentStatuses] = useState([]);
+
+  const [stockRequests, setStockRequests] = useState([]);
+  const [selectedContract, setSelectedContract] = useState(null);
+  const [showStockRequestsDialog, setShowStockRequestsDialog] = useState(false);
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
+
+  // Fetch xem chi tiết nguyên liệu hợp đồng
+  const handleViewStockRequests = async (contractId) => {
+    try {
+      const accessToken = localStorage.getItem("accessToken");
+
+      const url = `http://localhost:8080/obbm/contract/${contractId}`;
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      console.log("Dữ liệu API trả về:", data);
+
+      const contractData = data?.result;
+
+      if (!contractData) {
+        toast.error("Không tìm thấy hợp đồng!");
+        return;
+      }
+
+      const stockRequests = Array.isArray(contractData.listStockrequests)
+        ? contractData.listStockrequests
+        : [];
+
+      setStockRequests(stockRequests);
+      setSelectedContract(contractData);
+      setShowStockRequestsDialog(true); // Hiển thị dialog
+    } catch (error) {
+      console.error("Lỗi khi gọi API:", error);
+      toast.error("Không thể lấy danh sách nguyên liệu!");
+    }
+  };
+
+  const formatDateForInput = (date) => {
+    if (!date) return "";
+
+    // Kiểm tra nếu giá trị đã có định dạng yyyy-MM-ddTHH:mm
+    const isoFormatPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
+    if (isoFormatPattern.test(date)) {
+      return date; // Nếu có đúng định dạng, giữ nguyên
+    }
+
+    // Chuyển từ dd/MM/yyyy HH:mm sang yyyy-MM-ddTHH:mm
+    const [day, month, year, hour, minute] = date.split(/[\s/:]+/);
+    return `${year}-${month}-${day}T${hour}:${minute}`;
+  };
+
+  // Hàm chuyển từ tiếng Việt sang tiếng Anh
+  const mapStatusToEnglish = (status) => {
+    const statusMapReverse = {
+      "Chờ duyệt": "Pending",
+      "Đã duyệt": "Approved",
+      "Đang hoạt động": "Actived",
+      "Đã hoàn thành": "Completed",
+      "Chưa thanh toán": "Unpaid",
+      "Trả trước 50%": "Prepay 50%",
+      "Trả trước 70%": "Prepay 70%",
+      "Đã thanh toán": "Paid",
+      "Đã hủy": "Cancelled",
+    };
+    return statusMapReverse[status] || status;
+  };
+
+  // Hàm gọi API để lấy dữ liệu hợp đồng
+  const fetchContracts = async (page) => {
+    try {
+      const res = await contractApi.getPaginate(page, 100); // Giả sử API lấy tất cả hợp đồng
+      if (res.code === 1000) {
+        // Lọc giá trị các trường type, status, và paymentstatus
+        const types = Array.isArray(res?.result?.content)
+          ? res?.result?.content.map((contract) => contract?.type)
+          : [];
+
+        // Gán cứng các giá trị trạng thái hợp đồng và trạng thái thanh toán
+        const statuses = [
+          "Chờ duyệt",
+          "Đã duyệt",
+          "Đang hoạt động",
+          "Đã hoàn thành",
+        ];
+        const paymentStatuses = [
+          "Chưa thanh toán",
+          "Trả trước 50%",
+          "Trả trước 70%",
+          "Đã thanh toán",
+        ];
+
+        setContractTypes(types);
+        setContractStatuses(statuses);
+        setPaymentStatuses(paymentStatuses);
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu hợp đồng:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchContracts(page + 1); // Gọi API khi component được mount
+  }, [page]);
 
   useEffect(() => {
     fetchContractWithPaginate(page + 1, rowsPerPage);
   }, [page, rowsPerPage]);
+
+  useEffect(() => {
+    filterContracts(); // Gọi hàm lọc mỗi khi giá trị lọc hoặc từ khóa tìm kiếm thay đổi
+  }, [selectedContractStatus, selectedPaymentStatus, searchTerm, contracts]);
+
   // Hàm lấy tất cả listContract
   const fetchContractWithPaginate = async (page, rowsPerPage) => {
     try {
       const res = await contractApi.getPaginate(page, rowsPerPage);
       setContracts(res.result?.content.reverse());
       setTotalElements(res.result?.totalElements);
+      setFilteredContracts(res.result?.content.reverse());
       console.log(res.result?.content);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
@@ -72,6 +232,8 @@ const ManageContracts = () => {
         return "Trả trước 70%";
       case "Paid":
         return "Đã thanh toán";
+      case "Cancelled":
+        return "Đã hủy";
       default:
         return status; // Nếu không có giá trị hợp lệ, trả lại trạng thái gốc
     }
@@ -82,19 +244,17 @@ const ManageContracts = () => {
     // Kiểm tra trạng thái hợp đồng "Chờ duyệt" và "Chưa thanh toán"
     if (contract.status === "Pending" && contract.paymentstatus === "Unpaid") {
       contract.status = "Approved";
-      toast.success(
-        `Hợp đồng đã được duyệt: ${translateStatus(contract.paymentstatus)}`
-      );
+      showSuccess("Hợp đồng đã được phê duyệt thành công.");
     }
 
-    // Kiểm tra trạng thái "Chờ duyệt" với thanh toán trước một phần (50% hoặc 70%)
+    // Kiểm tra trạng thái "Đã duyệt" với thanh toán trước một phần (50% hoặc 70%)
     if (
       contract.status === "Approved" &&
       (contract.paymentstatus === "Prepay 50%" ||
         contract.paymentstatus === "Prepay 70%")
     ) {
       contract.status = "Actived"; // Đổi trạng thái thành "Đang hoạt động"
-      toast.success(
+      showSuccess(
         `Hợp đồng đã được kích hoạt với phần trăm thanh toán: ${translateStatus(
           contract.paymentstatus
         )}`
@@ -104,15 +264,8 @@ const ManageContracts = () => {
     // Trường hợp hợp đồng "Đã duyệt" và "Đã thanh toán"
     if (contract.status === "Actived" && contract.paymentstatus === "Paid") {
       contract.status = "Completed"; // Đổi trạng thái thành "Đã hoàn thành"
-      toast.success("Hợp đồng đã được xác nhận và hoàn thành!");
+      showSuccess("Hợp đồng đã được hoàn thành và đã thanh toán!");
     }
-
-    // Trường hợp hợp đồng đã hoàn thành và đã thanh toán đầy đủ
-    if (contract.status === "Completed" && contract.paymentstatus === "Paid") {
-      toast.success("Hợp đồng đã hoàn thành và đã được xác nhận trước đó!");
-    }
-
-    // Trường hợp không thỏa mãn các điều kiện trên
 
     // Chuẩn bị dữ liệu gửi lên API để cập nhật
     const data = {
@@ -142,8 +295,18 @@ const ManageContracts = () => {
 
       // Kiểm tra mã trạng thái trả về từ server
       if (res.code === 1000) {
-        fetchContractWithPaginate(page); // Làm mới danh sách hợp đồng sau khi cập nhật
-        toast.success("Cập nhật hợp đồng thành công!");
+        // Cập nhật lại dữ liệu hợp đồng trong state để không cần tải lại trang
+        setContracts((prevContracts) =>
+          prevContracts.map((contractItem) =>
+            contractItem.contractId === contract.contractId
+              ? {
+                  ...contractItem,
+                  status: contract.status,
+                  paymentstatus: contract.paymentstatus,
+                }
+              : contractItem
+          )
+        );
       } else {
         toast.error("Cập nhật hợp đồng không thành công. Vui lòng thử lại.");
       }
@@ -165,7 +328,7 @@ const ManageContracts = () => {
         guest: contract.guest,
         table: contract.table,
         totalcost: contract.totalcost,
-        status: "Đã hủy",
+        status: "Cancelled",
         paymentstatus: contract.paymentstatus,
         organizdate: contract.organizdate, // Định dạng ISO 8601
         custname: contract.custname,
@@ -180,7 +343,7 @@ const ManageContracts = () => {
       // Gọi API POST để hủy hợp đồng
       const res = await contractApi.update(contract.contractId, updateData);
       if (res.code === 1000) {
-        fetchContractWithPaginate(page);
+        fetchContractWithPaginate(page, rowsPerPage);
         toast.success("Hợp đồng đã được hủy thành công!");
       }
     } catch (error) {
@@ -189,27 +352,141 @@ const ManageContracts = () => {
     }
   };
 
-  // Hàm xử lý tìm kiếm theo từ khóa
-  const filteredContracts = contracts.filter((contract) => {
-    const matchesSearchTerm = searchTerm
-      ? contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.paymentstatus.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
+  // Hàm chuyển ngày sang định dạng "dd/MM/yyyy HH:mm"
+  const formatDateForAPI = (date) => {
+    console.log("check date: ", date);
 
-    const matchesContractStatus = selectedContractStatus
-      ? contract.status.toLowerCase() === selectedContractStatus.toLowerCase()
-      : true;
+    // Kiểm tra nếu ngày đã có định dạng yyyy-MM-ddTHH:mm
+    const isoFormatPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/;
 
-    const matchesPaymentStatus = selectedPaymentStatus
-      ? contract.paymentstatus.toLowerCase() ===
-        selectedPaymentStatus.toLowerCase()
-      : true;
+    // Nếu ngày đã có định dạng yyyy-MM-ddTHH:mm, chuyển thành dd/MM/yyyy HH:mm
+    if (isoFormatPattern.test(date)) {
+      const parsedDate = new Date(date);
+      if (isNaN(parsedDate)) {
+        console.error("Invalid date format");
+        return ""; // Hoặc trả về một giá trị mặc định như ""
+      }
+      return format(parsedDate, "dd/MM/yyyy HH:mm");
+    }
 
-    // Kết hợp tất cả điều kiện
-    return matchesSearchTerm && matchesContractStatus && matchesPaymentStatus;
-  });
+    // Nếu ngày không có định dạng yyyy-MM-ddTHH:mm, trả lại như cũ
+    return date;
+  };
+
+  // Hàm chỉnh sửa hợp đồng
+  const handleSaveContract = async (contract) => {
+    const formattedDate = formatDateForAPI(selecterContract.organizdate);
+
+    // Chuẩn bị dữ liệu gửi lên API để cập nhật
+    const data = {
+      name: selecterContract.name,
+      type: selecterContract.type,
+      guest: selecterContract.guest,
+      table: selecterContract.table,
+      totalcost: selecterContract.totalcost,
+      status: mapStatusToEnglish(selecterContract.status),
+      paymentstatus: mapStatusToEnglish(selecterContract.paymentstatus),
+      organizdate: formattedDate,
+      custname: selecterContract.custname,
+      custphone: selecterContract.custphone,
+      description: selecterContract.description,
+      userId: selecterContract.users.userId, // Vẫn có thể dùng để gửi API
+      locationId: selecterContract.locations.locationId,
+      eventId: selecterContract.events.eventId,
+      menuId: selecterContract.menus.menuId,
+    };
+
+    try {
+      // Gọi API PUT để cập nhật hợp đồng
+      const res = await contractApi.update(selecterContract.contractId, data);
+      console.log("Phản hồi từ API:", res);
+
+      showSuccess("Cập nhật hợp đồng thành công!");
+
+      // Kiểm tra mã trạng thái trả về từ server
+      if (res.code === 1000) {
+        // Cập nhật hợp đồng trong state sau khi sửa thành công
+        setContracts((prevContracts) => {
+          return prevContracts.map((contractItem) =>
+            contractItem.contractId === selecterContract.contractId
+              ? { ...contractItem, ...selecterContract } // Cập nhật hợp đồng đã sửa
+              : contractItem
+          );
+        });
+
+        // Cập nhật lại filteredContracts nếu có bộ lọc
+        setFilteredContracts((prevContracts) => {
+          return prevContracts.map((contractItem) =>
+            contractItem.contractId === selecterContract.contractId
+              ? { ...contractItem, ...selecterContract } // Cập nhật hợp đồng đã sửa
+              : contractItem
+          );
+        });
+
+        setShowModal(false);
+      } else {
+        toast.error("Cập nhật hợp đồng không thành công. Vui lòng thử lại.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi xác nhận hợp đồng:", error);
+      if (error.response) {
+        console.error("Phản hồi lỗi từ server:", error.response.data);
+      }
+      toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
+    }
+  };
+
+  // Hàm tìm kiếm và lọc hợp đồng
+  const filterContracts = () => {
+    const filtered = contracts.filter((contract) => {
+      const matchesSearchTerm = searchTerm
+        ? contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contract.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contract.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contract.paymentstatus
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
+        : true;
+
+      const matchesContractStatus = selectedContractStatus
+        ? contract.status.toLowerCase() === selectedContractStatus.toLowerCase()
+        : true;
+
+      const matchesPaymentStatus = selectedPaymentStatus
+        ? contract.paymentstatus.toLowerCase() ===
+          selectedPaymentStatus.toLowerCase()
+        : true;
+
+      // Kết hợp tất cả các điều kiện lọc
+      return matchesSearchTerm && matchesContractStatus && matchesPaymentStatus;
+    });
+
+    setFilteredContracts(filtered);
+  };
+
+  // Cập nhật trạng thái hợp đồng khi chọn trong ContractFilter
+  const handleContractStatusFilter = (status) => {
+    setSelectedContractStatus(status);
+    filterContracts(); // Gọi lại hàm lọc khi thay đổi trạng thái hợp đồng
+  };
+
+  // Cập nhật trạng thái thanh toán khi chọn trong ContractFilter
+  const handlePaymentStatusFilter = (paymentStatus) => {
+    setSelectedPaymentStatus(paymentStatus);
+    filterContracts(); // Gọi lại hàm lọc khi thay đổi trạng thái thanh toán
+  };
+
+  // Cập nhật từ khóa tìm kiếm
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+    filterContracts(); // Gọi lại hàm lọc khi thay đổi từ khóa
+  };
+
+  // Hàm mở modal và set contract đã chọn
+  const handleEditContract = (contract) => {
+    setSelecterContract(contract);
+    setShowModal(true);
+  };
 
   const handleChangePage = (event, newPage) => {
     console.log("check page: ", newPage);
@@ -268,6 +545,12 @@ const ManageContracts = () => {
   return (
     <div>
       <Toaster position="top-center" reverseOrder={false} />
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
       <Box
         sx={{
           display: "flex",
@@ -307,10 +590,11 @@ const ManageContracts = () => {
                   Trạng thái hợp đồng
                   <ContractFilter
                     filterType="contract"
-                    onApplyFilter={(status) => {
-                      setSelectedContractStatus(status);
+                    onApplyFilter={handleContractStatusFilter}
+                    onClearFilter={() => {
+                      setSelectedContractStatus(""); // Xóa bộ lọc trạng thái hợp đồng
+                      filterContracts(); // Lọc lại sau khi xóa
                     }}
-                    onClearFilter={() => setSelectedContractStatus("")}
                   />
                 </Box>
               </TableCell>
@@ -319,10 +603,11 @@ const ManageContracts = () => {
                   Trạng thái thanh toán
                   <ContractFilter
                     filterType="payment"
-                    onApplyFilter={(paymentStatus) => {
-                      setSelectedPaymentStatus(paymentStatus);
+                    onApplyFilter={handlePaymentStatusFilter}
+                    onClearFilter={() => {
+                      setSelectedPaymentStatus(""); // Xóa bộ lọc trạng thái thanh toán
+                      filterContracts(); // Lọc lại sau khi xóa
                     }}
-                    onClearFilter={() => setSelectedPaymentStatus("")}
                   />
                 </Box>
               </TableCell>
@@ -363,6 +648,17 @@ const ManageContracts = () => {
                           ? "#17a2b8"
                           : "#dc3545",
                       fontWeight: "bold",
+                      backgroundColor:
+                        contract.status === "Completed"
+                          ? "#28a7451a" // Màu xanh nhẹ cho "Đã hoàn thành"
+                          : contract.status === "Pending"
+                          ? "#ffc1071a" // Màu vàng nhẹ cho "Chờ duyệt"
+                          : contract.status === "Actived"
+                          ? "#17a2b81a" // Màu xanh dương nhẹ cho "Đang hoạt động"
+                          : "#dc35451a", // Màu đỏ nhẹ cho "Đã hủy"
+                      padding: "3px 8px", // Thêm padding cho các thẻ trạng thái
+                      borderRadius: "5px", // Bo tròn các góc để mềm mại
+                      display: "inline-block",
                     }}
                   >
                     {translateStatus(contract.status)}{" "}
@@ -381,6 +677,17 @@ const ManageContracts = () => {
                           ? "#ff851b"
                           : "#dc3545",
                       fontWeight: "bold",
+                      backgroundColor:
+                        contract.paymentstatus === "Paid"
+                          ? "#28a7451a" // Màu xanh nhẹ cho "Đã thanh toán"
+                          : contract.paymentstatus === "Prepay 50%"
+                          ? "#ffc1071a" // Màu vàng nhẹ cho "Trả trước 50%"
+                          : contract.paymentstatus === "Prepay 70%"
+                          ? "#ff851b1a" // Màu cam nhẹ cho "Trả trước 70%"
+                          : "#dc35451a", // Màu đỏ nhẹ cho "Chưa thanh toán"
+                      padding: "3px 8px", // Thêm padding cho các thẻ thanh toán
+                      borderRadius: "5px", // Bo tròn các góc
+                      display: "inline-block",
                     }}
                   >
                     {translateStatus(contract.paymentstatus)}{" "}
@@ -389,16 +696,10 @@ const ManageContracts = () => {
 
                 <TableCell>
                   {contract.organizdate
-                    ? format(
-                        parse(
-                          contract.organizdate,
-                          "dd/MM/yyyy HH:mm",
-                          new Date()
-                        ),
-                        "dd/MM/yyyy"
-                      )
+                    ? formatDateForAPI(contract.organizdate)
                     : "Không có ngày tổ chức"}
                 </TableCell>
+
                 <TableCell
                   sx={{
                     display: "flex",
@@ -407,70 +708,137 @@ const ManageContracts = () => {
                     zIndex: 1,
                   }}
                 >
-                  {contract.status !== "Completed" &&
-                    contract.status !== "Đã hủy" && (
-                      <span>
-                        <Button
-                          variant="outlined"
-                          onClick={() => handleConfirmContract(contract)}
-                          sx={{
-                            fontSize: "1.3rem",
-                            fontWeight: "bold",
-                            color: "#33CC33",
-                            borderRadius: "8px",
-                            transition: "all 0.3s ease-in-out",
-                            marginRight: "8px",
-                            "&:hover": {
-                              background:
-                                "linear-gradient(45deg, #FFFFFF 30%, #CCFFCC 90%)",
-                            },
-                          }}
-                        >
-                          <Tooltip
-                            title={
-                              <span style={{ fontSize: "1.25rem" }}>
-                                Xác nhận hợp đồng
-                              </span>
-                            }
-                            placement="top"
-                          >
-                            <CheckCircleIcon />
-                          </Tooltip>
-                        </Button>
+                  <span>
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleConfirmContract(contract)}
+                      disabled={
+                        contract.status === "Completed" ||
+                        contract.status === "Cancelled"
+                      } // Disable if status is "Completed" or "Cancelled"
+                      sx={{
+                        fontSize: "1.3rem",
+                        fontWeight: "bold",
+                        color:
+                          contract.status === "Completed"
+                            ? "#28a745" // Màu xanh cho "Đã hoàn thành"
+                            : contract.status === "Pending"
+                            ? "#ffc107" // Màu vàng cho "Chờ duyệt"
+                            : contract.status === "Actived"
+                            ? "#17a2b8" // Màu xanh dương cho "Đang hoạt động"
+                            : "#dc3545", // Màu đỏ cho "Đã hủy"
+                        borderRadius: "8px",
+                        transition: "all 0.3s ease-in-out",
+                        marginRight: "8px",
+                        "&:hover": {
+                          background:
+                            contract.status === "Completed"
+                              ? "linear-gradient(45deg, #28a7451a 30%, #28a745 90%)"
+                              : contract.status === "Pending"
+                              ? "linear-gradient(45deg, #ffc1071a 30%, #ffc107 90%)"
+                              : contract.status === "Actived"
+                              ? "linear-gradient(45deg, #17a2b81a 30%, #17a2b8 90%)"
+                              : "linear-gradient(45deg, #dc35451a 30%, #dc3545 90%)", // Hiệu ứng hover theo trạng thái
+                        },
+                        opacity:
+                          contract.status === "Completed" ||
+                          contract.status === "Cancelled"
+                            ? 0.5
+                            : 1, // Mờ nút khi vô hiệu hóa
+                      }}
+                    >
+                      <Tooltip
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Xác nhận hợp đồng
+                          </span>
+                        }
+                        placement="top"
+                      >
+                        <CheckCircleIcon />
+                      </Tooltip>
+                    </Button>
 
-                        <Button
-                          variant="outlined"
-                          onClick={() => handleCancelContract(contract)}
-                          sx={{
-                            fontSize: "1.3rem",
-                            fontWeight: "bold",
-                            borderColor: "#f44336",
-                            color: "#f44336",
-                            borderRadius: "8px",
-                            transition: "all 0.3s ease-in-out",
-                            marginRight: "8px",
-                            "&:hover": {
-                              backgroundColor: "#fdecea",
-                              borderColor: "#d32f2f",
-                            },
-                          }}
-                        >
-                          <Tooltip
-                            title={
-                              <span style={{ fontSize: "1.25rem" }}>
-                                Hủy hợp đồng
-                              </span>
-                            }
-                            placement="top"
-                          >
-                            <CancelIcon />
-                          </Tooltip>
-                        </Button>
-                      </span>
-                    )}
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleEditContract(contract)}
+                      disabled={
+                        contract.status === "Completed" ||
+                        contract.status === "Cancelled"
+                      } // Disable if status is "Completed" or "Cancelled"
+                      sx={{
+                        fontSize: "1.3rem",
+                        fontWeight: "bold",
+                        borderColor: "#4caf50",
+                        color: "#4caf50",
+                        borderRadius: "8px",
+                        transition: "all 0.3s ease-in-out",
+                        marginRight: "8px",
+                        "&:hover": {
+                          backgroundColor: "#a3f0b4",
+                          borderColor: "#4ec267",
+                        },
+                        opacity:
+                          contract.status === "Completed" ||
+                          contract.status === "Cancelled"
+                            ? 0.5
+                            : 1, // Mờ nút khi vô hiệu hóa
+                      }}
+                    >
+                      <Tooltip
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Sửa hợp đồng
+                          </span>
+                        }
+                        placement="top"
+                      >
+                        <EditIcon />
+                      </Tooltip>
+                    </Button>
+
+                    <Button
+                      variant="outlined"
+                      onClick={() => handleCancelContract(contract)}
+                      disabled={
+                        contract.status === "Completed" ||
+                        contract.status === "Cancelled"
+                      } // Disable if status is "Completed" or "Cancelled"
+                      sx={{
+                        fontSize: "1.3rem",
+                        fontWeight: "bold",
+                        borderColor: "#f44336",
+                        color: "#f44336",
+                        borderRadius: "8px",
+                        transition: "all 0.3s ease-in-out",
+                        marginRight: "8px",
+                        "&:hover": {
+                          backgroundColor: "#fdecea",
+                          borderColor: "#d32f2f",
+                        },
+                        opacity:
+                          contract.status === "Completed" ||
+                          contract.status === "Cancelled"
+                            ? 0.5
+                            : 1, // Mờ nút khi vô hiệu hóa
+                      }}
+                    >
+                      <Tooltip
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Hủy hợp đồng
+                          </span>
+                        }
+                        placement="top"
+                      >
+                        <CancelIcon />
+                      </Tooltip>
+                    </Button>
+                  </span>
+
                   <Button
                     variant="outlined"
-                    onClick={() => handleModalPDF(contract)}
+                    onClick={() => handleModalPDF(contract)} // Always enabled
                     sx={{
                       fontSize: "1.3rem",
                       fontWeight: "bold",
@@ -496,6 +864,14 @@ const ManageContracts = () => {
                       <InfoIcon />
                     </Tooltip>
                   </Button>
+
+                  <IconButton
+                    color="primary"
+                    onClick={() => handleViewStockRequests(contract.contractId)}
+                    title="Xem nguyên liệu"
+                  >
+                    <VisibilityIcon style={{ fontSize: "1.5rem" }} />
+                  </IconButton>
                 </TableCell>
               </TableRow>
             ))}
@@ -539,6 +915,440 @@ const ManageContracts = () => {
           }}
         />
       </TableContainer>
+      {/* Modal chỉnh sửa hợp đồng */}
+      <Dialog
+        open={showModal}
+        onClose={handleCloseModal}
+        aria-labelledby="contract-modal-title"
+        aria-describedby="contract-modal-description"
+      >
+        <div
+          style={{
+            padding: 20,
+            backgroundColor: "white",
+            borderRadius: 8,
+            maxWidth: 1000, // Chiều rộng của modal
+            margin: "auto",
+          }}
+        >
+          <Typography
+            id="contract-modal-title"
+            variant="h6"
+            component="h2"
+            style={{
+              marginBottom: 10,
+              textAlign: "center",
+              fontSize: "1.9rem", // Tăng cỡ chữ tiêu đề
+            }}
+          >
+            Chỉnh sửa hợp đồng
+          </Typography>
+          <Divider />
+
+          {/* Form chỉnh sửa hợp đồng */}
+          <Grid container spacing={3}>
+            {/* Nhóm thông tin cơ bản */}
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Tên hợp đồng
+              </label>
+              <TextField
+                value={selecterContract?.name || ""}
+                onChange={(e) =>
+                  setSelecterContract({
+                    ...selecterContract,
+                    name: e.target.value,
+                  })
+                }
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "36px", // Chiều cao tổng thể của ô input
+                  },
+                  "& .MuiInputBase-input": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ của label
+                  },
+                }}
+                disabled
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Loại hợp đồng
+              </label>
+              <Autocomplete
+                value={selecterContract.type || ""}
+                onChange={(event, newValue) =>
+                  setSelecterContract({ ...selecterContract, type: newValue })
+                }
+                options={contractTypes || []}
+                getOptionLabel={(option) => option || ""}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    sx={{
+                      "& .MuiInputBase-root": {
+                        height: "36px", // Chiều cao tổng thể của ô input
+                      },
+                      "& .MuiInputBase-input": {
+                        fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                      },
+                      "& .MuiInputLabel-root": {
+                        fontSize: "1.2rem", // Tăng cỡ chữ của label
+                      },
+                    }}
+                  />
+                )}
+                disabled
+              />
+            </Grid>
+
+            {/* <Grid item xs={6}>
+        <label style={{ fontWeight: "bold", display: "block", fontSize:"13px" }}>
+          Số khách
+        </label>
+        <TextField
+          type="number"
+          value={selecterContract?.guest || 0}
+          onChange={(e) => {
+            setSelecterContract({ ...selecterContract, guest: e.target.value })
+            }
+          }
+          fullWidth
+          sx={{
+            "& .MuiInputBase-root": {
+              height: "36px", // Chiều cao tổng thể của ô input
+            },
+            "& .MuiInputBase-input": {
+              fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+            },
+            "& .MuiInputLabel-root": {
+              fontSize: "1.2rem", // Tăng cỡ chữ của label
+            },
+          }}
+        />
+      </Grid>
+      <Grid item xs={6}>
+      <label style={{ fontWeight: "bold", display: "block", fontSize:"13px" }}>
+          Số bàn
+        </label>
+        <TextField
+          type="number"
+          value={selecterContract?.table || 0}
+          onChange={(e) =>
+            setSelecterContract({ ...selecterContract, table: e.target.value })
+          }
+          fullWidth
+          sx={{
+            "& .MuiInputBase-root": {
+              height: "36px", // Chiều cao tổng thể của ô input
+            },
+            "& .MuiInputBase-input": {
+              fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+            },
+            "& .MuiInputLabel-root": {
+              fontSize: "1.2rem", // Tăng cỡ chữ của label
+            },
+          }}
+        />
+      </Grid> */}
+
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Tổng chi phí
+              </label>
+              <TextField
+                type="text" // Đổi type sang text để cho phép hiển thị dấu chấm
+                value={new Intl.NumberFormat("vi-VN").format(
+                  selecterContract?.totalcost || 0
+                )}
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/\./g, ""); // Loại bỏ dấu chấm khi nhập
+                  if (!isNaN(rawValue)) {
+                    setSelecterContract({
+                      ...selecterContract,
+                      totalcost: parseInt(rawValue, 10) || 0, // Lưu giá trị gốc không format
+                    });
+                  }
+                }}
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "36px", // Chiều cao tổng thể của ô input
+                  },
+                  "& .MuiInputBase-input": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ của label
+                  },
+                }}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Trạng thái hợp đồng
+              </label>
+              <Autocomplete
+                value={selecterContract.status || ""}
+                onChange={(event, newValue) => {
+                  const statusInEnglish = mapStatusToEnglish(newValue);
+                  setSelecterContract({
+                    ...selecterContract,
+                    status: statusInEnglish,
+                  });
+                }}
+                options={contractStatuses || []}
+                getOptionLabel={(option) => option || ""}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    sx={{
+                      "& .MuiInputBase-root": {
+                        height: "36px", // Chiều cao tổng thể của ô input
+                      },
+                      "& .MuiInputBase-input": {
+                        fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                      },
+                      "& .MuiInputLabel-root": {
+                        fontSize: "1.2rem", // Tăng cỡ chữ của label
+                      },
+                    }}
+                  />
+                )}
+              />
+            </Grid>
+
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Trạng thái thanh toán
+              </label>
+              <Autocomplete
+                value={selecterContract.paymentstatus || ""}
+                onChange={(event, newValue) =>
+                  setSelecterContract({
+                    ...selecterContract,
+                    paymentstatus: newValue,
+                  })
+                }
+                options={
+                  paymentStatuses.map((status) => translateStatus(status)) || []
+                }
+                getOptionLabel={(option) => option || ""}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    sx={{
+                      "& .MuiInputBase-root": {
+                        height: "36px", // Chiều cao tổng thể của ô input
+                      },
+                      "& .MuiInputBase-input": {
+                        fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                      },
+                      "& .MuiInputLabel-root": {
+                        fontSize: "1.2rem", // Tăng cỡ chữ của label
+                      },
+                    }}
+                  />
+                )}
+                disabled
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Ngày tổ chức
+              </label>
+              <TextField
+                type="datetime-local"
+                value={formatDateForInput(selecterContract?.organizdate) || ""}
+                onChange={(e) =>
+                  setSelecterContract({
+                    ...selecterContract,
+                    organizdate: e.target.value,
+                  })
+                }
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "36px", // Chiều cao tổng thể của ô input
+                  },
+                  "& .MuiInputBase-input": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ của label
+                  },
+                }}
+              />
+            </Grid>
+
+            {/* Thông tin khách hàng */}
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Tên khách hàng
+              </label>
+              <TextField
+                value={selecterContract?.custname || ""}
+                onChange={(e) =>
+                  setSelecterContract({
+                    ...selecterContract,
+                    custname: e.target.value,
+                  })
+                }
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "36px", // Chiều cao tổng thể của ô input
+                  },
+                  "& .MuiInputBase-input": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ của label
+                  },
+                }}
+                disabled
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Số điện thoại
+              </label>
+              <TextField
+                value={selecterContract?.custphone || ""}
+                onChange={(e) =>
+                  setSelecterContract({
+                    ...selecterContract,
+                    custphone: e.target.value,
+                  })
+                }
+                fullWidth
+                sx={{
+                  "& .MuiInputBase-root": {
+                    height: "36px", // Chiều cao tổng thể của ô input
+                  },
+                  "& .MuiInputBase-input": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ của label
+                  },
+                }}
+                disabled
+              />
+            </Grid>
+
+            {/* Mô tả */}
+            <Grid item xs={12}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Mô tả
+              </label>
+              <TextField
+                value={selecterContract?.description || ""}
+                onChange={(e) =>
+                  setSelecterContract({
+                    ...selecterContract,
+                    description: e.target.value,
+                  })
+                }
+                fullWidth
+                multiline
+                rows={3}
+                sx={{
+                  "& .MuiInputBase-input": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ phần nội dung nhập vào
+                  },
+                  "& .MuiInputLabel-root": {
+                    fontSize: "1.2rem", // Tăng cỡ chữ của label
+                  },
+                }}
+              />
+            </Grid>
+          </Grid>
+          {/* Nút Lưu và Hủy */}
+          <Box
+            display="flex"
+            justifyContent="right"
+            marginTop={3}
+            gap={2} // Khoảng cách giữa hai nút
+          >
+            <Button
+              onClick={handleSaveContract}
+              variant="outlined"
+              color="primary"
+              sx={{ fontSize: "1rem" }}
+            >
+              Cập nhật
+            </Button>
+            <Button
+              onClick={handleCloseModal}
+              variant="outlined"
+              color="secondary"
+            >
+              Hủy
+            </Button>
+          </Box>
+        </div>
+      </Dialog>
       {/* Hiển thị dialog hợp đồng */}
       <Dialog open={showModalPDF} onClose={handleCloseModal}>
         <DialogTitle sx={{ fontSize: "1.6rem", fontWeight: "bold" }}>
@@ -719,6 +1529,140 @@ const ManageContracts = () => {
           </Button>
         </DialogActions>
       </Dialog>{" "}
+      <Dialog
+        open={showStockRequestsDialog}
+        onClose={() => setShowStockRequestsDialog(false)}
+        fullWidth
+        maxWidth="md"
+        PaperProps={{
+          sx: {
+            borderRadius: "16px", // Bo góc cho dialog
+            padding: "16px", // Thêm padding
+            backgroundColor: "#f5f5f5", // Nền xám nhạt
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            fontSize: "1.5rem",
+            fontWeight: "bold",
+            color: "#031b4a",
+            textAlign: "center",
+          }}
+        >
+          Danh sách chi tiết nguyên liệu -{" "}
+          {selectedContract?.name || "Chưa xác định"}
+        </DialogTitle>
+        <DialogContent
+          sx={{
+            backgroundColor: "#ffffff", // Nền trắng cho nội dung
+            borderRadius: "8px", // Bo góc nội dung
+            padding: "16px",
+            marginTop: "8px",
+          }}
+        >
+          {Array.isArray(stockRequests) && stockRequests.length > 0 ? (
+            <Table
+              sx={{
+                "& .MuiTableCell-root": {
+                  fontSize: "1.2rem", // Tăng cỡ chữ
+                  padding: "12px", // Thêm khoảng cách
+                },
+                "& .MuiTableHead-root": {
+                  backgroundColor: "#f0f0f0", // Màu nền cho tiêu đề
+                },
+                "& .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: "#fafafa", // Màu nền cho hàng lẻ
+                },
+                "& .MuiTableRow-root:nth-of-type(even)": {
+                  backgroundColor: "#eaeaea", // Màu nền cho hàng chẵn
+                },
+              }}
+            >
+              <TableHead>
+                <TableRow>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    STT
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold" }}>
+                    Tên nguyên liệu
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    Số lượng
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    Đơn vị
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    Trạng thái
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {stockRequests.map((request, index) => (
+                  <TableRow key={request.stockrequestId}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>
+                      {request.ingredients?.name || "Không rõ"}
+                    </TableCell>
+                    <TableCell>{request.quantity || 0}</TableCell>
+                    <TableCell>
+                      {request.ingredients?.unit || "Không rõ"}
+                    </TableCell>
+                    <TableCell>{request.status || "Không rõ"}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          ) : (
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                padding: "16px",
+              }}
+            >
+              <Typography variant="h6" color="textSecondary">
+                Không có dữ liệu nguyên liệu
+              </Typography>
+              <Box
+                component="img"
+                src="https://via.placeholder.com/150"
+                alt="No Data"
+                sx={{
+                  width: "150px",
+                  height: "150px",
+                  marginTop: "16px",
+                  opacity: 0.7,
+                }}
+              />
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            padding: "8px 16px",
+          }}
+        >
+          <Button
+            onClick={() => setShowStockRequestsDialog(false)}
+            color="primary"
+            sx={{
+              textTransform: "none",
+              borderRadius: "8px",
+              padding: "8px 24px",
+              fontSize: "1.3rem",
+            }}
+          >
+            Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
