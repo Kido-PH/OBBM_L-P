@@ -1,16 +1,4 @@
 import React from "react";
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Divider,
-  Snackbar,
-  TextField,
-  Typography,
-} from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import { OAuthConfig } from "../configurations/configuration";
 import { useEffect, useState } from "react";

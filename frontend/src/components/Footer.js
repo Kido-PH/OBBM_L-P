@@ -27,11 +27,11 @@ const Footer = () => {
   // }, [navigate]);
   // const refreshAccessToken = async () => {
   //   const refreshToken = Cookies.get("refreshToken"); // Lấy refreshToken từ cookies
-  
+
   //   if (!refreshToken) {
   //     throw new Error("Không có refreshToken.");
   //   }
-  
+
   //   try {
   //     const refreshToken = Cookies.get("refreshToken");
   //     console.log("refreshToken",refreshToken); // Lấy refreshToken từ cookies
@@ -43,7 +43,7 @@ const Footer = () => {
   //             // Nếu API trả về accessToken mới, lưu nó vào localStorage
   //     if (response.code === 1000 && response.result?.accessToken) {
   //       const newAccessToken = response.result.accessToken;
-        
+
   //       setToken(newAccessToken); // Lưu accessToken mới vào localStorage
   //       console.log("Mới nhận accessToken:", newAccessToken); // Log accessToken mới
   //       return newAccessToken; // Trả về accessToken mới
@@ -52,9 +52,6 @@ const Footer = () => {
   //       console.error("Lỗi khi gửi yêu cầu đến API /refresh:", e);
   //     }
 
-    
-
-  
   //   } catch (error) {
   //     console.error("Lỗi khi làm mới accessToken:", error);    }
   // };
@@ -189,7 +186,13 @@ const Footer = () => {
               className="input-field"
             ></textarea>
 
-            <button type="submit" className="btn" onClick={() => {window.location.href="/login"}}>
+            <button
+              type="submit"
+              className="btn"
+              onClick={() => {
+                window.location.href = "/login";
+              }}
+            >
               Đặt tiệc
             </button>
           </form>
@@ -199,11 +202,10 @@ const Footer = () => {
       <div className="footer-bottom">
         <div className="container">
           <p className="copyright-text">
-            &copy; 2024{" "}
-            <a href="#" className="copyright-link">
+            &copy; 2024 Powered By 
+            <a href="#" className="copyright-link ms-2">
               L&P Team
             </a>{" "}
-            All Rights Reserved.
           </p>
         </div>
       </div>

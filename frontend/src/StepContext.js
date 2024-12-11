@@ -22,7 +22,7 @@ const StepContext = () => {
   var [eventData, setEventData] = useState([]);
   var [eventServicesData, setEventServicesData] = useState([]);
 
-  const currentUserId = JSON.parse(sessionStorage.getItem("currentUserId")); // Parse chuỗi JSON thành đối tượng
+  const currentUserId = localStorage.getItem("userId"); // Parse chuỗi JSON thành đối tượng
 
   const [contractInfoUrl, setContractInfoUrl] = React.useState("");
   const navigate = useNavigate();
@@ -198,7 +198,6 @@ const StepContext = () => {
         }}
       >
         <GuestContract />
-        <ContractInfo />
       </multiStepContext.Provider>
     </div>
   );

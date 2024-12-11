@@ -139,7 +139,6 @@ const Menu = ({ accessToken }) => {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
 
   const handleSelectMenu = (menu) => {
-    // Kiểm tra userId trong sessionStorage
     const userId = localStorage.getItem("userId");
     if (!isStatus) {
       Swal.fire({
@@ -157,7 +156,7 @@ const Menu = ({ accessToken }) => {
       });
       return;
     }
-    // Nếu không tìm thấy userId trong session, hiển thị cảnh báo
+    // Nếu không tìm thấy userId trong local, hiển thị cảnh báo
     if (!userId) {
       Swal.fire({
         icon: "warning",
@@ -258,7 +257,7 @@ const Menu = ({ accessToken }) => {
           listMenuDish: parsedDishes,
         });
       } catch (error) {
-        console.error("Lỗi khi phân tích dữ liệu từ sessionStorage:", error);
+        console.error("Lỗi khi phân tích dữ liệu từ localStorage:", error);
       }
     }
   }, []);
@@ -339,9 +338,7 @@ const Menu = ({ accessToken }) => {
         });
         return;
       }
-
-      const currentEventId = localStorage.getItem("currentEventId"); // Lấy giá trị eventId từ sessionStorage
-
+      const currentEventId = localStorage.getItem("currentEventId"); // Lấy giá trị eventId từ localStorage
       const dataToSave = {
         name: selectedMenu.name,
         totalcost: totalCost,

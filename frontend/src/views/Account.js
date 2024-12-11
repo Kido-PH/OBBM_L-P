@@ -38,13 +38,13 @@ const AccountSection = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    fullname: userDetails.fullname || "",
-    gender: userDetails.gender ? "Male" : "Female",
-    residence: userDetails.residence || "",
-    email: userDetails.email || "",
-    phone: userDetails.phone || "",
-    citizenIdentity: userDetails.citizenIdentity || "",
-    dob: userDetails.dob || "",
+    fullname: userDetails?.fullname || "",
+    gender: userDetails?.gender ? "Male" : "Female",
+    residence: userDetails?.residence || "",
+    email: userDetails?.email || "",
+    phone: userDetails?.phone || "",
+    citizenIdentity: userDetails?.citizenIdentity || "",
+    dob: userDetails?.dob || "",
   });
   const [imageFile, setImageFile] = useState(null);
   const toggleEdit = () => {
@@ -113,7 +113,7 @@ const AccountSection = () => {
   const uploadImage = async (file) => {
     const formData = new FormData();
     formData.append("file", file);
-  
+
     try {
       const response = await fetch("http://localhost:8080/obbm/upload/image", {
         method: "POST",
@@ -122,12 +122,12 @@ const AccountSection = () => {
         },
         body: formData,
       });
-  
+
       if (response.ok) {
         const data = await response.json();
         const imageUrl = data.result; // Giả sử API trả về URL của ảnh
         console.log("Ảnh tải lên thành công:", imageUrl);
-  
+
         // Lưu URL ảnh vào state tạm thời
         setImageSrc(imageUrl); // imageSrc là state
       } else {
@@ -137,7 +137,7 @@ const AccountSection = () => {
       console.error("Có lỗi khi tải ảnh lên:", error);
     }
   };
-  
+
   useEffect(() => {
     const accessToken = getToken();
 
@@ -199,7 +199,7 @@ const AccountSection = () => {
 
   const handleUpdate = async () => {
     const userId = localStorage.getItem("userId");
-  
+
     // Lấy thông tin người dùng từ form
     const updatedData = {
       fullname: document.getElementById("fullname").value,
@@ -211,9 +211,9 @@ const AccountSection = () => {
       citizenIdentity: document.getElementById("IdCard").value,
       image: imageSrc, // Lấy URL ảnh từ state
     };
-  
+
     console.log("Dữ liệu gửi đi API:", updatedData);
-  
+
     try {
       const response = await fetch(
         `http://localhost:8080/obbm/users/user/${userId}`,
@@ -226,7 +226,7 @@ const AccountSection = () => {
           body: JSON.stringify(updatedData),
         }
       );
-  
+
       if (response.ok) {
         const data = await response.json();
         Swal.fire({
@@ -254,7 +254,6 @@ const AccountSection = () => {
       });
     }
   };
-  
 
   const handleGenderChange = (event) => {
     // Cập nhật userDetail.gender theo lựa chọn của người dùng
@@ -266,7 +265,6 @@ const AccountSection = () => {
         : null;
     setUserDetails({ ...userDetails, gender: genderValue });
   };
-
 
   return (
     <main style={{ marginTop: "50px" }}>
@@ -392,71 +390,71 @@ const AccountSection = () => {
                 {/* Right Column */}
                 <div className="right-column" style={{ flex: "1" }}>
                   <div className="input-wrapper">
-                    
                     <div className="input-wrapper">
-                    <label
-                      style={{
-                        paddingTop: "10px",
-                        paddingBottom: "10px",
-                        borderRadius: "3px",
-                        display: "none", // Ẩn label
-                      }}
-                      htmlFor="avatar-upload"
-                      className="custom-file-upload btn btn-secondary"
-                    >
-                      Căn cước công dân
-                    </label>
-                  
-                    <div
-                      style={{
-                        maxWidth: "350px",
-                        maxHeight: "300px",
-                        height: "220px",
-                        marginBottom: "15px",
-                        border: "2px solid hsl(32, 100%, 59%)",
-                        borderRadius: "5px",
-                        padding: "5px",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: isEditing ? "#f9f9f9" : "#e0e0e0", // Đổi màu nền khi không được chỉnh sửa
-                        cursor: isEditing ? "pointer" : "not-allowed", // Đổi kiểu con trỏ
-                      }}
-                      onClick={() => {
-                        if (isEditing) {
-                          // Chỉ kích hoạt nếu isEditing là true
-                          document.getElementById("avatar-upload").click();
-                        }
-                      }}
-                    >
-                      {imageSrc ? (
-                        <img
-                          src={imageSrc}
-                          alt="Selected"
-                          style={{ maxWidth: "100%", maxHeight: "100%" }}
-                        />
-                      ) : userDetails.image ? (
-                        <img
-                          src={userDetails.image}
-                          alt="User Avatar"
-                          style={{ maxWidth: "100%", maxHeight: "100%" }}
-                        />
-                      ) : (
-                        <span style={{ color: "#888" }}>Ảnh căn cước công dân</span>
-                      )}
+                      <label
+                        style={{
+                          paddingTop: "10px",
+                          paddingBottom: "10px",
+                          borderRadius: "3px",
+                          display: "none", // Ẩn label
+                        }}
+                        htmlFor="avatar-upload"
+                        className="custom-file-upload btn btn-secondary"
+                      >
+                        Căn cước công dân
+                      </label>
+
+                      <div
+                        style={{
+                          maxWidth: "350px",
+                          maxHeight: "300px",
+                          height: "220px",
+                          marginBottom: "15px",
+                          border: "2px solid hsl(32, 100%, 59%)",
+                          borderRadius: "5px",
+                          padding: "5px",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          backgroundColor: isEditing ? "#f9f9f9" : "#e0e0e0", // Đổi màu nền khi không được chỉnh sửa
+                          cursor: isEditing ? "pointer" : "not-allowed", // Đổi kiểu con trỏ
+                        }}
+                        onClick={() => {
+                          if (isEditing) {
+                            // Chỉ kích hoạt nếu isEditing là true
+                            document.getElementById("avatar-upload").click();
+                          }
+                        }}
+                      >
+                        {imageSrc ? (
+                          <img
+                            src={imageSrc}
+                            alt="Selected"
+                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                          />
+                        ) : userDetails.image ? (
+                          <img
+                            src={userDetails.image}
+                            alt="User Avatar"
+                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                          />
+                        ) : (
+                          <span style={{ color: "#888" }}>
+                            Ảnh căn cước công dân
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Input file */}
+                      <input
+                        type="file"
+                        id="avatar-upload"
+                        style={{ display: "none" }}
+                        accept="image/*"
+                        disabled={!isEditing} // Vô hiệu hóa input nếu không chỉnh sửa
+                        onChange={handleImageUpload} // Hàm xử lý khi upload ảnh
+                      />
                     </div>
-                  
-                    {/* Input file */}
-                    <input
-                      type="file"
-                      id="avatar-upload"
-                      style={{ display: "none" }}
-                      accept="image/*"
-                      disabled={!isEditing} // Vô hiệu hóa input nếu không chỉnh sửa
-                      onChange={handleImageUpload} // Hàm xử lý khi upload ảnh
-                    />
-                  </div>
-                  
 
                     <label htmlFor="dob">Ngày sinh</label>
                     <input
@@ -473,9 +471,13 @@ const AccountSection = () => {
                       name="gender"
                       aria-label="Total person"
                       id="gender"
-                      style={{ height: "40px", color: "hsl(0deg 0% 24.88%)",appearance: "none",
+                      style={{
+                        height: "40px",
+                        color: "hsl(0deg 0% 24.88%)",
+                        appearance: "none",
                         MozAppearance: "none",
-                        WebkitAppearance: "none", }}
+                        WebkitAppearance: "none",
+                      }}
                       className="input-field"
                       value={userDetails.gender}
                       disabled
@@ -525,45 +527,43 @@ const AccountSection = () => {
                     </button>
                   )}
 
-<button
-  type="button"
-  className="edit-icon-btn btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
-  onClick={() => setIsEditing(!isEditing)}
-  style={{
-    position: "absolute",
-    bottom: "80px",
-    right: "230px",
-    cursor: "pointer",
-    textAlign: "center"
-  }}
->
-  {isEditing ? "Hủy" : "Chỉnh sửa"}
-</button>
-
-
-                  {userDetails.noPassword && (
-                    <div style={{ textAlign: "left" }}>
-                      <p style={{ display: "inline", marginRight: "4px" }}>
-                        Chú ý: Tài khoản bạn chưa có mật khẩu,
-                      </p>
-                      <button
-                        onClick={() => {
-                          navigate("/create-password");
-                        }}
-                        style={{
-                          display: "inline",
-                          background: "none",
-                          border: "none",
-                          color: "var(--dark-orange)",
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Tạo mật khẩu
-                      </button>
-                    </div>
-                  )}
+                  <button
+                    type="button"
+                    className="edit-icon-btn btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
+                    onClick={() => setIsEditing(!isEditing)}
+                    style={{
+                      position: "absolute",
+                      bottom: "80px",
+                      right: "230px",
+                      cursor: "pointer",
+                      textAlign: "center",
+                    }}
+                  >
+                    {isEditing ? "Hủy" : "Chỉnh sửa"}
+                  </button>
                 </div>
+                {userDetails.noPassword && (
+                  <div style={{ textAlign: "left" }}>
+                    <p style={{ display: "inline", marginRight: "4px" }}>
+                      Chú ý: Tài khoản bạn chưa có mật khẩu,
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigate("/create-password");
+                      }}
+                      style={{
+                        display: "inline",
+                        background: "none",
+                        border: "none",
+                        color: "var(--dark-orange)",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Tạo mật khẩu
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           </div>

@@ -76,7 +76,8 @@ const ContractList = () => {
       id="blog"
     >
       <div className="container" style={{ marginTop: "120px" }}>
-        <Card border="1" className="p-5">
+        <Card border="1" className="p-5 pt-4">
+          <h1 className="text-center">Danh sách hợp đồng</h1>
           <div className="row row-cols-sm-1 row-cols-md-3 ">
             <div className="col mb-3 d-flex align-items-center gap-2">
               <label className="mb-0">Trạng thái: </label>
@@ -93,69 +94,79 @@ const ContractList = () => {
               </Form.Select>
             </div>
           </div>
-          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 mt-3">
-            {/* Vòng lặp đổ danh sách hợp đồng ở đây */}
-            {filteredContracts.map((contract, index) => (
-              <div className="col mb-4 px-4" key={index}>
-                <Card className="p-3">
-                  <div className="card-title text-body-secondary fw-bold d-flex justify-content-center align-items-center text-center">
-                    {contract.name}
-                  </div>
-                  <div className="d-flex justify-content-center align-items-center fw-bold">
-                    Sự kiện:{" "}
-                    <span className="ps-1 fw-normal">{contract.type}</span>
-                  </div>
-                  <div className="d-flex justify-content-center align-items-center fw-bold">
-                    Ngày tạo:
-                    <span className="ps-1 fw-normal">{contract.createdAt}</span>
-                  </div>
-                  <div className="d-flex justify-content-center align-items-center fw-bold">
-                    SĐT khách hàng:{" "}
-                    <span className="ps-1 fw-normal">{contract.custphone}</span>
-                  </div>
-                  <div className="d-flex justify-content-center align-items-center fw-bold">
-                    Tổng giá trị:{" "}
-                    <span className="text-success ps-1 fw-bold">
-                      {formatCurrency(contract.totalcost)} VND
-                    </span>
-                  </div>
+          <div className="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-3 justify-content-center mt-3">
+            {filteredContracts.length > 0 ? (
+              filteredContracts.map((contract, index) => (
+                <div className="col mb-4 px-4" key={index}>
+                  <Card className="p-3">
+                    <div className="card-title text-body-secondary fw-bold d-flex justify-content-center align-items-center text-center">
+                      {contract.name}
+                    </div>
+                    <div className="d-flex justify-content-center align-items-center fw-bold">
+                      Sự kiện:{" "}
+                      <span className="ps-1 fw-normal">{contract.type}</span>
+                    </div>
+                    <div className="d-flex justify-content-center align-items-center fw-bold">
+                      Ngày tạo:
+                      <span className="ps-1 fw-normal">
+                        {contract.createdAt}
+                      </span>
+                    </div>
+                    <div className="d-flex justify-content-center align-items-center fw-bold">
+                      SĐT khách hàng:{" "}
+                      <span className="ps-1 fw-normal">
+                        {contract.custphone}
+                      </span>
+                    </div>
+                    <div className="d-flex justify-content-center align-items-center fw-bold">
+                      Tổng giá trị:{" "}
+                      <span className="text-success ps-1 fw-bold">
+                        {formatCurrency(contract.totalcost)} VND
+                      </span>
+                    </div>
 
-                  <div className="d-flex justify-content-center align-items-center fw-bold">
-                    Trạng thái:{" "}
-                    <span
-                      className="ps-1"
-                      style={{ color: getStatusColor(contract.status) }}
-                    >
-                      {contract.status === "Pending"
-                        ? "Chờ xác nhận"
-                        : contract.status === "Approved"
-                        ? "Đã xác nhận"
-                        : contract.status === "Actived"
-                        ? "Đang hoạt động"
-                        : "Đã hoàn thành"}
-                    </span>
-                  </div>
+                    <div className="d-flex justify-content-center align-items-center fw-bold">
+                      Trạng thái:{" "}
+                      <span
+                        className="ps-1"
+                        style={{ color: getStatusColor(contract.status) }}
+                      >
+                        {contract.status === "Pending"
+                          ? "Chờ xác nhận"
+                          : contract.status === "Approved"
+                          ? "Đã xác nhận"
+                          : contract.status === "Actived"
+                          ? "Đang hoạt động"
+                          : "Đã hoàn thành"}
+                      </span>
+                    </div>
 
-                  <div className="d-flex justify-content-center align-items-center mt-3">
-                    <a
-                      href={`/contract/info/${contract.contractId}`}
-                      className="btn btn-secondary btn-sm p-3"
-                    >
-                      Chi tiết
-                    </a>
-                    {contract.paymentstatus !== "Paid" &&
-                      contract.status !== "Pending" && (
-                        <a
-                          href={`/contract/info/${contract.contractId}`}
-                          className="btn btn-secondary btn-sm p-3 mx-3 btn-vnp"
-                        >
-                          Thanh toán
-                        </a>
-                      )}
-                  </div>
-                </Card>
+                    <div className="d-flex justify-content-center align-items-center mt-3">
+                      <a
+                        href={`/contract/info/${contract.contractId}`}
+                        className="btn btn-secondary btn-sm p-3"
+                      >
+                        Chi tiết
+                      </a>
+                      {contract.paymentstatus !== "Paid" &&
+                        contract.status !== "Pending" && (
+                          <a
+                            href={`/contract/info/${contract.contractId}`}
+                            className="btn btn-secondary btn-sm p-3 mx-3 btn-vnp"
+                          >
+                            Thanh toán
+                          </a>
+                        )}
+                    </div>
+                  </Card>
+                </div>
+              ))
+            ) : (
+              <div className="d-flex justify-content-center text-center">
+                <p >Bạn chưa có hợp đồng nào.</p>
+                <a href="/menu">Tạo tại đây</a>
               </div>
-            ))}
+            )}
           </div>
 
           <div className="d-flex justify-content-center mt-4">

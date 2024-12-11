@@ -43,6 +43,7 @@ const Header = () => {
       if (response.ok) {
         // Xóa thông tin đăng nhập sau khi logout thành công
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("isAdmin");
         localStorage.removeItem("userId");
         Cookies.remove("refreshToken");
         navigate("/login");
@@ -219,6 +220,7 @@ const Header = () => {
                     Đổi mật khẩu
                   </a>
                   <a
+                    href="/#"
                     className="dropdown-item navbar-link"
                     onClick={handleLogout}
                     style={{
@@ -238,7 +240,11 @@ const Header = () => {
           {/* Hiển thị tên người dùng khi đã đăng nhập */}
           {isLoggedIn && userDetails && (
             <div className="user-name">
-              <p className="navbar-link">Chào, {userDetails.fullname}</p>{" "}
+              <p className="navbar-link mb-0">
+                {userDetails.fullname !== null
+                  ? "Chào, " + userDetails.fullname
+                  : "Xin chào!"}
+              </p>{" "}
               {/* Hiển thị tên người dùng */}
             </div>
           )}

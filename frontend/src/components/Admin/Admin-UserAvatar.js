@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Avatar, Dropdown, Modal, Button, Input, message, Divider, Row, Col, Select, DatePicker } from "antd";
+import {
+  Avatar,
+  Dropdown,
+  Modal,
+  Button,
+  Input,
+  message,
+  Divider,
+  Row,
+  Col,
+  Select,
+  DatePicker,
+} from "antd";
 import {
   SettingOutlined,
   LogoutOutlined,
@@ -11,8 +23,12 @@ import {
 } from "@ant-design/icons";
 import { EmailOutlined } from "@mui/icons-material";
 import dayjs from "dayjs";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 
 const AdminUserAvatar = () => {
+  const navigate = useNavigate(); // Khởi tạo useNavigate
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
@@ -105,15 +121,15 @@ const AdminUserAvatar = () => {
     try {
       const token = localStorage.getItem("accessToken");
       const userId = userData.userId;
-  
+
       if (!token) {
         throw new Error("Token không tồn tại trong sessionStorage.");
       }
-  
+
       const formattedDob = new Date(editData.dob || userData.dob)
         .toISOString()
         .split("T")[0];
-  
+
       // Chuẩn bị request body
       const requestBody = {
         fullname: editData.fullname || userData.fullname,
@@ -125,9 +141,9 @@ const AdminUserAvatar = () => {
         citizenIdentity: userData.citizenIdentity,
         dob: formattedDob,
       };
-  
+
       console.log("Request Body:", requestBody);
-  
+
       const response = await fetch(
         `http://localhost:8080/obbm/users/user/${userId}`,
         {
@@ -139,14 +155,14 @@ const AdminUserAvatar = () => {
           body: JSON.stringify(requestBody),
         }
       );
-  
+
       if (!response.ok) {
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
-  
+
       const data = await response.json();
       console.log("Phản hồi API:", data);
-  
+
       if (response.ok) {
         message.success("Cập nhật thông tin thành công.");
         setUserData((prev) => ({
@@ -168,7 +184,6 @@ const AdminUserAvatar = () => {
       message.error("Không thể cập nhật thông tin.");
     }
   };
-  
 
   const handleInputChange = (e, field) => {
     setEditData((prev) => ({ ...prev, [field]: e.target.value }));
@@ -184,7 +199,6 @@ const AdminUserAvatar = () => {
   const handleFileChange = async (event) => {
     const file = event.target.files[0]; // Lấy file từ input
     if (file) {
-
       // Tạo URL tạm thời để hiển thị ảnh ngay lập tức
       const previewUrl = URL.createObjectURL(file);
       setEditData((prev) => ({
@@ -197,13 +211,16 @@ const AdminUserAvatar = () => {
         formData.append("file", file);
 
         // Gửi yêu cầu lên API để tải ảnh lên
-        const response = await fetch('http://localhost:8080/obbm/upload/image', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          body: formData, // Đưa formData vào body
-        });
+        const response = await fetch(
+          "http://localhost:8080/obbm/upload/image",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+            body: formData, // Đưa formData vào body
+          }
+        );
 
         if (!response.ok) {
           throw new Error(`HTTP error! Status: ${response.status}`);
@@ -219,14 +236,47 @@ const AdminUserAvatar = () => {
           ...prev,
           image: imageUrl,
         }));
-
       } catch (error) {
         console.error("Lỗi upload ảnh:", error);
         message.error("Upload ảnh thất bại!");
       }
     }
-  }; 
-  
+  };
+
+  const handleLogout = async () => {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = Cookies.get("refreshToken");
+    console.log("Access token: " + accessToken);
+    console.log("Refresh token: " + refreshToken);
+
+    try {
+      // Gửi yêu cầu POST đến API logout
+      const response = await fetch("http://localhost:8080/obbm/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          access_token: accessToken, // Truyền access_token
+          refresh_token: refreshToken, // Truyền refresh_token
+        }),
+      });
+
+      if (response.ok) {
+        // Xóa thông tin đăng nhập sau khi logout thành công
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("isAdmin");
+        localStorage.removeItem("userId");
+        Cookies.remove("refreshToken");
+        navigate("/login");
+      } else {
+        console.error("Logout failed:", response.status);
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
+
   return (
     <>
       <Dropdown
@@ -234,7 +284,7 @@ const AdminUserAvatar = () => {
           items: [
             {
               key: "settings",
-              icon: <UserOutlined  />,
+              icon: <UserOutlined />,
               label: "Hồ sơ cá nhân",
             },
             { key: "logout", icon: <LogoutOutlined />, label: "Đăng xuất" },
@@ -243,9 +293,7 @@ const AdminUserAvatar = () => {
             if (e.key === "settings") {
               setIsSettingsOpen(true);
             } else if (e.key === "logout") {
-              localStorage.removeItem("accessToken");
-              message.info("Đăng xuất thành công.");
-              window.location.href = "/login";
+              handleLogout(); // Thêm dấu ngoặc đơn để gọi hàm
             }
           },
         }}
@@ -269,7 +317,7 @@ const AdminUserAvatar = () => {
         open={isSettingsOpen}
         onCancel={() => setIsSettingsOpen(false)}
         footer={null}
-        width={1000}  // Tăng độ rộng modal
+        width={1000} // Tăng độ rộng modal
       >
         <Divider />
 
@@ -294,7 +342,7 @@ const AdminUserAvatar = () => {
             style={{ display: "none" }} // Ẩn input file
             accept="image/*" // Chỉ nhận file ảnh
             onChange={handleFileChange} // Xử lý khi chọn file
-           />
+          />
           <div>
             <h1>{userData.fullname}</h1>
             <p style={{ color: "gray" }}>Thông tin tài khoản</p>
@@ -306,7 +354,13 @@ const AdminUserAvatar = () => {
           <Row gutter={16}>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    color: "#333",
+                  }}
+                >
                   <UserSwitchOutlined /> Họ và tên:
                 </span>
                 {isEditing ? (
@@ -322,7 +376,13 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    color: "#333",
+                  }}
+                >
                   <PhoneOutlined /> Số điện thoại:
                 </span>
                 {isEditing ? (
@@ -338,14 +398,25 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    color: "#333",
+                  }}
+                >
                   <SolutionOutlined /> Ngày tháng năm sinh:
                 </span>
                 {isEditing ? (
                   <DatePicker
-                    value={editData.dob ? dayjs(editData.dob, "YYYY-MM-DD") : null}
+                    value={
+                      editData.dob ? dayjs(editData.dob, "YYYY-MM-DD") : null
+                    }
                     onChange={(date, dateString) =>
-                      handleInputChange({ target: { value: dateString } }, "dob")
+                      handleInputChange(
+                        { target: { value: dateString } },
+                        "dob"
+                      )
                     }
                     format="YYYY-MM-DD" // Định dạng ngày tháng
                     style={{ marginTop: 5, width: "100%" }} // Giao diện phù hợp
@@ -357,7 +428,13 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    color: "#333",
+                  }}
+                >
                   <EmailOutlined /> Email:
                 </span>
                 {isEditing ? (
@@ -373,26 +450,42 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    color: "#333",
+                  }}
+                >
                   <UserOutlined /> Giới tính:
                 </span>
                 {isEditing ? (
                   <Select
-                    value={editData.gender} 
-                    onChange={(value) => handleInputChange({ target: { value } }, "gender")}
+                    value={editData.gender}
+                    onChange={(value) =>
+                      handleInputChange({ target: { value } }, "gender")
+                    }
                     style={{ marginTop: 5 }}
                   >
                     <Select.Option value={true}>Nam</Select.Option>
                     <Select.Option value={false}>Nữ</Select.Option>
                   </Select>
                 ) : (
-                  <span style={{ marginLeft: 10 }}>{userData.gender === true ? "Nam" : "Nữ"}</span>
+                  <span style={{ marginLeft: 10 }}>
+                    {userData.gender === true ? "Nam" : "Nữ"}
+                  </span>
                 )}
               </div>
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
+                <span
+                  style={{
+                    fontWeight: "bold",
+                    fontSize: "15px",
+                    color: "#333",
+                  }}
+                >
                   <SolutionOutlined /> Nơi cư trú:
                 </span>
                 {isEditing ? (

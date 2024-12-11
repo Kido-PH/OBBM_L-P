@@ -572,6 +572,9 @@ const handleDeleteCategory = async (categoryId) => {
               {
                 fontSize: "1.2rem",
               },
+            "& .MuiTablePagination-displayedRows": {
+              marginBottom: "0px",
+            },
             "& .MuiTablePagination-actions > button": {
               fontSize: "1.2rem",
               margin: "0 8px", // Thêm khoảng cách giữa các nút

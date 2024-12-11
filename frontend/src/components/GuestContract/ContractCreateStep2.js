@@ -1,16 +1,18 @@
 import * as React from "react";
 import moment from "moment";
 import { Form, Card } from "react-bootstrap";
-import { FaEye } from "react-icons/fa6";
 import { multiStepContext } from "../../StepContext";
 import ModalLocations from "./ModalLocations";
 import ModalServices from "./ModalServices";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import ModalInfoMenu from "./ModalInfoMenu";
 import eventApi from "api/eventApi";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 const ContractCreateStep2 = () => {
+  const navigate = useNavigate();
+
   const { setStep, contractData, setContractData } =
     React.useContext(multiStepContext);
   const location = JSON.parse(localStorage.getItem("currentLocation")); // Parse chuỗi JSON thành đối tượng
@@ -36,8 +38,12 @@ const ContractCreateStep2 = () => {
   // };
 
   const fetchEvent = async () => {
-    const currentEvent = await eventApi.get(currentEventId);
-    setCurrentEventInfo(currentEvent.result);
+    try {
+      const currentEvent = await eventApi.get(currentEventId);
+      setCurrentEventInfo(currentEvent.result);
+    } catch (error) {
+      checkAccessToken(navigate);
+    }
   };
 
   const handleShowModalMenu = () => {
@@ -134,11 +140,16 @@ const ContractCreateStep2 = () => {
         ...contractData,
         guest: 0, // Hoặc bạn có thể giữ lại giá trị cũ nếu cần
       });
+    } else if (location.isCustom) {
+      setContractData({
+        ...contractData,
+        guest: Math.min(value, 5000),
+      });
     } else {
       // Giới hạn giá trị tối đa là 10,000 và cập nhật giá trị
       setContractData({
         ...contractData,
-        guest: Math.min(value, 10000),
+        guest: Math.min(value, location.capacity),
       });
     }
   };
