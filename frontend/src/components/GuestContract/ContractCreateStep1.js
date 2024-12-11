@@ -162,9 +162,12 @@ const ContractCreateStep1 = () => {
                 Lưu ý:{" "}
               </p>
               <span className="text-secondary fw-bold">
-                Email và CCCD là của tài khoản hiện tại không phải của khách
-                hàng
+                Email và CCCD là của tài khoản hiện tại. Tải lên CCCD mới nếu
+                muốn thay đổi
               </span>
+              <a className="fw-bold" href="/account" style={{ marginLeft: "4px" }}>
+                tại đây
+              </a>
             </div>
           </div>
 

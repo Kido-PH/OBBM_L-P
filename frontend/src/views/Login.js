@@ -50,6 +50,7 @@ const Login = () => {
   React.useEffect(() => {
     const currentAccessToken = localStorage.getItem("accessToken");
     if (currentAccessToken) {
+      
       toggleForm("createPassword");
     }
   }, []);

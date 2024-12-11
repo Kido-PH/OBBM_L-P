@@ -36,13 +36,13 @@ const AccountSection = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    fullname: userDetails.fullname || "",
-    gender: userDetails.gender ? "Male" : "Female",
-    residence: userDetails.residence || "",
-    email: userDetails.email || "",
-    phone: userDetails.phone || "",
-    citizenIdentity: userDetails.citizenIdentity || "",
-    dob: userDetails.dob || "",
+    fullname: userDetails?.fullname || "",
+    gender: userDetails?.gender ? "Male" : "Female",
+    residence: userDetails?.residence || "",
+    email: userDetails?.email || "",
+    phone: userDetails?.phone || "",
+    citizenIdentity: userDetails?.citizenIdentity || "",
+    dob: userDetails?.dob || "",
   });
   
 
@@ -190,7 +190,7 @@ const AccountSection = () => {
     fetch("https://api.fpt.ai/vision/idr/vnm", {
       method: "POST",
       headers: {
-        "api-key": "ss1bW3eunWJ2zBr6i2js7LR8fM12O6y2", // API key của bạn
+        "api-key": "CmxrJlqn1ulabQJ6IctH5JjAzZLyUERv", // API key của bạn
       },
       body: formData,
     })

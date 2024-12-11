@@ -196,34 +196,48 @@ const ContractInfo = () => {
   const handlePayment = () => {};
 
   return (
-    <section
-      className="section section-divider white account-section pt-5"
-      id="blog"
-    >
-      <div className="container" style={{ marginTop: "120px" }}>
-        <div className="text-center mb-5 fw-bold">
-          <h1>Thông tin chi tiết hợp đồng</h1>
-        </div>
-        <Card name="contractInfo" className="p-5" style={{ opacity: 0.9 }}>
-          <h2 style={{ color: "hsl(28, 100%, 58%)" }}>Thông tin hợp đồng</h2>
-          <div name="contractForm" className="contractForm">
-            <div className="row row-cols-sm-1 row-cols-md-2">
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Thực đơn</label>
-                  <button
-                    className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi-popup"
-                    onClick={handleShowModalMenu}
-                  >
-                    Thực đơn {contractInfo.events?.name}
-                    <FaEye />
-                  </button>
-                </div>
+    <>
+      <Card name="contractInfo" className="p-5" style={{ opacity: 0.9, borderTopLeftRadius: 0 }}>
+        <h2 style={{ color: "hsl(28, 100%, 58%)" }}>Thông tin hợp đồng</h2>
+        <div name="contractForm" className="contractForm">
+          <div className="row row-cols-sm-1 row-cols-md-2">
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">Thực đơn</label>
+                <button
+                  className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi-popup"
+                  onClick={handleShowModalMenu}
+                >
+                  Thực đơn {contractInfo.events?.name}
+                  <FaEye style={{ marginTop: 4 }} />
+                </button>
+              </div>
 
-                <div className="row row-cols-md-2 mb-3">
-                  <div className="col">
-                    <label className="form-label fw-bold">Địa điểm</label>
-                    <div className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi">
+              <div className="row row-cols-md-2 mb-3">
+                <div className="col">
+                  <label className="form-label fw-bold">Địa điểm</label>
+                  <div className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi">
+                    <p
+                      className="mb-0"
+                      style={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                      }}
+                    >
+                      {contractInfo.locations?.name} -{" "}
+                      {contractInfo.locations?.address}
+                    </p>
+                  </div>
+                </div>
+                <div className="col">
+                  <label className="form-label fw-bold">Dịch vụ</label>
+                  <div className="d-flex align-items-center ">
+                    <div
+                      className="form-control fs-4  input-hienthi-popup d-flex justify-content-between align-items-center w-100"
+                      onClick={handleShowModalServices}
+                      style={{ cursor: "pointer" }}
+                    >
                       <p
                         className="mb-0"
                         style={{
@@ -232,281 +246,257 @@ const ContractInfo = () => {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {contractInfo.locations?.name} -{" "}
-                        {contractInfo.locations?.address}
+                        {eventServicesInfo[0]?.name} -{" "}
+                        {formatCurrency(eventServicesInfo[0]?.price)} ...
                       </p>
-                    </div>
-                  </div>
-                  <div className="col">
-                    <label className="form-label fw-bold">Dịch vụ</label>
-                    <div className="d-flex align-items-center ">
-                      <div
-                        className="form-control fs-4  input-hienthi-popup d-flex justify-content-between align-items-center w-100"
-                        onClick={handleShowModalServices}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <p
-                          className="mb-0"
-                          style={{
-                            whiteSpace: "nowrap",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                          }}
-                        >
-                          {eventServicesInfo[0]?.name} -{" "}
-                          {formatCurrency(eventServicesInfo[0]?.price)} ...
-                        </p>
-                        <FaEye />
-                      </div>
+                      <FaEye />
                     </div>
                   </div>
                 </div>
               </div>
-
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold ">Ngày tổ chức</label>
-                  <div className="form-control input-hienthi fs-4">
-                    {contractInfo.organizdate}
-                  </div>
-                </div>
-
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Ghi chú</label>
-                  <div className="form-control input-hienthi fs-4 me-2">
-                    {contractInfo.description ? (
-                      <div>{contractInfo.description}</div>
-                    ) : (
-                      <div>Không có ghi chú...</div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="row row-cols-sm-2 row-cols-lg-4">
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Sự kiện</label>
-                  <div className="form-control input-hienthi fs-4">
-                    {contractInfo.events?.name}
-                  </div>
-                </div>
-              </div>
-
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Số lượng khách ước tính
-                  </label>
-                  <div className="form-control input-hienthi fs-4">
-                    {contractInfo.guest}
-                  </div>
-                </div>
-              </div>
-
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Số lượng khách / bàn
-                    <span className="text-danger d-inline-block">*</span>
-                  </label>
-                  <div className="form-control input-hienthi fs-4">
-                    {calculateGuestPerTable(
-                      contractInfo.menus?.totalcost,
-                      finaltotalMenuCost,
-                      contractInfo.table
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <div className="col">
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Số bàn cuối cùng</label>
-                  <div className="form-control input-hienthi fs-4">
-                    {contractInfo.table}
-                  </div>
-                </div>
-              </div>
             </div>
 
-            <h3 style={{ color: "var(--dark-orange)" }}>
-              Thông Tin Khách Hàng
-            </h3>
-            <Row lg={3} md={3} xs={1}>
-              <Col>
-                <div className="mb-3">
-                  <label className="form-label fw-bold ">Tên Khách Hàng</label>
-                  <div className="form-control input-hienthi fs-4">
-                    {contractInfo.custname}
-                  </div>
-                </div>
-              </Col>
-              <Col>
-                <div className="mb-3">
-                  <label className="form-label fw-bold">
-                    Số Điện Thoại Khách Hàng
-                  </label>
-                  <div className="form-control input-hienthi fs-4">
-                    {contractInfo.custphone}
-                  </div>
-                </div>
-              </Col>
-              <Col>
-                <div className="mb-3">
-                  <label className="form-label fw-bold">Email liên hệ</label>
-                  <div className="form-control input-hienthi fs-4">
-                    {contractInfo.custmail}
-                  </div>
-                </div>
-              </Col>
-            </Row>
-            <h3 style={{ color: "var(--dark-orange)" }}>Chi Phí</h3>
-            <div className="row row-cols-sm-1 row-cols-lg-3 mt-3">
-              <div className="col">
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label fw-bold mb-0 me-2">
-                    Chi phí địa điểm:
-                  </label>
-                  <span
-                    className="fw-bold"
-                    style={{ color: "var(--deep-saffron)" }}
-                  >
-                    {formatCurrency(contractInfo.locations?.cost)} VND
-                  </span>
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold ">Ngày tổ chức</label>
+                <div className="form-control input-hienthi fs-4">
+                  {contractInfo.organizdate}
                 </div>
               </div>
 
-              <div className="col">
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label fw-bold mb-0 me-2">
-                    Tổng chi phí dịch vụ:
-                  </label>
-                  <span
-                    className="fw-bold"
-                    style={{ color: "var(--deep-saffron)" }}
-                  >
-                    {formatCurrency(totalServicesCost)} VND
-                  </span>
+              <div className="mb-3">
+                <label className="form-label fw-bold">Ghi chú</label>
+                <div className="form-control input-hienthi fs-4 me-2">
+                  {contractInfo.description ? (
+                    <div>{contractInfo.description}</div>
+                  ) : (
+                    <div>Không có ghi chú...</div>
+                  )}
                 </div>
               </div>
-
-              <div className="col">
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label fw-bold mb-0 me-2">
-                    Tổng chi phí thực đơn:
-                  </label>
-                  <span
-                    className="fw-bold"
-                    style={{ color: "var(--deep-saffron)" }}
-                  >
-                    {formatCurrency(finaltotalMenuCost)} VND
-                  </span>
-                </div>
-              </div>
-
-              <div className="ms-auto">
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label fw-bold mb-0 me-2">
-                    Tổng giá trị hợp đồng:
-                  </label>
-                  <span className="text-success fw-bold">
-                    {formatCurrency(contractInfo.totalcost)} VND
-                  </span>
-                </div>
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label fw-bold mb-0 me-2">
-                    Đã thanh toán:
-                  </label>
-                  <span className="text-success fw-bold">
-                    {formatCurrency(contractInfo.prepay)} VND
-                  </span>
-                </div>
-                <div className="mb-3 d-flex align-items-center">
-                  <label className="form-label fw-bold mb-0 me-2">
-                    Số tiền còn lại:
-                  </label>
-                  <span className="text-success fw-bold">
-                    {formatCurrency(
-                      contractInfo.totalcost - contractInfo.prepay //sau này tính ở đây
-                    )}{" "}
-                    VND
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="d-flex justify-content-between">
-              <h3 style={{ color: "var(--dark-orange)" }}>
-                Trạng thái hợp đồng:{" "}
-                <span
-                  className="d-inline-block"
-                  style={{
-                    color:
-                      contractInfo.status === "Pending"
-                        ? "var(--sonic-silver)"
-                        : contractInfo.status === "Approved"
-                        ? "var(--deep-saffron)"
-                        : "var(--green-success)",
-                  }}
-                >
-                  {contractInfo.status === "Pending"
-                    ? "Chờ xác nhận"
-                    : contractInfo.status === "Approved"
-                    ? "Đã xác nhận"
-                    : contractInfo.status === "Actived"
-                    ? "Đang hoạt động"
-                    : "Đã hoàn thành"}
-                </span>
-              </h3>
-
-              <h3 style={{ color: "var(--dark-orange)" }}>
-                Trạng thái thanh toán:{" "}
-                <span
-                  className="d-inline-block"
-                  style={{
-                    color:
-                      contractInfo.paymentstatus === "Unpaid"
-                        ? "var(--sonic-silver)"
-                        : contractInfo.paymentstatus === "Prepay 50%"
-                        ? "var(--green-success)"
-                        : contractInfo.paymentstatus === "Prepay 70%"
-                        ? "var(--green-success)"
-                        : "var(--green-success)",
-                  }}
-                >
-                  {contractInfo.paymentstatus === "Unpaid"
-                    ? "Chưa thanh toán"
-                    : contractInfo.paymentstatus === "Prepay 50%"
-                    ? "Đã thanh toán 50%"
-                    : contractInfo.paymentstatus === "Prepay 70%"
-                    ? "Đã thanh toán 70%"
-                    : "Đã thanh toán"}
-                </span>
-              </h3>
             </div>
           </div>
-        </Card>
-        <div style={{ textAlign: "center" }}>
-          {contractInfo.status === "Pending" &&
-            contractInfo.paymentstatus === "Unpaid" && (
-              <button
-                type="button"
-                className="btn btn-save-form btn-huy mx-3"
-                style={{ marginTop: "1rem" }}
-                onClick={handleShowModalCancel}
+          <div className="row row-cols-sm-2 row-cols-lg-4">
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">Sự kiện</label>
+                <div className="form-control input-hienthi fs-4">
+                  {contractInfo.events?.name}
+                </div>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Số lượng khách ước tính
+                </label>
+                <div className="form-control input-hienthi fs-4">
+                  {contractInfo.guest}
+                </div>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Số lượng khách / bàn
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
+                <div className="form-control input-hienthi fs-4">
+                  {calculateGuestPerTable(
+                    contractInfo.menus?.totalcost,
+                    finaltotalMenuCost,
+                    contractInfo.table
+                  )}
+                </div>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">Số bàn cuối cùng</label>
+                <div className="form-control input-hienthi fs-4">
+                  {contractInfo.table}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <h3 style={{ color: "var(--dark-orange)" }}>Thông Tin Khách Hàng</h3>
+          <Row lg={3} md={3} xs={1}>
+            <Col>
+              <div className="mb-3">
+                <label className="form-label fw-bold ">Tên Khách Hàng</label>
+                <div className="form-control input-hienthi fs-4">
+                  {contractInfo.custname}
+                </div>
+              </div>
+            </Col>
+            <Col>
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Số Điện Thoại Khách Hàng
+                </label>
+                <div className="form-control input-hienthi fs-4">
+                  {contractInfo.custphone}
+                </div>
+              </div>
+            </Col>
+            <Col>
+              <div className="mb-3">
+                <label className="form-label fw-bold">Email liên hệ</label>
+                <div className="form-control input-hienthi fs-4">
+                  {contractInfo.custmail}
+                </div>
+              </div>
+            </Col>
+          </Row>
+          <h3 style={{ color: "var(--dark-orange)" }}>Chi Phí</h3>
+          <div className="row row-cols-sm-1 row-cols-lg-3 mt-3">
+            <div className="col">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Chi phí địa điểm:
+                </label>
+                <span
+                  className="fw-bold"
+                  style={{ color: "var(--deep-saffron)" }}
+                >
+                  {formatCurrency(contractInfo.locations?.cost)} VND
+                </span>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Tổng chi phí dịch vụ:
+                </label>
+                <span
+                  className="fw-bold"
+                  style={{ color: "var(--deep-saffron)" }}
+                >
+                  {formatCurrency(totalServicesCost)} VND
+                </span>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Tổng chi phí thực đơn:
+                </label>
+                <span
+                  className="fw-bold"
+                  style={{ color: "var(--deep-saffron)" }}
+                >
+                  {formatCurrency(finaltotalMenuCost)} VND
+                </span>
+              </div>
+            </div>
+
+            <div className="ms-auto">
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Tổng giá trị hợp đồng:
+                </label>
+                <span className="text-success fw-bold">
+                  {formatCurrency(contractInfo.totalcost)} VND
+                </span>
+              </div>
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Đã thanh toán:
+                </label>
+                <span className="text-success fw-bold">
+                  {formatCurrency(contractInfo.prepay)} VND
+                </span>
+              </div>
+              <div className="mb-3 d-flex align-items-center">
+                <label className="form-label fw-bold mb-0 me-2">
+                  Số tiền còn lại:
+                </label>
+                <span className="text-success fw-bold">
+                  {formatCurrency(
+                    contractInfo.totalcost - contractInfo.prepay //sau này tính ở đây
+                  )}{" "}
+                  VND
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="d-flex justify-content-between">
+            <h3 style={{ color: "var(--dark-orange)" }}>
+              Trạng thái hợp đồng:{" "}
+              <span
+                className="d-inline-block"
+                style={{
+                  color:
+                    contractInfo.status === "Pending"
+                      ? "var(--sonic-silver)"
+                      : contractInfo.status === "Approved"
+                      ? "var(--deep-saffron)"
+                      : "var(--green-success)",
+                }}
               >
-                Hủy hợp đồng
-              </button>
-            )}
+                {contractInfo.status === "Pending"
+                  ? "Chờ xác nhận"
+                  : contractInfo.status === "Approved"
+                  ? "Đã xác nhận"
+                  : contractInfo.status === "Actived"
+                  ? "Đang hoạt động"
+                  : "Đã hoàn thành"}
+              </span>
+            </h3>
+
+            <h3 style={{ color: "var(--dark-orange)" }}>
+              Trạng thái thanh toán:{" "}
+              <span
+                className="d-inline-block"
+                style={{
+                  color:
+                    contractInfo.paymentstatus === "Unpaid"
+                      ? "var(--sonic-silver)"
+                      : contractInfo.paymentstatus === "Prepay 50%"
+                      ? "var(--green-success)"
+                      : contractInfo.paymentstatus === "Prepay 70%"
+                      ? "var(--green-success)"
+                      : "var(--green-success)",
+                }}
+              >
+                {contractInfo.paymentstatus === "Unpaid"
+                  ? "Chưa thanh toán"
+                  : contractInfo.paymentstatus === "Prepay 50%"
+                  ? "Đã thanh toán 50%"
+                  : contractInfo.paymentstatus === "Prepay 70%"
+                  ? "Đã thanh toán 70%"
+                  : "Đã thanh toán"}
+              </span>
+            </h3>
+          </div>
         </div>
-        {(contractInfo.paymentstatus === "Unpaid" ||
-          contractInfo.paymentstatus === "Prepay 50%" ||
-          contractInfo.paymentstatus === "Prepay 70%") &&
-          contractInfo.status !== "Pending" && (
-            <PaymentCard onHide={handlePayment} contractInfo={contractInfo}/>
+      </Card>
+      <div style={{ textAlign: "center" }}>
+        {contractInfo.status === "Pending" &&
+          contractInfo.paymentstatus === "Unpaid" && (
+            <button
+              type="button"
+              className="btn btn-save-form btn-huy mx-3"
+              style={{ marginTop: "1rem" }}
+              onClick={handleShowModalCancel}
+            >
+              Hủy hợp đồng
+            </button>
           )}
       </div>
+      {(contractInfo.paymentstatus === "Unpaid" ||
+        contractInfo.paymentstatus === "Prepay 50%" ||
+        contractInfo.paymentstatus === "Prepay 70%") &&
+        contractInfo.status !== "Pending" && (
+          <PaymentCard onHide={handlePayment} contractInfo={contractInfo} />
+        )}
 
       <ConfirmCancelModal
         show={showModalCancel}
@@ -526,7 +516,7 @@ const ContractInfo = () => {
         onTotalCost={handleServicesTotalCost}
         servicesList={eventServicesInfo}
       />
-    </section>
+    </>
   );
 };
 

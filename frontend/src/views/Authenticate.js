@@ -5,7 +5,6 @@ import { Box, CircularProgress, Typography } from "@mui/material";
 
 const Authenticate = () => {
   const navigate = useNavigate();
-  const [isLoggedin, setIsLoggedin] = useState(false);
 
   useEffect(() => {
     console.log(window.location.href);
@@ -26,20 +25,21 @@ const Authenticate = () => {
         .then((data) => {
           console.log(data);
 
+          const refreshToken = data.result?.refreshToken;
+          if (refreshToken) {
+            document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
+              7 * 24 * 60 * 60
+            }; secure`;
+          }
+
           setToken(data.result?.accessToken);
-          setIsLoggedin(true);
+          navigate("/");
         })
         .catch((error) => {
           console.error("Error during authentication:", error);
         });
     }
   }, []);
-
-  useEffect(() => {
-    if (isLoggedin) {
-      navigate("/");
-    }
-  }, [isLoggedin, navigate]);
 
   return (
     <Box

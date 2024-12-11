@@ -12,6 +12,7 @@ import { FiLogOut } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 import { AiFillLock } from "react-icons/ai";
 import { getToken } from "services/localStorageService";
+import Cookies from "js-cookie";
 
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
@@ -185,11 +186,13 @@ const Header = () => {
                     <AiFillLock />
                     Đổi mật khẩu
                   </a>
-                  <a
+                  <p
                     className="dropdown-item navbar-link"
                     onClick={() => {
                       localStorage.removeItem("accessToken");
                       localStorage.removeItem("userId");
+                      localStorage.removeItem("isAdmin");
+                      Cookies.remove("refreshToken");
                       navigate("/login");
                     }}
                     style={{
@@ -200,7 +203,7 @@ const Header = () => {
                   >
                     <FiLogOut />
                     Đăng xuất
-                  </a>
+                  </p>
                 </div>
               </div>
             )}
@@ -209,7 +212,11 @@ const Header = () => {
           {/* Hiển thị tên người dùng khi đã đăng nhập */}
           {isLoggedIn && userDetails && (
             <div className="user-name">
-              <p className="navbar-link">Chào, {userDetails.fullname}</p>{" "}
+              <p className="navbar-link mb-0">
+                {userDetails.fullname !== null
+                  ? "Chào," + userDetails.fullname
+                  : "Xin chào!"}
+              </p>{" "}
               {/* Hiển thị tên người dùng */}
             </div>
           )}

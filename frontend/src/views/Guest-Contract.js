@@ -16,9 +16,9 @@ const Contract = () => {
   }, []);
 
   const steps = [
-    "Step 1: Cung cấp thông tin khách hàng",
-    "Step 2: Chọn nội dung hợp đồng",
-    "Step 3: Xác nhận hợp đồng",
+    "Bước 1: Cung cấp thông tin khách hàng",
+    "Bước 2: Chọn nội dung hợp đồng",
+    "Bước 3: Xác nhận hợp đồng",
   ];
 
   const { currentStep, finalData } = useContext(multiStepContext);

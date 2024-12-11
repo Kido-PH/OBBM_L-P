@@ -1,13 +1,11 @@
 import * as React from "react";
 import moment from "moment";
 import { Form, Card } from "react-bootstrap";
-import { FaEye } from "react-icons/fa6";
 import { multiStepContext } from "../../StepContext";
 import ModalLocations from "./ModalLocations";
 import ModalServices from "./ModalServices";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import ModalInfoMenu from "./ModalInfoMenu";
 import eventApi from "api/eventApi";
 
 const ContractCreateStep2 = () => {
@@ -134,11 +132,16 @@ const ContractCreateStep2 = () => {
         ...contractData,
         guest: 0, // Hoặc bạn có thể giữ lại giá trị cũ nếu cần
       });
+    } else if (location.isCustom) {
+      setContractData({
+        ...contractData,
+        guest: Math.min(value, 5000),
+      });
     } else {
       // Giới hạn giá trị tối đa là 10,000 và cập nhật giá trị
       setContractData({
         ...contractData,
-        guest: Math.min(value, 10000),
+        guest: Math.min(value, location.capacity),
       });
     }
   };

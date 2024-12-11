@@ -1,16 +1,4 @@
 import React from "react";
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardActions,
-  CardContent,
-  Divider,
-  Snackbar,
-  TextField,
-  Typography,
-} from "@mui/material";
 import GoogleIcon from "@mui/icons-material/Google";
 import { OAuthConfig } from "../configurations/configuration";
 import { useEffect, useState } from "react";
@@ -29,42 +17,6 @@ const LoginForm = ({ toggleForm }) => {
       "Content-Type": "application/json",
     },
   });
-
-  apiClient.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      console.log("Interceptor Error:", error); // Log lỗi
-      if (error.response?.status === 401) {
-        try {
-          const refreshToken = Cookies.get("refreshToken");
-          if (!refreshToken) {
-            console.error("Refresh token không tồn tại.");
-            throw new Error("Vui lòng đăng nhập lại.");
-          }
-  
-          const { data } = await axios.post(
-            "http://localhost:8080/obbm/auth/refresh",
-            { refreshToken },
-            {
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-  
-          console.log("Làm mới token thành công:", data);
-  
-          const newAccessToken = data.result.accessToken;
-          setToken(newAccessToken);
-          error.config.headers.Authorization = `Bearer ${newAccessToken}`;
-          return axios(error.config);
-        } catch (refreshError) {
-          console.error("Làm mới token thất bại:", refreshError.message);
-          return Promise.reject(refreshError);
-        }
-      }
-  
-      return Promise.reject(error);
-    }
-  );
   
 
   const handleContinueWithGoogle = () => {

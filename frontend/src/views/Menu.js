@@ -86,11 +86,11 @@ const Menu = ({ accessToken }) => {
   const setMenuIdUrl = (eventId) => {
     setEventToMenuUrl(`menu/${eventId}`);
     // Lưu eventId vào localStorage
-    sessionStorage.setItem("currentEventId", eventId);
+    localStorage.setItem("currentEventId", eventId);
   };
   const pushEventIdtoMenu = (newEventId) => {
     // Lưu eventId vào localStorage
-    sessionStorage.setItem("currentEventId", newEventId);
+    localStorage.setItem("currentEventId", newEventId);
 
     // Điều hướng đến trang menu mới với eventId
     navigate(`/menu/${newEventId}`);
@@ -135,8 +135,8 @@ const Menu = ({ accessToken }) => {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
 
   const handleSelectMenu = (menu) => {
-    // Kiểm tra userId trong sessionStorage
-    const userId = sessionStorage.getItem("userId");
+    // Kiểm tra userId trong localStorage
+    const userId = localStorage.getItem("userId");
 
     // Nếu không tìm thấy userId trong session, hiển thị cảnh báo
     if (!userId) {
@@ -239,9 +239,9 @@ const Menu = ({ accessToken }) => {
     // console.log("selectedMenu Menu Data:", selectedMenu);
   }, [id, location]);
   useEffect(() => {
-    const createdMenu = sessionStorage.getItem("createdMenu");
-    const createdMenuDishes = sessionStorage.getItem("createdMenuDishes");
-    const menuDishesDetail = sessionStorage.getItem("MenuDishesDetail");
+    const createdMenu = localStorage.getItem("createdMenu");
+    const createdMenuDishes = localStorage.getItem("createdMenuDishes");
+    const menuDishesDetail = localStorage.getItem("MenuDishesDetail");
 
     console.log("createdMenu:", createdMenu);
     console.log("createdMenuDishes:", createdMenuDishes);
@@ -259,7 +259,7 @@ const Menu = ({ accessToken }) => {
           listMenuDish: parsedDishes,
         });
       } catch (error) {
-        console.error("Lỗi khi phân tích dữ liệu từ sessionStorage:", error);
+        console.error("Lỗi khi phân tích dữ liệu từ localStorage:", error);
       }
     }
   }, []);
@@ -300,7 +300,7 @@ const Menu = ({ accessToken }) => {
 
   const handleCreateMenu = async () => {
     try {
-      const userId = sessionStorage.getItem("userId");
+      const userId = localStorage.getItem("userId");
 
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
@@ -323,7 +323,7 @@ const Menu = ({ accessToken }) => {
       }
       // Chuẩn bị dữ liệu để lưu
 
-      const currentEventId = sessionStorage.getItem("currentEventId"); // Lấy giá trị eventId từ sessionStorage
+      const currentEventId = localStorage.getItem("currentEventId"); // Lấy giá trị eventId từ localStorage
 
       const dataToSave = {
         name: selectedMenu.name,
@@ -334,9 +334,9 @@ const Menu = ({ accessToken }) => {
       };
 
       // Lưu dữ liệu vào localStorage
-      sessionStorage.setItem("createdMenu", JSON.stringify(dataToSave));
-      sessionStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-      sessionStorage.setItem(
+      localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+      localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
+      localStorage.setItem(
         "MenuDishesDetail",
         JSON.stringify(selectedMenu.groupedDishes)
       );
@@ -352,7 +352,7 @@ const Menu = ({ accessToken }) => {
           reverseButtons: true,
         }).then((result) => {
           if (result.isConfirmed) {
-            sessionStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+            localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
             window.location.href = "/login";
           }
         });
