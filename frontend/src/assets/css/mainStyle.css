@@ -256,10 +256,14 @@ body.active { overflow: hidden; }
 .has-scrollbar {
   display: flex;
   gap: 10px;
-  overflow-x: auto;
-  scroll-snap-type: inline mandatory;
-  padding-block-end: 40px;
+  overflow-x: auto; /* Cho phép thanh cuộn ngang */
+  scroll-snap-type: inline mandatory; /* Đảm bảo cuộn có thể dừng lại ở các phần tử con */
+  padding-block-end: 40px; /* Giữ khoảng cách dưới cùng */
+  scroll-behavior: smooth; /* Tùy chọn để cuộn mượt mà */
+  flex-wrap: nowrap; /* Đảm bảo các phần tử con không xuống dòng */
+  width: 100%; /* Đảm bảo chiều rộng đầy đủ */
 }
+
 
 .has-scrollbar::-webkit-scrollbar { height: 12px; }
 
@@ -1234,19 +1238,19 @@ body.active { overflow: hidden; }
 
 .footer-form {
   background-color: var(--white);
-  padding: 30px;
+  /* padding: 40px; */
   border: 1px solid var(--cultured);
   box-shadow: var(--shadow-2);
 }
 
 .input-wrapper {
   display: grid;
-  gap: 10px;
+  /* gap: 10px; */
   margin-block-end: 10px;
 }
 
 .input-field {
-  color: var(--spanish-gray);
+  color: var(--spanish-gray);;
   font-size: var(--fs-4);
   /* border: 1px solid var(--cultured); */
   padding: 8px 12px;
@@ -1291,7 +1295,7 @@ textarea.input-field {
 
  .input-field.highlight {
   background-color: hsl(33deg 100% 98.06%); /* Màu nền nhạt để nổi bật */
-  font-weight: bold; /* Chữ đậm */
+  color: #141414;
   border: 1px solid hsl(32, 100%, 59%); /* Đường viền nổi bật */
 }
 
@@ -1564,7 +1568,7 @@ textarea.input-field {
    * FOOTER
    */
 
-  .input-wrapper { grid-template-columns: 1fr 1fr; }
+  /* .input-wrapper { grid-template-columns: 1fr 1fr; } */
 
 }
 
@@ -1831,4 +1835,9 @@ textarea.input-field {
 .back-to-top-button:hover {
   background-color: hsl(25, 100%, 48%);
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+
+label{
+  font-size: 12px;
 }
