@@ -424,12 +424,6 @@ const Content = () => {
                     alignItems: "center",
                   }}
                 >
-                  <button
-                    className="scroll-btn left"
-                    onClick={() => handleScroll("left", category.categoryId)}
-                  >
-                    &lt;
-                  </button>
                   <ul className="food-menu-list">
                     {category.listDish.slice(0, 6).map(
                       (

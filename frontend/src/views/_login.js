@@ -17,7 +17,6 @@ const LoginForm = ({ toggleForm }) => {
       "Content-Type": "application/json",
     },
   });
-  
 
   const handleContinueWithGoogle = () => {
     const callbackUrl = OAuthConfig.redirectUri;
@@ -66,10 +65,9 @@ const LoginForm = ({ toggleForm }) => {
     setIsSubmitting(true);
     setError(""); // Reset lỗi khi bắt đầu đăng nhập
 
-    // Kiểm tra dữ liệu người dùng nhập vào
     if (!username.trim() || !password.trim()) {
       setError("Tài khoản và mật khẩu không được để trống!");
-      setIsSubmitting(false); // Dừng trạng thái submitting
+      setIsSubmitting(false);
       return;
     }
 
@@ -78,7 +76,6 @@ const LoginForm = ({ toggleForm }) => {
       password: password,
     };
 
-    // Gửi yêu cầu đăng nhập tới server
     apiClient
       .post("/auth/token", data)
       .then((response) => {
@@ -91,15 +88,11 @@ const LoginForm = ({ toggleForm }) => {
 
         const refreshToken = responseData.result?.refreshToken;
         if (refreshToken) {
-          document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
-            7 * 24 * 60 * 60
-          }; secure`;
+          document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure`;
         }
 
         const accessToken = responseData.result?.accessToken;
-        setToken(accessToken); // Lưu token vào localStorage
-
-        // Lấy thông tin người dùng nếu token hợp lệ
+        setToken(accessToken);
         return getUserDetails(accessToken);
       })
       .then((userDetails) => {
@@ -108,27 +101,30 @@ const LoginForm = ({ toggleForm }) => {
           return;
         }
 
-        // Lưu thông tin người dùng vào localStorage
-        sessionStorage.setItem("userId", userDetails.userId);
+        localStorage.setItem("userId", userDetails.userId);
         localStorage.setItem("userId", userDetails.userId);
 
-        // Lấy `currentEventId` từ localStorage
-        const currentEventId = sessionStorage.getItem("currentEventId");
+        const currentEventId = localStorage.getItem("currentEventId");
 
-        // Chuyển hướng sau khi đăng nhập
         if (currentEventId) {
           navigate(`/menu/${currentEventId}`);
         } else {
-          navigate("/account"); // Nếu không có `currentEventId`, chuyển hướng mặc định
+          navigate("/account");
         }
       })
       .catch((error) => {
-        setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
+        if (error.response?.status === 401) {
+          // Nếu lỗi là 401 thì hiển thị thông báo lỗi
+          setError("Tài khoản hoặc mật khẩu không chính xác!");
+        } else {
+          setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
+        }
       })
       .finally(() => {
-        setIsSubmitting(false); // Đặt lại trạng thái submitting khi kết thúc
+        setIsSubmitting(false);
       });
   };
+
 
   const getUserDetails = async (accessToken) => {
     console.log("Sử dụng accessToken:", accessToken); // Log accessToken
@@ -191,7 +187,7 @@ const LoginForm = ({ toggleForm }) => {
         onClick={() => toggleForm("register")}
         style={{ color: "#3d4fc8" }}
       >
-        Bạn chưa có tài khoản? Hãy <strong>tạo tài khoản</strong> 
+        Bạn chưa có tài khoản?<strong><u> Hãy tạo tài khoản</u></strong> 
       </div>
       <div
         

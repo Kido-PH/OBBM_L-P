@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import jsQR from "jsqr";
 import "../assets/css/customStyle.css";
 import "../assets/css/mainStyle.css";
-
+import "../assets/css/account.css";
+import { FaEdit, FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import {
   Alert,
@@ -14,6 +15,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import avatar from "../assets/images/gif_avatar.gif";
 import { getToken, setToken } from "../services/localStorageService";
 import { logOut } from "../services/authenticationService";
 import Swal from "sweetalert2";
@@ -44,8 +46,7 @@ const AccountSection = () => {
     citizenIdentity: userDetails?.citizenIdentity || "",
     dob: userDetails?.dob || "",
   });
-  
-
+  const [imageFile, setImageFile] = useState(null);
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
@@ -98,10 +99,45 @@ const AccountSection = () => {
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
-      setImageSrc(URL.createObjectURL(file)); // Tạo URL cho ảnh tải lên để hiển thị
-      scanIdCard(file); // Gọi API để quét ảnh CCCD
+      // Tạo URL cho ảnh để hiển thị trước
+      setImageSrc(URL.createObjectURL(file));
+
+      // Quét ảnh CCCD (nếu có API quét ảnh, gọi ở đây)
+      scanIdCard(file);
+
+      // Lưu ảnh lên server
+      uploadImage(file);
     }
   };
+
+  const uploadImage = async (file) => {
+    const formData = new FormData();
+    formData.append("file", file);
+  
+    try {
+      const response = await fetch("http://localhost:8080/obbm/upload/image", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+        body: formData,
+      });
+  
+      if (response.ok) {
+        const data = await response.json();
+        const imageUrl = data.result; // Giả sử API trả về URL của ảnh
+        console.log("Ảnh tải lên thành công:", imageUrl);
+  
+        // Lưu URL ảnh vào state tạm thời
+        setImageSrc(imageUrl); // imageSrc là state
+      } else {
+        console.error("Lỗi tải ảnh lên:", response.statusText);
+      }
+    } catch (error) {
+      console.error("Có lỗi khi tải ảnh lên:", error);
+    }
+  };
+  
   useEffect(() => {
     const accessToken = getToken();
 
@@ -109,73 +145,7 @@ const AccountSection = () => {
       navigate("/account");
     }
   }, [navigate]);
-  const refreshAccessToken = async () => {
-    const refreshToken = Cookies.get("refreshToken"); // Lấy refreshToken từ cookies
-  
-    if (!refreshToken) {
-      throw new Error("Không có refreshToken.");
-    }
-  
-    try {
-      // Gửi yêu cầu đến API /refresh để lấy accessToken mới
-      const response = await fetch("http://localhost:8080/obbm/auth/refresh", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ refreshToken }), // Gửi refreshToken
-      });
-  
-      const data = await response.json();
-  
-      // Nếu API trả về accessToken mới, lưu nó vào localStorage
-      if (data.code === 1000 && data.result?.accessToken) {
-        const newAccessToken = data.result.accessToken;
-        
-        setToken(newAccessToken); // Lưu accessToken mới vào localStorage
-        console.log("Mới nhận accessToken:", newAccessToken); // Log accessToken mới
-        return newAccessToken; // Trả về accessToken mới
-      }
-      if(data.code ===401){
-        const newAccessToken = data.result.accessToken;
-        console.log(newAccessToken);
-      }
-      throw new Error("Không thể lấy accessToken mới.");
-  
-    } catch (error) {
-      console.error("Lỗi khi làm mới accessToken:", error.message);
-      throw error;
-    }
-  };
-  
-  const addPassword = (event) => {
-    event.preventDefault();
 
-    const body = {
-      password: password,
-    };
-
-    fetch(`http://localhost:8080/obbm/users/create-password`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${getToken()}`,
-      },
-      body: JSON.stringify(body),
-    })
-      .then((response) => {
-        return response.json();
-      })
-      .then((data) => {
-        if (data.code != 1000) throw new Error(data.message);
-
-        getUserDetails(getToken());
-        showSuccess(data.message);
-      })
-      .catch((error) => {
-        showError(error.message);
-      });
-  };
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     const year = date.getFullYear().toString().slice(-4); // Lấy 2 chữ số cuối của năm
@@ -227,11 +197,10 @@ const AccountSection = () => {
     getUserDetails(accessToken);
   }, [navigate]);
 
-  const handleUpdate = async (event) => {
-    event.preventDefault();
+  const handleUpdate = async () => {
     const userId = localStorage.getItem("userId");
-
-    // Chuẩn bị dữ liệu cần gửi
+  
+    // Lấy thông tin người dùng từ form
     const updatedData = {
       fullname: document.getElementById("fullname").value,
       email: document.getElementById("email_address").value,
@@ -240,9 +209,11 @@ const AccountSection = () => {
       dob: document.getElementById("dob").value,
       gender: document.getElementById("gender").value,
       citizenIdentity: document.getElementById("IdCard").value,
+      image: imageSrc, // Lấy URL ảnh từ state
     };
-    console.log("data gửi đi API:", updatedData);
-
+  
+    console.log("Dữ liệu gửi đi API:", updatedData);
+  
     try {
       const response = await fetch(
         `http://localhost:8080/obbm/users/user/${userId}`,
@@ -255,31 +226,35 @@ const AccountSection = () => {
           body: JSON.stringify(updatedData),
         }
       );
-
+  
       if (response.ok) {
         const data = await response.json();
         Swal.fire({
           icon: "success",
           title: "Thành công",
           text: "Cập nhật thông tin thành công",
-          timer: 2000,
           showConfirmButton: true,
         });
         console.log(data);
+        setIsEditing(false);
       } else {
         Swal.fire({
           icon: "error",
           title: "Thất bại",
           text: "Lỗi không rõ",
-          timer: 2000,
           showConfirmButton: true,
         });
       }
     } catch (error) {
-      console.error("Lỗi khi cập nhật thông tin:", error);
-      alert("Đã xảy ra lỗi trong quá trình cập nhật.");
+      Swal.fire({
+        icon: "error",
+        title: "Thất bại",
+        text: "Lỗi không rõ",
+        showConfirmButton: true,
+      });
     }
   };
+  
 
   const handleGenderChange = (event) => {
     // Cập nhật userDetail.gender theo lựa chọn của người dùng
@@ -292,16 +267,6 @@ const AccountSection = () => {
     setUserDetails({ ...userDetails, gender: genderValue });
   };
 
-  const handleLogout = (event) => {
-    // Clear all data in localStorage
-    localStorage.clear();
-
-    // Call your logout function if you have one
-    logOut();
-
-    // Redirect the user to the login page
-    window.location.href = "/login";
-  };
 
   return (
     <main style={{ marginTop: "50px" }}>
@@ -309,206 +274,282 @@ const AccountSection = () => {
         <section
           className="section section-divider white account-section"
           id="blog"
-          style={{ paddingTop: "60px", paddingBottom: "60px" }}
+          style={{ paddingTop: "40px", paddingBottom: "60px" }}
         >
           <div className="container pt-4">
-            <p className="section-subtitle">Tài khoản</p>
             <div className="profile-container">
               <div className="profile-photo">
-                <img src={userDetails.image} />
+                <img
+                  src={avatar}
+                  alt="Avatar"
+                  style={{ maxWidth: "100%", maxHeight: "100%" }}
+                />
               </div>
-              <p className="profile-name">{`${userDetails.fullname}`}</p>
-              {/* <p className="join-date section-title">
-              Registration Date: <span className="span">26/05/2024</span>
-            </p> */}
             </div>
 
             <div className="container w-75">
-              <form id="userInfoForm" className="footer-form form-account">
-                <div className="d-flex align-items-center justify-content-between mb-3">
-                  <p className="footer-list-title account-form-title">
-                    Thông tin cá nhân
-                  </p>
-                </div>
-
-                <div className="input-wrapper">
-                  <input
-                    type="text"
-                    name="fullname"
-                    id="fullname"
-                    placeholder="Họ và tên"
-                    className={`input-field ${isEditing ? "highlight" : ""}`}
-                    value={userDetails.fullname}
-                    disabled={!isEditing}
-                    onChange={(e) => {
-                      const fullnameValue = e.target.value;
-                      setUserDetails({
-                        ...userDetails,
-                        fullname: fullnameValue,
-                      });
-                    }}
-                    // style={{ border: "1px solid var(--cultured)" }}
-                  />
-
-                  <input
-                    type="text"
-                    name="user_name"
-                    id="user_name"
-                    required
-                    placeholder="UserName"
-                    aria-label="UserName"
-                    className="input-field"
-                    value={userDetails.username}
-                    disabled
-                  />
-                  <input
-                    type="text"
-                    id="IdCard"
-                    name="IdCard"
-                    placeholder="Căn cước công dân"
-                    aria-label="IdCard"
-                    className="input-field"
-                    value={userDetails.citizenIdentity || ""}
-                    disabled
-                  />
-                  <input
-                    type="email"
-                    name="email_address"
-                    id="email_address"
-                    required
-                    placeholder="Email"
-                    aria-label="Email"
-                    className="input-field"
-                    value={userDetails.email}
-                    disabled
-                  />
-                  <input
-                    type="text"
-                    name="dob"
-                    id="dob"
-                    placeholder="Ngày sinh"
-                    className="input-field"
-                    value={userDetails.dob}
-                    disabled
-                  />
-                  <input
-                    type="text"
-                    name="phone"
-                    id="phone"
-                    required
-                    placeholder="Phone Number"
-                    aria-label="Phone Number"
-                    className={`input-field ${isEditing ? "highlight" : ""}`}
-                    value={userDetails.phone || ""}
-                    disabled={!isEditing}
-                    onChange={(e) => {
-                      // Regular expression to allow only digits and restrict the length to 10 digits
-                      const phoneValue = e.target.value;
-                      if (/^\d{0,10}$/.test(phoneValue)) {
-                        // Allow only numbers and a max of 10 digits
-                        setUserDetails({ ...userDetails, phone: phoneValue });
-                      }
-                    }}
-                    pattern="\d{10}" // Optional, for additional HTML5 validation
-                    title="Please enter a valid 10-digit phone number"
-                    // style={{ border: "1px solid var(--cultured)" }}
-
-                  />
-                  <select
-                    name="gender"
-                    aria-label="Total person"
-                    id="gender"
-                    style={{ height: "40px", color: "hsl(0deg 0% 24.88%)" }}
-                    className="input-field"
-                    value={userDetails.gender} // Đảm bảo giá trị của select phù hợp với state
-                    disabled
-                  >
-                    <option value="" disabled={false}>
-                      -- Chọn giới tính --
-                    </option>
-                    <option value="true">Nam</option>
-                    <option value="false">Nữ</option>
-                    <option value="null">Khác</option>
-                  </select>
-                  <label
-                    style={{
-                      paddingTop: "10px",
-                      paddingBottom: "10px",
-                      borderRadius: "3px",
-                    }}
-                    htmlFor="avatar-upload"
-                    className="custom-file-upload btn btn-secondary"
-                  >
-                    Căn cước công dân
-                  </label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    id="avatar-upload" // Make sure this matches the label's htmlFor
-                    onChange={handleImageUpload}
-                    style={{ display: "none" }} // Hide the input element
-                  />
-
-                  <input
-                    style={{ height: "40px" }}
-                    type="text"
-                    id="address"
-                    name="address"
-                    placeholder="Địa chỉ"
-                    className="input-field"
-                    value={userDetails.residence}
-                    disabled
-                  />
-
-                  {imageSrc && (
-                    <img
-                      src={imageSrc}
-                      alt="Selected"
-                      style={{
-                        maxWidth: "300px",
-                        marginTop: "10px",
-                        marginLeft: "140px",
+              <div className="" style={{ display: "block" }}>
+                <p className="footer-list-title account-form-title">
+                  Thông tin cá nhân
+                </p>
+              </div>
+              <form
+                id="userInfoForm"
+                className="footer-form form-account d-flex"
+              >
+                {/* Left Column */}
+                <div
+                  className="left-column"
+                  style={{ flex: "1", marginRight: "20px" }}
+                >
+                  <div className="input-wrapper">
+                    <label htmlFor="fullname">Họ và tên</label>
+                    <input
+                      type="text"
+                      name="fullname"
+                      id="fullname"
+                      placeholder="Họ và tên"
+                      className={`input-field ${isEditing ? "highlight" : ""}`}
+                      value={userDetails.fullname}
+                      disabled={!isEditing}
+                      onChange={(e) => {
+                        const fullnameValue = e.target.value;
+                        setUserDetails({
+                          ...userDetails,
+                          fullname: fullnameValue,
+                        });
                       }}
                     />
-                  )}
-                </div>
-
-                <div className="input-wrapper">
-                  <div className="input-wrapper" style={{ marginTop: "7px" }}>
-                    <canvas id="canvas" style={{ display: "none" }}></canvas>
-                    <div
-                      id="result"
-                      className="mt-3"
-                      style={{ display: "none" }}
-                    ></div>
+                    <label htmlFor="phone">Số điện thoại</label>
+                    <input
+                      type="text"
+                      name="phone"
+                      id="phone"
+                      required
+                      placeholder="Số điện thoại"
+                      aria-label="Phone Number"
+                      className={`input-field ${isEditing ? "highlight" : ""}`}
+                      value={userDetails.phone || ""}
+                      disabled={!isEditing}
+                      onChange={(e) => {
+                        const phoneValue = e.target.value;
+                        if (/^\d{0,10}$/.test(phoneValue)) {
+                          setUserDetails({ ...userDetails, phone: phoneValue });
+                        }
+                      }}
+                      pattern="\d{10}"
+                      title="Please enter a valid 10-digit phone number"
+                    />
+                    <label htmlFor="username">Tên đăng nhập</label>
+                    <input
+                      type="text"
+                      name="user_name"
+                      id="user_name"
+                      required
+                      placeholder="UserName"
+                      aria-label="UserName"
+                      className="input-field"
+                      value={userDetails.username}
+                      disabled
+                    />
+                    <label htmlFor="idCard">Căn cước công dân</label>
+                    <input
+                      type="text"
+                      id="IdCard"
+                      name="IdCard"
+                      placeholder="Căn cước công dân"
+                      aria-label="IdCard"
+                      className="input-field"
+                      value={userDetails.citizenIdentity || ""}
+                      disabled
+                    />
+                    <label htmlFor="address">Địa chỉ</label>
+                    <input
+                      style={{ height: "40px" }}
+                      type="text"
+                      id="address"
+                      name="address"
+                      placeholder="Địa chỉ"
+                      className="input-field"
+                      value={userDetails.residence}
+                      disabled
+                    />
+                    <label htmlFor="email">Email</label>
+                    <input
+                      type="email"
+                      name="email_address"
+                      id="email_address"
+                      required
+                      placeholder="Email"
+                      aria-label="Email"
+                      className="input-field"
+                      value={userDetails.email}
+                      disabled
+                    />
                   </div>
-
-                  <div className="input-wrapper"></div>
                 </div>
 
+                {/* Right Column */}
+                <div className="right-column" style={{ flex: "1" }}>
+                  <div className="input-wrapper">
+                    
+                    <div className="input-wrapper">
+                    <label
+                      style={{
+                        paddingTop: "10px",
+                        paddingBottom: "10px",
+                        borderRadius: "3px",
+                        display: "none", // Ẩn label
+                      }}
+                      htmlFor="avatar-upload"
+                      className="custom-file-upload btn btn-secondary"
+                    >
+                      Căn cước công dân
+                    </label>
+                  
+                    <div
+                      style={{
+                        maxWidth: "350px",
+                        maxHeight: "300px",
+                        height: "220px",
+                        marginBottom: "15px",
+                        border: "2px solid hsl(32, 100%, 59%)",
+                        borderRadius: "5px",
+                        padding: "5px",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: isEditing ? "#f9f9f9" : "#e0e0e0", // Đổi màu nền khi không được chỉnh sửa
+                        cursor: isEditing ? "pointer" : "not-allowed", // Đổi kiểu con trỏ
+                      }}
+                      onClick={() => {
+                        if (isEditing) {
+                          // Chỉ kích hoạt nếu isEditing là true
+                          document.getElementById("avatar-upload").click();
+                        }
+                      }}
+                    >
+                      {imageSrc ? (
+                        <img
+                          src={imageSrc}
+                          alt="Selected"
+                          style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        />
+                      ) : userDetails.image ? (
+                        <img
+                          src={userDetails.image}
+                          alt="User Avatar"
+                          style={{ maxWidth: "100%", maxHeight: "100%" }}
+                        />
+                      ) : (
+                        <span style={{ color: "#888" }}>Ảnh căn cước công dân</span>
+                      )}
+                    </div>
+                  
+                    {/* Input file */}
+                    <input
+                      type="file"
+                      id="avatar-upload"
+                      style={{ display: "none" }}
+                      accept="image/*"
+                      disabled={!isEditing} // Vô hiệu hóa input nếu không chỉnh sửa
+                      onChange={handleImageUpload} // Hàm xử lý khi upload ảnh
+                    />
+                  </div>
+                  
+
+                    <label htmlFor="dob">Ngày sinh</label>
+                    <input
+                      type="text"
+                      name="dob"
+                      id="dob"
+                      placeholder="Ngày sinh"
+                      className="input-field"
+                      value={userDetails.dob}
+                      disabled
+                    />
+                    <label htmlFor="gender">Giới tính</label>
+                    <select
+                      name="gender"
+                      aria-label="Total person"
+                      id="gender"
+                      style={{ height: "40px", color: "hsl(0deg 0% 24.88%)",appearance: "none",
+                        MozAppearance: "none",
+                        WebkitAppearance: "none", }}
+                      className="input-field"
+                      value={userDetails.gender}
+                      disabled
+                    >
+                      <option value="" disabled={false}>
+                        -- Chọn giới tính --
+                      </option>
+                      <option value="true">Nam</option>
+                      <option value="false">Nữ</option>
+                      <option value="null">Khác</option>
+                    </select>
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="avatar-upload"
+                      onChange={handleImageUpload}
+                      style={{ display: "none" }}
+                    />
+
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id="avatar-upload" // Đảm bảo ID trùng khớp với label's htmlFor
+                      onChange={handleImageUpload}
+                      style={{ display: "none" }} // Ẩn input file
+                    />
+                  </div>
+                </div>
+                {/* Nút Lưu và Nút Chỉnh sửa */}
                 <div style={{ textAlign: "center" }}>
-                  <button
-                    type="submit"
-                    className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
-                    style={{ margin: "10px auto" }}
-                    onClick={handleUpdate}
-                  >
-                    Lưu
-                  </button>
-                  <button
-                    type="button"
-                    className="edit-profile-btn navbar-link bi bi-pencil-square"
-                    onClick={toggleEdit}
-                  >
-                    {isEditing ? "Hủy" : "Chỉnh sửa"}
-                  </button>
+                  {isEditing && (
+                    <button
+                      type="submit"
+                      className="update-btn btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
+                      style={{
+                        position: "absolute",
+                        // top: "370px",
+                        bottom: "80px",
+                        right: "320px",
+                        cursor: "pointer",
+                        color: "hsl(32, 100%, 59%)",
+                      }}
+                      onClick={handleUpdate}
+                    >
+                      Lưu
+                    </button>
+                  )}
+
+<button
+  type="button"
+  className="edit-icon-btn btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
+  onClick={() => setIsEditing(!isEditing)}
+  style={{
+    position: "absolute",
+    bottom: "80px",
+    right: "230px",
+    cursor: "pointer",
+    textAlign: "center"
+  }}
+>
+  {isEditing ? "Hủy" : "Chỉnh sửa"}
+</button>
+
+
                   {userDetails.noPassword && (
                     <div style={{ textAlign: "left" }}>
                       <p style={{ display: "inline", marginRight: "4px" }}>
                         Chú ý: Tài khoản bạn chưa có mật khẩu,
                       </p>
                       <button
-                        onClick={() => {navigate("/create-password")}}
+                        onClick={() => {
+                          navigate("/create-password");
+                        }}
                         style={{
                           display: "inline",
                           background: "none",
@@ -522,25 +563,8 @@ const AccountSection = () => {
                       </button>
                     </div>
                   )}
-
-                  <div className="d-flex justify-content-center align-items-center"></div>
                 </div>
               </form>
-            </div>
-
-            <div className="d-flex justify-content-center align-items-center">
-              <button
-                onClick={handleLogout}
-                className="d-flex align-items-center me-5 mb-2 btn btn-hover"
-                style={{
-                  fontSize: "14px",
-                  margin: "10px auto",
-                  marginTop: "10px",
-                  borderRadius: "3px",
-                }}
-              >
-                Đăng xuất
-              </button>
             </div>
           </div>
         </section>
