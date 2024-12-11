@@ -177,7 +177,7 @@ const PaymentHistoryTable = () => {
               ) : (
                 <TableRow>
                   <TableCell colSpan={columns.length} align="center">
-                    Bạn chưa thanh toán hợp đồng lần nào
+                    Bạn chưa thanh toán hợp đồng lần nào.
                   </TableCell>
                 </TableRow>
               )}

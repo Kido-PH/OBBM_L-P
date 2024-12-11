@@ -218,7 +218,8 @@ const Header = () => {
                     <AiFillLock />
                     Đổi mật khẩu
                   </a>
-                  <p
+                  <a
+                    href="/#"
                     className="dropdown-item navbar-link"
                     onClick={handleLogout}
                     style={{
@@ -229,7 +230,7 @@ const Header = () => {
                   >
                     <FiLogOut />
                     Đăng xuất
-                  </p>
+                  </a>
                 </div>
               </div>
             )}
@@ -240,7 +241,7 @@ const Header = () => {
             <div className="user-name">
               <p className="navbar-link mb-0">
                 {userDetails.fullname !== null
-                  ? "Chào," + userDetails.fullname
+                  ? "Chào, " + userDetails.fullname
                   : "Xin chào!"}
               </p>{" "}
               {/* Hiển thị tên người dùng */}

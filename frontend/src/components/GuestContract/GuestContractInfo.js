@@ -70,6 +70,7 @@ const ContractInfo = () => {
         timer: 2000, // Tự động đóng sau 2 giây
         showConfirmButton: false,
       });
+      navigate(`/contract/info/${id}`);
     }
     if (paymentStatus === "PAID" || paymentStatus === "00") {
       Swal.fire({
@@ -79,6 +80,7 @@ const ContractInfo = () => {
         timer: 5000,
         showConfirmButton: true,
       });
+      navigate(`/contract/info/${id}`);
     }
   };
 
@@ -197,7 +199,11 @@ const ContractInfo = () => {
 
   return (
     <>
-      <Card name="contractInfo" className="p-5" style={{ opacity: 0.9, borderTopLeftRadius: 0 }}>
+      <Card
+        name="contractInfo"
+        className="p-5"
+        style={{ opacity: 0.9, borderTopLeftRadius: 0 }}
+      >
         <h2 style={{ color: "hsl(28, 100%, 58%)" }}>Thông tin hợp đồng</h2>
         <div name="contractForm" className="contractForm">
           <div className="row row-cols-sm-1 row-cols-md-2">
