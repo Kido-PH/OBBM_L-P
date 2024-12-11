@@ -29,14 +29,19 @@ import IngredientManager from "./components/Admin/Admin-Ingredient";
 import MenuManagement from "./components/Admin/Admin-Menu";
 import Authenticate from "./views/Authenticate";
 import PaymentCoordinatorPage from "views/PaymentCoordinator";
+
+import AdminRoute from "components/Admin/AdminRouter";
+
 import CreatePasswordForm from "views/_createPassword";
+
 const App = () => {
   const location = useLocation();
+  const isAdmin = JSON.parse(localStorage.getItem("isAdmin"));
   const shouldShowHeaderFooter =
     !location.pathname.startsWith("/admin") &&
     location.pathname !== "/login" &&
     location.pathname !== "/register" &&
-    location.pathname !== "/resetpassword"&&
+    location.pathname !== "/resetpassword" &&
     location.pathname !== "/create-password";
 
   return (
@@ -59,7 +64,14 @@ const App = () => {
         <Route path="/resetpassword" element={<Login />} />
         <Route path="/create-password" element={<Login />} />
         <Route path="/authenticate" element={<Authenticate />} />
-        <Route path="/admin/*" element={<DashboardPage />}>
+        <Route
+          path="/admin/*"
+          element={
+            <AdminRoute isAdmin={isAdmin}>
+              <DashboardPage />
+            </AdminRoute>
+          }
+        >
           <Route path="ManageContracts" element={<ManageContracts />} />
           <Route path="ManageCategoryDish" element={<CategoryDish />} />
           <Route path="ManageDish" element={<DishManager />} />

@@ -16,11 +16,20 @@ import { OAuthConfig } from "../configurations/configuration";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getToken, setToken } from "../services/localStorageService";
+import Cookies from "js-cookie";
+import axios from "axios";
 
 const LoginForm = ({ toggleForm }) => {
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+
+  const apiClient = axios.create({
+    baseURL: "http://localhost:8080/obbm",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
   const handleContinueWithGoogle = () => {
     const callbackUrl = OAuthConfig.redirectUri;
     const authUrl = OAuthConfig.authUri;
@@ -35,21 +44,13 @@ const LoginForm = ({ toggleForm }) => {
     window.location.href = targetUrl;
   };
 
-  useEffect(() => {
-    const accessToken = getToken();
-
-    if (accessToken) {
-      navigate("/account");
-    }
-  }, [navigate]);
-
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("error");
   const [error, setError] = useState("");
-
+  const getRefreshToken = () => Cookies.get("refreshToken");
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -76,9 +77,9 @@ const LoginForm = ({ toggleForm }) => {
     setIsSubmitting(true);
     setError(""); // Reset lỗi khi bắt đầu đăng nhập
 
-    // Kiểm tra dữ liệu người dùng nhập vào
     if (!username.trim() || !password.trim()) {
       setError("Tài khoản và mật khẩu không được để trống!");
+      setIsSubmitting(false);
       return;
     }
 
@@ -87,30 +88,23 @@ const LoginForm = ({ toggleForm }) => {
       password: password,
     };
 
-    // Gửi yêu cầu đăng nhập tới server
-    fetch("http://localhost:8080/obbm/auth/token", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.code !== 1000) {
-          // Kiểm tra nếu thông báo lỗi liên quan đến tài khoản hoặc mật khẩu sai
-          if (data.message.includes("Invalid credentials")) {
-            setError("Tài khoản hoặc mật khẩu không đúng!");
-          } else {
-            setError(data.message || "Đăng nhập không thành công");
-          }
+    apiClient
+      .post("/auth/token", data)
+      .then((response) => {
+        const responseData = response.data;
+
+        if (responseData.code !== 1000) {
+          setError(responseData.message || "Đăng nhập không thành công");
           return;
         }
-        
-        const accessToken = data.result?.accessToken;
-        setToken(accessToken); // Lưu token vào localStorage
 
-        // Lấy thông tin người dùng nếu token hợp lệ
+        const refreshToken = responseData.result?.refreshToken;
+        if (refreshToken) {
+          document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure`;
+        }
+
+        const accessToken = responseData.result?.accessToken;
+        setToken(accessToken);
         return getUserDetails(accessToken);
       })
       .then((userDetails) => {
@@ -118,35 +112,44 @@ const LoginForm = ({ toggleForm }) => {
           setError("Không thể lấy thông tin người dùng.");
           return;
         }
-        // Lưu thông tin người dùng vào localStorage
+
         localStorage.setItem("userId", userDetails.userId);
-        
-        navigate("/"); // Điều hướng về trang chính sau khi đăng nhập thành công
+        localStorage.setItem("userId", userDetails.userId);
+
+        const currentEventId = localStorage.getItem("currentEventId");
+
+        if (currentEventId) {
+          navigate(`/menu/${currentEventId}`);
+        } else {
+          navigate("/account");
+        }
       })
       .catch((error) => {
-        setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
+        if (error.response?.status === 401) {
+          // Nếu lỗi là 401 thì hiển thị thông báo lỗi
+          setError("Tài khoản hoặc mật khẩu không chính xác!");
+        } else {
+          setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
+        }
       })
       .finally(() => {
-        setIsSubmitting(false); // Đặt lại trạng thái submitting khi kết thúc
+        setIsSubmitting(false);
       });
   };
+
+
   const getUserDetails = async (accessToken) => {
-    const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
+    console.log("Sử dụng accessToken:", accessToken); // Log accessToken
+    const response = await apiClient.get("/users/myInfo", {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
-
-    const data = await response.json();
-
+  
+    const data = response.data;
     if (data.code !== 1000) {
       throw new Error(data.message);
     }
-
     return data.result;
   };
-
   
 
   return (
@@ -196,7 +199,7 @@ const LoginForm = ({ toggleForm }) => {
         onClick={() => toggleForm("register")}
         style={{ color: "#3d4fc8" }}
       >
-        Bạn chưa có tài khoản? Hãy <strong>tạo tài khoản</strong> 
+        Bạn chưa có tài khoản?<strong><u> Hãy tạo tài khoản</u></strong> 
       </div>
       <div
         
@@ -206,8 +209,6 @@ const LoginForm = ({ toggleForm }) => {
       </div>
     </div>
   );
-  
-  
 };
 
 export default LoginForm;

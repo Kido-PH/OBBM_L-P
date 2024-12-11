@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import danhMucApi from "api/danhMucApi";
-import { FaPlus, FaEye, FaTimes } from "react-icons/fa"; // Import icons
+import { FaPlus, FaEye, FaTimes } from "react-icons/fa";
 import AudioRecorderWithAPI from "components/GuestContract/SpeechToTextInput";
 
 const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
@@ -32,9 +32,12 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   }, []);
 
   const filteredCategories = categories.filter(
-    (category) => category.categoryId === categoryId
+    (category) =>
+      category.categoryId === categoryId || // Đổ dữ liệu theo categoryId hiện tại
+      (categoryId === 1 && category.categoryId === 4) // Nếu categoryId là 1, thêm cả categoryId = 4
   );
-
+  
+  
   const handleSearch = (value) => {
     setIsSearching(true);
     if (!value.trim()) {
@@ -63,24 +66,22 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
       }`}
     >
       <div className="listfood-header">
-        <h2>Danh mục món ăn</h2>
-        <div className="action-buttons align-items-center">
-          <button className="filter-button btn btn-save-form me-5 mb-2 btn btn-hover">
-            Lọc
-          </button>
-          <button className="sort-button btn btn-save-form me-5 mb-2 btn btn-hover">
-            Sắp xếp
-          </button>
+        <h1>Danh mục món ăn</h1>
+        <div className="action-buttons">
+          
           <AudioRecorderWithAPI
             onSearch={handleSearch}
-            visibleSearchButton="hidden"
+            visibleSearchButton="none"
           />
-          <button
-            className="add-button"
-            onClick={closeListFood}
-            style={{ marginLeft: "20px" }}
-          >
-            <FaTimes style={{ color: "red" }} /> {/* X icon for "Remove" */}
+          <button className="filter-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover" style={{width:"80px"}}>
+            Lọc
+          </button>
+          <button className="sort-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover" style={{width:"130px"}}>
+            Sắp xếp
+          </button>
+          {/* Nút đóng ListFood */}
+          <button className="add-button" onClick={closeListFood} style={{marginLeft:"20px"}}>
+          <FaTimes style={{color:"red"}} /> {/* X icon for "Remove" */}
           </button>
         </div>
       </div>

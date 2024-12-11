@@ -168,6 +168,17 @@ const Content = () => {
     fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
     fetchEvent();
   }, [activeCategoryId]);
+  const handleScroll = (direction, categoryId) => {
+    const menuList = document.querySelector(
+      `#category-${categoryId} .food-menu-list`
+    );
+    const scrollAmount = 120; // Số pixel muốn cuộn mỗi lần
+    if (direction === "left") {
+      menuList.scrollLeft -= scrollAmount;
+    } else if (direction === "right") {
+      menuList.scrollLeft += scrollAmount;
+    }
+  };
 
   const handleFilter = (categoryId) => {
     const filtered = categories.filter(
@@ -439,10 +450,7 @@ const Content = () => {
                               {dish.name}
                             </h4>
 
-                            {/* <div className="price-wrapper">
-              <p className="price-text">Giá:</p>
-              {dish.price.toLocaleString()} VND
-            </div> */}
+          
                           </div>
                         </li>
                       )

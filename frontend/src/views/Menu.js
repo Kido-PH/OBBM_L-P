@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import "../assets/css/menu.css";
 import "../assets/css/listFood.css";
 import "../assets/css/swipermenu.css";
@@ -18,8 +18,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
+import AddButton from "../assets/images/add.png";
 
-const Menu = () => {
+const Menu = ({ accessToken }) => {
+  const scrollableRefs = useRef([]);
+  const listRef = useRef(null);
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
   const categoriesOrder = ["Appetizers", "Main Courses", "Desserts"];
   const [menuDishesDetails, setMenuDishesDetails] = useState([]);
@@ -35,6 +38,49 @@ const Menu = () => {
   const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
   const location = useLocation();
   const [isModalEventsOpen, setIsModalEventsOpen] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+  const [userDetails, setUserDetails] = useState({});
+  const [isStatus, setIsStatus] = useState(true);
+  const getUserDetails = async (accessToken) => {
+    try {
+      const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      const data = await response.json();
+      console.log("myInfo", data); // Kiểm tra dữ liệu trả về
+
+      if (data && data.result) {
+        setUserDetails(data.result);
+
+        // Kiểm tra trạng thái isStatus, nếu là false thì hiển thị cảnh báo
+        const isStatusActive = data.result.isStatus;
+
+        if (isStatusActive === false) {
+          setShowWarning(true); // Hiển thị cảnh báo nếu isStatus là false
+        } else {
+          setShowWarning(false); // Ẩn cảnh báo nếu isStatus là true
+        }
+        setIsStatus(isStatusActive);
+      }
+    } catch (error) {
+      console.error("Error fetching user details:", error);
+    }
+  };
+
+  useEffect(() => {
+    // Kiểm tra trạng thái đăng nhập từ localStorage
+    const userId = localStorage.getItem("userId");
+    const accessToken = localStorage.getItem("accessToken"); // Lấy token từ localStorage
+
+    if (accessToken) {
+      getUserDetails(accessToken); // Lấy thông tin người dùng
+    }
+  }, []);
+  // Gọi API khi component được render lần đầu
+
   const handleOpenModalEvents = () => {
     setIsModalEventsOpen(true);
   };
@@ -43,11 +89,14 @@ const Menu = () => {
   };
   const setMenuIdUrl = (eventId) => {
     setEventToMenuUrl(`menu/${eventId}`);
+    // Lưu eventId vào localStorage
+    localStorage.setItem("currentEventId", eventId);
   };
   const pushEventIdtoMenu = (newEventId) => {
-    // Điều hướng đến trang menu mới với eventId thay đổi
+    // Lưu eventId vào localStorage
     localStorage.setItem("currentEventId", newEventId);
 
+    // Điều hướng đến trang menu mới với eventId
     navigate(`/menu/${newEventId}`);
   };
 
@@ -90,6 +139,43 @@ const Menu = () => {
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
 
   const handleSelectMenu = (menu) => {
+    // Kiểm tra userId trong sessionStorage
+    const userId = localStorage.getItem("userId");
+    if (!isStatus) {
+      Swal.fire({
+        icon: "warning",
+        title: "Cập nhật đầy đủ thông tin",
+        text: "Bạn cần Cập nhật đầy đủ thông tin để có thể chọn thực đơn.",
+        showCancelButton: true,
+        confirmButtonText: "Cập nhật ngay",
+        cancelButtonText: "Hủy",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/account";
+        }
+      });
+      return;
+    }
+    // Nếu không tìm thấy userId trong session, hiển thị cảnh báo
+    if (!userId) {
+      Swal.fire({
+        icon: "warning",
+        title: "Chưa đăng nhập",
+        text: "Bạn cần đăng nhập để chọn tạo thực đơn.",
+        showCancelButton: true,
+        confirmButtonText: "Đăng nhập ngay",
+        cancelButtonText: "Hủy",
+        reverseButtons: true,
+      }).then((result) => {
+        if (result.isConfirmed) {
+          window.location.href = "/login";
+        }
+      });
+      return; // Dừng hàm nếu không có userId
+    }
+
+    // Nếu có userId, tiếp tục thực hiện hành động
     setSelectedMenu(menu);
     const latestMenuId =
       menuList && menuList.length > 0
@@ -104,6 +190,7 @@ const Menu = () => {
         menuId: null,
       };
     });
+
     console.log("dữ liệu menu", menu);
     setSelectedMenuDishes(menuDishesList);
   };
@@ -112,7 +199,7 @@ const Menu = () => {
     const fetchMenu = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/obbm/menu/getAllMenuAdmin?page=1&size=100"
+          "http://localhost:8080/obbm/menu/getAllMenuAdmin?page=1&size=10000000"
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -140,29 +227,9 @@ const Menu = () => {
       }
     };
 
-    const fetchMenuList = async () => {
-      try {
-        const response = await menuApi.getAll(); // Gọi API lấy danh sách menu
-        const menuList = response.result?.content || []; // Lấy danh sách thực đơn hoặc mảng rỗng
-
-        // Lấy menuId lớn nhất
-        const latestMenuId =
-          menuList.length > 0
-            ? Math.max(...menuList.map((menu) => menu.menuId))
-            : 0;
-
-        setMenuList(menuList); // Lưu danh sách thực đơn vào state
-        setLatestMenuId(latestMenuId); // Lưu menuId lớn nhất vào state (nếu cần)
-      } catch (error) {
-        console.error("Lỗi khi lấy danh sách menu:", error);
-        setMenuList([]); // Nếu lỗi, gán danh sách thực đơn rỗng
-      }
-    };
-
-    fetchMenuList();
     fetchEvent();
     fetchMenu();
-    fetchMenuList();
+
     const latestMenuId =
       menuList && menuList.length > 0
         ? Math.max(...menuList.map((menu) => menu.menuId), 0)
@@ -170,6 +237,34 @@ const Menu = () => {
 
     // console.log("selectedMenu Menu Data:", selectedMenu);
   }, [id, location]);
+  useEffect(() => {
+    const createdMenu = localStorage.getItem("createdMenu");
+    const createdMenuDishes = localStorage.getItem("createdMenuDishes");
+    const menuDishesDetail = localStorage.getItem("MenuDishesDetail");
+
+    console.log("createdMenu:", createdMenu);
+    console.log("createdMenuDishes:", createdMenuDishes);
+    console.log("menuDishesDetail:", menuDishesDetail);
+
+    if (createdMenu && createdMenuDishes && menuDishesDetail) {
+      try {
+        const parsedMenu = JSON.parse(createdMenu);
+        const parsedDishes = JSON.parse(createdMenuDishes);
+        const parsedDetails = JSON.parse(menuDishesDetail);
+
+        setSelectedMenu({
+          ...parsedMenu,
+          groupedDishes: parsedDetails,
+          listMenuDish: parsedDishes,
+        });
+      } catch (error) {
+        console.error("Lỗi khi phân tích dữ liệu từ sessionStorage:", error);
+      }
+    }
+  }, []);
+  useEffect(() => {
+    console.log("selectedMenu sau khi cập nhật:", selectedMenu);
+  }, [selectedMenu]);
 
   useEffect(() => {
     // console.log("Current Path:", location.pathname);
@@ -182,6 +277,11 @@ const Menu = () => {
   const groupedMenu = menu.reduce((acc, category) => {
     const groupedDishes = category.listMenuDish.reduce((dishAcc, menuDish) => {
       const categoryName = menuDish.dishes.categories.name;
+
+      // Bỏ qua món ăn nếu deletedAt không phải null
+      if (menuDish.dishes.deletedAt !== null) {
+        return dishAcc;
+      }
 
       if (!dishAcc[categoryName]) {
         dishAcc[categoryName] = [];
@@ -206,32 +306,24 @@ const Menu = () => {
     try {
       const userId = localStorage.getItem("userId");
 
-      // Check if user is not logged in
-      if (!userId) {
-        // Show SweetAlert with Login button
+      // Kiểm tra trạng thái isStatus
+      if (userDetails && userDetails.isStatus === false) {
         Swal.fire({
-          icon: "warning",
-          title: "Chưa đăng nhập",
-          text: "Bạn cần đăng nhập để tạo thực đơn.",
-          showCancelButton: true,
-          confirmButtonText: "Đăng nhập ngay",
-          cancelButtonText: "Hủy",
-          reverseButtons: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            // Navigate to the login page if the user clicks "Đăng nhập ngay"
-            window.location.href = "/login"; // or you can use navigate('/login') if using react-router-dom
-          }
+          icon: "error",
+          title: "Không thể tạo thực đơn",
+          text: "Tài khoản của bạn chưa được kích hoạt. Vui lòng liên hệ hỗ trợ.",
         });
-
-        return; // Prevent further execution of the function if user is not logged in
+        return; // Dừng quá trình tạo menu
       }
 
+      const profitMargin = 0.2;
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
-        .reduce((total, dish) => total + (dish.price || 0), 0);
+        .reduce((total, dish) => {
+          const sellingPrice = dish.price / (1 - profitMargin);
+          return total + (sellingPrice || 0);
+        }, 0);
 
-      // Remove duplicate dishes from selectedMenuDishes
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
           acc.push(currentDish);
@@ -239,28 +331,26 @@ const Menu = () => {
         return acc;
       }, []);
 
-      // Check if there are no dishes selected
       if (uniqueDishes.length === 0) {
         Swal.fire({
           icon: "error",
           title: "Thất bại!",
           text: "Thực đơn phải có ít nhất 1 món ăn.",
         });
-        return; // Stop execution if there are no dishes
+        return;
       }
 
-      // Prepare the data to send to the server
+      const currentEventId = localStorage.getItem("currentEventId"); // Lấy giá trị eventId từ sessionStorage
+
       const dataToSave = {
         name: selectedMenu.name,
         totalcost: totalCost,
         description: selectedMenu.description,
-        userId: userId, // Get userId from localStorage
-        eventId: selectedMenu.events.eventId,
+        userId: userId || "guest",
+        eventId: currentEventId || selectedMenu.events.eventId, // Nếu không có currentEventId trong session, dùng eventId từ selectedMenu
       };
 
-      console.log("Phản hồi từ API tạo thực đơn:", dataToSave);
-
-      // Save the data to localStorage
+      // Lưu dữ liệu vào localStorage
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
       localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
       localStorage.setItem(
@@ -268,13 +358,29 @@ const Menu = () => {
         JSON.stringify(selectedMenu.groupedDishes)
       );
 
-      console.log("dữ liệu menu", selectedMenu.listMenuDish);
-      Swal.fire({
-        icon: "success",
-        title: "Thành công!",
-        text: "Thực đơn và món ăn đã được tạo thành công!",
-      });
-      navigate("/contract");
+      if (!userId) {
+        Swal.fire({
+          icon: "warning",
+          title: "Chưa đăng nhập",
+          text: "Bạn cần đăng nhập để hoàn tất tạo thực đơn.",
+          showCancelButton: true,
+          confirmButtonText: "Đăng nhập ngay",
+          cancelButtonText: "Hủy",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+            window.location.href = "/login";
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: "success",
+          title: "Thành công!",
+          text: "Thực đơn và món ăn đã được tạo thành công!",
+        });
+        navigate("/contract");
+      }
     } catch (error) {
       console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
       Swal.fire({
@@ -420,8 +526,53 @@ const Menu = () => {
       };
     });
   };
+  // Scroll function for left and right buttons
+  const handleScroll = (direction, categoryName) => {
+    // Cập nhật lại selector của .promo-list
+    const listContainer = document.querySelector(`.promo-list.${categoryName}`);
+
+    // Kiểm tra xem listContainer có tồn tại không
+    if (!listContainer) return;
+
+    // Lấy tất cả các mục li trong listContainer
+    const listItems = listContainer.querySelectorAll("li");
+
+    // Kiểm tra nếu không có mục nào, trả về luôn
+    if (listItems.length === 0) return;
+
+    // Lấy chiều rộng của listContainer (ul)
+    const listWidth = listContainer.offsetWidth;
+    const itemWidth = listItems[0]?.offsetWidth || 0; // Chiều rộng mỗi item
+
+    const scrollAmount = listWidth / 3; // Cuộn theo 33% chiều rộng của ul
+
+    // Kiểm tra chiều rộng của listItems để đảm bảo cuộn hoạt động
+    if (itemWidth === 0) return;
+
+    // Cuộn theo hướng trái hoặc phải
+    if (direction === "left") {
+      listContainer.scrollLeft -= scrollAmount; // Cuộn sang trái
+    } else if (direction === "right") {
+      listContainer.scrollLeft += scrollAmount; // Cuộn sang phải
+    }
+    // Thêm điều kiện để dừng khi đạt đến đầu/cuối của danh sách
+    if (listContainer.scrollLeft <= 0 && direction === "left") {
+      return; // Dừng nếu đang ở đầu
+    }
+
+    if (
+      listContainer.scrollLeft + listWidth >= listContainer.scrollWidth &&
+      direction === "right"
+    ) {
+      return; // Dừng nếu đang ở cuối
+    }
+  };
 
   let swiperRef = null;
+
+  groupedMenuArray.filter(
+    (category) => Object.values(category.groupedDishes).flat().length >= 9
+  );
 
   return (
     <div className="Menu">
@@ -472,103 +623,104 @@ const Menu = () => {
                   modules={[EffectCoverflow, Pagination, Navigation]}
                   className="swiper-container"
                 >
-                  {groupedMenuArray.map((category, index) => (
-                    <SwiperSlide
-                      key={index}
-                      onClick={() => handleSelectMenu(category)}
-                    >
-                      <div className="food-category">
-                        <h4 style={{ textAlign: "center" }}>{category.name}</h4>
+                  {groupedMenuArray
+                    .filter(
+                      (category) =>
+                        Object.values(category.groupedDishes).flat().length >= 9 // Chỉ lấy các menu có >= 9 món
+                    )
+                    .map((category, index) => (
+                      <SwiperSlide
+                        key={index}
+                        onClick={() => handleSelectMenu(category)}
+                      >
+                        <div className="food-category">
+                          <h4 style={{ textAlign: "center" }}>
+                            {category.name}
+                          </h4>
 
-                        {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
-                        {categoriesOrder.map(
-                          (categoryName) =>
-                            // Kiểm tra xem categoryName có tồn tại trong groupedDishes không
-                            category.groupedDishes[categoryName] ? (
-                              <div key={categoryName} className="menu-category">
-                                <h6>
-                                  {categoryName === "Appetizers"
-                                    ? "Khai vị và đồ uống"
-                                    : categoryName === "Main Courses"
-                                    ? "Món chính"
-                                    : categoryName === "Desserts"
-                                    ? "Tráng miệng"
-                                    : categoryName}
-                                </h6>
+                          {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
+                          {categoriesOrder.map(
+                            (categoryName) =>
+                              category.groupedDishes[categoryName] && (
+                                <div
+                                  key={categoryName}
+                                  className="menu-category"
+                                >
+                                  <h6>
+                                    {categoryName === "Appetizers"
+                                      ? "Khai vị và thức uống"
+                                      : categoryName === "Main Courses"
+                                      ? "Món chính"
+                                      : categoryName === "Desserts"
+                                      ? "Tráng miệng"
+                                      : categoryName}
+                                  </h6>
 
-                                <div className="menu-category-dish">
-                                  <ul
-                                    className="promo-list has-scrollbar"
-                                    style={{ paddingTop: "10px" }}
-                                  >
-                                    {category.groupedDishes[categoryName].map(
-                                      (dish, index) => (
-                                        <li
-                                          key={index}
-                                          style={{ width: "77px" }}
-                                        >
-                                          <img
-                                            src={dish.image}
-                                            alt={dish.name}
-                                            style={{
-                                              width: "63px",
-                                              height: "50px",
-                                              marginLeft: "7px",
-                                            }}
-                                          />
-                                          <p
-                                            style={{
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                              whiteSpace: "nowrap",
-                                              textAlign: "center",
-                                              fontWeight: "bold",
-                                              marginTop: "5px",
-                                            }}
+                                  <div className="menu-category-dish">
+                                    <ul
+                                      className="promo-list has-scrollbar"
+                                      style={{ paddingTop: "10px" }}
+                                    >
+                                      {category.groupedDishes[categoryName].map(
+                                        (dish, index) => (
+                                          <li
+                                            key={index}
+                                            style={{ width: "77px" }}
                                           >
-                                            {dish.name}
-                                          </p>
-                                          <p
-                                            style={{
-                                              overflow: "hidden",
-                                              textOverflow: "ellipsis",
-                                              whiteSpace: "nowrap",
-                                              textAlign: "center",
-                                            }}
-                                          >
-                                            {dish.price.toLocaleString()} VND
-                                          </p>
-                                        </li>
-                                      )
-                                    )}
-                                  </ul>
+                                            <img
+                                              src={dish.image}
+                                              alt={dish.name}
+                                              style={{
+                                                width: "63px",
+                                                height: "50px",
+                                                marginLeft: "7px",
+                                              }}
+                                            />
+                                            <p
+                                              style={{
+                                                overflow: "hidden",
+                                                textOverflow: "ellipsis",
+                                                whiteSpace: "nowrap",
+                                                textAlign: "center",
+                                                fontWeight: "bold",
+                                                marginTop: "5px",
+                                              }}
+                                            >
+                                              {dish.name}
+                                            </p>
+                                          </li>
+                                        )
+                                      )}
+                                    </ul>
+                                  </div>
                                 </div>
-                              </div>
-                            ) : null // Nếu không có món ăn trong danh mục này, không hiển thị
-                        )}
-
-                        <div
-                          style={{
-                            textAlign: "center",
-                            fontWeight: "bold",
-                            paddingTop: "10px",
-                          }}
-                        >
-                          <p style={{ color: "rgb(66 66 66)" }}>
-                            Tổng tiền:{" "}
-                            {Object.values(category.groupedDishes)
-                              .flat()
-                              .reduce(
-                                (total, dish) => total + (dish.price || 0),
-                                0
                               )
-                              .toLocaleString()}{" "}
-                            VND
-                          </p>
+                          )}
+
+                          <div
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "bold",
+                              paddingTop: "10px",
+                            }}
+                          >
+                            <p style={{ color: "rgb(66 66 66)" }}>
+                              Tổng tiền:{" "}
+                              {Object.values(category.groupedDishes)
+                                .flat()
+                                .reduce((total, dish) => {
+                                  const profitMargin = 0.2;
+                                  const sellingPrice =
+                                    dish.price / (1 - profitMargin);
+                                  return total + (sellingPrice || 0);
+                                }, 0)
+                                .toLocaleString()}{" "}
+                              VND
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    </SwiperSlide>
-                  ))}
+                      </SwiperSlide>
+                    ))}
 
                   <div className="slider-controler">
                     <div className="swiper-button-prev slider-arrow">
@@ -579,6 +731,7 @@ const Menu = () => {
                     </div>
                   </div>
                 </Swiper>
+
                 <div
                   className="choose-button-container"
                   style={{ display: "flex", justifyContent: "flex-end" }}
@@ -704,89 +857,180 @@ const Menu = () => {
                 ) // Sắp xếp
                 .map((categoryName, index) => (
                   <div key={categoryName} className="menu-category-dish">
-                    <h4>
+                    <h4
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                      }}
+                    >
                       {index === 0
-                        ? "Khai vị và đồ uống"
+                        ? "Khai vị và thức uống"
                         : index === 1
                         ? "Món chính"
                         : index === 2
                         ? "Tráng miệng"
                         : "Đồ uống"}
+                      <span
+                        style={{
+                          // backgroundColor: "hsl(213, 100%, 67%)",
+                          color: "red",
+                          // borderRadius: "50%",
+                          padding: "3px 6px", // Điều chỉnh padding để tạo khoảng cách xung quanh số
+                          fontSize: "12px",
+                          fontWeight: "bold",
+                          display: "inline-block", // Đảm bảo span không bị ép co dãn
+                          textAlign: "center", // Căn giữa nội dung
+                          marginBottom: "10px",
+                        }}
+                      >
+                        {`${
+                          selectedMenu.groupedDishes[categoryName]?.length || 0
+                        } món`}
+                      </span>
+
                       <button
                         onClick={() => toggleListFood(index + 1)}
                         className="add-button"
-                        style={{ color: "#02AF55" }}
+                        style={{ color: "#02AF55", marginLeft: "auto" }} // Đẩy nút sang bên phải nếu cần
                       >
-                        <FaPlus style={{ width: "14px", marginLeft: "20px" }} />{" "}
+                        {/* <FaPlus style={{ width: "14px" }} /> */}
+                        <img
+                          src={AddButton}
+                          alt="Thêm món ăn"
+                          className="add-button-image"
+                          style={{ width: "25px" }}
+                        />
                       </button>
                     </h4>
-                    <ul
-                      className="promo-list has-scrollbar"
-                      style={{ paddingBottom: "10px" }}
+
+                    <div
+                      className="promo-list-container"
+                      style={{ position: "relative" }}
                     >
-                      {selectedMenu.groupedDishes[categoryName].map(
-                        (dish, index) => (
-                          <li key={index} style={{ width: "119px" }}>
-                            <button
-                              onClick={() =>
-                                handleRemoveDish(categoryName, dish.dishId)
-                              }
+                      <button
+                        className="scroll-button left"
+                        onClick={() => handleScroll("left", categoryName)} // Pass categoryName here
+                        style={{
+                          position: "absolute",
+                          left: "0",
+                          top: "50%",
+                          transform: "translateY(-90%)",
+                          zIndex: 10,
+                          display:
+                            selectedMenu.groupedDishes[categoryName].length >= 4
+                              ? "block"
+                              : "none", // Show only when there are 4 or more items
+                        }}
+                      >
+                        &lt;
+                      </button>
+
+                      <ul
+                        className={`promo-list ${categoryName} has-scrollbar`}
+                        style={{
+                          paddingBottom: "10px",
+                          overflowX:
+                            selectedMenu.groupedDishes[categoryName].length >= 4
+                              ? "auto"
+                              : "hidden", // Hiển thị thanh cuộn khi có đủ 4 món
+                          display: "flex",
+                          alignItems: "center",
+                          width: "100%", // Đảm bảo chiều rộng đầy đủ
+                        }}
+                      >
+                        {selectedMenu.groupedDishes[categoryName].map(
+                          (dish, index) => (
+                            <li
+                              key={index}
                               style={{
-                                color: "red",
-                                marginLeft: "90px",
-                                width: "10px",
-                              }}
-                              title="Xóa món ăn"
-                            >
-                              <FaMinus style={{ width: "10px" }} />
-                            </button>
-                            <img
-                              src={dish.image}
-                              alt={dish.name}
-                              style={{
-                                width: "63px",
-                                height: "60px",
-                                marginLeft: "25px",
-                                borderRadius: "2rem",
-                              }}
-                            />
-                            <p
-                              style={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                textAlign: "center",
-                                fontWeight: "bold",
-                                marginTop: "5px",
-                                fontSize: "10px",
-                                color: "#1e1e1e",
-                              }}
-                            >
-                              {dish.name}
-                            </p>
-                            <p
-                              style={{
-                                overflow: "hidden",
-                                textOverflow: "ellipsis",
-                                whiteSpace: "nowrap",
-                                textAlign: "center",
-                                fontSize: "10px",
-                                color: "#1e1e1e",
+                                width: "119px",
+                                display: "inline-block",
                               }}
                             >
-                              {dish.price.toLocaleString()} VND
-                            </p>
-                          </li>
-                        )
-                      )}
-                    </ul>
+                              <button
+                                onClick={() =>
+                                  handleRemoveDish(categoryName, dish.dishId)
+                                }
+                                style={{
+                                  color: "red",
+                                  marginLeft: "90px",
+                                  width: "10px",
+                                }}
+                                title="Xóa món ăn"
+                              >
+                                <FaMinus style={{ width: "10px" }} />
+                              </button>
+                              <img
+                                src={dish.image}
+                                alt={dish.name}
+                                style={{
+                                  width: "63px",
+                                  height: "60px",
+                                  marginLeft: "25px",
+                                  borderRadius: "2rem",
+                                }}
+                              />
+                              <p
+                                style={{
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  textAlign: "center",
+                                  fontWeight: "bold",
+                                  marginTop: "5px",
+                                  fontSize: "10px",
+                                  color: "#1e1e1e",
+                                }}
+                              >
+                                {dish.name}
+                              </p>
+                              <p
+                                style={{
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                  whiteSpace: "nowrap",
+                                  textAlign: "center",
+                                  fontSize: "10px",
+                                  color: "#1e1e1e",
+                                }}
+                              >
+                                {/* {dish.price.toLocaleString()} VND */}
+                              </p>
+                            </li>
+                          )
+                        )}
+                      </ul>
+
+                      <button
+                        className="scroll-button right"
+                        onClick={() => handleScroll("right", categoryName)} // Pass categoryName here
+                        style={{
+                          position: "absolute",
+                          right: "0",
+                          top: "50%",
+                          transform: "translateY(-90%)",
+                          zIndex: 10,
+                          display:
+                            selectedMenu.groupedDishes[categoryName].length >= 4
+                              ? "block"
+                              : "none", // Show only when there are 4 or more items
+                        }}
+                      >
+                        &gt;
+                      </button>
+                    </div>
                   </div>
                 ))}
               <div style={{ textAlign: "right", fontWeight: "bold" }}>
                 Tổng tiền:{" "}
                 {Object.values(selectedMenu.groupedDishes)
                   .flat()
-                  .reduce((total, dish) => total + (dish.price || 0), 0)
+                  .reduce((total, dish) => {
+                    // Giả sử `dish.cost` là giá cost và `profitMargin` là tỷ lệ lợi nhuận mong muốn (ví dụ 0.2 cho 20%)
+                    const profitMargin = 0.2; // Thay đổi theo tỷ lệ lợi nhuận mong muốn
+                    const sellingPrice = dish.price / (1 - profitMargin); // Tính giá bán theo công thức
+                    return total + (sellingPrice || 0); // Cộng dồn tổng tiền
+                  }, 0)
                   .toLocaleString()}{" "}
                 VND
               </div>
@@ -841,7 +1085,7 @@ const Menu = () => {
                 <FaTimes
                   style={{ color: "#341c0e", width: "12px", marginTop: "12px" }}
                 />{" "}
-                {/* X icon for "Remove" */}
+                +{/* <img src={AddButton} alt="Thêm món ăn" /> */}
               </button>
               <div className="chiTietThucDon">
                 <div className="menu-view-control">
@@ -878,6 +1122,25 @@ const Menu = () => {
           )}
         </Modal>
       </div>
+      {showWarning && (
+        <div
+          style={{
+            color: "red",
+            fontWeight: "bold",
+            marginTop: "10px",
+            marginLeft: "10px",
+            backgroundColor: "black",
+            borderRadius: "2px",
+            textAlign: "center",
+          }}
+        >
+          * Bạn cần cập nhật đầy đủ thông tin của tài khoản để có thể tạo hợp
+          đồng.{" "}
+          <a href="/account" style={{ display: "inline" }}>
+            Cập nhật ngay!
+          </a>
+        </div>
+      )}
     </div>
   );
 };

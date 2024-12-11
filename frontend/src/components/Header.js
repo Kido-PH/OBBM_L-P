@@ -2,21 +2,57 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom"; // Import useNavigate để điều hướng
 import Tooltip from "@mui/material/Tooltip";
 import { RiFileList2Fill } from "react-icons/ri";
-import { BiSolidFoodMenu } from "react-icons/bi";
 import { BiUser } from "react-icons/bi";
-
+import { GiKnifeFork } from "react-icons/gi";
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import "../assets/css/headerStyle.css";
+import Menu from "../assets/images/menu_header.jpg";
+import Cookies from "js-cookie";
+import { FiLogOut } from "react-icons/fi";
+import { FaUserCircle } from "react-icons/fa";
+import { AiFillLock } from "react-icons/ai";
 import { getToken } from "services/localStorageService";
-
+import { AiOutlineMenu } from "react-icons/ai";
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false); // Thêm state để kiểm tra vai trò người dùng
   const [userDetails, setUserDetails] = useState(null);
   const navigate = useNavigate(); // Khởi tạo useNavigate
+  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const handleLogout = async () => {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = Cookies.get("refreshToken");
+    console.log("Access token: " + accessToken);
+    console.log("Refresh token: " + refreshToken);
 
+    try {
+      // Gửi yêu cầu POST đến API logout
+      const response = await fetch("http://localhost:8080/obbm/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          access_token: accessToken,  // Truyền access_token
+          refresh_token: refreshToken,  // Truyền refresh_token
+        }),
+      });
+
+      if (response.ok) {
+        // Xóa thông tin đăng nhập sau khi logout thành công
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userId");
+        Cookies.remove("refreshToken");
+        navigate("/login");
+      } else {
+        console.error("Logout failed:", response.status);
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
   // Hàm lấy thông tin người dùng từ API
   const getUserDetails = async (accessToken) => {
     try {
@@ -31,13 +67,19 @@ const Header = () => {
 
       if (data && data.result) {
         setUserDetails(data.result);
-        // Kiểm tra nếu vai trò người dùng là "ADMIN"
         const roles = data.result.roles;
-        const adminRole = roles.find((role) => role.name === "ADMIN");
+        const adminRole = roles.find(
+          (role) => role.name === "ADMIN" || role.name === "STAFF"
+        );
         if (adminRole) {
-          setIsAdmin(true); // Nếu có vai trò ADMIN, set isAdmin là true
-          navigate("/admin"); // Điều hướng đến trang Admin ngay khi đăng nhập nếu là Admin
-        } 
+          setIsAdmin(true);
+          localStorage.setItem("isAdmin", true); // Lưu trạng thái vào localStorage
+          localStorage.setItem("roles", JSON.stringify(adminRole));
+          navigate("/admin");
+        } else {
+          setIsAdmin(false);
+          localStorage.setItem("isAdmin", false); // Nếu không phải Admin
+        }
       }
     } catch (error) {
       console.error("Error fetching user details:", error);
@@ -134,10 +176,11 @@ const Header = () => {
 
           <Tooltip title="Thực đơn">
             <a href="/menu" className="navbar-link header-icon">
-              <BiSolidFoodMenu />
+              {/* <GiKnifeFork /> */}
+              <AiOutlineMenu />
             </a>
           </Tooltip>
-          
+
           {isLoggedIn && (
             <Tooltip title="Danh sách hợp đồng">
               <a href="/user/contract-list" className="navbar-link header-icon">
@@ -146,18 +189,56 @@ const Header = () => {
             </Tooltip>
           )}
 
-          <Tooltip title="Tài khoản">
-            <a href="/account" className="navbar-link header-icon">
-              <BiUser />
-            </a>
+          <Tooltip>
+            {isLoggedIn && (
+              <div className="navbar-link header-icon account-dropdown">
+                <BiUser />
+                <div className="dropdown-menu">
+                  <a
+                    href="/account"
+                    className="dropdown-item navbar-link"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <FaUserCircle />
+                    Thông tin cá nhân
+                  </a>
+                  <a
+                    href="/#"
+                    className="dropdown-item navbar-link"
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <AiFillLock />
+                    Đổi mật khẩu
+                  </a>
+                  <a
+                    className="dropdown-item navbar-link"
+                    onClick={handleLogout}
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "8px",
+                    }}
+                  >
+                    <FiLogOut />
+                    Đăng xuất
+                  </a>
+                </div>
+              </div>
+            )}
           </Tooltip>
 
           {/* Hiển thị tên người dùng khi đã đăng nhập */}
           {isLoggedIn && userDetails && (
             <div className="user-name">
-              <p style={{ color: "hsl(23, 61%, 86%)" }}>
-                Chào, {userDetails.username}
-              </p>{" "}
+              <p className="navbar-link">Chào, {userDetails.fullname}</p>{" "}
               {/* Hiển thị tên người dùng */}
             </div>
           )}
