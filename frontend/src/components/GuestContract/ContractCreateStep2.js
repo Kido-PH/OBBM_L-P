@@ -7,8 +7,12 @@ import ModalServices from "./ModalServices";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import eventApi from "api/eventApi";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 const ContractCreateStep2 = () => {
+  const navigate = useNavigate();
+
   const { setStep, contractData, setContractData } =
     React.useContext(multiStepContext);
   const location = JSON.parse(localStorage.getItem("currentLocation")); // Parse chuỗi JSON thành đối tượng
@@ -34,8 +38,12 @@ const ContractCreateStep2 = () => {
   // };
 
   const fetchEvent = async () => {
-    const currentEvent = await eventApi.get(currentEventId);
-    setCurrentEventInfo(currentEvent.result);
+    try {
+      const currentEvent = await eventApi.get(currentEventId);
+      setCurrentEventInfo(currentEvent.result);
+    } catch (error) {
+      checkAccessToken(navigate);
+    }
   };
 
   const handleShowModalMenu = () => {
