@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -9,14 +9,15 @@ import {
   Tab,
   IconButton,
   Button,
-  Modal,
-  TextField,
+  MenuItem,
+  FormControl,
+  Dialog,
+  Table,
   TableHead,
   TableRow,
   TableCell,
   TableBody,
-  MenuItem,
-  FormControl,
+  Divider,
 } from "@mui/material";
 import { Bar } from "react-chartjs-2";
 import {
@@ -36,10 +37,10 @@ import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 // import LaptopIcon from "@mui/icons-material/Laptop";
 // import CloseIcon from "@mui/icons-material/Close";
-// import CheckCircleIcon from "@mui/icons-material/CheckCircle"; 
-// import LogoutIcon from "@mui/icons-material/Logout"; 
-import { DatePicker, message, Select, Table } from "antd";
-import SearchIcon from "@mui/icons-material/Search";
+// import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+// import LogoutIcon from "@mui/icons-material/Logout";
+import { DatePicker, message, Select, Modal } from "antd";
+import axios from "axios";
 
 // Đăng ký các thành phần của biểu đồ
 ChartJS.register(
@@ -58,10 +59,9 @@ const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth");
   const [openModal, setOpenModal] = useState(false);
-  const [pendingContracts, setPendingContracts] = useState([]);
 
-  const handleOpenModal = () => setOpenModal(true);
-  const handleCloseModal = () => setOpenModal(false);
+  const [pendingContracts, setPendingContracts] = useState([]); // Lưu trữ chi tiết hợp đồng
+  const [selectedContract, setSelectedContract] = useState(null); // Lưu hợp đồng được chọn
 
   // Định nghĩa state cho ngày bắt đầu và ngày kết thúc
   const [startDate, setStartDate] = useState(null);
@@ -74,50 +74,91 @@ const AdminAnalytics = () => {
     pendingApproval: { count: 0, total: 0 },
   });
 
+  useEffect(() => {
+    if (startDate && endDate) {
+      fetchDataByDateRange(startDate, endDate);
+    }
+  }, [startDate, endDate]);
+
   const handleDateChange = (field, value) => {
     if (field === "start") {
+      // Cập nhật startDate
       setStartDate(value);
-    } else {
+  
+      // Kiểm tra nếu endDate đã chọn và nhỏ hơn startDate mới
+      if (endDate && value > endDate) {
+        message.error("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.");
+      }
+    } else if (field === "end") {
+      // Cập nhật endDate
       setEndDate(value);
+  
+      // Kiểm tra nếu startDate đã chọn và lớn hơn endDate mới
+      if (startDate && value < startDate) {
+        message.error("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+      }
+    }
+  };
+  
+
+  // Hàm gọi API để lấy hợp đồng chờ duyệt
+  const fetchPendingContracts = async (status, startDate, endDate) => {
+    
+    try {
+      // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
+      const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
+      const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
+
+      // Gửi yêu cầu GET với query parameters
+      const response = await fetch(
+        `http://localhost:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=1&size=10`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log("Dữ danh sách chờ duyệt: ", data);
+
+      // Cập nhật state với dữ liệu trả về từ API
+      if (data.code === 1000) {
+        setPendingContracts(data?.result?.content);
+      } else {
+        message.error("Không thể tải dữ liệu.");
+      }
+    } catch (error) {
+      console.error("Lỗi khi lấy dữ liệu:", error);
     }
   };
 
-  // Hàm gọi API để lấy tất cả hợp đồng
-  const handlePendingClick = async () => {
-    try {
-      const response = await fetch("http://localhost:8080/obbm/contract?page=1&size=100", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
-  
-      const data = await response.json();
-      console.log("Dữ liệu hợp đồng:", data);
-  
-      if (data.code === 1000) {
-        const pendingContracts = data.result?.content?.filter(contract => contract.status === "Pending");
-  
-        console.log("Hợp đồng chờ duyệt:", pendingContracts); // Kiểm tra lại hợp đồng
-  
-        if (pendingContracts.length > 0) {
-          setPendingContracts(pendingContracts); // Cập nhật state hợp đồng chờ duyệt
-          setOpenModal(true); // Mở modal
-        } else {
-          message.info("Không có hợp đồng chờ duyệt.");
-        }
-      } else {
-        message.error("Không thể lấy dữ liệu hợp đồng.");
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu hợp đồng:", error);
-      message.error("Có lỗi khi lấy dữ liệu hợp đồng.");
-    }
+  // Hàm gọi khi click vào card
+  const handlePendingClick = (status) => {
+    fetchPendingContracts(status, startDate, endDate); // Gọi API khi click vào card
+    setOpenModal(true); // Mở modal
   };
-  
+
+  // Hàm đóng modal
+  const handleOpenModal = () => {
+    setOpenModal(true);
+  };
+
+  // Hàm đóng modal
+  const handleCloseModal = () => {
+    setOpenModal(false);
+    setSelectedContract(null);
+  };
+
+  // Hàm chọn hợp đồng
+  const handleContractSelect = (contract) => {
+    setSelectedContract(contract); // Cập nhật hợp đồng được chọn
+  };
+
   // Gửi API khi chọn ngày
-  const fetchDataByDateRange = async () => {
+  const fetchDataByDateRange = async (startDate, endDate) => {
     if (!startDate || !endDate) {
       message.error("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc.");
       return;
@@ -141,7 +182,6 @@ const AdminAnalytics = () => {
       );
 
       const data = await response.json();
-
       console.log("Dữ liệu thống kê: ", data);
 
       // Cập nhật state với dữ liệu trả về từ API
@@ -156,89 +196,70 @@ const AdminAnalytics = () => {
     }
   };
 
-  const handleTimeRangeChange = (event) => {
-    setSelectedTimeRange(event.target.value);
+  const handleTimeRangeChange = (selectedValue) => {
+    console.log("Selected value:", selectedValue);
+
+    if (!selectedValue) {
+      console.error("Không thể đọc giá trị");
+      return;
+    }
+
+    setSelectedTimeRange(selectedValue);
+
+    setEndDate(null);
+    setStartDate(null);
+
+    // Logic xác định ngày bắt đầu và kết thúc
+    let startDate, endDate;
+    const today = new Date();
+
+    switch (selectedValue) {
+      case "today":
+        startDate = today;
+        endDate = today;
+        break;
+      case "yesterday":
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 1);
+        endDate = startDate;
+        break;
+      case "last7days":
+        endDate = today;
+        startDate = new Date(today);
+        startDate.setDate(today.getDate() - 7);
+        break;
+      case "thisMonth":
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = today;
+        break;
+      case "lastMonth":
+        const lastMonth = new Date(today);
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        startDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+        endDate = new Date(
+          lastMonth.getFullYear(),
+          lastMonth.getMonth() + 1,
+          0
+        );
+        break;
+      default:
+        return;
+    }
+
+    // Gọi API lấy dữ liệu theo khoảng thời gian
+    fetchDataByDateRange(startDate, endDate);
   };
-
-  // Dữ liệu mẫu cho từng tab
-  // const dailyRevenueData = {
-  //   labels: ["01", "02", "03", "04", "05", "06", "07"],
-  //   datasets: [
-  //     {
-  //       label: "Doanh thu (VND)",
-  //       data: [3000000, 2500000, 4000000, 3500000, 4200000, 5000000, 6000000],
-  //       backgroundColor: "rgba(0, 123, 255, 0.8)", // Màu xanh nước biển
-  //       borderColor: "rgba(0, 123, 255, 1)",
-  //       borderWidth: 1,
-  //       barThickness: 50, // Điều chỉnh độ rộng của cột
-  //     },
-  //     {
-  //       label: "Số lượng hợp đồng",
-  //       data: [3, 5, 6, 4, 7, 8, 5],
-  //       type: "line",
-  //       borderColor: "rgba(0, 123, 255, 1)",
-  //       backgroundColor: "rgba(0, 123, 255, 0.2)",
-  //       borderWidth: 2,
-  //       pointBackgroundColor: "rgba(0, 123, 255, 1)",
-  //     },
-  //   ],
-  // };
-
-  // const hourlyRevenueData = {
-  //   labels: ["8:00", "10:00", "11:00", "12:00", "13:00"], // Theo các giờ trong ngày
-  //   datasets: [
-  //     {
-  //       label: "Doanh thu (VND)",
-  //       data: [500000, 800000, 1000000, 750000, 900000],
-  //       borderColor: "rgba(0, 123, 255, 1)",
-  //       borderWidth: 1,
-  //       barThickness: 50, // Điều chỉnh độ rộng của cột
-  //     },
-  //     {
-  //       label: "Số lượng hợp đồng",
-  //       data: [1, 2, 3, 2, 3],
-  //       type: "line",
-  //       borderColor: "rgba(0, 123, 255, 1)",
-  //       backgroundColor: "rgba(0, 123, 255, 0.2)",
-  //       borderWidth: 2,
-  //       pointBackgroundColor: "rgba(0, 123, 255, 1)",
-  //     },
-  //   ],
-  // };
-
-  // const weeklyRevenueData = {
-  //   labels: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"], // Theo các thứ trong tuần
-  //   datasets: [
-  //     {
-  //       label: "Doanh thu (VND)",
-  //       data: [
-  //         10000000, 15000000, 12000000, 18000000, 16000000, 17000000, 20000000,
-  //       ],
-  //       borderColor: "rgba(0, 123, 255, 1)",
-  //       borderWidth: 1,
-  //       barThickness: 50, // Điều chỉnh độ rộng của cột
-  //     },
-  //     {
-  //       label: "Số lượng hợp đồng",
-  //       data: [10, 12, 15, 17, 13, 18, 20],
-  //       type: "line",
-  //       borderColor: "rgba(0, 123, 255, 1)",
-  //       backgroundColor: "rgba(0, 123, 255, 0.2)",
-  //       borderWidth: 2,
-  //       pointBackgroundColor: "rgba(0, 123, 255, 1)",
-  //     },
-  //   ],
-  // };
 
   const revenueByDay = apiData?.revenueByDay || {};
 
   const chartData = {
-    labels: Object.keys(revenueByDay).map(date => date.split("-")[2].padStart(2, '0'))
-    .sort((a, b) => a - b),
+    labels: Object.keys(revenueByDay)
+      .map((date) => date.split("-")[2].padStart(2, "0"))
+      .sort((a, b) => a - b),
     datasets: [
       {
         label: "Doanh thu (VND)",
-        data: Object.values(revenueByDay).sort((a, b) => a - b), 
+        data: Object.values(revenueByDay).sort((a, b) => a - b),
         backgroundColor: "rgba(0, 123, 255, 0.8)",
         borderColor: "rgba(0, 123, 255, 1)",
         borderWidth: 1,
@@ -247,61 +268,187 @@ const AdminAnalytics = () => {
     ],
   };
 
-  // Chọn dữ liệu dựa trên tab đang chọn
-  // const revenueData =
-  //   activeTab === 0
-  //     ? dailyRevenueData
-  //     : activeTab === 1
-  //     ? hourlyRevenueData
-  //     : weeklyRevenueData;
-
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
 
   return (
     <Grid container spacing={2} sx={{ minHeight: "100vh" }}>
+      {/* Modal hiển thị chi tiết hợp đồng */}
+      <Dialog
+        open={openModal}
+        onClose={handleCloseModal}
+        sx={{
+          "& .MuiDialog-paper": {
+            width: "80%", // Hoặc bất kỳ tỷ lệ nào bạn muốn (ví dụ: 80% chiều rộng màn hình)
+            maxWidth: "1100px", // Bạn có thể giới hạn chiều rộng tối đa nếu muốn
+          },
+        }}
+      >
+        <Typography
+          id="contract-modal-title"
+          variant="h6"
+          component="h2"
+          style={{
+            fontSize: "16px",
+            marginTop: "10px",
+            marginBottom: "10px",
+            textAlign: "center",
+          }}
+        >
+          Chi tiết hợp đồng
+        </Typography>
 
-<Modal
-  open={openModal}
-  onClose={handleCloseModal}
-  title="Danh sách hợp đồng đang chờ duyệt"
-  sx={{
-    width: "80%",
-    maxHeight: "80vh",
-    overflowY: "auto",
-    margin: "0 auto",
-  }}
->
-  <Box sx={{ padding: "20px" }}>
-    {console.log("Rendering contracts:", pendingContracts)} {/* Log dữ liệu trước khi render */}
+        <Divider />
 
-    {pendingContracts && pendingContracts.length > 0 ? (
-      <Table>
-        <TableHead>
-          <TableRow>
-            <TableCell>Số hợp đồng</TableCell>
-            <TableCell>Ngày tạo</TableCell>
-            <TableCell>Số tiền</TableCell>
-            <TableCell>Trạng thái</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {pendingContracts.map((contract) => (
-            <TableRow key={contract.contractId}>
-              <TableCell>{contract.contractId}</TableCell>
-              <TableCell>{contract.organizdate}</TableCell>
-              <TableCell>{contract.totalcost.toLocaleString()} VND</TableCell>
-              <TableCell>{contract.status}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    ) : (
-      <Typography>Không có hợp đồng chờ duyệt.</Typography>
-    )}
-  </Box>
-</Modal>
+        {pendingContracts.length > 0 ? (
+          <div>
+            {pendingContracts.map((contract) => (
+              <div
+                key={contract.contractId}
+                style={{
+                  margin: "10px 10px",
+                  cursor: "pointer",
+                  padding: 15,
+                  border: "1px solid #ddd",
+                  borderRadius: 5,
+                  transition: "all 0.3s ease-in-out", // Thêm hiệu ứng khi hover
+                  "&:hover": {
+                    transform: "scale(1.05)",
+                    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)", // Thêm hiệu ứng hover
+                  },
+                }}
+                onClick={() => handleContractSelect(contract)}
+              >
+                <Typography
+                  variant="body1"
+                  style={{ fontWeight: "bold", fontSize: "14px" }}
+                >
+                  {contract.name}
+                </Typography>
+                <Typography
+                  variant="body2"
+                  style={{ color: "gray", fontSize: "13px" }}
+                >
+                  {contract.status} - {new Intl.NumberFormat('vi-VN').format(contract.totalcost)} VND
+                </Typography>
+                <Typography
+                  variant="body2"
+                  style={{ color: "gray", fontSize: "13px" }}
+                >
+                  Khách hàng: {contract.custname}
+                </Typography>
+              </div>
+            ))}
+
+            <Divider />
+
+            {selectedContract && (
+              <div style={{ marginTop: 20 }}>
+                <Typography
+                  variant="h6"
+                  style={{
+                    margin: "10px 10px",
+                    fontWeight: "bold",
+                    textAlign: "center",
+                    fontSize: "14px",
+                  }}
+                >
+                  Hợp đồng đã chọn
+                </Typography>
+
+                <Table>
+                  <TableHead>
+                    <TableRow style={{ backgroundColor: "#659feb" }}>
+                      <TableCell
+                        style={{
+                          fontWeight: "bold",
+                          color: "white",
+                          fontSize: "13px",
+                        }}
+                      >
+                        Thông tin
+                      </TableCell>
+                      <TableCell
+                        style={{
+                          fontWeight: "bold",
+                          color: "white",
+                          fontSize: "13px",
+                        }}
+                      >
+                        Chi tiết
+                      </TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    <TableRow style={{ backgroundColor: "#f9f9f9" }}>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        <strong>Tên hợp đồng:</strong>
+                      </TableCell>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        {selectedContract.name}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow style={{ backgroundColor: "#ffffff" }}>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        <strong>Trạng thái:</strong>
+                      </TableCell>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        {selectedContract.status}
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        <strong>Tổng giá trị:</strong>
+                      </TableCell>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        {new Intl.NumberFormat("vi-VN").format(
+                          selectedContract.totalcost
+                        )}{" "}
+                        VND
+                      </TableCell>
+                    </TableRow>
+                    <TableRow style={{ backgroundColor: "#f9f9f9" }}>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        <strong>Khách hàng:</strong>
+                      </TableCell>
+                      <TableCell style={{ fontSize: "12px" }}>
+                        {selectedContract.custname}
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+            )}
+          </div>
+        ) : (
+          <Typography
+            variant="body1"
+            style={{
+              color: "gray",
+              margin: "10px 10px",
+              textAlign: "center",
+              fontSize: "15px",
+            }}
+          >
+            Không có hợp đồng nào.
+          </Typography>
+        )}
+
+        <Button
+          onClick={handleCloseModal}
+          variant="outlined"
+          color="secondary"
+          sx={{
+            margin: "10px 10px",
+            width: "200px",
+            fontSize: "10px",
+            fontWeight: "bold",
+          }}
+        >
+          Đóng
+        </Button>
+      </Dialog>
 
       {/* Cột bên trái - Phần biểu đồ và dashboard */}
       <Grid item xs={9}>
@@ -360,7 +507,7 @@ const AdminAnalytics = () => {
                   borderRadius: "8px",
                   boxShadow: 1,
                 }}
-                onClick={handlePendingClick}  // Gọi hàm khi click vào thẻ
+                onClick={() => handlePendingClick("Pending")}
               >
                 <CardContent
                   sx={{
@@ -390,6 +537,7 @@ const AdminAnalytics = () => {
                   borderRadius: "8px",
                   boxShadow: 1,
                 }}
+                onClick={() => handlePendingClick("Cancelled")}
               >
                 <CardContent
                   sx={{
@@ -457,13 +605,12 @@ const AdminAnalytics = () => {
                     Từ ngày
                   </Typography>
                   <DatePicker
-                    size="small"
+                    showTime // Cho phép chọn giờ
+                    format="YYYY-MM-DD HH:mm:ss" // Định dạng ngày và giờ
                     value={startDate}
                     onChange={(date) => handleDateChange("start", date)}
-                    renderInput={(params) => <TextField {...params} />}
-                    sx={{
+                    style={{
                       width: 160, // Đảm bảo chiều rộng cố định
-                      fontSize: "1rem",
                       borderRadius: "5px",
                     }}
                   />
@@ -482,34 +629,15 @@ const AdminAnalytics = () => {
                     Đến ngày
                   </Typography>
                   <DatePicker
-                    size="small"
+                    showTime // Cho phép chọn giờ
+                    format="YYYY-MM-DD HH:mm:ss" // Định dạng ngày và giờ
                     value={endDate}
                     onChange={(date) => handleDateChange("end", date)}
-                    renderInput={(params) => <TextField {...params} />}
-                    sx={{
+                    style={{
                       width: 160, // Đảm bảo chiều rộng cố định
-                      fontSize: "1rem",
                       borderRadius: "5px",
                     }}
                   />
-                </Grid>
-
-                {/* Nút lọc */}
-                <Grid item>
-                  <IconButton
-                    onClick={fetchDataByDateRange}
-                    sx={{
-                      backgroundColor: "#1976d2", // Màu nền cho button
-                      color: "#fff", // Màu icon
-                      padding: "12px 30px",
-                      height: "22px",
-                      marginTop: "17px",
-                      borderRadius: "5px",
-                      "&:hover": { backgroundColor: "#1565c0" },
-                    }}
-                  >
-                    <SearchIcon />
-                  </IconButton>
                 </Grid>
               </Grid>
             </Box>
@@ -520,14 +648,14 @@ const AdminAnalytics = () => {
               size="small"
               sx={{
                 position: "absolute",
-                top: "16px",
+                top: "21px",
                 right: "16px",
                 minWidth: 150,
               }}
             >
               <Select
                 value={selectedTimeRange}
-                onChange={handleTimeRangeChange}
+                onChange={(event) => handleTimeRangeChange(event)}
                 displayEmpty
                 inputProps={{ "aria-label": "Chọn khoảng thời gian" }}
                 sx={{ fontSize: "1.2rem" }}
@@ -557,9 +685,12 @@ const AdminAnalytics = () => {
               textColor="primary"
               indicatorColor="primary"
               variant="fullWidth"
-              sx={{ marginBottom: "10px" }}
+              sx={{ marginBottom: "10px", marginTop: "19px" }}
             >
-              <Tab label="Theo ngày" sx={{ fontSize: "1rem" }} />
+              <Tab
+                label="Theo ngày"
+                sx={{ fontSize: "1rem", fontWeight: "bold" }}
+              />
               {/* <Tab label="Theo giờ" sx={{ fontSize: "1rem" }} />
               <Tab label="Theo thứ" sx={{ fontSize: "1rem" }} /> */}
             </Tabs>
@@ -572,14 +703,24 @@ const AdminAnalytics = () => {
                   responsive: true,
                   onClick: (e, element) => {
                     if (element.length) {
-                      const index = element[0].index;
-                      alert(
-                        `Chi tiết doanh thu cho ${
-                          chartData.labels[index]
-                        }: ${chartData.datasets[0].data[
-                          index
-                        ].toLocaleString()} VND`
-                      );
+                      const index = element[0].index; // Lấy chỉ số phần tử trong biểu đồ
+                      const label = chartData.labels[index]; // Lấy nhãn của phần tử
+                      const value =
+                        chartData.datasets[0].data[index].toLocaleString(); // Lấy giá trị doanh thu và định dạng
+
+                      // Hiển thị Modal với chi tiết doanh thu
+                      Modal.info({
+                        title: `Chi tiết doanh thu cho ngày ${label}`,
+                        content: (
+                          <div>
+                            <p>
+                              <strong>Doanh thu: </strong>
+                              {value} VND
+                            </p>
+                          </div>
+                        ),
+                        onOk() {},
+                      });
                     }
                   },
                   plugins: {
@@ -918,7 +1059,7 @@ const AdminAnalytics = () => {
                 </Typography>
               </Box>
             </Box>
-          </Box>         
+          </Box>
         </Box>
       </Grid>
     </Grid>

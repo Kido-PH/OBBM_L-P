@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Avatar, Dropdown, Modal, Button, Input, message, Divider, Row, Col, Select } from "antd";
+import React, { useState, useEffect, useRef } from "react";
+import { Avatar, Dropdown, Modal, Button, Input, message, Divider, Row, Col, Select, DatePicker } from "antd";
 import {
   SettingOutlined,
   LogoutOutlined,
@@ -9,8 +9,8 @@ import {
   EditOutlined,
   SolutionOutlined,
 } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
 import { EmailOutlined } from "@mui/icons-material";
+import dayjs from "dayjs";
 
 const AdminUserAvatar = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -30,7 +30,7 @@ const AdminUserAvatar = () => {
     roles: [],
   });
   const [editData, setEditData] = useState({});
-  const navigate = useNavigate(); // Khai báo hook navigate
+  const fileInputRef = useRef(null);
 
   // Fetch thông tin người dùng từ API
   const fetchUserData = async () => {
@@ -174,39 +174,59 @@ const AdminUserAvatar = () => {
     setEditData((prev) => ({ ...prev, [field]: e.target.value }));
   };
 
-  // Hàm xử lý logout
-  const handleLogout = async () => {
-    try {
-      const token = localStorage.getItem("accessToken");
-
-      // Nếu không có token
-      if(!token) {
-        message.error("Không tìm thấy token.");
-        return;
-      }
-
-      const response = await fetch("http://localhost:8080/obbm/auth/logout", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      if(response.ok) {
-        // Xóa token và điều hướng tới trang đăng nhập
-        localStorage.removeItem("accessToken");
-        message.success("Đăng xuất thành công.");
-        navigate("/login");
-      } else {
-        message.error("Đăng xuất thất bại.");
-      }
-
-    } catch (error) {
-      message.error("Đã xảy ra lỗi khi đăng xuất.");
+  const handleAvatarClick = () => {
+    // Kích hoạt input file khi nhấn vào Avatar
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
     }
-  }
+  };
 
+  const handleFileChange = async (event) => {
+    const file = event.target.files[0]; // Lấy file từ input
+    if (file) {
+
+      // Tạo URL tạm thời để hiển thị ảnh ngay lập tức
+      const previewUrl = URL.createObjectURL(file);
+      setEditData((prev) => ({
+        ...prev,
+        image: previewUrl, // Hiển thị tạm thời
+      }));
+
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Gửi yêu cầu lên API để tải ảnh lên
+        const response = await fetch('http://localhost:8080/obbm/upload/image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: formData, // Đưa formData vào body
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Lấy URL từ API Cloudinary
+        const imageUrl = data.result;
+
+        // Cập nhật dữ liệu ảnh trong state
+        setEditData((prev) => ({
+          ...prev,
+          image: imageUrl,
+        }));
+
+      } catch (error) {
+        console.error("Lỗi upload ảnh:", error);
+        message.error("Upload ảnh thất bại!");
+      }
+    }
+  }; 
+  
   return (
     <>
       <Dropdown
@@ -214,8 +234,8 @@ const AdminUserAvatar = () => {
           items: [
             {
               key: "settings",
-              icon: <SettingOutlined />,
-              label: "Cài đặt tài khoản",
+              icon: <UserOutlined  />,
+              label: "Hồ sơ cá nhân",
             },
             { key: "logout", icon: <LogoutOutlined />, label: "Đăng xuất" },
           ],
@@ -258,7 +278,7 @@ const AdminUserAvatar = () => {
         >
           <Avatar
             size={64}
-            src={userData?.image}
+            src={editData.image || userData?.image}
             icon={!userData.image && <UserOutlined />}
             style={{
               marginRight: 16,
@@ -266,7 +286,15 @@ const AdminUserAvatar = () => {
               width: "100px",
               height: "100px",
             }}
+            onClick={handleAvatarClick} // Gọi khi nhấn vào Avatar
           />
+          <input
+            type="file"
+            ref={fileInputRef}
+            style={{ display: "none" }} // Ẩn input file
+            accept="image/*" // Chỉ nhận file ảnh
+            onChange={handleFileChange} // Xử lý khi chọn file
+           />
           <div>
             <h1>{userData.fullname}</h1>
             <p style={{ color: "gray" }}>Thông tin tài khoản</p>
@@ -278,7 +306,7 @@ const AdminUserAvatar = () => {
           <Row gutter={16}>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span>
+                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
                   <UserSwitchOutlined /> Họ và tên:
                 </span>
                 {isEditing ? (
@@ -294,7 +322,7 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span>
+                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
                   <PhoneOutlined /> Số điện thoại:
                 </span>
                 {isEditing ? (
@@ -310,14 +338,17 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span>
+                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
                   <SolutionOutlined /> Ngày tháng năm sinh:
                 </span>
                 {isEditing ? (
-                  <Input
-                    value={editData.dob}
-                    onChange={(e) => handleInputChange(e, "dob")}
-                    style={{ marginTop: 5 }}
+                  <DatePicker
+                    value={editData.dob ? dayjs(editData.dob, "YYYY-MM-DD") : null}
+                    onChange={(date, dateString) =>
+                      handleInputChange({ target: { value: dateString } }, "dob")
+                    }
+                    format="YYYY-MM-DD" // Định dạng ngày tháng
+                    style={{ marginTop: 5, width: "100%" }} // Giao diện phù hợp
                   />
                 ) : (
                   <span style={{ marginLeft: 10 }}>{userData.dob}</span>
@@ -326,7 +357,7 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span>
+                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
                   <EmailOutlined /> Email:
                 </span>
                 {isEditing ? (
@@ -342,7 +373,7 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span>
+                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
                   <UserOutlined /> Giới tính:
                 </span>
                 {isEditing ? (
@@ -361,7 +392,7 @@ const AdminUserAvatar = () => {
             </Col>
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
-                <span>
+                <span style={{ fontWeight: "bold", fontSize: "15px", color: "#333" }}>
                   <SolutionOutlined /> Nơi cư trú:
                 </span>
                 {isEditing ? (

@@ -6,12 +6,13 @@ import {
   UsergroupAddOutlined,
   StarOutlined,
   BarChartOutlined,
-  BellOutlined,
   SisternodeOutlined,
   MenuOutlined,
   FileDoneOutlined,
   UnorderedListOutlined,
-  CoffeeOutlined,
+  ShoppingCartOutlined,
+  AppstoreOutlined,
+  ForkOutlined,
 } from "@ant-design/icons";
 import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
@@ -67,13 +68,13 @@ function DashboardPage() {
     {
       key: "3",
       icon: <UnorderedListOutlined />,
-      label: "DANH MỤC MÓN ĂN",
+      label: "DANH MỤC",
       path: "/admin/ManageCategoryDish",
     },
 
     {
       key: "4",
-      icon: <CoffeeOutlined />,
+      icon: <ForkOutlined />,
       label: "MÓN ĂN",
       path: "/admin/ManageDish",
     },
@@ -104,13 +105,13 @@ function DashboardPage() {
     },
     {
       key: "9",
-      icon: <MenuOutlined />,
+      icon: <AppstoreOutlined />,
       label: "THỰC ĐƠN",
       path: "/admin/MenuManagement",
     },
     {
       key: "10",
-      icon: <BellOutlined />,
+      icon: <ShoppingCartOutlined  />,
       label: "NGUYÊN LIỆU",
       path: "/admin/ManagerIngredient",
     },

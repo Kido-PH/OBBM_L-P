@@ -16,15 +16,17 @@ import {
   Box,
   Tooltip,
   TablePagination,
+  Autocomplete,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import AddIcon from "@mui/icons-material/Add";
-import { toast, Toaster } from "react-hot-toast";
 import serviceApi from "../../api/serviceApi";
 import { Typography } from "antd";
+import SnackBarNotification from "./SnackBarNotification";
+import Swal from "sweetalert2";
 
 const ServiceManager = () => {
   const [services, setServices] = useState([]);
@@ -46,10 +48,28 @@ const ServiceManager = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [errors, setErrors] = useState({});
+  const [serviceTypes, setServiceTypes] = useState([]); // Danh sách loại dịch vụ
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   const handleOpenDialog = (mode, event) => {
     setDialogMode(mode);
-    if (event) event.image = "";
     setCurrentService(
       event || {
         serviceId: null,
@@ -63,10 +83,12 @@ const ServiceManager = () => {
     );
     setOpenDialog(true);
   };
+  
 
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     fetchDichVuWithPaginate(page + 1);
+    fetchDichVu(page + 1);
   }, [page, rowsPerPage]);
 
   // Hàm đổ dữ liệu & phân trang
@@ -76,6 +98,22 @@ const ServiceManager = () => {
       setServices(res.result?.content);
       setTotalElements(res.result?.totalElements);
       console.log("res.dt = ", res.result.content);
+    } catch (error) {
+      console.error("Không tìm nạp được dịch vụ: ", error);
+    }
+  };
+
+  // Hàm đổ dữ liệu & phân trang
+  const fetchDichVu= async (page) => {
+    try {
+      const res = await serviceApi.getPaginate(page, 100);
+      const content = res.result?.content || [];
+      setServices(content);
+      // Trích xuất danh sách loại dịch vụ (type) và loại bỏ trùng lặp
+      const types = [...new Set(content.map((service) => service.type))];
+      setServiceTypes(types);
+      setServices(res.result?.content);
+      console.log("data dịch vụ: ", res);
     } catch (error) {
       console.error("Không tìm nạp được dịch vụ: ", error);
     }
@@ -203,8 +241,9 @@ const ServiceManager = () => {
       delete currentService.serviceId;
       const res = await serviceApi.add(currentService);
       if (res.code === 1000) {
-        fetchDichVuWithPaginate(page);
-        toast.success("Thêm dịch vụ thành công !");
+        const newService = res.result; // Lấy dịch vụ vừa thêm từ server
+        setServices((prevServices) => [newService, ...prevServices]); // Thêm vào đầu danh sách
+        showSuccess("Thêm dịch vụ thành công !");
       }
     } else if (dialogMode === "edit") {
       const { name, type, price, image, description, status } = currentService;
@@ -217,24 +256,56 @@ const ServiceManager = () => {
         status,
       });
       if (res.code === 1000) {
-        fetchDichVuWithPaginate(page);
-        toast.success("Cập nhật dịch vụ thành công !");
+        // Cập nhật dịch vụ trong danh sách
+        setServices((prevServices) =>
+          prevServices.map((service) =>
+            service.serviceId === currentService.serviceId ? { ...currentService } : service
+          )
+        );
+        showSuccess("Cập nhật dịch vụ thành công !");
       }
     }
     handleCloseDialog();
   };
 
   // Xử lý click "Delete" để cập nhật trạng thái "Status" và ẩn dịch vụ
-  const handleDeleteClick = (serviceId) => {
-    setServiceToDelete(serviceId);
-    setOpenConfirmDialog(true);
+  const handleDeleteClick = async (serviceId) => {
+    Swal.fire({
+      title: "Bạn chắc chắn muốn xóa dịch vụ này?",
+      text: "Dịch vụ sẽ không thể khôi phục lại!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          const res = await serviceApi.delete(serviceId);
+          if (res.code === 1000) {
+            // Nếu xóa thành công, cập nhật danh sách dịch vụ
+            setServices((prevServices) =>
+              prevServices.filter((service) => service.serviceId !== serviceId)
+            );
+            Swal.fire("Đã xóa!", "Dịch vụ đã được xóa thành công.", "success");
+          } else {
+            Swal.fire("Lỗi!", "Xóa dịch vụ thất bại. Vui lòng thử lại.", "error");
+          }
+        } catch (error) {
+          console.error("Lỗi khi xóa dịch vụ: ", error);
+          Swal.fire("Lỗi!", "Đã xảy ra lỗi trong quá trình xóa.", "error");
+        }
+      }
+    });
   };
+  
 
   const handleConfirmDelete = async () => {
     const res = await serviceApi.delete(serviceToDelete);
     if (res.code === 1000) {
       fetchDichVuWithPaginate(page);
-      toast.success("Dịch vụ đã được xóa thành công !");
+      showSuccess("Dịch vụ đã được xóa thành công !");
     }
     setOpenConfirmDialog(false);
     setServiceToDelete(null);
@@ -268,7 +339,12 @@ const ServiceManager = () => {
 
   return (
     <div>
-      <Toaster position="top-center" reverseOrder={false} />
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
       <Box>
         {/* Ô tìm kiếm */}
         <div className="admin-toolbar">
@@ -510,26 +586,22 @@ const ServiceManager = () => {
             </Typography>
             <Typography>Loại dịch vụ</Typography>
           </div>
+          <Autocomplete
+        options={serviceTypes} // Mảng loại dịch vụ
+        getOptionLabel={(option) => option} // Hiển thị trực tiếp giá trị `type`
+        renderInput={(params) => (
           <TextField
-            sx={{ marginBottom: "20px" }}
-            margin="dense"
-            name="type"
-            placeholder="Loại dịch vụ"
-            type="text"
-            fullWidth
+            {...params}
             variant="outlined"
-            value={currentService.type || ""}
-            onChange={handleInputChange}
-            error={!!errors.type}
-            helperText={errors.type}
             size="small"
-            FormHelperTextProps={{
-              style: {
-                fontSize: "1.2rem",
-                color: "red",
-              },
-            }}
+            placeholder="Chọn hoặc nhập loại dịch vụ"
+            fullWidth
           />
+        )}
+        onChange={(event, newValue) => {
+          setCurrentService((prev) => ({ ...prev, type: newValue }));
+        }}
+      />
           <div
             style={{
               display: "flex",
@@ -552,11 +624,25 @@ const ServiceManager = () => {
             margin="dense"
             name="price"
             placeholder="Giá"
-            type="number"
+            type="text" 
             fullWidth
             variant="outlined"
-            value={currentService.price || 0}
-            onChange={handleInputChange}
+            value={new Intl.NumberFormat("vi-VN").format(currentService.price || 0)} // Định dạng giá trị hiển thị
+            onChange={(e) => {
+              const inputValue = e.target.value.replace(/\D/g, ""); // Loại bỏ các ký tự không phải số
+              const numericValue = parseInt(inputValue, 10) || 0; // Chuyển đổi thành số
+              setCurrentService((prev) => ({
+                ...prev,
+                price: numericValue, // Cập nhật giá trị số nguyên
+              }));
+              // Xóa lỗi nếu người dùng nhập hợp lệ
+              if (numericValue > 0) {
+                setErrors((prevErrors) => ({
+                  ...prevErrors,
+                  price: undefined,
+                }));
+              }
+            }}
             error={!!errors.price}
             helperText={errors.price}
             size="small"
@@ -567,6 +653,7 @@ const ServiceManager = () => {
               },
             }}
           />
+
 
           <Box
             sx={{
@@ -588,7 +675,7 @@ const ServiceManager = () => {
             {currentService.image ? (
               <Box
                 component="img"
-                src={currentService.image}
+                src={currentService.image} // Giá trị ảnh từ state
                 alt="Dịch vụ"
                 sx={{
                   width: "100%",

@@ -1,8 +1,6 @@
-
 import React, { useState } from "react";
 import {
   Box,
-  Button,
   Popover,
   Select,
   MenuItem,
@@ -12,7 +10,33 @@ import {
 } from "@mui/material";
 import FilterListIcon from "@mui/icons-material/FilterList";
 
-const ContractFilter = ({ filterType, onApplyFilter, onClearFilter }) => {
+// Hàm dịch trạng thái
+const translateStatus = (status) => {
+  switch (status) {
+    case "Pending":
+      return "Chờ duyệt";
+    case "Approved":
+      return "Đã duyệt";
+    case "Actived":
+      return "Đang hoạt động";
+    case "Completed":
+      return "Đã hoàn thành";
+    case "Unpaid":
+      return "Chưa thanh toán";
+    case "Prepay 50%":
+      return "Trả trước 50%";
+    case "Prepay 70%":
+      return "Trả trước 70%";
+    case "Paid":
+      return "Đã thanh toán";
+    case "Cancelled":
+      return "Đã hủy";
+    default:
+      return status; // Nếu không có giá trị hợp lệ, trả lại trạng thái gốc
+  }
+};
+
+const ContractFilter = ({ filterType, onApplyFilter }) => {
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedValue, setSelectedValue] = useState("");
 
@@ -24,27 +48,36 @@ const ContractFilter = ({ filterType, onApplyFilter, onClearFilter }) => {
     setAnchorEl(null);
   };
 
-  const handleApply = () => {
-    onApplyFilter(selectedValue);
-    handleClose();
-  };
-
-  const handleClear = () => {
-    setSelectedValue("");
-    onClearFilter();
-    handleClose();
+  const handleFilter = (value) => {
+    setSelectedValue(value);
+    onApplyFilter(value);  // Áp dụng ngay khi chọn item
+    handleClose();  // Đóng popover ngay khi chọn item
   };
 
   const open = Boolean(anchorEl);
   const id = open ? "filter-popover" : undefined;
 
+  // Các tùy chọn lọc cho hợp đồng và thanh toán
+  const contractStatusOptions = [
+    { label: translateStatus("Tất cả"), value: "" },
+    { label: translateStatus("Pending"), value: "Pending" },
+    { label: translateStatus("Completed"), value: "Completed" },
+    { label: translateStatus("Approved"), value: "Approved" },
+    { label: translateStatus("Actived"), value: "Actived" },
+    { label: translateStatus("Cancelled"), value: "Cancelled" },
+  ];
+
+  const paymentStatusOptions = [
+    { label: translateStatus("Tất cả"), value: "" },
+    { label: translateStatus("Paid"), value: "Paid" },
+    { label: translateStatus("Prepay 50%"), value: "Prepay 50%" },
+    { label: translateStatus("Prepay 70%"), value: "Prepay 70%" },
+    { label: translateStatus("Unpaid"), value: "Unpaid" },
+  ];
+
   return (
     <div>
-      <IconButton
-        variant="contained"
-        onClick={handleOpen}
-        sx={{ textTransform: "none" }}
-      >
+      <IconButton variant="contained" onClick={handleOpen} sx={{ textTransform: "none" }}>
         <FilterListIcon />
       </IconButton>
       <Popover
@@ -67,7 +100,6 @@ const ContractFilter = ({ filterType, onApplyFilter, onClearFilter }) => {
           }}
         >
           <FormControl fullWidth size="small">
-            {/* Nội dung Select thay đổi dựa trên filterType */}
             <InputLabel sx={{ fontSize: "1.1rem" }}>
               {filterType === "contract"
                 ? "Trạng thái hợp đồng"
@@ -75,76 +107,18 @@ const ContractFilter = ({ filterType, onApplyFilter, onClearFilter }) => {
             </InputLabel>
             <Select
               value={selectedValue}
-              onChange={(e) => setSelectedValue(e.target.value)}
+              onChange={(e) => handleFilter(e.target.value)}  // Áp dụng lọc ngay
               sx={{ borderRadius: "6px", fontSize: "1.1rem" }}
             >
-              <MenuItem value="">
-                <em>Tất cả</em>
-              </MenuItem>
-              {filterType === "contract"
-                ? [
-                    <MenuItem key="1" value="Đã hoàn thành">
-                      Đã hoàn thành
-                    </MenuItem>,
-                    <MenuItem key="2" value="Đang hoạt động">
-                      Đang hoạt động
-                    </MenuItem>,
-                    <MenuItem key="3" value="Đã hủy">
-                      Đã hủy
-                    </MenuItem>,
-                  ]
-                : [
-                    <MenuItem key="1" value="Đã thanh toán đầy đủ">
-                      Đã thanh toán đầy đủ
-                    </MenuItem>,
-                    <MenuItem key="2" value="Đã thanh toán một phần">
-                      Đã thanh toán một phần
-                    </MenuItem>,
-                    <MenuItem key="3" value="Chưa thanh toán">
-                      Chưa thanh toán
-                    </MenuItem>,
-                  ]}
+              {(filterType === "contract" ? contractStatusOptions : paymentStatusOptions).map(
+                (option) => (
+                  <MenuItem key={option.value} value={option.value}>
+                    {option.label}
+                  </MenuItem>
+                )
+              )}
             </Select>
           </FormControl>
-          <Box
-            mt={2}
-            justifyContent="space-between"
-            gap={2}
-            alignItems="center"
-          >
-            <Button
-              variant="contained"
-              onClick={handleApply}
-              sx={{
-                backgroundColor: "#1976d2",
-                color: "#fff",
-                textTransform: "none",
-                borderRadius: "6px",
-                fontSize: "0.85rem",
-                fontWeight: "bold",
-                "&:hover": {
-                  backgroundColor: "#125ea5",
-                },
-              }}
-            >
-              <FilterListIcon sx={{ mr: 1, fontSize: "1rem" }} />
-              Lọc
-            </Button>
-            <Button
-              variant="outlined"
-              color="error"
-              onClick={handleClear}
-              sx={{
-                marginLeft:"5px",
-                textTransform: "none",
-                borderRadius: "6px",
-                fontSize: "0.85rem",
-                fontWeight: "bold",
-              }}
-            >
-              Xóa
-            </Button>
-          </Box>
         </Box>
       </Popover>
     </div>

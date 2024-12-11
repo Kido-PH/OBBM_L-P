@@ -23,7 +23,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddUserStaff from "./Admin-AddStaff";
-import toast, { Toaster } from "react-hot-toast";
+import SnackBarNotification from "./SnackBarNotification";
 
 const AccessControl = () => {
   const [users, setUsers] = useState([]);
@@ -34,6 +34,24 @@ const AccessControl = () => {
   const [selectedPermissions, setSelectedPermissions] = useState([]); // Danh sách quyền
   const [selectedRole, setSelectedRole] = useState(""); // Vai trò hiện tại
   const [selectedUserId, setSelectedUserId] = useState(""); // ID người dùng được chọn
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   // Gọi API để lấy danh sách người dùng
   useEffect(() => {
@@ -201,7 +219,7 @@ const AccessControl = () => {
       );
 
       if (response.ok) {
-        toast.success("Cập nhật quyền cho người dùng thành công!");
+        showSuccess("Cập nhật quyền cho người dùng thành công!");
       } else {
         console.error("Lỗi khi cập nhật quyền:", response.status);
       }
@@ -217,7 +235,12 @@ const AccessControl = () => {
 
   return (
     <Box p={3} sx={{padding:"1px"}}>
-      <Toaster position="top-center" reverseOrder={false} />
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <AddUserStaff onUserAdded={handleUserAdded} />
       </Box>

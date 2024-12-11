@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Divider, Select } from "antd";
-import toast from "react-hot-toast";
+import toast, { Toaster } from "react-hot-toast";
 
 // Modal style
 const modalStyle = {
@@ -331,6 +331,7 @@ const AddUserStaff = ({ onUserAdded }) => {
   
   return (
     <Box>
+    <Toaster position="top-center" reverseOrder={false} />
       <Button
         variant="contained"
         color="primary"

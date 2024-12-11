@@ -19,8 +19,7 @@ import {
   Box,
   Tooltip,
   TablePagination,
-  Snackbar,
-  Alert,
+  Grid,
 } from "@mui/material";
 
 import dishApi from "../../api/dishApi";
@@ -30,10 +29,12 @@ import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
-import toast, { Toaster } from "react-hot-toast";
+import toast from "react-hot-toast";
 import DishDetailPopup from "./DishDetailPopup";
 import { Typography } from "antd";
 import ingredientApi from "api/ingredientApi";
+import SnackBarNotification from "./SnackBarNotification";
+import Swal from "sweetalert2";
 
 const DishManager = () => {
   const [categories, setCategories] = useState([]); // State cho danh mục
@@ -46,7 +47,7 @@ const DishManager = () => {
     image: "",
     description: "",
     categoryId: "",
-    existing: "Còn hàng",
+    existing: "Còn món ăn",
   });
   const [dishId, setDishId] = useState("");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -168,9 +169,9 @@ const DishManager = () => {
   // Hàm lấy danh sách nguyên liệu
   const fetchIngredients = async () => {
     try {
-      const response = await ingredientApi.getAll(); 
+      const response = await ingredientApi.getAll();
       if (response?.result?.content) {
-        setAllIngredients(response.result.content); 
+        setAllIngredients(response.result.content);
       }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách nguyên liệu:", error);
@@ -196,50 +197,53 @@ const DishManager = () => {
   };
 
   const handleChange = async (e) => {
-    const {type, name, files, value} = e.target;
-  
+    const { type, name, files, value } = e.target;
+
     // Xử lý ảnh
     if (name === "image" && files && files.length > 0) {
       const file = files[0];
-  
+
       // Tạo URL tạm thời cho ảnh (preview)
       const imagePreviewUrl = URL.createObjectURL(file);
-  
+
       // Cập nhật ảnh vào state để hiển thị preview
       setDishData({
         ...dishData,
         image: imagePreviewUrl,
       });
-  
+
       try {
         // Tạo FormData để gửi file
         const formData = new FormData();
-        formData.append('file', file);
-  
+        formData.append("file", file);
+
         // Gửi yêu cầu lên API để tải ảnh lên
-        const response = await fetch('http://localhost:8080/obbm/upload/image', {
-          method: 'POST',
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-          body: formData, // Đưa formData vào body
-        });
-  
+        const response = await fetch(
+          "http://localhost:8080/obbm/upload/image",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+            body: formData, // Đưa formData vào body
+          }
+        );
+
         const data = await response.json();
-        console.log('Response Data:', data);
-  
+        console.log("Response Data:", data);
+
         if (response.ok) {
           console.log("Upload thành công:", data);
 
           // Lấy URL từ API Cloudinary
-          const imageUrl = data.result;  // Kết quả trả về là URL của ảnh đã được upload
+          const imageUrl = data.result; // Kết quả trả về là URL của ảnh đã được upload
 
           // Cập nhật URL ảnh trả về từ server vào dishData
           setDishData({
             ...dishData,
             image: imageUrl, // Lấy URL ảnh từ trường fileUrl của API
           });
-  
+
           // Xóa lỗi nếu ảnh được tải lên thành công
           setErrors((prevErrors) => ({
             ...prevErrors,
@@ -249,16 +253,16 @@ const DishManager = () => {
           console.error("Lỗi tải ảnh:", data);
           setErrors((prevErrors) => ({
             ...prevErrors,
-            image: 'Không thể tải ảnh lên',
+            image: "Không thể tải ảnh lên",
           }));
         }
       } catch (error) {
-        console.error('Lỗi tải ảnh:', error);
+        console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,
-          image: 'Không thể tải ảnh lên',
+          image: "Không thể tải ảnh lên",
         }));
-      } 
+      }
     } else {
       // Xử lý các trường khác
       setDishData({
@@ -266,35 +270,34 @@ const DishManager = () => {
         [name]: type === "number" ? Number(value) : value,
       });
 
-       // Xóa lỗi nếu người dùng nhập đúng
-       if (typeof value === "string" && value.trim() !== "") {
+      // Xóa lỗi nếu người dùng nhập đúng
+      if (typeof value === "string" && value.trim() !== "") {
         setErrors((prevErrors) => ({
           ...prevErrors,
           [name]: undefined,
         }));
       }
     }
-  
+
     // Xóa lỗi khi người dùng nhập dữ liệu hợp lệ
     setErrors((prevErrors) => {
       const updatedErrors = { ...prevErrors };
-  
+
       if (name === "name" && value.trim()) {
         updatedErrors.name = "";
       }
-  
+
       if (name === "price" && value && Number(value) > 0) {
         updatedErrors.price = "";
       }
-  
+
       if (name === "categoryId" && value) {
         updatedErrors.categoryId = "";
       }
-  
+
       return updatedErrors;
     });
   };
-  
 
   const handleAddDish = async () => {
     try {
@@ -383,16 +386,20 @@ const DishManager = () => {
       console.log(updatedDishData); // Kiểm tra lại dữ liệu gửi đi
 
       // Gửi yêu cầu PUT để cập nhật món ăn
-      await dishApi.update(dishId, updatedDishData);
+      const response = await dishApi.update(dishId, updatedDishData);
 
       showSuccess("Món ăn đã được cập nhật thành công!");
 
-      // Lấy lại danh sách món ăn của trang hiện tại
-      fetchDishesWithPaginate(page);
+      // Cập nhật món ăn trực tiếp trong danh sách
+      setDishes((prevDishes) =>
+        prevDishes.map((dish) =>
+          dish.dishId === dishId ? { ...dish, ...response.result } : dish
+        )
+      );
     } catch (error) {
       console.error("Lỗi khi cập nhật món ăn:", error);
       if (error.response) {
-        console.log("Response error data:", error.response.data); 
+        console.log("Response error data:", error.response.data);
       }
       toast.error("Có lỗi xảy ra khi cập nhật món ăn!");
     }
@@ -414,12 +421,36 @@ const DishManager = () => {
     handleClose();
   };
 
-  const handleDeleteDish = (dishId) => {
+  const handleDeleteDish = async (dishId) => {
     const dish = dishes.find((dish) => dish.dishId === dishId);
 
-    // Lưu món ăn cần xóa và mở hộp thoại xác nhận
-    setDishToDelete(dish);
-    setDeleteDialogOpen(true);
+    // Hiển thị hộp thoại xác nhận xóa với SweetAlert2
+    const confirm = await Swal.fire({
+      title: "Bạn có chắc chắn muốn xóa món ăn này?",
+      text: `Món ăn: "${dish?.name}" sẽ bị xóa vĩnh viễn!`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Xóa",
+      cancelButtonText: "Hủy",
+    });
+
+    if (confirm.isConfirmed) {
+      try {
+        // Gửi yêu cầu xóa món ăn
+        await dishApi.delete(dishId);
+  
+        // Hiển thị thông báo thành công
+        Swal.fire("Đã xóa!", "Món ăn đã được xóa thành công.", "success");
+  
+        // Làm mới danh sách món ăn
+        fetchDishesWithPaginate(page);
+      } catch (error) {
+        console.error("Lỗi khi xóa món ăn: ", error);
+        Swal.fire("Thất bại", "Có lỗi xảy ra khi xóa món ăn.", "error");
+      }
+    }
   };
 
   const confirmDeleteDish = async () => {
@@ -452,27 +483,17 @@ const DishManager = () => {
 
   const handleRemoveImage = () => {
     setDishData((prev) => ({ ...prev, image: "" }));
-  }; 
+  };
 
   return (
     <Box>
-      <Snackbar
+      <SnackBarNotification
         open={snackBarOpen}
-        onClose={handleCloseSnackBar}
-        autoHideDuration={6000}
-        anchorOrigin={{ vertical: "top", horizontal: "right" }}
-      >
-        <Alert
-          onClose={handleCloseSnackBar}
-          severity={snackType}
-          variant="filled"
-          sx={{ width: "100%", fontSize: "1.5rem" }}
-        >
-          {snackBarMessage}
-        </Alert>
-      </Snackbar>
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
 
-      <Toaster position="top-center" reverseOrder={false} />
       {/* Ô tìm kiếm */}
       <div className="admin-toolbar">
         <div className="admin-group">
@@ -560,242 +581,180 @@ const DishManager = () => {
         <DialogTitle sx={{ fontSize: "1.7rem" }}>
           {editMode ? "Cập nhật món ăn" : "Thêm món ăn mới"}
         </DialogTitle>
+
         <DialogContent className="custom-input" dividers>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              style={{
-                color: "red",
-                fontSize: "1.9rem",
-                marginRight: "5px",
-              }}
-            >
-              *
-            </Typography>
-            <Typography>Tên món ăn</Typography>
-          </div>
-          <TextField
-            size="small"
-            margin="dense"
-            name="name"
-            type="text"
-            placeholder="Tên món ăn"
-            fullWidth
-            value={dishData.name}
-            onChange={handleChange}
-            error={Boolean(errors.name)}
-            helperText={errors.name}
-            FormHelperTextProps={{
-              sx: {
-                fontSize: "1rem",
-                color: "red",
-              },
-            }}
-          />
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              style={{
-                color: "red",
-                fontSize: "1.9rem",
-                marginRight: "5px",
-              }}
-            >
-              *
-            </Typography>
-            <Typography>Danh mục</Typography>
-          </div>
-          <FormControl
-            fullWidth
-            margin="dense"
-            error={Boolean(errors.categoryId)}
-            size="small"
-          >
-            <Select
-              labelId="category-label"
-              name="categoryId"
-              value={dishData.categoryId || ""}
-              onChange={handleChange}
-            >
-              {categories.length > 0 ? (
-                categories.map((category) => (
-                  <MenuItem
-                    key={category.categoryId}
-                    value={category.categoryId}
-                  >
-                    {category.name}
-                  </MenuItem>
-                ))
-              ) : (
-                <MenuItem value="">Không có danh mục</MenuItem>
-              )}
-            </Select>
-          </FormControl>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              style={{
-                color: "red",
-                fontSize: "1.9rem",
-                marginRight: "5px",
-              }}
-            >
-              *
-            </Typography>
-            <Typography>Giá</Typography>
-          </div>
-          <TextField
-            size="small"
-            margin="dense"
-            name="price"
-            type="number"
-            placeholder="Giá"
-            fullWidth
-            value={dishData.price}
-            onChange={handleChange}
-            error={Boolean(errors.price)}
-            helperText={errors.price}
-            FormHelperTextProps={{
-              sx: {
-                fontSize: "1rem",
-                color: "red",
-              },
-            }}
-          />
-
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              justifyContent: "center",
-              border: "2px dashed #ccc",
-              borderRadius: "8px",
-              padding: "1em",
-              marginBottom: "1em",
-              cursor: "pointer",
-              position: "relative",
-              overflow: "hidden",
-              textAlign: "center",
-            }}
-            onClick={() => document.getElementById("file-upload").click()}
-          >
-            {dishData.image ? (
-              <Box
-                component="img"
-                src={dishData.image}
-                alt="Món ăn"
-                sx={{
-                  width: "100%",
-                  height: "250px",
-                  objectFit: "cover",
-                  borderRadius: "8px",
-                }}
+          <Grid container spacing={2}>
+            {/* Hàng 1: Tên món ăn | Danh mục */}
+            <Grid item xs={6}>
+              <Typography sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                Tên món ăn
+              </Typography>
+              <TextField
+                size="small"
+                margin="dense"
+                name="name"
+                type="text"
+                placeholder="Tên món ăn"
+                fullWidth
+                value={dishData.name}
+                onChange={handleChange}
+                error={Boolean(errors.name)}
+                helperText={errors.name}
               />
-            ) : (
-              <>
-                <AddAPhotoIcon sx={{ fontSize: 48, color: "#aaa", mb: 1 }} />
-                <Typography variant="body2" sx={{ color: "#aaa" }}>
-                  Nhấn để chọn ảnh
-                </Typography>
-              </>
-            )}
-
-            <input
-              type="file"
-              name="image"
-              accept="image/*"
-              onChange={handleChange}
-              style={{ display: "none" }}
-              id="file-upload"
-            />
-            {dishData.image && (
-              <Button
-                variant="contained"
-                sx={{
-                  position: "absolute",
-                  top: "10px",
-                  right: "10px",
-                  backgroundColor: "#dc3545",
-                  color: "#fff",
-                  "&:hover": {
-                    backgroundColor: "#c82333",
-                  },
-                }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleRemoveImage();
-                }}
+            </Grid>
+            <Grid item xs={6}>
+              <Typography sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                Danh mục
+              </Typography>
+              <FormControl
+                fullWidth
+                margin="dense"
+                size="small"
+                error={Boolean(errors.categoryId)}
               >
-                Xóa ảnh
-              </Button>
-            )}
-          </Box>
+                <Select
+                  labelId="category-label"
+                  name="categoryId"
+                  value={dishData.categoryId || ""}
+                  onChange={handleChange}
+                >
+                  {categories.length > 0 ? (
+                    categories.map((category) => (
+                      <MenuItem
+                        key={category.categoryId}
+                        value={category.categoryId}
+                      >
+                        {category.name}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem value="">Không có danh mục</MenuItem>
+                  )}
+                </Select>
+              </FormControl>
+            </Grid>
 
-          <TextField
-            margin="dense"
-            name="description"
-            placeholder="Mô tả"
-            type="text"
-            fullWidth
-            multiline
-            minRows={4}
-            maxRows={10}
-            value={dishData.description}
-            onChange={handleChange}
-            error={Boolean(errors.description)}
-            helperText={errors.description}
-            sx={{
-              "& .MuiFormHelperText-root": {
-                fontSize: "1rem", // Tăng kích thước chữ của helper text
-              },
-            }}
-          />
+            {/* Hàng 2: Giá | Trạng thái */}
+            <Grid item xs={6}>
+              <Typography sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                Giá
+              </Typography>
+              <TextField
+                size="small"
+                margin="dense"
+                name="price"
+                type="text"
+                placeholder="Giá"
+                fullWidth
+                value={new Intl.NumberFormat("vi-VN").format(
+                  dishData.price || 0
+                )}
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/\D/g, "");
+                  if (!isNaN(rawValue)) {
+                    setDishData((prev) => ({
+                      ...prev,
+                      price: rawValue !== "" ? parseInt(rawValue, 10) : 0, // Cập nhật giá trị không định dạng
+                    }));
+                  }
+                }}
+                error={Boolean(errors.price)}
+                helperText={errors.price}
+              />
+            </Grid>
+            <Grid item xs={6}>
+              <Typography sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                Trạng thái
+              </Typography>
+              <FormControl fullWidth margin="dense">
+                <Select
+                  labelId="dish-existing-label"
+                  name="existing"
+                  value={dishData.existing}
+                  onChange={handleChange}
+                  size="small"
+                >
+                  <MenuItem value={"Còn món ăn"}>Còn món ăn</MenuItem>
+                  <MenuItem value={"Hết món ăn"}>Hết món ăn</MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
 
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-            }}
-          >
-            <Typography
-              style={{
-                color: "red",
-                fontSize: "1.9rem",
-                marginRight: "5px",
-              }}
-            >
-              *
-            </Typography>
-            <Typography>Món ăn này còn hàng không ?</Typography>
-          </div>
+            {/* Hàng 3: Hình ảnh */}
+            <Grid item xs={12}>
+              <Typography sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                Hình ảnh
+              </Typography>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "2px dashed #ccc",
+                  borderRadius: "8px",
+                  padding: "1em",
+                  cursor: "pointer",
+                  textAlign: "center",
+                }}
+                onClick={() => document.getElementById("file-upload").click()}
+              >
+                {dishData.image ? (
+                  <Box
+                    component="img"
+                    src={dishData.image}
+                    alt="Món ăn"
+                    sx={{
+                      width: "100%",
+                      height: "150px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                    }}
+                  />
+                ) : (
+                  <>
+                    <AddAPhotoIcon
+                      sx={{ fontSize: 48, color: "#aaa", mb: 1 }}
+                    />
+                    <Typography variant="body2" sx={{ color: "#aaa" }}>
+                      Nhấn để chọn ảnh
+                    </Typography>
+                  </>
+                )}
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleChange}
+                  style={{ display: "none" }}
+                  id="file-upload"
+                />
+              </Box>
+            </Grid>
 
-          <FormControl fullWidth margin="dense">
-            <Select
-              labelId="dish-existing-label"
-              name="existing"
-              value={dishData.existing}
-              onChange={handleChange}
-              size="small"
-            >
-              <MenuItem value={"Còn hàng"}>Còn hàng</MenuItem>
-              <MenuItem value={"Hết hàng"}>Hết hàng</MenuItem>
-            </Select>
-          </FormControl>
+            {/* Hàng 4: Mô tả */}
+            <Grid item xs={12}>
+              <Typography sx={{ fontWeight: "bold", fontSize: "1.2rem" }}>
+                Mô tả
+              </Typography>
+              <TextField
+                margin="dense"
+                name="description"
+                placeholder="Mô tả"
+                type="text"
+                fullWidth
+                multiline
+                minRows={3}
+                maxRows={5}
+                value={dishData.description}
+                onChange={handleChange}
+                error={Boolean(errors.description)}
+                helperText={errors.description}
+              />
+            </Grid>
+          </Grid>
         </DialogContent>
+
         <DialogActions>
           <Button
             onClick={handleClose}
@@ -877,7 +836,9 @@ const DishManager = () => {
                 <TableCell>
                   <Button
                     variant="outlined"
-                    onClick={() => handleEditDish(page + 1, rowsPerPage, dish.dishId)}
+                    onClick={() =>
+                      handleEditDish(page + 1, rowsPerPage, dish.dishId)
+                    }
                     color="primary"
                     style={{ marginRight: "8px" }}
                   >
