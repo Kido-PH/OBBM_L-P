@@ -153,7 +153,7 @@ const AudioRecorderWithAPI = ({
       <button
         className="btn btn-modal-search-speech"
         onClick={() => onSearch(inputValue)}
-        style={{ visibility: visibleSearchButton }}
+        style={{ display: visibleSearchButton }}
       >
         <CiSearch size={24} />
       </button>
