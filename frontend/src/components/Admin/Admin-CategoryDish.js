@@ -20,10 +20,11 @@ import {
 import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import danhMucApi from "../../api/danhMucApi";
-import { toast, Toaster } from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { Typography } from "antd";
+import SnackBarNotification from "./SnackBarNotification";
+import Swal from "sweetalert2";
 
 const CategoryDish = () => {
   const [open, setOpen] = useState(false);
@@ -37,9 +38,38 @@ const CategoryDish = () => {
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [totalElements, setTotalElements] = useState(0);
-  const [openConfirmDelete, setOpenConfirmDelete] = useState(false);
   const [nameError, setNameError] = useState("");
   const [descriptionError, setDescriptionError] = useState("");
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
+
+  // const showError = (message) => {
+  //   setSnackType('error');
+  //   setSnackBarMessage(message);
+  //   setSnackBarOpen(true);
+  // };
+
+  // const showInfo = (message) => {
+  //   setSnackType('info');
+  //   setSnackBarMessage(message);
+  //   setSnackBarOpen(true);
+  // };
 
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
@@ -71,16 +101,6 @@ const CategoryDish = () => {
     setCategoryDescription("");
   };
 
-  // Mở Dialog xác nhận xóa
-  const handleOpenConfirmDelete = (categoryId) => {
-    setCurrentIndex(categoryId);
-    setOpenConfirmDelete(true); // Mở dialog xác nhận xóa
-  };
-
-  // Đóng Dialog xác nhận xóa
-  const handleCloseConfirmDelete = () => {
-    setOpenConfirmDelete(false);
-  };
 
   const handleAddCategory = async () => {
     if (!categoryName) {
@@ -88,13 +108,6 @@ const CategoryDish = () => {
       return;
     } else {
       setNameError("");
-    }
-
-    if (!categoryDescription) {
-      setDescriptionError("Mô tả không được để trống");
-      return;
-    } else {
-      setDescriptionError("");
     }
 
     try {
@@ -109,7 +122,7 @@ const CategoryDish = () => {
       setCategories((prevCategories) => [response.result, ...prevCategories]);
 
       // Show success message
-      toast.success("Danh mục đã được thêm thành công!");
+      showSuccess("Danh mục đã được thêm thành công!");
 
       handleClose();
     } catch (error) {
@@ -169,23 +182,22 @@ const CategoryDish = () => {
         // Gọi API cập nhật danh mục
         const response = await danhMucApi.update(categoryId, updatedCategory);
 
-        // Cập nhật danh mục trong state sau khi API trả về thành công
-        const updatedCategories = categories.map((category) =>
-          category.categoryId === categoryId
-            ? {
-                ...category,
-                name: response.data?.name || category.name,
-                description: response.data?.description || category.description,
-              }
-            : category
+        // Cập nhật danh mục trực tiếp trong danh sách hiện tại
+        setCategories((prevCategories) =>
+          prevCategories.map((category) =>
+            category.categoryId === categoryId
+              ? {
+                  ...category,
+                  name: response.data?.name || updatedCategory.name,
+                  description:
+                    response.data?.description || updatedCategory.description,
+                }
+              : category
+          )
         );
-        setCategories(updatedCategories);
 
-        // Tải lại danh mục ở trang hiện tại
-        fetchDanhMucWithPaginate(page);
-
-        // Hiển thị toast thông báo chỉnh sửa thành công
-        toast.success("Danh mục đã được chỉnh sửa thành công!");
+        // Hiển thị thông báo thành công
+        showSuccess("Danh mục đã được chỉnh sửa thành công!");
 
         handleClose(); // Đóng modal sau khi sửa xong
       } catch (error) {
@@ -197,34 +209,40 @@ const CategoryDish = () => {
   };
 
   // Xóa danh mục món ăn
-  const handleDeleteCategory = async (categoryId) => {
-    if (!categoryId) {
-      console.error("categoryId không hợp lệ.");
-      return;
+const handleDeleteCategory = async (categoryId) => {
+  Swal.fire({
+    title: "Bạn có chắc chắn muốn xóa danh mục này không?",
+    text: "Danh mục này sẽ không thể khôi phục lại!",
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#d33",
+    cancelButtonColor: "#3085d6",
+    confirmButtonText: "Xóa",
+    cancelButtonText: "Hủy",
+  }).then(async (result) => {
+    if (result.isConfirmed) {
+      try {
+        // Gọi API xóa danh mục
+        await danhMucApi.delete(categoryId);
+
+        // Cập nhật danh sách danh mục sau khi xóa
+        const updatedCategories = categories.filter(
+          (category) => category.categoryId !== categoryId
+        );
+        setCategories(updatedCategories);
+
+        // Hiển thị thông báo thành công
+        Swal.fire("Đã xóa!", "Danh mục đã được xóa thành công.", "success");
+      } catch (error) {
+        console.error("Lỗi khi xóa danh mục:", error);
+
+        // Hiển thị thông báo lỗi
+        Swal.fire("Lỗi!", "Không thể xóa danh mục. Vui lòng thử lại.", "error");
+      }
     }
+  });
+};
 
-    try {
-      // Gọi API để xóa danh mục
-      await danhMucApi.delete(categoryId);
-
-      // Cập nhật danh sách danh mục sau khi xóa
-      const updatedCategories = categories.filter(
-        (category) => category.categoryId !== categoryId
-      );
-
-      setCategories(updatedCategories);
-
-      // Tải lại danh mục ở trang hiện tại
-      fetchDanhMucWithPaginate(page);
-
-      toast.success("Danh mục đã được xóa thành công!");
-
-      setCurrentIndex(null); // Đặt lại currentIndex sau khi xóa xong
-    } catch (error) {
-      console.error("Lỗi khi xóa danh mục: ", error);
-    }
-    handleCloseConfirmDelete(); // Đóng hộp thoại xác nhận
-  };
 
   // Hàm xử lý thay đổi giá trị input tìm kiếm
   const handleSearchChange = async (event) => {
@@ -261,7 +279,13 @@ const CategoryDish = () => {
 
   return (
     <Box>
-      <Toaster position="top-center" reverseOrder={false} />
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
+
       <div className="admin-toolbar">
         {/* Ô tìm kiếm */}
         <div className="admin-group">
@@ -307,49 +331,6 @@ const CategoryDish = () => {
           Thêm danh mục
         </Button>
       </div>
-
-      {/* Dialog xác nhận xóa */}
-      <Dialog
-        open={openConfirmDelete}
-        onClose={handleCloseConfirmDelete}
-        aria-labelledby="confirm-delete-title"
-        maxWidth="sm"
-        fullWidth
-      >
-        <DialogTitle
-          id="confirm-delete-title"
-          sx={{
-            fontSize: "1.6rem",
-            color: "#d32f2f",
-            display: "flex",
-            alignItems: "center",
-          }}
-        >
-          <ErrorOutlineIcon sx={{ color: "error.main", mr: 1 }} />
-          Xác nhận xóa danh mục
-        </DialogTitle>
-        <DialogContent>
-          <p>Bạn có chắc chắn muốn xóa danh mục này không ?</p>
-        </DialogContent>
-        <DialogActions>
-          <Button
-            onClick={handleCloseConfirmDelete}
-            color="primary"
-            variant="outlined"
-            sx={{ fontSize: "1.3rem" }}
-          >
-            Hủy
-          </Button>
-          <Button
-            onClick={() => handleDeleteCategory(currentIndex)}
-            color="error"
-            variant="outlined"
-            sx={{ fontSize: "1.3rem" }}
-          >
-            Đồng ý
-          </Button>
-        </DialogActions>
-      </Dialog>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle
@@ -549,7 +530,7 @@ const CategoryDish = () => {
                         },
                       }}
                       onClick={() =>
-                        handleOpenConfirmDelete(category.categoryId)
+                        handleDeleteCategory(category.categoryId)
                       }
                     >
                       <Tooltip
