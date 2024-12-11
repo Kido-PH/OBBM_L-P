@@ -14,13 +14,15 @@ import {
   DialogContent,
   DialogTitle,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Tooltip,
   Grid,
   TablePagination,
+  Tabs,
+  Tab,
+  Divider,
+  FormControl,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -30,7 +32,8 @@ import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import locationApi from "../../api/locationApi";
 import toast, { Toaster } from "react-hot-toast";
 import userApi from "../../api/userApi";
-
+import { Typography } from "antd";
+ 
 const LocationManager = () => {
   const [locations, setLocations] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -55,10 +58,47 @@ const LocationManager = () => {
   const [totalElements, setTotalElements] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [errors, setErrors] = useState({});
+  const [activeTab, setActiveTab] = useState(0); // 0: Admin, 1: Customer
 
   useEffect(() => {
     fetchDanhMucWithPaginate(page + 1, rowsPerPage);
   }, [page, rowsPerPage]);
+
+  const handleTabChange = (event, newTab) => {
+    setActiveTab(newTab); // Cập nhật tab đang chọn
+    filterLocations(newTab, searchTerm); // Lọc lại dữ liệu khi chuyển tab
+  };
+
+  useEffect(() => {
+    filterLocations(activeTab, searchTerm); // Lọc lại khi đổi tab hoặc tìm kiếm
+  }, [locations, activeTab, searchTerm]);
+
+  const filterLocations = (tab, searchTerm) => {
+    let filtered = locations;
+
+    // Lọc theo tab đang chọn: 0 cho Admin, 1 cho Customer
+    if (tab === 0) {
+      filtered = locations.filter((location) => !location.isCustom); // Admin tạo địa điểm
+    } else {
+      filtered = locations.filter((location) => location.isCustom); // Customer tạo địa điểm
+    }
+
+    // Tiến hành lọc theo từ khóa tìm kiếm
+    if (searchTerm.trim() !== "") {
+      filtered = filtered.filter(
+        (location) =>
+          location.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          location.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          location.address.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          location.description
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          location.creatorName.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    setFilteredLocations(filtered);
+  };
 
   const fetchDanhMucWithPaginate = async (page, rowsPerPage) => {
     try {
@@ -162,22 +202,7 @@ const LocationManager = () => {
       if (name === "address" && value.trim() !== "") {
         delete newErrors.address;
       }
-      if (name === "capacity" && !isNaN(value) && Number(value) > 0) {
-        delete newErrors.capacity;
-      }
-      if (name === "table" && !isNaN(value) && Number(value) > 0) {
-        delete newErrors.table;
-      }
-      if (name === "cost" && !isNaN(value) && Number(value) > 0) {
-        delete newErrors.cost;
-      }
-      if (name === "description" && value.trim() !== "") {
-        delete newErrors.description;
-      }
-      if (name === "status" && value.trim() !== "") {
-        delete newErrors.status;
-      }
-
+      
       return newErrors;
     });
   };
@@ -196,37 +221,7 @@ const LocationManager = () => {
     if (!currentLocation.address || currentLocation.address.trim() === "") {
       newErrors.address = "Địa chỉ không được để trống";
     }
-    if (
-      !currentLocation.capacity ||
-      isNaN(currentLocation.capacity) ||
-      currentLocation.capacity <= 0
-    ) {
-      newErrors.capacity = "Sức chứa phải là số lớn hơn 0";
-    }
-    if (
-      !currentLocation.table ||
-      isNaN(currentLocation.table) ||
-      currentLocation.table <= 0
-    ) {
-      newErrors.table = "Số lượng bàn phải là số lớn hơn 0";
-    }
-    if (
-      !currentLocation.cost ||
-      isNaN(currentLocation.cost) ||
-      currentLocation.cost <= 0
-    ) {
-      newErrors.cost = "Chi phí phải là số lớn hơn 0";
-    }
-    if (
-      !currentLocation.description ||
-      currentLocation.description.trim() === ""
-    ) {
-      newErrors.description = "Mô tả không được để trống";
-    }
-    if (!currentLocation.status || currentLocation.status.trim() === "") {
-      newErrors.status = "Trạng thái không được để trống";
-    }
-
+   
     setErrors(newErrors);
 
     // Trả về true nếu không có lỗi
@@ -235,12 +230,7 @@ const LocationManager = () => {
 
   const addLocation = async () => {
     try {
-      // Kiểm tra form
-      if (!validateForm()) {
-        toast.error("Vui lòng kiểm tra lại các trường dữ liệu!");
-        return;
-      }
-
+      
       // Chuẩn bị dữ liệu cho request
       const diaDiemMoi = {
         name: currentLocation.name,
@@ -420,31 +410,37 @@ const LocationManager = () => {
   // Hàm tìm kiếm
   const handleSearch = (term) => {
     setSearchTerm(term);
+  };
 
-    // Nếu từ khóa tìm kiếm rỗng, hiển thị toàn bộ danh sách
-    if (term.trim() === "") {
-      setFilteredLocations(locations);
-      return;
-    }
-
-    // Lọc kết quả tìm kiếm theo các trường: name, type, address, description, creatorName
-    const filtered = locations.filter(
-      (location) =>
-        location.name.toLowerCase().includes(term.toLowerCase()) ||
-        location.type.toLowerCase().includes(term.toLowerCase()) ||
-        location.address.toLowerCase().includes(term.toLowerCase()) ||
-        location.description.toLowerCase().includes(term.toLowerCase()) ||
-        location.creatorName.toLowerCase().includes(term.toLowerCase())
-    );
-
-    setFilteredLocations(filtered);
+  const handleRemoveImage = () => {
+    setCurrentLocation((prev) => ({ ...prev, image: "" }));
   };
 
   return (
     <div>
+      <Box sx={{ width: "100%" }}>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          TabIndicatorProps={{
+            style: {
+              backgroundColor: "#1976d2", // Màu của đường kẻ dưới tab
+            },
+          }}
+          sx={{
+            borderBottom: "1px solid #ddd", // Thêm đường kẻ dưới tất cả các tab
+          }}
+        >
+          <Tab label="QUẢN LÝ" style={{ fontSize: "11px", fontWeight: "bold" }} />
+          <Tab
+            label="KHÁCH HÀNG"
+            style={{ fontSize: "11px", fontWeight: "bold" }}
+          />
+        </Tabs>
+      </Box>
       <Toaster position="top-center" reverseOrder={false} />
       <Box>
-        <div className="admin-toolbar">
+        <div className="admin-toolbar" style={{ marginTop: "12px" }}>
           <div className="admin-group">
             <svg
               className="admin-icon-search"
@@ -463,21 +459,23 @@ const LocationManager = () => {
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
-          <Button
-            sx={{ fontSize: "10px" }}
-            variant="contained"
-            color="primary"
-            onClick={() => handleOpenDialog("add")}
-          >
-            <AddIcon
-              sx={{
-                marginRight: "5px",
-                fontSize: "16px",
-                verticalAlign: "middle",
-              }}
-            />
-            Thêm địa điểm
-          </Button>
+          {activeTab === 0 && (
+            <Button
+              sx={{ fontSize: "10px" }}
+              variant="contained"
+              color="primary"
+              onClick={() => handleOpenDialog("add")}
+            >
+              <AddIcon
+                sx={{
+                  marginRight: "5px",
+                  fontSize: "16px",
+                  verticalAlign: "middle",
+                }}
+              />
+              Thêm địa điểm
+            </Button>
+          )}
         </div>
       </Box>
 
@@ -491,11 +489,6 @@ const LocationManager = () => {
               <TableCell>Loại</TableCell>
               <TableCell>Địa chỉ</TableCell>
               <TableCell>Sức chứa</TableCell>
-              <TableCell>Bàn</TableCell>
-              <TableCell>Chi phí</TableCell>
-              <TableCell>Mô tả</TableCell>
-              <TableCell>Người tạo</TableCell>
-              <TableCell>Vai trò</TableCell>
               <TableCell
                 sx={{
                   position: "sticky",
@@ -509,71 +502,64 @@ const LocationManager = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {(searchTerm ? filteredLocations : locations).map(
-              (location, index) => (
-                <TableRow key={location.locationId}>
-                  <TableCell>{index + 1}</TableCell>
-                  <TableCell>{location.name}</TableCell>
-                  <TableCell>
-                    <img src={location.image} alt={location.name} width="70" />
-                  </TableCell>
-                  <TableCell>{location.type}</TableCell>
-                  <TableCell>{location.address}</TableCell>
-                  <TableCell>
-                    {location.capacity
-                      ? `${location.capacity} người`
-                      : "Không xác định"}
-                  </TableCell>
-                  <TableCell>{location.table}</TableCell>
-                  <TableCell>{location.cost}</TableCell>
-                  <TableCell>{location.description}</TableCell>
-                  <TableCell>{location.creatorName}</TableCell>
-                  <TableCell>{location.creatorRole}</TableCell>
-                  <TableCell
-                    sx={{
-                      position: "sticky",
-                      right: 0,
-                      backgroundColor: "white",
-                      zIndex: 1,
-                    }}
+            {filteredLocations.map((location, index) => (
+              <TableRow key={location.locationId}>
+                <TableCell>{index + 1}</TableCell>
+                <TableCell>{location.name}</TableCell>
+                <TableCell>
+                  <img src={location.image} alt={location.name} width="70" />
+                </TableCell>
+                <TableCell>{location.type}</TableCell>
+                <TableCell>{location.address}</TableCell>
+                <TableCell>
+                  {location.capacity
+                    ? `${location.capacity} người`
+                    : "Không xác định"}
+                </TableCell>
+                <TableCell
+                  sx={{
+                    position: "sticky",
+                    right: 0,
+                    backgroundColor: "white",
+                    zIndex: 1,
+                  }}
+                >
+                  <Button
+                    variant="outlined"
+                    color="primary"
+                    sx={{ mr: 1 }}
+                    onClick={() => handleOpenDialog("edit", location)}
                   >
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      sx={{ mr: 1 }}
-                      onClick={() => handleOpenDialog("edit", location)}
+                    <Tooltip
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>
+                          Sửa địa điểm
+                        </span>
+                      }
+                      placement="top"
                     >
-                      <Tooltip
-                        title={
-                          <span style={{ fontSize: "1.25rem" }}>
-                            Sửa địa điểm
-                          </span>
-                        }
-                        placement="top"
-                      >
-                        <EditIcon />
-                      </Tooltip>
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleDeleteClick(location.locationId)}
+                      <EditIcon />
+                    </Tooltip>
+                  </Button>
+                  <Button
+                    variant="outlined"
+                    color="error"
+                    onClick={() => handleDeleteClick(location.locationId)}
+                  >
+                    <Tooltip
+                      title={
+                        <span style={{ fontSize: "1.25rem" }}>
+                          Xóa địa điểm
+                        </span>
+                      }
+                      placement="top"
                     >
-                      <Tooltip
-                        title={
-                          <span style={{ fontSize: "1.25rem" }}>
-                            Xóa địa điểm
-                          </span>
-                        }
-                        placement="top"
-                      >
-                        <DeleteIcon />
-                      </Tooltip>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )
-            )}
+                      <DeleteIcon />
+                    </Tooltip>
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
         {/* Phân trang */}
@@ -614,47 +600,80 @@ const LocationManager = () => {
         />
       </TableContainer>
 
+      {/* Dialog thêm và sửa */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
         <DialogTitle
-          sx={{ fontSize: "1.7rem", color: "#FFA500", fontWeight: "bold" }}
+          sx={{ fontSize: "1.7rem" }}
         >
           {dialogMode === "add" ? "Thêm địa điểm" : "Chỉnh sửa địa điểm"}
         </DialogTitle>
-        <DialogContent className="custom-input">
+
+        <Divider />
+
+        <DialogContent>
           <Grid container spacing={2}>
             <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Tên địa điểm
+              </label>
               <TextField
                 margin="dense"
                 name="name"
-                label="Tên địa điểm"
                 type="text"
+                placeholder="Tên địa điểm"
                 fullWidth
                 variant="outlined"
                 value={currentLocation.name}
                 onChange={handleInputChange}
                 error={!!errors.name}
                 helperText={errors.name}
+                disabled={activeTab === 1}
               />
             </Grid>
             <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Loại địa điểm
+              </label>
               <TextField
                 margin="dense"
                 name="type"
-                label="Loại"
                 type="text"
+                placeholder="Loại địa điểm"
                 fullWidth
                 variant="outlined"
                 value={currentLocation.type}
                 onChange={handleInputChange}
                 error={!!errors.type}
                 helperText={errors.type}
+                disabled={activeTab === 1}
               />
             </Grid>
             <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Địa chỉ
+              </label>
               <TextField
                 margin="dense"
                 name="address"
-                label="Địa chỉ"
+                placeholder="Địa chỉ"
                 type="text"
                 fullWidth
                 variant="outlined"
@@ -665,10 +684,19 @@ const LocationManager = () => {
               />
             </Grid>
             <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Sức chứa
+              </label>
               <TextField
                 margin="dense"
                 name="capacity"
-                label="Sức chứa"
+                placeholder="Sức chứa"
                 type="number"
                 fullWidth
                 variant="outlined"
@@ -679,10 +707,19 @@ const LocationManager = () => {
               />
             </Grid>
             <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Bàn
+              </label>
               <TextField
                 margin="dense"
                 name="table"
-                label="Bàn"
+                placeholder="Bàn"
                 type="number"
                 fullWidth
                 variant="outlined"
@@ -693,127 +730,199 @@ const LocationManager = () => {
               />
             </Grid>
             <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Chi phí
+              </label>
               <TextField
                 margin="dense"
                 name="cost"
-                label="Chi phí"
-                type="number"
+                type="text"
                 fullWidth
                 variant="outlined"
-                value={currentLocation.cost}
-                onChange={handleInputChange}
+                value={new Intl.NumberFormat("vi-VN").format(
+                  currentLocation?.cost
+                )}
+                onChange={(e) => {
+                  const rawValue = e.target.value.replace(/\./g, ""); // Loại bỏ tất cả dấu chấm
+                  if (rawValue === "") {
+                    setCurrentLocation({
+                      ...currentLocation,
+                      cost: 0, // Nếu xóa hết giá trị, gán về 0
+                    });
+                  } else if (!isNaN(rawValue)) {
+                    // Nếu giá trị hợp lệ, lưu vào state mà không có dấu chấm
+                    setCurrentLocation({
+                      ...currentLocation,
+                      cost: parseInt(rawValue, 10), // Chuyển thành số nguyên
+                    });
+                  }
+                }}
                 error={!!errors.cost}
                 helperText={errors.cost}
               />
             </Grid>
-            <Grid item xs={12}>
-              <TextField
-                margin="dense"
-                name="description"
-                label="Mô tả"
-                type="text"
-                fullWidth
-                variant="outlined"
-                multiline
-                rows={3}
-                maxRows={10}
-                value={currentLocation.description}
-                onChange={handleInputChange}
-              />
-            </Grid>
+
             <Grid item xs={6}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Trạng thái
+              </label>
               <FormControl
                 fullWidth
                 margin="dense"
                 variant="outlined"
                 sx={{ height: "100%" }}
               >
-                <InputLabel id="status-label">
-                  <Box display="flex" alignItems="center">
-                    Trạng thái
-                  </Box>
-                </InputLabel>
                 <Select
                   labelId="status-label"
                   name="status"
-                  label="Trạng thái"
                   value={currentLocation.status || ""}
                   onChange={handleInputChange}
                   error={!!errors.status}
-                  helperText={errors.status}
                   sx={{
                     "& .MuiSvgIcon-root": {
                       color: "#3f51b5",
                       fontSize: "2rem",
                     },
-                    minHeight: "3.6em", // Đảm bảo chiều cao đồng nhất với TextField
+                    minHeight: "3.6em",
                   }}
                 >
-                  <MenuItem value="Hoạt động">Hoạt động</MenuItem>
-                  <MenuItem value="Đang chờ duyệt">Đang chờ duyệt</MenuItem>
-                  <MenuItem value="Không hoạt động">Không hoạt động</MenuItem>
-                  <MenuItem value="Đã hoàn thành">Đã hoàn thành</MenuItem>
+                  <MenuItem value="Chờ kiểm duyệt">Chờ kiểm duyệt</MenuItem>
+                  <MenuItem value="Đã kiểm duyệt">Đã kiểm duyệt</MenuItem>
                 </Select>
               </FormControl>
             </Grid>
 
-            <Grid
-              item
-              xs={6}
-              display="flex"
-              flexDirection="column"
-              alignItems="center"
-              justifyContent="center"
-            >
-              {currentLocation.image && (
-                <img
-                  src={currentLocation.image}
-                  alt="Dish"
-                  style={{
-                    width: "100%",
-                    height: "150px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                    marginBottom: "0.5em",
-                  }}
-                />
-              )}
-              <input
-                type="file"
-                name="image"
-                onChange={handleInputChange}
-                style={{ display: "none" }}
-                id="file-upload"
-              />
-              <label
-                htmlFor="file-upload"
-                style={{ width: "100%", textAlign: "center" }}
+            <Grid item xs={12}>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  border: "2px dashed #ccc",
+                  borderRadius: "8px",
+                  padding: "1em",
+                  marginBottom: "1em",
+                  cursor: "pointer",
+                  position: "relative",
+                  overflow: "hidden",
+                  textAlign: "center",
+                }}
+                onClick={() => document.getElementById("file-upload").click()}
               >
-                <Button variant="contained" component="span" fullWidth>
-                  <AddAPhotoIcon sx={{ mr: "3px" }} />
-                  Chọn ảnh
-                </Button>
+                {currentLocation.image ? (
+                  <Box
+                    component="img"
+                    src={currentLocation.image}
+                    alt="Dịch vụ"
+                    sx={{
+                      width: "100%",
+                      height: "250px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                    }}
+                  />
+                ) : (
+                  <>
+                    <AddAPhotoIcon
+                      sx={{ fontSize: 48, color: "#aaa", mb: 1 }}
+                    />
+                    <Typography variant="body2" sx={{ color: "#aaa" }}>
+                      Nhấn để chọn ảnh
+                    </Typography>
+                  </>
+                )}
+
+                <input
+                  type="file"
+                  name="image"
+                  accept="image/*"
+                  onChange={handleInputChange}
+                  style={{ display: "none" }}
+                  id="file-upload"
+                />
+                {currentLocation.image && (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      backgroundColor: "#dc3545",
+                      color: "#fff",
+                      "&:hover": {
+                        backgroundColor: "#c82333",
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                  >
+                    Xóa ảnh
+                  </Button>
+                )}
+              </Box>
+            </Grid>
+
+            <Grid item xs={12}>
+              <label
+                style={{
+                  fontWeight: "bold",
+                  display: "block",
+                  fontSize: "13px",
+                }}
+              >
+                Mô tả
               </label>
+              <TextField
+                margin="dense"
+                name="description"
+                placeholder="Mô tả"
+                type="text"
+                fullWidth
+                variant="outlined"
+                multiline
+                minRows={3}
+                maxRows={5}
+                value={currentLocation.description}
+                onChange={handleInputChange}
+              />
             </Grid>
           </Grid>
         </DialogContent>
+
         <DialogActions>
           <Button
             onClick={handleCloseDialog}
             color="primary"
             sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
           >
-            Cancel
+            HỦY
           </Button>
           <Button
             onClick={dialogMode === "add" ? addLocation : updateLocation}
             color="primary"
             sx={{ fontSize: "1.3rem", fontWeight: "bold" }}
           >
-            Save
+            LƯU
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Dialog xác nhận xóa */}
       <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
         <DialogTitle
           sx={{

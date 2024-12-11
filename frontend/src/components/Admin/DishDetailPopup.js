@@ -19,6 +19,7 @@ import {
   TablePagination,
   Checkbox,
   TextField,
+  Autocomplete,
 } from "@mui/material";
 import ingredientApi from "api/ingredientApi";
 import dishingredientApi from "api/dishingredientApi";
@@ -317,168 +318,173 @@ const DishDetailPopup = ({ open, handleClose, dish }) => {
           </Box>
         )}
         {activeTab === 1 && (
-          <Box>
-            {!isAddingDisabled && (
-              <Button
-                variant="contained"
-                color="primary"
-                sx={{ fontSize: "1.3rem", marginBottom: "16px" }}
-                onClick={() => setAddIngredientOpen(true)} // Mở popup chọn nguyên liệu
-              >
-                Thêm nguyên liệu
-              </Button>
-            )}
-            {isAddingDisabled && (
-              <Button
-                variant="outlined"
-                color="secondary"
-                onClick={() => setIsAddingDisabled(false)}
-                sx={{ marginBottom: "16px" }}
-              >
-                Khôi phục nút Thêm nguyên liệu
-              </Button>
-            )}
+  <Box>
+    {/* Autocomplete chọn nguyên liệu */}
+    {!isAddingDisabled && (
+      <Box sx={{ marginBottom: "16px" }}>
+        <Autocomplete
+          multiple
+          options={allIngredients.filter(
+            (ingredient) =>
+              !ingredients.some(
+                (existingIngredient) =>
+                  existingIngredient.ingredientId === ingredient.ingredientId
+              )
+          )} // Lọc nguyên liệu đã có trong món ăn
+          value={selectedIngredients}
+          onChange={async (event, newSelectedIngredients) => {
+            setSelectedIngredients(newSelectedIngredients);
 
-            {loading ? (
-              <CircularProgress />
-            ) : error ? (
-              <Typography sx={{ color: "red" }}>{error}</Typography>
-            ) : ingredients.length > 0 ? (
-              <>
-                <Table>
-                  <TableHead>
-                    <TableRow>
-                      <TableCell
-                        sx={{ fontWeight: "bold", fontSize: "1.5rem" }}
-                      >
-                        STT
-                      </TableCell>
-                      <TableCell
-                        sx={{ fontWeight: "bold", fontSize: "1.5rem" }}
-                      >
-                        Tên nguyên liệu
-                      </TableCell>
-                      <TableCell
-                        sx={{ fontWeight: "bold", fontSize: "1.5rem" }}
-                      >
-                        Số lượng
-                      </TableCell>
-                      <TableCell
-                        sx={{ fontWeight: "bold", fontSize: "1.5rem" }}
-                      >
-                        Mô tả
-                      </TableCell>
-                    </TableRow>
-                  </TableHead>
-                  <TableBody>
-                    {ingredients.map((ingredient, index) => (
-                      <TableRow key={ingredient.dishingredientId}>
-                        <TableCell sx={{ fontSize: "1.4rem" }}>
-                          {page * rowsPerPage + index + 1}
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "1.4rem" }}>
-                          {ingredient.ingredients.name} (
-                          {ingredient.ingredients.unit})
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "1.4rem" }}>
-                          <TextField
-                            size="small"
-                            type="number"
-                            value={ingredient.quantity}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setIngredients((prev) =>
-                                prev.map((item) =>
-                                  item.dishingredientId ===
-                                  ingredient.dishingredientId
-                                    ? { ...item, quantity: value }
-                                    : item
-                                )
-                              );
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell sx={{ fontSize: "1.4rem" }}>
-                          <TextField
-                            size="small"
-                            value={ingredient.desc || ""}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              setIngredients((prev) =>
-                                prev.map((item) =>
-                                  item.dishingredientId ===
-                                  ingredient.dishingredientId
-                                    ? { ...item, desc: value }
-                                    : item
-                                )
-                              );
-                            }}
-                          />
-                        </TableCell>
-                        <TableCell>
-                          <Button
-                            sx={{ fontSize: "1.1rem" }}
-                            variant="contained"
-                            color="primary"
-                            onClick={() => handleUpdateIngredient(ingredient)} // Gọi hàm cập nhật
-                          >
-                            Lưu
-                          </Button>
-                        </TableCell>
-                        <TableCell>
-                          {/* Nút Xóa */}
-                          <Button
-                            sx={{ fontSize: "1.1rem" }}
-                            variant="contained"
-                            color="error"
-                            onClick={() => {
-                              if (
-                                window.confirm(
-                                  "Bạn có chắc chắn muốn xóa nguyên liệu này?"
-                                )
-                              ) {
-                                handleDeleteIngredient(
-                                  ingredient.dishingredientId
-                                );
-                              }
-                            }}
-                          >
-                            Xóa
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-                <TablePagination
-                  rowsPerPageOptions={[2, 5, 10]}
-                  component="div"
-                  count={totalElements}
-                  rowsPerPage={rowsPerPage}
-                  page={page}
-                  onPageChange={handleChangePage}
-                  onRowsPerPageChange={handleChangeRowsPerPage}
-                  sx={{
-                    fontSize: "1.5rem",
-                    display: "flex",
-                    justifyContent: "center",
-                    marginTop: 2,
-                    ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
-                      {
-                        fontSize: "1.5rem",
-                      },
-                    ".MuiTablePagination-actions button": {
-                      fontSize: "2.5rem",
-                      padding: "10px",
-                    },
-                  }}
-                />
-              </>
-            ) : (
-              <Typography sx={{fontSize:"1.3rem",textAlign: "center"}}>Không có nguyên liệu nào !</Typography>
-            )}
-          </Box>
-        )}
+            // Gọi API ngay lập tức khi người dùng chọn nguyên liệu
+            if (newSelectedIngredients.length > 0) {
+              try {
+                await handleSaveIngredients(dish.dishId, newSelectedIngredients);
+              } catch (error) {
+                console.error("Lỗi khi thêm nguyên liệu:", error);
+                toast.error("Có lỗi xảy ra khi thêm nguyên liệu!");
+              }
+            }
+          }}
+          getOptionLabel={(option) => option.name || ""}
+          isOptionEqualToValue={(option, value) => option.ingredientId === value.ingredientId}
+          renderInput={(params) => (
+            <TextField {...params} label="Chọn nguyên liệu" variant="outlined" />
+          )}
+        />
+      </Box>
+    )}
+
+    {isAddingDisabled && (
+      <Button
+        variant="outlined"
+        color="secondary"
+        onClick={() => setIsAddingDisabled(false)}
+        sx={{ marginBottom: "16px" }}
+      >
+        Thêm nguyên liệu
+      </Button>
+    )}
+
+    {loading ? (
+      <CircularProgress />
+    ) : error ? (
+      <Typography sx={{ color: "red" }}>{error}</Typography>
+    ) : ingredients.length > 0 ? (
+      <>
+        <Table>
+          <TableHead>
+            <TableRow>
+              <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>STT</TableCell>
+              <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>Tên nguyên liệu</TableCell>
+              <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>Số lượng</TableCell>
+              <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>Mô tả</TableCell>
+              <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>Hành động</TableCell>
+            </TableRow>
+          </TableHead>
+          <TableBody>
+            {ingredients.map((ingredient, index) => (
+              <TableRow key={ingredient.dishingredientId}>
+                <TableCell sx={{ fontSize: "1.4rem" }}>
+                  {page * rowsPerPage + index + 1}
+                </TableCell>
+                <TableCell sx={{ fontSize: "1.4rem" }}>
+                  {ingredient.ingredients.name} ({ingredient.ingredients.unit})
+                </TableCell>
+                <TableCell sx={{ fontSize: "1.4rem" }}>
+                  <TextField
+                    size="small"
+                    type="number"
+                    value={ingredient.quantity}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setIngredients((prev) =>
+                        prev.map((item) =>
+                          item.dishingredientId === ingredient.dishingredientId
+                            ? { ...item, quantity: value }
+                            : item
+                        )
+                      );
+                    }}
+                  />
+                </TableCell>
+                <TableCell sx={{ fontSize: "1.4rem" }}>
+                  <TextField
+                    size="small"
+                    value={ingredient.desc || ""}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setIngredients((prev) =>
+                        prev.map((item) =>
+                          item.dishingredientId === ingredient.dishingredientId
+                            ? { ...item, desc: value }
+                            : item
+                        )
+                      );
+                    }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Button
+                    sx={{ fontSize: "1.1rem" }}
+                    variant="contained"
+                    color="primary"
+                    onClick={() => handleUpdateIngredient(ingredient)} // Gọi hàm cập nhật
+                  >
+                    Lưu
+                  </Button>
+                </TableCell>
+                <TableCell>
+                  {/* Nút Xóa */}
+                  <Button
+                    sx={{ fontSize: "1.1rem" }}
+                    variant="contained"
+                    color="error"
+                    onClick={() => {
+                      if (window.confirm("Bạn có chắc chắn muốn xóa nguyên liệu này?")) {
+                        handleDeleteIngredient(ingredient.dishingredientId);
+                      }
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+        <TablePagination
+          rowsPerPageOptions={[2, 5, 10]}
+          component="div"
+          count={totalElements}
+          rowsPerPage={rowsPerPage}
+          page={page}
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          sx={{
+            fontSize: "1.5rem",
+            display: "flex",
+            justifyContent: "center",
+            marginTop: 2,
+            ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows": {
+              fontSize: "1.5rem",
+            },
+            ".MuiTablePagination-actions button": {
+              fontSize: "2.5rem",
+              padding: "10px",
+            },
+          }}
+        />
+      </>
+    ) : (
+      <Typography sx={{ fontSize: "1.3rem", textAlign: "center" }}>
+        Không có nguyên liệu nào!
+      </Typography>
+    )}
+  </Box>
+)}
+
+
+
         <Dialog
           open={addIngredientOpen}
           onClose={() => setAddIngredientOpen(false)}

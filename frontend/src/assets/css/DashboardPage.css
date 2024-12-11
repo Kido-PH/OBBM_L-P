@@ -59,7 +59,7 @@
 }
 
 .table-container {
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* Tùy chỉnh thanh cuộn */
@@ -106,11 +106,10 @@
     line-height: 28px;
     align-items: center;
     position: relative;
-    max-width: 190px;
 }
    
 .admin-input-search {
-    width: 100%;
+    width: 370px;
     height: 40px;
     line-height: 28px;
     padding: 0 1rem;

@@ -1,46 +1,120 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../assets/css/DashboardPage.css";
 import {
-  LogoutOutlined,
   CustomerServiceOutlined,
   EnvironmentOutlined,
   UsergroupAddOutlined,
   StarOutlined,
   BarChartOutlined,
-  BellOutlined,
   SisternodeOutlined,
   MenuOutlined,
   FileDoneOutlined,
   UnorderedListOutlined,
-  CoffeeOutlined,
+  ShoppingCartOutlined,
+  AppstoreOutlined,
+  ForkOutlined,
 } from "@ant-design/icons";
 import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
 import ManageContracts from "../components/Admin/Admin-Contracts";
 import AdminUserAvatar from "components/Admin/Admin-UserAvatar";
-import { logOut } from "../services/authenticationService";
 
 const { Header, Sider, Content, Footer } = Layout;
 
 function DashboardPage() {
   const [marginLeft, setMarginLeft] = useState(200);
   const [collapsed, setCollapsed] = useState(false);
-
-  const handleLogout = (event) => {
-    logOut();
-    window.location.href = "/login";
-  };
-
+  const [footerVisible, setFooterVisible] = useState(false); // Trạng thái hiển thị Footer
   const navigate = useNavigate();
   const siteLayoutStyle = { marginLeft: marginLeft };
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
+<<<<<<< HEAD
+  // Xử lý khi cuộn trang
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        // Nếu cuộn xuống hơn 100px
+        setFooterVisible(true); // Hiển thị Footer
+      } else {
+        setFooterVisible(false); // Ẩn Footer khi cuộn lên
+      }
+    };
+
+    // Thêm sự kiện scroll
+    window.addEventListener("scroll", handleScroll);
+
+    // Cleanup event listener khi component unmount
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+=======
   const userRole = localStorage.getItem("roles") ? JSON.parse(localStorage.getItem("roles")).name : null;
+>>>>>>> main
 
   const menuItems = [
 
+<<<<<<< HEAD
+    {
+      key: "3",
+      icon: <UnorderedListOutlined />,
+      label: "DANH MỤC",
+      path: "/admin/ManageCategoryDish",
+    },
+
+    {
+      key: "4",
+      icon: <ForkOutlined />,
+      label: "MÓN ĂN",
+      path: "/admin/ManageDish",
+    },
+
+    {
+      key: "5",
+      icon: <CustomerServiceOutlined />,
+      label: "DỊCH VỤ",
+      path: "/admin/ManageServices",
+    },
+    {
+      key: "6",
+      icon: <StarOutlined />,
+      label: "SỰ KIỆN",
+      path: "/admin/ManageEvents",
+    },
+    {
+      key: "7",
+      icon: <EnvironmentOutlined />,
+      label: "ĐỊA ĐIỂM",
+      path: "/admin/ManageLocation",
+    },
+    {
+      key: "8",
+      icon: <UsergroupAddOutlined />,
+      label: "KHÁCH HÀNG",
+      path: "/admin/ManageAccounts",
+    },
+    {
+      key: "9",
+      icon: <AppstoreOutlined />,
+      label: "THỰC ĐƠN",
+      path: "/admin/MenuManagement",
+    },
+    {
+      key: "10",
+      icon: <ShoppingCartOutlined  />,
+      label: "NGUYÊN LIỆU",
+      path: "/admin/ManagerIngredient",
+    },
+    {
+      key: "11",
+      icon: <SisternodeOutlined />,
+      label: "PHÂN QUYỀN",
+      path: "/admin/AccessControl",
+    },
+=======
 
     { key: "1", icon: <BarChartOutlined />, label: "TỔNG QUAN", path: "/admin" },
     { key: "2", icon: <FileDoneOutlined />, label: "HỢP ĐỒNG", path: "/admin/ManageContracts" },
@@ -61,6 +135,7 @@ function DashboardPage() {
       : []),
     { key: "12", icon: <LogoutOutlined />, label: "ĐĂNG XUẤT", onclick: handleLogout },
     
+>>>>>>> main
   ];
   return (
     <Layout>
@@ -159,25 +234,25 @@ function DashboardPage() {
             <Outlet />
           </div>
         </Content>
+
+        {/* Footer */}
+        <Footer
+          style={{
+            textAlign: "center",
+            fontFamily: "circular std book, sans-serif",
+            color: "#858796",
+            height: "0px",
+            background: "#f0f2f5",
+            position: "fixed",
+            bottom: footerVisible ? "0" : "-60px", // Chỉnh sửa vị trí của Footer
+            width: `calc(100% - ${marginLeft + 32}px)`,
+            left: marginLeft + 16,
+            transition: "bottom 0.3s ease", // Thêm hiệu ứng chuyển động mượt mà khi Footer xuất hiện/ẩn
+          }}
+        >
+          OBBM ©{new Date().getFullYear()} Created by L&P
+        </Footer>
       </Layout>
-      {/* Footer */}
-      <Footer
-        style={{
-          textAlign: "center",
-          fontFamily: "circular std book, sans-serif",
-          color: "#858796",
-          height: "60px",
-          background: colorBgContainer,
-          position: "fixed",
-          bottom: 0,
-          width: `calc(100% - ${
-            marginLeft + 32
-          }px)`,
-          left: marginLeft + 16,
-        }}
-      >
-        OBBM ©{new Date().getFullYear()} Created by L&P
-      </Footer>
     </Layout>
   );
 }
