@@ -13,6 +13,7 @@ import {
   AppstoreOutlined,
   ForkOutlined,
   BellOutlined,
+  ShoppingCartOutlined,
 } from "@ant-design/icons";
 import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
@@ -51,28 +52,84 @@ function DashboardPage() {
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);
-  const userRole = localStorage.getItem("roles") ? JSON.parse(localStorage.getItem("roles")).name : null;
 
+  const userRole = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).name
+    : null;
 
   const menuItems = [
-
-    { key: "1", icon: <BarChartOutlined />, label: "TỔNG QUAN", path: "/admin" },
-    { key: "2", icon: <FileDoneOutlined />, label: "HỢP ĐỒNG", path: "/admin/ManageContracts" },
-    { key: "3", icon: <UnorderedListOutlined />, label: "DANH MỤC MÓN ĂN", path: "/admin/ManageCategoryDish" },
-    { key: "4", icon: <CoffeeOutlined />, label: "MÓN ĂN", path: "/admin/ManageDish" },
-    { key: "5", icon: <CustomerServiceOutlined />, label: "DỊCH VỤ", path: "/admin/ManageServices" },
-    { key: "6", icon: <StarOutlined />, label: "SỰ KIỆN", path: "/admin/ManageEvents" },
-    { key: "7", icon: <EnvironmentOutlined />, label: "ĐỊA ĐIỂM", path: "/admin/ManageLocation" },
+    {
+      key: "1",
+      icon: <BarChartOutlined />,
+      label: "TỔNG QUAN",
+      path: "/admin",
+    },
+    {
+      key: "2",
+      icon: <FileDoneOutlined />,
+      label: "HỢP ĐỒNG",
+      path: "/admin/ManageContracts",
+    },
+    {
+      key: "3",
+      icon: <UnorderedListOutlined />,
+      label: "DANH MỤC MÓN ĂN",
+      path: "/admin/ManageCategoryDish",
+    },
+    {
+      key: "4",
+      icon: <ForkOutlined />,
+      label: "MÓN ĂN",
+      path: "/admin/ManageDish",
+    },
+    {
+      key: "5",
+      icon: <CustomerServiceOutlined />,
+      label: "DỊCH VỤ",
+      path: "/admin/ManageServices",
+    },
+    {
+      key: "6",
+      icon: <StarOutlined />,
+      label: "SỰ KIỆN",
+      path: "/admin/ManageEvents",
+    },
+    {
+      key: "7",
+      icon: <EnvironmentOutlined />,
+      label: "ĐỊA ĐIỂM",
+      path: "/admin/ManageLocation",
+    },
     // Các mục chỉ dành cho ADMIN
-    
-    { key: "9", icon: <MenuOutlined />, label: "THỰC ĐƠN", path: "/admin/MenuManagement" },
-    { key: "10", icon: <BellOutlined />, label: "NGUYÊN LIỆU", path: "/admin/ManagerIngredient" },
+
+    {
+      key: "9",
+      icon: <AppstoreOutlined />,
+      label: "THỰC ĐƠN",
+      path: "/admin/MenuManagement",
+    },
+    {
+      key: "10",
+      icon: <ShoppingCartOutlined />,
+      label: "NGUYÊN LIỆU",
+      path: "/admin/ManagerIngredient",
+    },
     ...(userRole === "ADMIN"
       ? [
-          { key: "8", icon: <UsergroupAddOutlined />, label: "KHÁCH HÀNG", path: "/admin/ManageAccounts" },
-          { key: "11", icon: <SisternodeOutlined />, label: "PHÂN QUYỀN", path: "/admin/AccessControl" },
+          {
+            key: "8",
+            icon: <UsergroupAddOutlined />,
+            label: "KHÁCH HÀNG",
+            path: "/admin/ManageAccounts",
+          },
+          {
+            key: "11",
+            icon: <SisternodeOutlined />,
+            label: "PHÂN QUYỀN",
+            path: "/admin/AccessControl",
+          },
         ]
-      : []),    
+      : []),
   ];
   return (
     <Layout>
