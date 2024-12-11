@@ -7,12 +7,13 @@ import { GiKnifeFork } from "react-icons/gi";
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import "../assets/css/headerStyle.css";
-
+import Menu from "../assets/images/menu_header.jpg";
+import Cookies from "js-cookie";
 import { FiLogOut } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 import { AiFillLock } from "react-icons/ai";
 import { getToken } from "services/localStorageService";
-
+import { AiOutlineMenu } from "react-icons/ai";
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -20,7 +21,38 @@ const Header = () => {
   const [userDetails, setUserDetails] = useState(null);
   const navigate = useNavigate(); // Khởi tạo useNavigate
   const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const handleLogout = async () => {
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshToken = Cookies.get("refreshToken");
+    console.log("Access token: " + accessToken);
+    console.log("Refresh token: " + refreshToken);
 
+    try {
+      // Gửi yêu cầu POST đến API logout
+      const response = await fetch("http://localhost:8080/obbm/auth/logout", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          access_token: accessToken,  // Truyền access_token
+          refresh_token: refreshToken,  // Truyền refresh_token
+        }),
+      });
+
+      if (response.ok) {
+        // Xóa thông tin đăng nhập sau khi logout thành công
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("userId");
+        Cookies.remove("refreshToken");
+        navigate("/login");
+      } else {
+        console.error("Logout failed:", response.status);
+      }
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
   // Hàm lấy thông tin người dùng từ API
   const getUserDetails = async (accessToken) => {
     try {
@@ -144,7 +176,8 @@ const Header = () => {
 
           <Tooltip title="Thực đơn">
             <a href="/menu" className="navbar-link header-icon">
-              <GiKnifeFork />
+              {/* <GiKnifeFork /> */}
+              <AiOutlineMenu />
             </a>
           </Tooltip>
 
@@ -187,11 +220,7 @@ const Header = () => {
                   </a>
                   <a
                     className="dropdown-item navbar-link"
-                    onClick={() => {
-                      localStorage.removeItem("accessToken");
-                      localStorage.removeItem("userId");
-                      navigate("/login");
-                    }}
+                    onClick={handleLogout}
                     style={{
                       display: "flex",
                       alignItems: "center",
