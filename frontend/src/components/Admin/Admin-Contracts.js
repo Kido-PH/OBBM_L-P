@@ -83,7 +83,7 @@ const ManageContracts = () => {
     setSnackType("success");
     setSnackBarMessage(message);
     setSnackBarOpen(true);
-  };  
+  };
 
   // Fetch xem chi tiết nguyên liệu hợp đồng
   const handleViewStockRequests = async (contractId) => {
@@ -1350,30 +1350,15 @@ const ManageContracts = () => {
         </div>
       </Dialog>
       {/* Hiển thị dialog hợp đồng */}
-      <Dialog
-        open={showModalPDF}
-        onClose={handleCloseModal}
-        sx={{
-          "& .MuiDialog-paper": {
-            width: "794px", // Chiều ngang của giấy A4
-            height: "1123px", // Chiều cao của giấy A4
-            maxWidth: "100%", // Đảm bảo không vượt quá màn hình nếu nhỏ hơn
-            maxHeight: "100%", // Đảm bảo không vượt quá màn hình nếu nhỏ hơn
-            margin: "auto", // Canh giữa Dialog
-            boxSizing: "border-box", // Đảm bảo padding không ảnh hưởng kích thước
-          },
-        }}
-      >
+      <Dialog open={showModalPDF} onClose={handleCloseModal}>
         <DialogTitle sx={{ fontSize: "1.6rem", fontWeight: "bold" }}>
           Hợp Đồng Dịch Vụ
         </DialogTitle>
 
         <DialogContent
+          className="custom-input"
           dividers
-          style={{
-            padding: "16px", // Padding cho nội dung
-            margin: "0 auto", // Canh giữa
-          }}
+          sx={{ width: "600px" }}
         >
           <div
             id="contract-content"
@@ -1381,8 +1366,6 @@ const ManageContracts = () => {
               padding: "20px",
               fontFamily: "Arial, sans-serif",
               lineHeight: 1.6,
-              backgroundColor:"white",
-              maxHeight:"1123px",
             }}
           >
             <h2 style={{ textAlign: "center", textTransform: "uppercase" }}>
@@ -1472,8 +1455,6 @@ const ManageContracts = () => {
                 "Số 6, Hai Bà Trưng, Tân An, Ninh Kiều, Cần Thơ"}
             </p>
 
-            <br />
-            <div style={{ pageBreakAfter: "always" }} />
             <h3>Điều 1: Nội dung hợp đồng</h3>
             <p>
               Bên A <strong>{selecterContract?.custname}</strong> đồng ý thuê
@@ -1501,24 +1482,6 @@ const ManageContracts = () => {
               cách giải quyết.
             </p>
 
-            <p>
-              - Bên B có trách nhiệm cung cấp dịch vụ theo yêu cầu của Bên A.
-              Nếu có bất kỳ vấn đề phát sinh nào, các bên sẽ thương lượng để tìm
-              cách giải quyết.
-            </p>
-
-            <p>
-              - Bên B có trách nhiệm cung cấp dịch vụ theo yêu cầu của Bên A.
-              Nếu có bất kỳ vấn đề phát sinh nào, các bên sẽ thương lượng để tìm
-              cách giải quyết.
-            </p>
-
-            <p>
-              - Bên B có trách nhiệm cung cấp dịch vụ theo yêu cầu của Bên A.
-              Nếu có bất kỳ vấn đề phát sinh nào, các bên sẽ thương lượng để tìm
-              cách giải quyết.
-            </p>
-
             <h3>Điều 3: Điều khoản chung</h3>
             <p>
               Hợp đồng có hiệu lực kể từ ngày ký và sẽ kết thúc sau khi dịch vụ
@@ -1536,7 +1499,6 @@ const ManageContracts = () => {
             <p>
               <strong>Bên B:</strong> _______________________
             </p>
-
           </div>
         </DialogContent>
 
@@ -1588,7 +1550,8 @@ const ManageContracts = () => {
             textAlign: "center",
           }}
         >
-          Danh sách chi tiết nguyên liệu - {selectedContract?.name || "Chưa xác định"}
+          Danh sách chi tiết nguyên liệu -{" "}
+          {selectedContract?.name || "Chưa xác định"}
         </DialogTitle>
         <DialogContent
           sx={{
@@ -1618,13 +1581,21 @@ const ManageContracts = () => {
             >
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", fontSize:"1.6rem" }}>STT</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    STT
+                  </TableCell>
                   <TableCell sx={{ fontWeight: "bold" }}>
                     Tên nguyên liệu
                   </TableCell>
-                  <TableCell sx={{ fontWeight: "bold", fontSize:"1.6rem" }}>Số lượng</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", fontSize:"1.6rem" }}>Đơn vị</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", fontSize:"1.6rem"}}>Trạng thái</TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    Số lượng
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    Đơn vị
+                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.6rem" }}>
+                    Trạng thái
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -1671,12 +1642,13 @@ const ManageContracts = () => {
             </Box>
           )}
         </DialogContent>
-        <DialogActions 
-            sx={{
+        <DialogActions
+          sx={{
             display: "flex",
             justifyContent: "center",
             padding: "8px 16px",
-          }}>
+          }}
+        >
           <Button
             onClick={() => setShowStockRequestsDialog(false)}
             color="primary"
