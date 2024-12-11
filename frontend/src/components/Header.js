@@ -43,6 +43,7 @@ const Header = () => {
       if (response.ok) {
         // Xóa thông tin đăng nhập sau khi logout thành công
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("isAdmin");
         localStorage.removeItem("userId");
         Cookies.remove("refreshToken");
         navigate("/login");
