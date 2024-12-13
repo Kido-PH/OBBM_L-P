@@ -513,6 +513,7 @@ const ContractInfo = () => {
       <ModalInfoMenu
         show={showModalMenu}
         onClose={handleCloseModalMenu}
+        totalMenu={contractInfo.menus?.totalcost}
         menuDishes={menuDishesInfo}
         status={true}
       />
