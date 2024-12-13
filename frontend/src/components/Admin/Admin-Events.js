@@ -608,7 +608,7 @@ const EventManager = () => {
               alignItems: "center",
             }}
           >
-            <Typography
+            {/* <Typography
               style={{
                 color: "red",
                 fontSize: "1.9rem",
@@ -617,10 +617,10 @@ const EventManager = () => {
             >
               *
             </Typography>
-            <Typography>Tổng chi phí</Typography>
+            <Typography>Tổng chi phí</Typography> */}
           </div>
 
-          <TextField
+          {/* <TextField
             size="small"
             margin="dense"
             name="totalcost"
@@ -632,7 +632,7 @@ const EventManager = () => {
             onChange={handleInputChange}
             error={!!errors.totalcost}
             helperText={errors.totalcost}
-          />
+          /> */}
           <Box
             sx={{
               display: "flex",
