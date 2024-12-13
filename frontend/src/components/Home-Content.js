@@ -119,11 +119,10 @@ const banners = [
 
 const Content = () => {
   const [loading, setLoading] = React.useState(false);
-
+  const [activeCategoryId, setActiveCategoryId] = useState(2);
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState([]);
-  const [activeCategoryId, setActiveCategoryId] = useState(2); // Gán mặc định là 2
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [Events, setEvents] = useState([]);
   const [EventToMenuUrl, setEventToMenuUrl] = React.useState("");
@@ -133,6 +132,13 @@ const Content = () => {
       navigate(EventToMenuUrl);
     }
   }, [EventToMenuUrl, navigate]);
+  useEffect(() => {
+    // Lọc dữ liệu ban đầu dựa trên activeCategoryId
+    const activeCategory = categories.filter(
+      (category) => category.categoryId === activeCategoryId
+    );
+    setFilteredCategories(activeCategory);
+  }, [activeCategoryId, categories]);
 
   React.useEffect(() => {
     const accessToken = getToken();
@@ -380,8 +386,19 @@ const Content = () => {
                 Những món ngon <span className="span"> của chúng tôi</span>
               </h2>
 
-              <ul className="fiter-list">
-                <li>
+              <ul
+                className="filter-list"
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  textAlign: "center",
+                  listStyle: "none",
+                  padding: "0",
+                  margin: "0",
+                }}
+              >
+                <li style={{margin:"20px 10px 20px 10px"}}>
                   <button
                     className={`filter-btn ${
                       activeCategoryId === 1 ? "active" : ""
@@ -392,7 +409,7 @@ const Content = () => {
                   </button>
                 </li>
 
-                <li>
+                <li style={{margin:"20px 10px 20px 10px"}}>
                   <button
                     className={`filter-btn ${
                       activeCategoryId === 2 ? "active" : ""
@@ -403,7 +420,7 @@ const Content = () => {
                   </button>
                 </li>
 
-                <li>
+                <li style={{margin:"20px 10px 20px 10px"}}>
                   <button
                     className={`filter-btn ${
                       activeCategoryId === 3 ? "active" : ""
@@ -425,45 +442,36 @@ const Content = () => {
                   }}
                 >
                   <ul className="food-menu-list">
-                    {category.listDish.slice(0, 6).map(
-                      (
-                        dish // Limit to the first 6 dishes
-                      ) => (
-                        <li key={dish.dishId}>
-                          <div className="food-menu-card">
-                            <div className="card-banner-home-dish">
-                              <img
-                                src={dish.image}
-                                alt={dish.name}
-                                style={{ width: "100%", height: "120px" }}
-                                loading="lazy"
-                                className="w-100"
-                              />
+                    {category.listDish.slice(0, 10).map((dish) => (
+                      <li key={dish.dishId}>
+                        <div className="food-menu-card">
+                          <div className="card-banner-home-dish">
+                            <img
+                              src={dish.image}
+                              alt={dish.name}
+                              style={{ width: "100%", height: "120px" }}
+                              loading="lazy"
+                              className="w-100"
+                            />
+                            <button className="btn food-menu-btn">
+                              <a href="/menu">Thêm vào Thực đơn</a>
+                            </button>
 
-                              <button className="btn food-menu-btn">
-                                <a href="/menu">Thêm vào Thực đơn</a>
-                              </button>
-                            </div>
-
-                            <div className="wrapper">
-                              <p className="category">{category.description}</p>
-                            </div>
-
-                            <h4
-                              className="card-title"
-                              style={{ textAlign: "center" }}
-                            >
-                              {dish.name}
-                            </h4>
-
-                            {/* <div className="price-wrapper">
-              <p className="price-text">Giá:</p>
-              {dish.price.toLocaleString()} VND
-            </div> */}
                           </div>
-                        </li>
-                      )
-                    )}
+
+                          <div className="wrapper">
+                            <p className="category">{category.description}</p>
+                          </div>
+
+                          <h4
+                            className="card-title"
+                            style={{ textAlign: "center" }}
+                          >
+                            {dish.name}
+                          </h4>
+                        </div>
+                      </li>
+                    ))}
                   </ul>
                   <button
                     className="scroll-btn right"

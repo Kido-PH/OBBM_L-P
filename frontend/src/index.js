@@ -31,11 +31,12 @@ import MenuManagement from "./components/Admin/Admin-Menu";
 import Authenticate from "./views/Authenticate";
 import PaymentCoordinatorPage from "views/PaymentCoordinator";
 import AdminRoute from "components/Admin/AdminRouter";
-
+import CreatePasswordForm from "views/_createPassword";
 import userApi from "api/userApi";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
 import TabContractInfo from "components/GuestContract/TabContractInfo";
+
 
 const App = () => {
   const location = useLocation();
@@ -164,7 +165,5 @@ const RootApp = () => (
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
     <RootApp />
-  </React.StrictMode>
 );
