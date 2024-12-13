@@ -59,8 +59,8 @@ const MenuManager = () => {
     [snackbarSeverity, setSnackbarSeverity] = useState('success'),
     [oldMenuDishes, setOldMenuDishes] = useState([]),
     [groupedDishes, setGroupedDishes] = useState({});
-    const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-    const [menuToDelete, setMenuToDelete] = useState(null);
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [menuToDelete, setMenuToDelete] = useState(null);
 
   const categoryTranslation = {
     "Appetizers": "Món khai vị",
@@ -306,7 +306,7 @@ const MenuManager = () => {
       };
 
       // Thêm menu mới vào đầu danh sách
-      setMenus((prevMenus) => [newMenu, ...prevMenus]);
+      // setMenus((prevMenus) => [newMenu, ...prevMenus]);
 
       // Reset form
       setMenuData({
@@ -523,7 +523,7 @@ const MenuManager = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredMenus.map((menu) => (
+            {filteredMenus.slice().reverse().map((menu) => (
               <TableRow key={menu.menuId}>
                 <TableCell>{menu.name}</TableCell>
                 <TableCell>{menu.description}</TableCell>
@@ -561,7 +561,6 @@ const MenuManager = () => {
                     <ErrorOutlineIcon />
                   </Button>
                 </TableCell>
-
               </TableRow>
             ))}
           </TableBody>
@@ -876,7 +875,7 @@ const MenuManager = () => {
                             {/* Dòng chứa tên danh mục */}
                             <TableRow key={group.categoryId}>
                               <TableCell colSpan={4} style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
-                              {categoryTranslation[group.label] || group.label} {/* Tên danh mục */}
+                                {categoryTranslation[group.label] || group.label} {/* Tên danh mục */}
                               </TableCell>
                             </TableRow>
 
