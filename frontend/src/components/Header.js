@@ -20,7 +20,7 @@ const Header = () => {
   const [isAdmin, setIsAdmin] = useState(false); // Thêm state để kiểm tra vai trò người dùng
   const [userDetails, setUserDetails] = useState(null);
   const navigate = useNavigate(); // Khởi tạo useNavigate
-  const [isMenuVisible, setIsMenuVisible] = useState(false);
+  const eventId = localStorage.getItem("currentEventId") || "defaultEventId";
   const handleLogout = async () => {
     const accessToken = localStorage.getItem("accessToken");
     const refreshToken = Cookies.get("refreshToken");
@@ -177,12 +177,10 @@ const Header = () => {
           </button>
 
           <Tooltip title="Thực đơn">
-            <a href="/menu" className="navbar-link header-icon">
-              {/* <GiKnifeFork /> */}
-              {/* <AiOutlineMenu /> */}
-              <img src={Menu} alt="Menu" style={{width:"28px"}} />
-            </a>
-          </Tooltip>
+      <a href={`/menu/${eventId}`} className="navbar-link header-icon">
+        <img src={Menu} alt="Menu" style={{ width: "28px" }} />
+      </a>
+    </Tooltip>
 
           {isLoggedIn && (
             <Tooltip title="Danh sách hợp đồng">

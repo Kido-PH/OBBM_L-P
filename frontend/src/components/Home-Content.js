@@ -5,9 +5,11 @@ import heroBannerBg from "../assets/images/hero-banner-bg.png";
 import steak from "../assets/images/steak.png";
 import aboutBanner from "../assets/images/about-banner.jpg";
 import flowerImage from "../assets/images/flower-1.jpg";
-import avatar1 from "../assets/images/avatar-1.jpg";
-import avatar2 from "../assets/images/avatar-2.jpg";
-import avatar3 from "../assets/images/avatar-3.jpg";
+import avatar1 from "../assets/images/thanhhuy.jpg";
+import avatar2 from "../assets/images/trungtin.jpg";
+import avatar3 from "../assets/images/phuochao.jpg";
+import avatar4 from "../assets/images/quocthinh.png";
+import avatar5 from "../assets/images/minhphi.jpg";
 import weddingStage from "../assets/images/wedding-stage.jpg";
 import flowerCrown from "../assets/images/flower-crown.jpg";
 import event2 from "../assets/images/event-2.jpg";
@@ -62,23 +64,36 @@ const blogPosts = [
 
 const testimonials = [
   {
-    name: "Robert William",
-    title: "CEO Kingfisher",
+    name: "Võ Thanh Huy",
+    title: "Trưởng nhóm L&P",
     avatar: avatar1,
     text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
   },
   {
-    name: "Thomas Josef",
-    title: "CEO Getforce",
+    name: "Trần Trung Tín",
+    title: "Phó nhóm L&P",
     avatar: avatar2,
     text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
   },
   {
-    name: "Charles Richard",
-    title: "CEO Angela",
+    name: "Tống Lê Phước Hào",
+    title: "Thành viên nhóm L&P",
     avatar: avatar3,
     text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
   },
+  {
+    name: "Bạch Quốc Thịnh",
+    title: "Thành viên nhóm L&P",
+    avatar: avatar4,
+    text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
+  },
+  {
+    name: "Đỗ Minh Phi",
+    title: "Thành viên nhóm L&P",
+    avatar: avatar5,
+    text: "Tôi sẽ không thể thành công nếu không có nhà hàng này. Tôi muốn gửi lời cảm ơn chân thành đến sản phẩm tuyệt vời của bạn.",
+  },
+  
 ];
 
 const banners = [
@@ -229,7 +244,7 @@ const Content = () => {
                   Sự tận tâm và chu đáo mang đến sự hài lòng cho bạn
                 </p>
 
-                <button className="btn">Đặt tiệc ngay</button>
+                <button className="btn"><a href="/menu">Đặt tiệc ngay</a></button>
               </div>
 
               <figure className="hero-banner">
@@ -311,7 +326,7 @@ const Content = () => {
                   </li>
                 </ul>
 
-                <button className="btn btn-hover">Đặt Tiệc Ngay</button>
+                <button className="btn btn-hover"><a href="/menu">Đặt Tiệc Ngay</a></button>
               </div>
             </div>
           </section>
@@ -338,6 +353,7 @@ const Content = () => {
                     <button
                       onClick={() => {
                         pushEventIdtoMenu(event.eventId);
+                        window.scrollTo(0, 0);
                       }}
                     >
                       <div
@@ -473,12 +489,6 @@ const Content = () => {
                       </li>
                     ))}
                   </ul>
-                  <button
-                    className="scroll-btn right"
-                    onClick={() => handleScroll("right", category.categoryId)}
-                  >
-                    &gt;
-                  </button>
                 </div>
               ))}
             </div>
