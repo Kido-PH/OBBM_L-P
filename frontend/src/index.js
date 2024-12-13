@@ -121,7 +121,6 @@ const App = () => {
         <Route path="/payment/cancel" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/cancle" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/success" element={<PaymentCoordinatorPage />} />
-        <Route path="/test" element={<Test />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
         <Route path="/account" element={<Account />} />
