@@ -216,7 +216,7 @@ const ContractCreateStep3 = () => {
                     className="form-control fs-4 d-flex justify-content-between align-middle input-hienthi-popup"
                     onClick={handleShowModalMenu}
                   >
-                    Menu Id
+                    Thực đơn đã chọn
                     <FaEye />
                   </button>
                 </div>
@@ -454,6 +454,7 @@ const ContractCreateStep3 = () => {
         show={showModalMenu}
         onClose={handleCloseModalMenu}
         menuDishes={menuDishesDetail}
+        totalMenu={createdMenu.totalcost}
         status={false}
       />
 
