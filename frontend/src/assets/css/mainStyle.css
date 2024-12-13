@@ -1592,10 +1592,9 @@ textarea.input-field {
      * spacing
      */
 
-    --section-padding: 120px;
+    --section-padding: 90px;
 
   }
-
 
 
   /**
@@ -1676,7 +1675,7 @@ textarea.input-field {
    * FOOD MENU
    */
 
-  .food-menu-list { grid-template-columns: repeat(6, 1fr); }
+  .food-menu-list { grid-template-columns: repeat(5, 1fr); }
 
   .food-menu-card { height: 100%; }
 

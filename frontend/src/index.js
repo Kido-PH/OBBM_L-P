@@ -31,7 +31,7 @@ import Authenticate from "./views/Authenticate";
 import PaymentCoordinatorPage from "views/PaymentCoordinator";
 
 import AdminRoute from "components/Admin/AdminRouter";
-
+import Test from "views/save";
 import CreatePasswordForm from "views/_createPassword";
 
 const App = () => {
@@ -56,6 +56,7 @@ const App = () => {
         <Route path="/payment/cancel" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/cancle" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/success" element={<PaymentCoordinatorPage />} />
+        <Route path="/test" element={<Test />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
         <Route path="/account" element={<Account />} />
@@ -100,7 +101,5 @@ const RootApp = () => (
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(
-  <React.StrictMode>
     <RootApp />
-  </React.StrictMode>
 );
