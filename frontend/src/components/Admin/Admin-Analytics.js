@@ -40,7 +40,7 @@ import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 // import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 // import LogoutIcon from "@mui/icons-material/Logout";
 import { DatePicker, message, Select, Modal } from "antd";
-import axios from "axios";
+import dayjs from 'dayjs';
 
 // Đăng ký các thành phần của biểu đồ
 ChartJS.register(
@@ -74,33 +74,58 @@ const AdminAnalytics = () => {
     pendingApproval: { count: 0, total: 0 },
   });
 
+  const [chartData, setChartData] = useState({
+    labels: [], // Nhãn của trục X
+    datasets: [
+      {
+        label: "Doanh thu (VND)",
+        data: [], // Dữ liệu biểu đồ
+        backgroundColor: "rgba(0, 123, 255, 0.8)",
+        borderColor: "rgba(0, 123, 255, 1)",
+        borderWidth: 1,
+        barThickness: 40,
+      },
+    ],
+  });
+  
+
   useEffect(() => {
-    if (startDate && endDate) {
-      fetchDataByDateRange(startDate, endDate);
-    }
-  }, [startDate, endDate]);
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Đầu tháng hiện tại
+    const endOfMonth = today; // Ngày hiện tại
+  
+    setStartDate(startOfMonth);
+    setEndDate(endOfMonth);
+  
+    // Gọi API để lấy dữ liệu thống kê của tháng hiện tại
+    fetchDataByDateRange(startOfMonth, endOfMonth);
+  }, []);
+  
 
   const handleDateChange = (field, value) => {
     if (field === "start") {
-      // Cập nhật startDate
       setStartDate(value);
-  
-      // Kiểm tra nếu endDate đã chọn và nhỏ hơn startDate mới
       if (endDate && value > endDate) {
         message.error("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.");
+        return;
       }
     } else if (field === "end") {
-      // Cập nhật endDate
       setEndDate(value);
-  
-      // Kiểm tra nếu startDate đã chọn và lớn hơn endDate mới
       if (startDate && value < startDate) {
         message.error("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+        return;
       }
     }
-  };
   
-
+    // Gọi API khi cả startDate và endDate đều tồn tại và hợp lệ
+    const updatedStartDate = field === "start" ? value : startDate;
+    const updatedEndDate = field === "end" ? value : endDate;
+  
+    if (updatedStartDate && updatedEndDate) {
+      fetchDataByDateRange(updatedStartDate, updatedEndDate);
+    }
+  };  
+  
   // Hàm gọi API để lấy hợp đồng chờ duyệt
   const fetchPendingContracts = async (status, startDate, endDate) => {
     
@@ -215,58 +240,57 @@ const AdminAnalytics = () => {
 
     switch (selectedValue) {
       case "today":
-        startDate = today;
-        endDate = today;
+        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
+        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
         break;
       case "yesterday":
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - 1);
-        endDate = startDate;
+        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
+        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 23, 59, 59);
         break;
       case "last7days":
-        endDate = today;
-        startDate = new Date(today);
-        startDate.setDate(today.getDate() - 7);
+        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
         break;
       case "thisMonth":
         startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = today;
+        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
         break;
       case "lastMonth":
         const lastMonth = new Date(today);
         lastMonth.setMonth(lastMonth.getMonth() - 1);
         startDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
-        endDate = new Date(
-          lastMonth.getFullYear(),
-          lastMonth.getMonth() + 1,
-          0
-        );
+        endDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0, 23, 59, 59);
         break;
       default:
         return;
-    }
+    }    
 
     // Gọi API lấy dữ liệu theo khoảng thời gian
     fetchDataByDateRange(startDate, endDate);
   };
 
-  const revenueByDay = apiData?.revenueByDay || {};
 
-  const chartData = {
-    labels: Object.keys(revenueByDay)
-      .map((date) => date.split("-")[2].padStart(2, "0"))
-      .sort((a, b) => a - b),
-    datasets: [
-      {
-        label: "Doanh thu (VND)",
-        data: Object.values(revenueByDay).sort((a, b) => a - b),
-        backgroundColor: "rgba(0, 123, 255, 0.8)",
-        borderColor: "rgba(0, 123, 255, 1)",
-        borderWidth: 1,
-        barThickness: 50,
-      },
-    ],
-  };
+  useEffect(() => {
+    if (!apiData || !apiData.revenueByDay) return;
+  
+    const revenueByDay = apiData?.revenueByDay || {};
+    const sortedDates = Object.keys(revenueByDay).sort((a, b) => new Date(a) - new Date(b)); // Sắp xếp ngày
+  
+    setChartData({
+      labels: sortedDates.map((date) => date.split("-")[2].padStart(2, "0")), // Chỉ lấy ngày (dd)
+      datasets: [
+        {
+          label: "Doanh thu (VND)",
+          data: sortedDates.map((date) => revenueByDay[date]), // Dữ liệu tương ứng
+          backgroundColor: "rgba(0, 123, 255, 0.8)",
+          borderColor: "rgba(0, 123, 255, 1)",
+          borderWidth: 1,
+          barThickness: 40,
+        },
+      ],
+    });
+  }, [apiData]); // Chạy lại khi `apiData` thay đổi
+  
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -607,7 +631,7 @@ const AdminAnalytics = () => {
                   <DatePicker
                     showTime // Cho phép chọn giờ
                     format="YYYY-MM-DD HH:mm:ss" // Định dạng ngày và giờ
-                    value={startDate}
+                    value={startDate ? dayjs(startDate) : null}
                     onChange={(date) => handleDateChange("start", date)}
                     style={{
                       width: 160, // Đảm bảo chiều rộng cố định
@@ -631,7 +655,7 @@ const AdminAnalytics = () => {
                   <DatePicker
                     showTime // Cho phép chọn giờ
                     format="YYYY-MM-DD HH:mm:ss" // Định dạng ngày và giờ
-                    value={endDate}
+                    value={endDate ? dayjs(endDate) : null}
                     onChange={(date) => handleDateChange("end", date)}
                     style={{
                       width: 160, // Đảm bảo chiều rộng cố định

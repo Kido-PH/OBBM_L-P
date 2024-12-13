@@ -124,13 +124,6 @@ const Menu = ({ accessToken }) => {
   const [menu, setMenu] = useState([]);
 
   const handleShowMenuPopup = (menu) => {
-    // // Lấy menuId lớn nhất từ cơ sở dữ liệu hoặc danh sách menu
-    // const latestMenuId = Math.max(...menuList.map((menu) => menu.menuId), 0);
-    // const newMenuId = latestMenuId + 1;
-
-    // // Cập nhật menuId cho selectedMenu
-    // const updatedMenu = { ...menu, menuId: newMenuId };
-    // setSelectedMenu(updatedMenu);
 
     setShowModal(true); // Hiển thị modal
   };
@@ -236,34 +229,6 @@ const Menu = ({ accessToken }) => {
 
     // console.log("selectedMenu Menu Data:", selectedMenu);
   }, [id, location]);
-  useEffect(() => {
-    const createdMenu = localStorage.getItem("createdMenu");
-    const createdMenuDishes = localStorage.getItem("createdMenuDishes");
-    const menuDishesDetail = localStorage.getItem("MenuDishesDetail");
-
-    console.log("createdMenu:", createdMenu);
-    console.log("createdMenuDishes:", createdMenuDishes);
-    console.log("menuDishesDetail:", menuDishesDetail);
-
-    if (createdMenu && createdMenuDishes && menuDishesDetail) {
-      try {
-        const parsedMenu = JSON.parse(createdMenu);
-        const parsedDishes = JSON.parse(createdMenuDishes);
-        const parsedDetails = JSON.parse(menuDishesDetail);
-
-        setSelectedMenu({
-          ...parsedMenu,
-          groupedDishes: parsedDetails,
-          listMenuDish: parsedDishes,
-        });
-      } catch (error) {
-        console.error("Lỗi khi phân tích dữ liệu từ localStorage:", error);
-      }
-    }
-  }, []);
-  useEffect(() => {
-    console.log("selectedMenu sau khi cập nhật:", selectedMenu);
-  }, [selectedMenu]);
 
   useEffect(() => {
     // console.log("Current Path:", location.pathname);
@@ -485,16 +450,6 @@ const Menu = ({ accessToken }) => {
     });
   };
 
-  // useEffect(() => {
-  //   if (activeTab === "tab1") {
-  //     const interval = setInterval(() => {
-  //       setCurrentCardIndex((prevIndex) => (prevIndex + 1) % menu.length);
-  //     }, 4000);
-
-  //     return () => clearInterval(interval);
-  //   }
-  // }, [activeTab]);
-
   const handleRefreshMenu = () => {
     setSelectedMenu(null); // Reset the menu
   };
@@ -702,7 +657,7 @@ const Menu = ({ accessToken }) => {
                             }}
                           >
                             <p style={{ color: "rgb(66 66 66)" }}>
-                              Tổng tiền:{" "}
+                              Giá tiền:{" "}
                               {Object.values(category.groupedDishes)
                                 .flat()
                                 .reduce((total, dish) => {
@@ -712,7 +667,7 @@ const Menu = ({ accessToken }) => {
                                   return total + (sellingPrice || 0);
                                 }, 0)
                                 .toLocaleString()}{" "}
-                              VND
+                              VND/người
                             </p>
                           </div>
                         </div>
@@ -731,8 +686,9 @@ const Menu = ({ accessToken }) => {
 
                 <div
                   className="choose-button-container"
-                  style={{ display: "flex", justifyContent: "flex-end" }}
+                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
                 >
+                  <p style={{ marginLeft: "5px",marginTop:"25px", fontWeight:"600px", color:"black" }}><span style={{color:"red", display:"inline"}}>* </span> Lưu ý: Lưu ý!</p>
                   <button
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
                     onClick={handleOpenModalEvents}
@@ -1019,7 +975,7 @@ const Menu = ({ accessToken }) => {
                   </div>
                 ))}
               <div style={{ textAlign: "right", fontWeight: "bold" }}>
-                Tổng tiền:{" "}
+                Giá tiền:{" "}
                 {Object.values(selectedMenu.groupedDishes)
                   .flat()
                   .reduce((total, dish) => {
@@ -1029,7 +985,7 @@ const Menu = ({ accessToken }) => {
                     return total + (sellingPrice || 0); // Cộng dồn tổng tiền
                   }, 0)
                   .toLocaleString()}{" "}
-                VND
+                VND/người
               </div>
             </div>
           ) : (

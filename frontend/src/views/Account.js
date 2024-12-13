@@ -30,6 +30,7 @@ const AccountSection = () => {
     address: "",
     citizenIdentity: "",
   });
+  const [originalData, setOriginalData] = useState(userDetails);
   const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
@@ -50,7 +51,16 @@ const AccountSection = () => {
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
+  useEffect(() => {
+    // Cập nhật dữ liệu gốc và dữ liệu form khi nhận được userDetails mới
+    setUserDetails(userDetails);
+    setOriginalData(userDetails);
+  }, [userDetails]);
 
+  const handleCancel = () => {
+    setUserDetails(originalData); // Khôi phục dữ liệu gốc
+    setIsEditing(false); // Tắt chế độ chỉnh sửa
+  };
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -198,23 +208,37 @@ const AccountSection = () => {
   }, [navigate]);
 
   const handleUpdate = async () => {
-    const userId = localStorage.getItem("userId");
 
-    // Lấy thông tin người dùng từ form
+    const userId = localStorage.getItem("userId");
     const updatedData = {
-      fullname: document.getElementById("fullname").value,
-      email: document.getElementById("email_address").value,
-      phone: document.getElementById("phone").value,
-      residence: document.getElementById("address").value,
-      dob: document.getElementById("dob").value,
-      gender: document.getElementById("gender").value,
-      citizenIdentity: document.getElementById("IdCard").value,
-      image: imageSrc, // Lấy URL ảnh từ state
+      fullname: document.getElementById("fullname").value.trim(),
+      email: document.getElementById("email_address").value.trim(),
+      phone: document.getElementById("phone").value.trim(),
+      residence: document.getElementById("address").value.trim(),
+      dob: document.getElementById("dob").value.trim(),
+      gender: document.getElementById("gender").value.trim(),
+      citizenIdentity: document.getElementById("IdCard").value.trim(),
+      image: imageSrc || userDetails.image, // Giữ ảnh hiện tại nếu không upload ảnh mới
     };
 
-    console.log("Dữ liệu gửi đi API:", updatedData);
+    // Lấy danh sách các trường bị thiếu
+    const missingFields = validateForm(updatedData);
+
+    if (missingFields.length > 0) {
+      Swal.fire({
+        icon: "info",
+        title: "Vui lòng nhập đầy đủ thông tin!",
+        html: `Các thông tin bị thiếu gồm: <br><br><ul>${missingFields
+          .map((field) => `<li>${field}</li>`)
+          .join("")}</ul><br>`,
+        showConfirmButton: true,
+      });
+      return;
+    }
+
 
     try {
+      const userId = localStorage.getItem("userId");
       const response = await fetch(
         `http://localhost:8080/obbm/users/user/${userId}`,
         {
@@ -235,13 +259,12 @@ const AccountSection = () => {
           text: "Cập nhật thông tin thành công",
           showConfirmButton: true,
         });
-        console.log(data);
         setIsEditing(false);
       } else {
         Swal.fire({
           icon: "error",
           title: "Thất bại",
-          text: "Lỗi không rõ",
+          text: "Có lỗi xảy ra, vui lòng thử lại sau.",
           showConfirmButton: true,
         });
       }
@@ -249,22 +272,65 @@ const AccountSection = () => {
       Swal.fire({
         icon: "error",
         title: "Thất bại",
-        text: "Lỗi không rõ",
+        text: "Lỗi không rõ, vui lòng thử lại sau.",
         showConfirmButton: true,
       });
     }
   };
 
-  const handleGenderChange = (event) => {
-    // Cập nhật userDetail.gender theo lựa chọn của người dùng
-    const genderValue =
-      event.target.value === "true"
-        ? true
-        : event.target.value === "false"
-        ? false
-        : null;
-    setUserDetails({ ...userDetails, gender: genderValue });
+  // Hàm kiểm tra dữ liệu
+  const validateForm = (data) => {
+    const missingFields = [];
+
+    // Mapping các trường thành tên dễ hiểu
+    const fieldLabels = {
+      fullname: "Họ và tên",
+      email: "Email",
+      phone: "Số điện thoại",
+      residence: "Địa chỉ",
+      dob: "Ngày sinh",
+      gender: "Giới tính",
+      citizenIdentity: "Căn cước công dân",
+    };
+
+    for (const key in data) {
+      if (key !== "image" && !data[key]) {
+        missingFields.push(fieldLabels[key] || key);
+      }
+    }
+
+    return missingFields;
   };
+
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      const userId = localStorage.getItem("userId");
+      try {
+        const response = await fetch(
+          `http://localhost:8080/obbm/users/user/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${getToken()}`,
+            },
+          }
+        );
+        if (response.ok) {
+          const data = await response.json();
+          setUserDetails(data); // Cập nhật thông tin người dùng
+          if (!data.image) {
+            setImageSrc(""); // Nếu không có ảnh trong CSDL, dùng ảnh từ `imageSrc`
+          }
+        } else {
+          console.error("Lỗi khi lấy thông tin người dùng");
+        }
+      } catch (error) {
+        console.error("Lỗi:", error);
+      }
+    };
+
+    fetchUserDetails();
+  }, []);
+
 
   return (
     <main style={{ marginTop: "50px" }}>
@@ -426,22 +492,25 @@ const AccountSection = () => {
                           }
                         }}
                       >
-                        {imageSrc ? (
-                          <img
-                            src={imageSrc}
-                            alt="Selected"
-                            style={{ maxWidth: "100%", maxHeight: "100%" }}
-                          />
-                        ) : userDetails.image ? (
+
+                        {userDetails.image ? ( // Ưu tiên hiển thị ảnh từ CSDL
                           <img
                             src={userDetails.image}
                             alt="User Avatar"
                             style={{ maxWidth: "100%", maxHeight: "100%" }}
                           />
+                        ) : imageSrc ? ( // Nếu không có ảnh từ CSDL, kiểm tra ảnh từ imageSrc
+
+                          <img
+                            src={imageSrc}
+                            alt="Selected"
+                            style={{ maxWidth: "100%", maxHeight: "100%" }}
+                          />
                         ) : (
                           <span style={{ color: "#888" }}>
                             Ảnh căn cước công dân
-                          </span>
+                          </span> // Nếu không có cả hai, hiển thị placeholder
+
                         )}
                       </div>
 
@@ -530,7 +599,14 @@ const AccountSection = () => {
                   <button
                     type="button"
                     className="edit-icon-btn btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
-                    onClick={() => setIsEditing(!isEditing)}
+                    onClick={() => {
+                      if (isEditing) {
+                        handleCancel(); // Khi đang chỉnh sửa và nhấn "Hủy"
+                      } else {
+                        setIsEditing(true); // Bật chế độ chỉnh sửa
+                      }
+                    }}
+
                     style={{
                       position: "absolute",
                       bottom: "80px",
@@ -541,6 +617,29 @@ const AccountSection = () => {
                   >
                     {isEditing ? "Hủy" : "Chỉnh sửa"}
                   </button>
+
+                  {userDetails.noPassword && (
+                    <div style={{ textAlign: "left" }}>
+                      <p style={{ display: "inline", marginRight: "4px" }}>
+                        Chú ý: Tài khoản bạn chưa có mật khẩu,
+                      </p>
+                      <button
+                        onClick={() => {
+                          navigate("/create-password");
+                        }}
+                        style={{
+                          display: "inline",
+                          background: "none",
+                          border: "none",
+                          color: "var(--dark-orange)",
+                          textDecoration: "underline",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Tạo mật khẩu
+                      </button>
+                    </div>
+                  )}
                 </div>
                 {userDetails.noPassword && (
                   <div
