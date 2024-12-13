@@ -30,43 +30,6 @@ const LoginForm = ({ toggleForm }) => {
     },
   });
 
-  apiClient.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      console.log("Interceptor Error:", error); // Log lỗi
-      if (error.response?.status === 401) {
-        try {
-          const refreshToken = Cookies.get("refreshToken");
-          if (!refreshToken) {
-            console.error("Refresh token không tồn tại.");
-            throw new Error("Vui lòng đăng nhập lại.");
-          }
-  
-          const { data } = await axios.post(
-            "http://localhost:8080/obbm/auth/refresh",
-            { refreshToken },
-            {
-              headers: { "Content-Type": "application/json" },
-            }
-          );
-  
-          console.log("Làm mới token thành công:", data);
-  
-          const newAccessToken = data.result.accessToken;
-          setToken(newAccessToken);
-          error.config.headers.Authorization = `Bearer ${newAccessToken}`;
-          return axios(error.config);
-        } catch (refreshError) {
-          console.error("Làm mới token thất bại:", refreshError.message);
-          return Promise.reject(refreshError);
-        }
-      }
-  
-      return Promise.reject(error);
-    }
-  );
-  
-
   const handleContinueWithGoogle = () => {
     const callbackUrl = OAuthConfig.redirectUri;
     const authUrl = OAuthConfig.authUri;
@@ -114,10 +77,9 @@ const LoginForm = ({ toggleForm }) => {
     setIsSubmitting(true);
     setError(""); // Reset lỗi khi bắt đầu đăng nhập
 
-    // Kiểm tra dữ liệu người dùng nhập vào
     if (!username.trim() || !password.trim()) {
       setError("Tài khoản và mật khẩu không được để trống!");
-      setIsSubmitting(false); // Dừng trạng thái submitting
+      setIsSubmitting(false);
       return;
     }
 
@@ -126,7 +88,6 @@ const LoginForm = ({ toggleForm }) => {
       password: password,
     };
 
-    // Gửi yêu cầu đăng nhập tới server
     apiClient
       .post("/auth/token", data)
       .then((response) => {
@@ -139,15 +100,11 @@ const LoginForm = ({ toggleForm }) => {
 
         const refreshToken = responseData.result?.refreshToken;
         if (refreshToken) {
-          document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
-            7 * 24 * 60 * 60
-          }; secure`;
+          document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${7 * 24 * 60 * 60}; secure`;
         }
 
         const accessToken = responseData.result?.accessToken;
-        setToken(accessToken); // Lưu token vào localStorage
-
-        // Lấy thông tin người dùng nếu token hợp lệ
+        setToken(accessToken);
         return getUserDetails(accessToken);
       })
       .then((userDetails) => {
@@ -156,27 +113,30 @@ const LoginForm = ({ toggleForm }) => {
           return;
         }
 
-        // Lưu thông tin người dùng vào localStorage
-        sessionStorage.setItem("userId", userDetails.userId);
+        localStorage.setItem("userId", userDetails.userId);
         localStorage.setItem("userId", userDetails.userId);
 
-        // Lấy `currentEventId` từ localStorage
-        const currentEventId = sessionStorage.getItem("currentEventId");
+        const currentEventId = localStorage.getItem("currentEventId");
 
-        // Chuyển hướng sau khi đăng nhập
         if (currentEventId) {
           navigate(`/menu/${currentEventId}`);
         } else {
-          navigate("/account"); // Nếu không có `currentEventId`, chuyển hướng mặc định
+          navigate("/account");
         }
       })
       .catch((error) => {
-        setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
+        if (error.response?.status === 401) {
+          // Nếu lỗi là 401 thì hiển thị thông báo lỗi
+          setError("Tài khoản hoặc mật khẩu không chính xác!");
+        } else {
+          setError(error.message || "Có lỗi xảy ra trong quá trình đăng nhập.");
+        }
       })
       .finally(() => {
-        setIsSubmitting(false); // Đặt lại trạng thái submitting khi kết thúc
+        setIsSubmitting(false);
       });
   };
+
 
   const getUserDetails = async (accessToken) => {
     console.log("Sử dụng accessToken:", accessToken); // Log accessToken
@@ -239,7 +199,7 @@ const LoginForm = ({ toggleForm }) => {
         onClick={() => toggleForm("register")}
         style={{ color: "#3d4fc8" }}
       >
-        Bạn chưa có tài khoản? Hãy <strong>tạo tài khoản</strong> 
+        Bạn chưa có tài khoản?<strong><u> Hãy tạo tài khoản</u></strong> 
       </div>
       <div
         

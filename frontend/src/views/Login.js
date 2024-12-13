@@ -70,7 +70,7 @@ const Login = () => {
         ></div>
 
         {currentForm === "login" && <LoginForm toggleForm={toggleForm} />}
-        {currentForm === "register" && <RegisterForm toggleForm={toggleForm} />}
+        {currentForm === "register" && <RegisterForm toggleForm={toggleForm} navigate={navigate} />}
         {currentForm === "forgotPassword" && <ResetPasswordForm toggleForm={toggleForm} />}
         {currentForm === "createPassword" && <CreatePasswordForm toggleForm={toggleForm} />}
       </div>

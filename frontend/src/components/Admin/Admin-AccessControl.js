@@ -15,11 +15,7 @@ import {
   Button,
   Tabs,
   Tab,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   ListItemIcon,
-  ListItemText,
   FormControl,
   Select,
   MenuItem,
@@ -27,7 +23,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddUserStaff from "./Admin-AddStaff";
-import toast, { Toaster } from "react-hot-toast";
+import SnackBarNotification from "./SnackBarNotification";
 
 const AccessControl = () => {
   const [users, setUsers] = useState([]);
@@ -38,6 +34,24 @@ const AccessControl = () => {
   const [selectedPermissions, setSelectedPermissions] = useState([]); // Danh sách quyền
   const [selectedRole, setSelectedRole] = useState(""); // Vai trò hiện tại
   const [selectedUserId, setSelectedUserId] = useState(""); // ID người dùng được chọn
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   // Gọi API để lấy danh sách người dùng
   useEffect(() => {
@@ -61,9 +75,7 @@ const AccessControl = () => {
         console.log("API response:", data);
         if (data.result && Array.isArray(data.result)) {
           const staffUsers = data?.result?.filter((user) =>
-            user.roles.some(
-              (role) => role.name.startsWith("STAFF")
-            )
+            user.roles.some((role) => role.name.startsWith("STAFF"))
           );
           setUsers(staffUsers);
         } else {
@@ -90,8 +102,8 @@ const AccessControl = () => {
         const data = await response.json();
 
         // Lọc ADMIN và các vai trò liên quan đến STAFF
-        const fillterRoles = data?.result?.filter(
-          (role) => role.name.startsWith("STAFF")
+        const fillterRoles = data?.result?.filter((role) =>
+          role.name.startsWith("STAFF")
         );
 
         setRoles(fillterRoles); // Lưu danh sách vai trò
@@ -160,6 +172,17 @@ const AccessControl = () => {
     setExpandedUser(expandedUser === user ? null : user); // Đóng lại nếu nhấp vào người dùng đang mở
     setSelectedUserId(user.userId); // Cập nhật ID người dùng được chọn
     setSelectedTab(0); // Đặt tab mặc định là "Thông tin"
+
+    // Lấy vai trò của người dùng từ mảng roles
+    const userRole = user.roles.find((role) => role.name.startsWith("STAFF")); // Lọc lấy vai trò có tên bắt đầu bằng "STAFF"
+    setSelectedRole(userRole ? userRole.name : ""); // Gán vai trò vào selectRole (nếu có)
+
+    // Nếu có quyền liên quan đến vai trò, lấy quyền của người dùng đó
+    if (userRole && userRole.permissions) {
+      setSelectedPermissions(userRole.permissions);
+    } else {
+      setSelectedPermissions([]); // Nếu không có quyền, reset
+    }
   };
 
   // Xử lý chuyển tab
@@ -196,7 +219,7 @@ const AccessControl = () => {
       );
 
       if (response.ok) {
-        toast.success("Cập nhật quyền cho người dùng thành công!");
+        showSuccess("Cập nhật quyền cho người dùng thành công!");
       } else {
         console.error("Lỗi khi cập nhật quyền:", response.status);
       }
@@ -211,8 +234,13 @@ const AccessControl = () => {
   };
 
   return (
-    <Box p={3}>
-      <Toaster position="top-center" reverseOrder={false} />
+    <Box p={3} sx={{padding:"1px"}}>
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
       <Box display="flex" justifyContent="flex-end" mb={2}>
         <AddUserStaff onUserAdded={handleUserAdded} />
       </Box>
@@ -223,9 +251,7 @@ const AccessControl = () => {
             <TableRow>
               <TableCell>STT</TableCell>
               <TableCell>Tên đăng nhập</TableCell>
-              <TableCell>Tên người dùng</TableCell>
-              <TableCell>Điện thoại</TableCell>
-              <TableCell>Ngày sinh</TableCell>
+              <TableCell>Email</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -244,11 +270,8 @@ const AccessControl = () => {
                 >
                   <TableCell>{index + 1}</TableCell>
                   <TableCell>{user.username}</TableCell>
-                  <TableCell>{user.fullname}</TableCell>
-                  <TableCell>{user.phone || "Không có thông tin"}</TableCell>
-                  <TableCell>{user.dob}</TableCell>
+                  <TableCell>{user.email}</TableCell>
                 </TableRow>
-
                 {/* Hàng mở rộng hiển thị chi tiết */}
                 {expandedUser === user && (
                   <TableRow>
@@ -324,72 +347,104 @@ const AccessControl = () => {
                           </Typography>
 
                           {/* Vai trò - ComboBox */}
-                          <Box display="flex" alignItems="center" mb={3}>
-                            <InputLabel id="role-select-label">
-                              Vai trò: 
-                            </InputLabel>
-                            <FormControl size="small" variant="outlined">
-                              <Select
-                                value={selectedRole}
-                                onChange={(e) =>
-                                  handleRoleSelect(e.target.value)
-                                }
-                                displayEmpty
-                                renderValue={(selected) => {
-                                  if (!selected) {
-                                    return <em>Chọn vai trò</em>;
-                                  }
-                                  return roles.find(
-                                    (role) => role.name === selected
-                                  )?.description;
+                          <Box>
+                            <Box display="flex" alignItems="center" mb={3}>
+                              <InputLabel
+                                id="role-select-label"
+                                sx={{
+                                  fontWeight: "bold",
+                                  fontSize: "13px",
+                                  color: "#1976d2",
+                                  marginRight: "5px",
                                 }}
                               >
-                                <MenuItem value="">
-                                  <span>--- Chọn vai trò ---</span>
-                                </MenuItem>
-                                {/* Đổ dữ liệu từ state */}
-                                {roles
-                                  .filter(
-                                    (role) =>
-                                      role.name.includes("STAFF") 
-                                  )
-                                  .map((role) => (
-                                    <MenuItem key={role.name} value={role.name}>
-                                      {role.description}
-                                    </MenuItem>
-                                  ))}
-                              </Select>
-                            </FormControl>
-                          </Box>
-
-                          {/* Hiển thị nhóm quyền */}
-                          <Box
-                            display="grid"
-                            gridTemplateColumns="repeat(3, 1fr)"
-                            gap={3}
-                          >
-                            {perGroups.map((group) => (
-                              <Accordion key={group.name}>
-                                <AccordionSummary
-                                  expandIcon={<ExpandMoreIcon />}
+                                Vai trò:
+                              </InputLabel>
+                              <FormControl
+                                size="small"
+                                variant="outlined"
+                                sx={{ width: "50%" }}
+                              >
+                                <Select
+                                  value={selectedRole}
+                                  onChange={(e) =>
+                                    handleRoleSelect(e.target.value)
+                                  }
+                                  displayEmpty
+                                  renderValue={(selected) => {
+                                    if (!selected) {
+                                      return <em>Chọn vai trò</em>;
+                                    }
+                                    return roles.find(
+                                      (role) => role.name === selected
+                                    )?.description;
+                                  }}
                                   sx={{
-                                    backgroundColor: "#e3f2fd",
-                                    borderRadius: "8px",
-                                    "&:hover": { backgroundColor: "#bbdefb" },
+                                    fontSize: "12px",
+                                    "& .MuiOutlinedInput-root": {
+                                      backgroundColor: "#f1f1f1", // Nền của input
+                                      borderRadius: "8px", // Thêm border-radius
+                                      "&:hover": {
+                                        backgroundColor: "#e3f2fd", // Nền khi hover
+                                      },
+                                      "&.Mui-focused": {
+                                        backgroundColor: "#fff", // Nền khi focus
+                                      },
+                                    },
                                   }}
                                 >
+                                  <MenuItem value="" sx={{ fontSize: "12px" }}>
+                                    <span>--- Chọn vai trò ---</span>
+                                  </MenuItem>
+                                  {/* Đổ dữ liệu từ state */}
+                                  {roles
+                                    .filter((role) =>
+                                      role.name.includes("STAFF")
+                                    )
+                                    .map((role) => (
+                                      <MenuItem
+                                        key={role.name}
+                                        value={role.name}
+                                        sx={{ fontSize: "12px" }}
+                                      >
+                                        {role.description}
+                                      </MenuItem>
+                                    ))}
+                                </Select>
+                              </FormControl>
+                            </Box>
+
+                            {/* Hiển thị nhóm quyền */}
+                            <Box
+                              display="grid"
+                              gridTemplateColumns="repeat(auto-fit, minmax(200px, 1fr))"
+                              gap={3}
+                            >
+                              {perGroups.map((group) => (
+                                <Box key={group.name}>
                                   <Typography
-                                    variant="h6"
+                                    expandIcon={<ExpandMoreIcon />}
                                     sx={{
-                                      fontWeight: "bold",
-                                      color: "#1976d2",
-                                      marginBottom: "8px",
+                                      backgroundColor: "#e3f2fd", // Background của Summary
+                                      borderRadius: "8px", // Border cho Summary
+                                      "&:hover": { backgroundColor: "#bbdefb" },
+                                      transition: "background-color 0.3s ease", // Hiệu ứng hover mượt mà
+                                      padding: "12px 16px", // Padding cho Summary
                                     }}
                                   >
-                                    {group.description}
+                                    <Typography
+                                      variant="h6"
+                                      sx={{
+                                        fontWeight: "bold",
+                                        color: "#1976d2", // Màu của tiêu đề
+                                        marginBottom: "0px",
+                                        textTransform: "uppercase", // Chữ in hoa cho tiêu đề
+                                      }}
+                                    >
+                                      {group.description}
+                                    </Typography>
                                   </Typography>
-                                </AccordionSummary>
-                                <AccordionDetails>
+
                                   <List dense>
                                     {group.listPermission.map((perm) => (
                                       <ListItem key={perm.name}>
@@ -401,17 +456,28 @@ const AccessControl = () => {
                                             onChange={() =>
                                               handlePermissionToggle(perm.name)
                                             }
+                                            sx={{
+                                              "& .MuiSvgIcon-root": {
+                                                color: "#1976d2", // Màu của checkbox
+                                              },
+                                            }}
                                           />
                                         </ListItemIcon>
-                                        <ListItemText
-                                          primary={perm.description}
-                                        />
+                                        <Typography
+                                          sx={{
+                                            fontSize: "1.2rem", // Kích thước chữ
+                                            fontWeight: "normal",
+                                            color: "#424242", // Màu chữ
+                                          }}
+                                        >
+                                          {perm.description}
+                                        </Typography>
                                       </ListItem>
                                     ))}
                                   </List>
-                                </AccordionDetails>
-                              </Accordion>
-                            ))}
+                                </Box>
+                              ))}
+                            </Box>
                           </Box>
                         </Box>
                       )}
@@ -429,7 +495,7 @@ const AccessControl = () => {
                           sx={{ fontSize: "1.2rem", textTransform: "none" }}
                           onClick={handleUpdateUser}
                         >
-                          Cập nhật
+                          Cập nhật quyền
                         </Button>
                         <Button
                           variant="contained"
