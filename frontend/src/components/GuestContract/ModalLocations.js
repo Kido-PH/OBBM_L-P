@@ -10,6 +10,8 @@ import FormCreateLocation from "./FormLocationCreate";
 import ModalDelete from "./ModalDelete";
 import FormUpdateLocation from "./FormLocationUpdate";
 import AudioRecorder from "./SpeechToTextInput";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 function Example() {
   const { contractData, setContractData } = React.useContext(multiStepContext);
@@ -34,6 +36,8 @@ function Example() {
   const [searchResults, setSearchResults] = React.useState([]);
   const [isSearching, setIsSearching] = React.useState(false);
 
+  const navigate = useNavigate();
+
   // Hàm xử lý nhấn nút sửa
   const handleEditClick = (location) => {
     setSelectedEditLocation(location); // Lưu location vào state
@@ -45,10 +49,14 @@ function Example() {
 
   //fetch dữ liệu mặc định cho
   const fetchLocations = async () => {
-    const List = await guestLocationApi.getPage(1, 1000);
+    try {
+      const List = await guestLocationApi.getPage(1, 1000);
 
-    setLocationList(List.result.content); //set state
-    console.log("List fetch:", List);
+      setLocationList(List.result.content); //set state
+      console.log("List fetch:", List);
+    } catch (error) {
+      checkAccessToken(navigate);
+    }
   };
 
   //Delete UserLocation
@@ -106,6 +114,8 @@ function Example() {
     setContractData({
       ...contractData,
       locationId: location.locationId,
+      guest: 0,
+      table: 0,
     });
     closeModalAll();
   };
@@ -339,7 +349,7 @@ function Example() {
             {filteredLocations // Lọc các phần tử có isCustom = false
               .map((location, index) => (
                 <Card
-                  className="my-3 card-select"
+                  className="my-3 card-select card-location"
                   style={getCardStyle(location)}
                   key={index}
                 >
@@ -356,6 +366,13 @@ function Example() {
                         </Card.Title>
                         <Card.Text>
                           <div>Địa chỉ: {location.address}</div>
+                          <div className="d-flex">
+                            Chi phí vận chuyển:{" "}
+                            <span className="text-success fw-bold ms-2">
+                              {" "}
+                              {formatCurrency(location.cost)} VND
+                            </span>
+                          </div>
                         </Card.Text>
                       </Card.Body>
                     </Col>

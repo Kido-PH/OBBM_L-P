@@ -134,7 +134,7 @@ const Footer = () => {
             </li>
           </ul>
 
-          <form action="" className="footer-form">
+          {/* <form action="" className="footer-form">
             <p className="footer-list-title">Đặt tiệc</p>
 
             <div className="input-wrapper">
@@ -195,7 +195,7 @@ const Footer = () => {
             >
               Đặt tiệc
             </button>
-          </form>
+          </form> */}
         </div>
       </div>
 
