@@ -44,6 +44,7 @@ const Header = () => {
         // Xóa thông tin đăng nhập sau khi logout thành công
         localStorage.removeItem("accessToken");
         localStorage.removeItem("isAdmin");
+        localStorage.removeItem("currentLocation");
         localStorage.removeItem("userId");
         Cookies.remove("refreshToken");
         navigate("/login");
@@ -219,9 +220,8 @@ const Header = () => {
                     <AiFillLock />
                     Đổi mật khẩu
                   </a>
-                  <a
-                    href="/#"
-                    className="dropdown-item navbar-link"
+                  <button
+                    className="dropdown-item navbar-link w-100"
                     onClick={handleLogout}
                     style={{
                       display: "flex",
@@ -231,7 +231,7 @@ const Header = () => {
                   >
                     <FiLogOut />
                     Đăng xuất
-                  </a>
+                  </button>
                 </div>
               </div>
             )}
