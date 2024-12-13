@@ -2,7 +2,7 @@ import React from "react";
 import { Modal, Button, Row, Col, Image } from "react-bootstrap";
 import { FaTimes } from "react-icons/fa";
 
-function ModalInfoMenu({ show, onClose, menuDishes, status }) {
+function ModalInfoMenu({ show, onClose, menuDishes, status, totalMenu }) {
   const formatCurrency = (amount) => {
     return amount
       ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
@@ -11,9 +11,9 @@ function ModalInfoMenu({ show, onClose, menuDishes, status }) {
 
   const categoryList = [1, 2, 3];
 
-  return status === true ? (
-    <Modal show={show} onHide={onClose}>
-      <div style={{ width: "420px", margin: "0 auto" }}>
+  return status === true ? ( //true là bên contract info
+    <Modal show={show} onHide={onClose} centered>
+      <div style={{ width: "420px", margin: "30px auto" }}>
         <button
           className="add-button"
           onClick={onClose}
@@ -27,7 +27,7 @@ function ModalInfoMenu({ show, onClose, menuDishes, status }) {
           <div className="menu-view-control">
             {categoryList.map((categoryId, index) => (
               <div key={index} style={{ marginBottom: "8px" }}>
-                <h3>
+                <h3 className="text-left fw-bold">
                   {categoryId === 1
                     ? "Khai vị"
                     : categoryId === 2
@@ -50,13 +50,23 @@ function ModalInfoMenu({ show, onClose, menuDishes, status }) {
                 </ul>
               </div>
             ))}
+            <div
+              className="d-flex"
+              style={{ position: "absolute", bottom: "35px", left: "40px" }}
+            >
+              <h3 className="fw-bold">Tổng giá trị:</h3>
+              <span className="text-success fw-bold">
+                {formatCurrency(totalMenu)} VND
+              </span>
+            </div>
           </div>
         </div>
       </div>
     </Modal>
   ) : (
-    <Modal show={show} onHide={onClose}>
-      <div style={{ width: "420px", margin: "0 auto" }}>
+    //false là bên bước 3
+    <Modal show={show} onHide={onClose} centered>
+      <div style={{ width: "420px", margin: "30px auto" }}>
         <button
           className="add-button"
           onClick={onClose}
@@ -74,7 +84,7 @@ function ModalInfoMenu({ show, onClose, menuDishes, status }) {
               ["Appetizers", "Main Courses", "Desserts"].map(
                 (category, index) => (
                   <div key={index} style={{ marginBottom: "8px" }}>
-                    <h3>
+                    <h3 className="fw-bold">
                       {category === "Appetizers"
                         ? "Khai vị"
                         : category === "Main Courses"
@@ -93,6 +103,15 @@ function ModalInfoMenu({ show, onClose, menuDishes, status }) {
                   </div>
                 )
               )}
+            <div
+              className="d-flex"
+              style={{ position: "absolute", bottom: "35px", left: "40px" }}
+            >
+              <h3 className="fw-bold">Tổng giá trị:</h3>
+              <span className="text-success fw-bold">
+                {formatCurrency(totalMenu)} VND
+              </span>
+            </div>
           </div>
         </div>
       </div>
