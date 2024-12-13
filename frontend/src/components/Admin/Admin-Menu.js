@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import {
   Button,
@@ -35,283 +36,187 @@ import { Snackbar, Alert } from '@mui/material';
 
 
 const MenuManager = () => {
-  
-  const [menuData, setMenuData] = useState({
 
-    name: "",
-    description: "",
-    totalcost: 0,
-    ismanaged: true,
-    listMenuDish: [],
-    eventId: 0,
-    menuId: null,
-  });
-  const [menus, setMenus] = useState([]);
-  const [dishes, setDishes] = useState([]); // Danh sách món ăn
-  const [events, setEvents] = useState([]); // Danh sách sự kiện
-  const [selectedDishes, setSelectedDishes] = useState([]); // Món ăn được chọn
-  const [openDialog, setOpenDialog] = useState(false); // Trạng thái hiển thị dialog
-  const [isEdit, setIsEdit] = useState(false); // Kiểm tra đang Thêm hay Sửa
-  const [pageCount, setPageCount] = useState(0);
-  const [page, setPage] = useState(1);
-  const [categories, setCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [totalElements, setTotalElements] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
+  const [menuData, setMenuData] = useState({ name: "", description: "", totalcost: 0, ismanaged: true, listMenuDish: [], eventId: 0, menuId: null });
+  const [menus, setMenus] = useState([]),
+    [dishes, setDishes] = useState([]),
+    [events, setEvents] = useState([]),
+    [selectedDishes, setSelectedDishes] = useState([]),
+    [openDialog, setOpenDialog] = useState(false),
+    [isEdit, setIsEdit] = useState(false),
+    [pageCount, setPageCount] = useState(0),
+    [page, setPage] = useState(0),
+    [categories, setCategories] = useState([]),
+    [searchTerm, setSearchTerm] = useState(""),
+    [totalElements, setTotalElements] = useState(0),
+    [rowsPerPage, setRowsPerPage] = useState(5),
+    [openDetailDialog, setOpenDetailDialog] = useState(false),
+    [selectedMenu, setSelectedMenu] = useState(null),
+    [filteredDishes, setFilteredDishes] = useState([]),
+    [selectedDishesByCategory, setSelectedDishesByCategory] = useState({}),
+    [open, setOpen] = useState(false),
+    [snackbarOpen, setSnackbarOpen] = useState(false),
+    [snackbarMessage, setSnackbarMessage] = useState(''),
+    [snackbarSeverity, setSnackbarSeverity] = useState('success'),
+    [oldMenuDishes, setOldMenuDishes] = useState([]),
+    [groupedDishes, setGroupedDishes] = useState({});
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+  const [menuToDelete, setMenuToDelete] = useState(null);
 
-  const [openDetailDialog, setOpenDetailDialog] = useState(false);
-  const [selectedMenu, setSelectedMenu] = useState(null);
-
-  const [filteredDishes, setFilteredDishes] = useState([]);
-  const [selectedDishesByCategory, setSelectedDishesByCategory] = useState({});
-
-  const [open, setOpen] = useState(false);
-
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState('');
-  const [snackbarSeverity, setSnackbarSeverity] = useState('success'); // success, error, info, warning
-
-
-  const handleSnackbarClose = () => {
-    setSnackbarOpen(false); // Ẩn Snackbar
+  const categoryTranslation = {
+    "Appetizers": "Món khai vị",
+    "Main Courses": "Món chính",
+    "Desserts": "Món tráng miệng",
+    "Beverages": "Nước giải khát",
+    // Thêm các danh mục khác ở đây
   };
-
-  const handleEventChange = (event, newValue) => {
-    setMenuData((prevState) => ({
-      ...prevState,
-      eventId: newValue?.eventId || 0,
-      // events: newValue || null,
-    }));
-  };
-
-
+  const [filteredMenus, setFilteredMenus] = useState(menus); // Khởi tạo danh sách đã lọc với toàn bộ dữ liệu ban đầu
   useEffect(() => {
-    if (Array.isArray(dishes)) {
-      const newFilteredDishes = dishes.filter(
-        (dish) =>
-          !menuData.listMenuDish.some(
-            (selectedDish) => selectedDish.dishId === dish.dishId
-          )
-      );
-      setFilteredDishes(newFilteredDishes);  // Cập nhật filteredDishes
-    }
-  }, [menuData.listMenuDish, dishes]);  // Khi menuData.listMenuDish hoặc dishes thay đổi
+    setFilteredMenus(menus);
+  }, [menus]);
 
-  const handleDishChange = (event, selectedDishes) => {
-    setMenuData((prev) => ({
-      ...prev,
-      listMenuDish: selectedDishes,
-    }));
+  const handleCancelDelete = () => {
+    setOpenConfirmDialog(false);
+    setMenuToDelete(null);
   };
 
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
+  const handleEventChange = (event, newValue) => setMenuData(prevState => ({ ...prevState, eventId: newValue?.eventId || 0 }));
 
+  useEffect(() => { if (Array.isArray(dishes)) { const newFilteredDishes = dishes.filter(dish => !menuData.listMenuDish.some(selectedDish => selectedDish.dishId === dish.dishId)); setFilteredDishes(newFilteredDishes); } }, [menuData.listMenuDish, dishes]);
 
-  const handleViewDetailsClick = (menu) => {
-    setSelectedMenu(menu);  // Lưu menu đang chọn
-    setOpenDetailDialog(true);  // Mở dialog chi tiết
-  };
+  const handleDishChange = (event, selectedDishes) => setMenuData(prev => ({ ...prev, listMenuDish: selectedDishes }));
 
-  const handleCloseDetailDialog = () => {
-    setOpenDetailDialog(false);
-    setSelectedMenu(null);  // Đặt lại menu khi đóng dialog
-  };
+  const handleViewDetailsClick = menu => { setSelectedMenu(menu); setOpenDetailDialog(true); };
 
-  const handleChangePage = (event, newPage) => {
-    console.log("check page: ", newPage);
-    setPage(newPage);
-  };
+  const handleCloseDetailDialog = () => { setOpenDetailDialog(false); setSelectedMenu(null); };
 
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0); // Reset về trang đầu tiên khi thay đổi số mục trên mỗi trang
-  };
+  const handleChangePage = (event, newPage) => { setPage(newPage); };
+
+  const handleChangeRowsPerPage = (event) => { setRowsPerPage(parseInt(event.target.value, 10)); setPage(0); };
+
   const fetchMenusWithPagination = async (page) => {
     try {
       const menuRes = await menuApi.getPaginate(page, rowsPerPage);
       setMenus(menuRes.result?.content || []);
       setPageCount(menuRes.result?.totalPages);
-      setTotalElements(menuRes.result?.totalElements); // Tổng số trang
-      console.log(menuRes.result?.content);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách menu: ", error);
-      toast.error("Không thể tải danh sách menu!");
-    }
+      setTotalElements(menuRes.result?.totalElements);
+    } catch (error) { console.error("Lỗi khi lấy danh sách menu: ", error); toast.error("Không thể tải danh sách menu!"); }
   };
+
   const fetchCategories = async () => {
     try {
       const response = await danhMucApi.getAll({});
       setCategories(response.result?.content || []);
-    } catch (error) {
-      console.error("Lỗi khi lấy danh sách danh mục: ", error);
-      console.log("Selected Dishes:", selectedDishes);
-    }
+    } catch (error) { console.error("Lỗi khi lấy danh sách danh mục: ", error); console.log("Selected Dishes:", selectedDishes); }
   };
 
-  // useEffect để load dữ liệu lần đầu
-
-
-
-  // Lấy dữ liệu từ API khi component mount
   const fetchData = async () => {
     try {
-      // Gọi API lấy danh sách món ăn (với size lớn)
-      const dishes = await dishApi.getAll({
-        page: 1,
-        size: 1000, // Đặt giá trị đủ lớn để lấy toàn bộ món ăn
-      });
+      const dishes = await dishApi.getAll({ page: 1, size: 1000 });
       setDishes(dishes.result?.content);
-
-      // Gọi API lấy danh sách sự kiện (với size lớn)
-      const events = await eventApi.getAll({
-        page: 1,
-        size: 1000, // Đặt giá trị đủ lớn để lấy toàn bộ sự kiện
-      });
+      const events = await eventApi.getAll({ page: 1, size: 1000 });
       setEvents(events.result?.content);
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu: ", error);
-    }
+    } catch (error) { console.error("Lỗi khi lấy dữ liệu: ", error); }
   };
 
+  useEffect(() => { fetchCategories(); fetchData(); fetchMenusWithPagination(page + 1, rowsPerPage); }, [page, rowsPerPage]);
 
+  useEffect(() => { fetchData(); console.log("Menu đã cập nhật:", menuData); }, [menuData]);
 
-  // useEffect để load dữ liệu lần đầu
-  useEffect(() => {
-    fetchCategories();
-    fetchData();
-    fetchMenusWithPagination(page + 1, rowsPerPage);
-  }, [page, rowsPerPage]);
-
-  // useEffect(() => {
-  //   fetchData();
-  //   console.log("Menu Data đã cập nhật:", menuData);  // Kiểm tra menuData sau khi set
-  // }, [menuData]);  // Mỗi khi menuData thay đổi, sẽ chạy lại useEffect này
-
-  useEffect(() => {
-    // Lấy dữ liệu mới từ API mỗi khi `menus` thay đổi
-    fetchData();
-    console.log("Menu đã cập nhật:", menus);
-  }, [menus]); // Chạy lại khi menus thay đổi
-
-
-
-  // Xử lý sự kiện mở dialog thêm menu
   const handleOpenAddDialog = () => {
-    setMenuData({
-      name: "",
-      description: "",
-      totalcost: 0,
-      ismanaged: true,
-      listMenuDish: [],
-      eventId: 0,
-    });
+    setMenuData({ name: "", description: "", totalcost: 0, ismanaged: true, listMenuDish: [], eventId: 0 });
     setIsEdit(false);
     setOpenDialog(true);
   };
 
-  // Đóng dialog
   const handleCloseDialog = () => {
-    setMenuData({
-      name: "",
-      description: "",
-      totalcost: 0,
-      ismanaged: true,
-      listMenuDish: [],
-      eventId: 0,
-    });
+    setMenuData({ name: "", description: "", totalcost: 0, ismanaged: true, listMenuDish: [], eventId: 0 });
     setOpenDialog(false);
   };
 
-  // Thêm hoặc sửa menu
-  const handleSaveMenu = async () => {
-    if (isEdit) {
-      // Gọi hàm cập nhật menu
-      await handleEditMenu();
-    } else {
-      // Gọi hàm thêm menu
-      await handleAddMenu();
-    }
-  };
-
-  const [oldMenuDishes, setOldMenuDishes] = useState([]);
+  const handleSaveMenu = async () => { isEdit ? await handleEditMenu() : await handleAddMenu(); };
 
   const handleDeleteDish = (dishId) => {
-    // Loại bỏ món ăn khỏi listMenuDish
-    setMenuData((prevState) => ({
-      ...prevState,
-      listMenuDish: prevState.listMenuDish.filter((dish) => dish.dishId !== dishId),
-    }));
-
-    // Loại bỏ món ăn khỏi dishes
-    setDishes((prevDishes) => prevDishes.filter((dish) => dish.dishId !== dishId));
+    setMenuData(prevState => ({ ...prevState, listMenuDish: prevState.listMenuDish.filter(dish => dish.dishId !== dishId) }));
+    setDishes(prevDishes => prevDishes.filter(dish => dish.dishId !== dishId));
   };
 
   const handleEditClick = async (menu) => {
     try {
-      // Lấy danh sách món ăn từ API
       const response = await menudishApi.getByMenu(menu.menuId);
+      if (response.code !== 1000) throw new Error("Danh sách món ăn không hợp lệ.");
 
-      if (response.code !== 1000) {
-        throw new Error("Danh sách món ăn không hợp lệ.");
-      }
+      // Cập nhật danh sách món ăn và sự kiện
+      const updatedMenuDishes = response.result?.content || [];
+      const eventData = menu.events || null;
+      const eventId = eventData ? eventData.eventId : 0;
 
-      const updatedMenuDishes = response.result.content || [];
+      // Cập nhật lại món ăn cho từng danh mục
+      const newSelectedDishesByCategory = {};
 
-      if (Array.isArray(updatedMenuDishes) && updatedMenuDishes.length > 0) {
-        // Lấy danh sách món ăn từ API (giả sử rằng updatedMenuDishes trả về là mảng)
-        const dishes = updatedMenuDishes.map(item => item.dishes); // Dùng map để lấy thông tin món ăn từ API
+      categories.forEach((category) => {
+        // Lọc món ăn theo danh mục
+        const dishesForCategory = updatedMenuDishes.filter((menuDish) =>
+          Array.isArray(menuDish.dishes.categories)
+            ? menuDish.dishes.categories.some((cat) => cat.categoryId === category.categoryId)
+            : menuDish.dishes.categories.categoryId === category.categoryId
+        );
 
-        // Kiểm tra mảng dishes trước khi dùng reduce
-        if (Array.isArray(dishes)) {
-          const dishesMap = dishes.reduce((acc, dish) => {
-            acc[dish.dishId] = dish.name;  // Lưu trữ tên món ăn theo dishId
-            return acc;
-          }, {});  // Dấu ngoặc đóng cho reduce
-        } else {
-          console.error("Dishes không phải là mảng hợp lệ:", dishes);
-        }
+        // Lưu món ăn đã chọn cho từng danh mục
+        newSelectedDishesByCategory[category.categoryId] = dishesForCategory.map((dish) => dish.dishes);
+      });
 
-        // Trích xuất sự kiện từ menu và đảm bảo cập nhật đúng eventId
-        const eventData = menu.events || null;
-        const eventId = eventData ? eventData.eventId : 0;
+      // Cập nhật trạng thái
+      setSelectedDishesByCategory(newSelectedDishesByCategory);
+      setMenuData(prevState => ({
+        ...prevState,
+        name: menu.name || prevState.name,
+        description: menu.description || prevState.description,
+        totalcost: menu.totalcost || prevState.totalcost,
+        ismanaged: menu.ismanaged || prevState.ismanaged,
+        listMenuDish: updatedMenuDishes.map(menuDish => ({
+          dishId: menuDish.dishes.dishId,
+          name: menuDish.dishes.name,
+          price: menuDish.dishes.price,
+          quantity: menuDish.quantity
+        })),
+        eventId,  // Cập nhật eventId
+        events: eventData || null, // Cập nhật toàn bộ sự kiện nếu có
+        menuId: menu.menuId || prevState.menuId
+      }));
 
-        // Cập nhật state với món ăn và sự kiện
-        setMenuData((prevState) => ({
-          ...prevState,
-          name: menu.name || prevState.name,
-          description: menu.description || prevState.description,
-          totalcost: menu.totalcost || prevState.totalcost,
-          ismanaged: menu.ismanaged || prevState.ismanaged,
-          listMenuDish: updatedMenuDishes.map((menuDish) => ({
-            dishId: menuDish.dishes.dishId,
-            name: menuDish.dishes.name,
-            price: menuDish.dishes.price,
-            quantity: menuDish.quantity,
-          })),
-          eventId: menu.events?.eventId || 0, // Cập nhật eventId đúng
-          menuId: menu.menuId || prevState.menuId,
-          event: events || null, // Lưu thông tin sự kiện vào state
-        }));
+      // Đánh dấu chế độ chỉnh sửa và mở dialog
+      setIsEdit(true);
+      setOpenDialog(true);
 
-        setOldMenuDishes(updatedMenuDishes);
-        setIsEdit(true);
-        setOpenDialog(true);
-      }
     } catch (error) {
       console.error("Lỗi khi lấy danh sách món ăn:", error);
       toast.error("Không thể lấy danh sách món ăn! Vui lòng thử lại.");
     }
   };
 
+  const fetchMenus = async () => {
+    try {
+      const response = await menuApi.getAll(); // Gọi API lấy tất cả menus
+      const updatedMenus = response.result?.content || [];
+      setMenus(updatedMenus); // Cập nhật state menus
+    } catch (error) {
+      console.error("Lỗi khi lấy danh sách menus:", error);
+      toast.error("Không thể tải lại danh sách menus!");
+    }
+  };
+
   const handleEditMenu = async () => {
     try {
       const { name, description, eventId, listMenuDish, menuId } = menuData;
-  
+
       if (!name || eventId === 0 || !Array.isArray(listMenuDish) || listMenuDish.length === 0 || !menuId) {
         toast.error("Vui lòng nhập đầy đủ thông tin và danh sách món ăn!");
         return;
       }
-  
+
       const totalCost = listMenuDish.reduce((total, dish) => {
         if (!dish.price || typeof dish.price !== "number") {
           toast.error("Dữ liệu món ăn không hợp lệ!");
@@ -319,15 +224,15 @@ const MenuManager = () => {
         }
         return total + dish.price * (dish.quantity || 1);
       }, 0);
-  
+
       const updatedMenuPayload = { name, description, totalcost: totalCost, eventId };
       const menuRes = await menuApi.update(menuId, updatedMenuPayload);
-  
+
       if (!menuRes || !menuRes.result) {
         toast.error("Không thể cập nhật menu! Vui lòng thử lại.");
         return;
       }
-  
+
       await menudishApi.deleteAllDish(menuId);
       await menudishApi.saveAllDish(
         listMenuDish.map((dish) => ({
@@ -336,54 +241,35 @@ const MenuManager = () => {
           quantity: dish.quantity || 1,
         }))
       );
-  
-      // Lấy thông tin sự kiện
-      const eventRes = await eventApi.get(eventId);
-      const eventDetail = eventRes.result?.content;
-  
-      // Cập nhật danh sách menus
-      setMenus((prevMenus) =>
-        prevMenus.map((menu) =>
-          menu.menuId === menuId
-            ? { ...menu, ...updatedMenuPayload, events: eventDetail } // Cập nhật thông tin sự kiện
-            : menu
-        )
-      );
-  
-      setMenuData({
-        name: "",
-        description: "",
-        totalcost: 0,
-        ismanaged: true,
-        listMenuDish: [],
-        eventId: 0,
-      });
-  
+
       toast.success("Cập nhật menu thành công!");
+      setOpenDialog(false);
+      handleClose();
+      // Cập nhật bảng
+      await fetchMenus(); // Gọi hàm làm mới danh sách menus
     } catch (error) {
       console.error("Lỗi khi cập nhật menu:", error.response?.data || error.message);
       toast.error("Không thể cập nhật menu! Vui lòng thử lại.");
     }
   };
-  
-  
-  
+
+
   // Thêm menu mới
   const handleAddMenu = async () => {
     try {
       const { name, description, ismanaged, eventId, listMenuDish } = menuData;
       const userId = "0903e5c7-44fa-4dfc-bbf1-f4a951e84bf2"; // Admin ID mặc định
-  
+
       if (!name || eventId === 0 || !listMenuDish || listMenuDish.length === 0) {
         toast.error("Vui lòng nhập đầy đủ thông tin và chọn món ăn!");
         return;
       }
-  
+
       const totalCost = listMenuDish.reduce((total, dish) => {
         const quantity = dish.quantity || 1;
         return total + dish.price * quantity;
       }, 0);
-  
+
       const newMenuPayload = {
         name,
         description,
@@ -391,42 +277,38 @@ const MenuManager = () => {
         userId,
         eventId,
       };
-  
+
       const menuRes = await menuApi.add(newMenuPayload);
       const newMenuId = menuRes.result?.menuId;
-  
+
       if (!newMenuId) {
         toast.error("Không thể thêm menu! Hãy thử lại.");
         return;
       }
-  
+
       const menuDishPayload = listMenuDish.map((dish) => ({
         menuId: newMenuId,
         dishesId: dish.dishId,
         price: dish.price,
         quantity: dish.quantity || 1,
       }));
-  
+
       await menudishApi.saveAllDish(menuDishPayload);
-  
-      // Lấy thông tin sự kiện
-      const eventRes = await eventApi.get(eventId);
-      const eventDetail = eventRes.result?.content;
-      const NewMenu = {
-        ...menuData
-      }
-      const NewEventId = NewMenu.event?.eventId;
-  console.log("eventId:", NewEventId);
-      // Cập nhật danh sách menus
+
+      toast.success("Thêm menu thành công!");
+      setOpenDialog(false);
+      handleClose();
+      // Cập nhật bảng bằng cách thêm menu mới vào đầu danh sách
       const newMenu = {
         ...menuData,
-        // menuId: newMenuId,
+        menuId: newMenuId,
         totalcost: totalCost,
-        // events: eventDetail,
-        eventId: NewEventId
+        eventId,
       };
-      setMenus((prevMenus) => [newMenu, ...prevMenus]);
-  
+
+      // Thêm menu mới vào đầu danh sách
+      // setMenus((prevMenus) => [newMenu, ...prevMenus]);
+
       // Reset form
       setMenuData({
         name: "",
@@ -436,149 +318,106 @@ const MenuManager = () => {
         listMenuDish: [],
         eventId: 0,
       });
-  
-      toast.success("Thêm menu thành công!");
+
     } catch (error) {
       console.error("Lỗi khi thêm menu:", error.response?.data || error.message);
       toast.error("Không thể thêm menu! Vui lòng thử lại.");
     }
   };
-  
-  
-  
 
+
+
+  const handleDeleteMenu = (menuId) => {
+    setMenuToDelete(menuId);
+    setOpenConfirmDialog(true);
+  };
   //Delete
-  const handleDeleteMenu = async (menuId) => {
-    try {
-      if (!menuId) {
-        toast.error("Không tìm thấy menu để xóa!");
-        return;
-      }
-
-      // Hiển thị xác nhận trước khi xóa
-      if (!window.confirm("Bạn có chắc chắn muốn xóa menu này?")) {
-        return;
-      }
-
-      // Gửi yêu cầu xóa menu
-      await menuApi.delete(menuId);
-
-      // Cập nhật danh sách menu trong state sau khi xóa
-      const updatedMenus = menus.filter((menu) => menu.menuId !== menuId);
-      setMenus(updatedMenus);
-
-      toast.success("Xóa menu thành công!");
-    } catch (error) {
-      console.error("Lỗi khi xóa menu:", error.response?.data || error.message);
-      toast.error("Không thể xóa menu! Vui lòng thử lại.");
+  const handleConfirmDelete = async () => {
+    const res = await menuApi.delete(menuToDelete);
+    if (res.code === 1000) {
+      fetchMenusWithPagination(page + 1);
+      toast.success("Menu đã được xóa thành công !");
     }
+    setOpenConfirmDialog(false);
+    setMenuToDelete(null);
   };
 
 
-  const filteredMenus = menus
-    // .filter((menus) => !menus.Status) // Loại bỏ các sự kiện có `Status` là true
-    .filter((menus) => {
-      if (searchTerm === "") return true; // Nếu không có từ khóa tìm kiếm, hiển thị tất cả
-      if (!isNaN(searchTerm)) {
-        // Nếu nhập số, lọc theo eventId
-        return String(menus.menuId).includes(searchTerm);
-      }
-      // Nếu nhập ký tự, lọc theo các trường khác (ví dụ: name)
-      return menus.name.toLowerCase().includes(searchTerm.toLowerCase());
-    });
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
 
-  const handleOpen = () => {
-    setOpen(true);
-  };
-
-  const handleClose = () => {
-    setOpen(false);
-  };
 
   const groupedOptions = categories.map((category) => ({
     label: category.name, // Tên danh mục
     categoryId: category.categoryId, // ID danh mục
     options: Array.isArray(dishes)
-      ? dishes.filter((dish) => dish.categories?.categoryId === category.categoryId)
-      : [], // Nếu `dishes` không phải là mảng, trả về mảng rỗng
+      ? dishes.filter((dish) =>
+        // Kiểm tra categories của món ăn có phải là mảng không, nếu không thì tạo thành mảng chứa 1 phần tử
+        Array.isArray(dish.categories)
+          ? dish.categories.some((cat) => cat.categoryId === category.categoryId)
+          : [dish.categories].some((cat) => cat.categoryId === category.categoryId)
+      )
+      : [],
   }));
 
-
-
+  console.log(dishes);  // Kiểm tra mảng món ăn
+  console.log(categories);  // Kiểm tra danh mục
+  console.log(dishes[0]?.categories);  // Kiểm tra categories của món ăn đầu tiên
 
   const filteredGroupedOptions = Object.keys(groupedOptions).map((category) => ({
     label: category,
     options: groupedOptions[category],
   }));
 
-  const handleAddDishToMenu = () => {
-
-    const updatedMenu = {
-      ...menuData,
-      listMenuDish: [
-        ...menuData.listMenuDish, // Giữ lại các món đã chọn trước đó
-        ...Object.values(selectedDishesByCategory).flat(), // Thêm tất cả món đã chọn theo từng danh mục
-      ],
-      // eventId:menuData.eventId
-
-    };
-     // Sẽ trả undefined nếu event không tồn tại
-
-    setMenuData(updatedMenu); // Cập nhật lại state menu
-    console.log("Thêm menu:", updatedMenu); // Kiểm tra kết quả
-    if (updatedMenu) {
-      setSnackbarMessage('Đã thêm món ăn vào menu!');
-      setSnackbarSeverity('success');
-      handleClose();
-    } else {
-      setSnackbarMessage('Thêm món ăn thất bại!');
-      setSnackbarSeverity('error');
-    }
-
-    setSnackbarOpen(true); // Hiển thị Snackbar
-  };
-
-
   const handleRemoveDish = (categoryId, dishId) => {
-    // Loại bỏ món ăn khỏi selectedDishesByCategory
     setSelectedDishesByCategory((prev) => ({
       ...prev,
       [categoryId]: (prev[categoryId] || []).filter((dish) => dish.dishId !== dishId),
     }));
 
-    // Loại bỏ món ăn khỏi listMenuDish
     setMenuData((prev) => ({
       ...prev,
       listMenuDish: prev.listMenuDish.filter((dish) => dish.dishId !== dishId),
     }));
-
-    console.log("Updated listMenuDish:", menuData.listMenuDish);
   };
 
+  // Hàm handleDishChangeByCategory
+  const handleDishUpdate = (categoryId, updatedDishes) => {
+    setSelectedDishesByCategory((prev) => {
+      const uniqueDishes = updatedDishes; // Trực tiếp cập nhật danh sách món mới
+      return {
+        ...prev,
+        [categoryId]: uniqueDishes, // Cập nhật món ăn theo danh mục
+      };
+    });
 
+    setMenuData((prev) => {
+      // Danh sách món ăn hiện tại trong menu
+      const existingDishes = new Set(prev.listMenuDish.map((dish) => dish.dishId));
 
-  const handleDishChangeByCategory = (categoryId, updatedDishes) => {
-    // Cập nhật selectedDishesByCategory
-    setSelectedDishesByCategory((prev) => ({
-      ...prev,
-      [categoryId]: updatedDishes, // Lưu danh sách món đã được lọc
-    }));
+      // Lọc ra món ăn mới từ updatedDishes
+      const newDishes = updatedDishes.filter(
+        (newDish) => !existingDishes.has(newDish.dishId)
+      );
 
-    // Cập nhật listMenuDish
-    setMenuData((prev) => ({
-      ...prev,
-      listMenuDish: prev.listMenuDish.filter(
-        (dish) =>
-          !(
-            dish.categories?.categoryId === categoryId &&
-            !updatedDishes.some((updatedDish) => updatedDish.dishId === dish.dishId)
-          )
-      ),
-    }));
+      // Kết hợp món mới và món cũ
+      return {
+        ...prev,
+        listMenuDish: [...prev.listMenuDish, ...newDishes], // Giữ lại các món cũ và thêm món mới
+      };
+    });
+    setSnackbarMessage('Đã cập nhật danh sách món ăn vào menu!');
+    setSnackbarSeverity('success');
+    setSnackbarOpen(true); // Hiển thị Snackbar
 
-    console.log("Updated listMenuDish:", menuData.listMenuDish);
   };
 
+  const handleAddToMenu = () => {
+    Object.entries(selectedDishesByCategory).forEach(([categoryId, dishes]) => {
+      handleDishUpdate(categoryId, dishes);
+    });
+    handleClose();
+  };
 
 
 
@@ -604,6 +443,20 @@ const MenuManager = () => {
     });
   };
 
+  const handleSearch = (searchTerm) => {
+    setSearchTerm(searchTerm); // Cập nhật giá trị tìm kiếm
+    const lowerCaseSearchTerm = searchTerm.toLowerCase();
+
+    const filteredResults = menus.filter((menu) => {
+      // Duyệt qua từng trường dữ liệu của một menu
+      return Object.values(menu).some((value) => {
+        if (value == null) return false; // Bỏ qua các giá trị null hoặc undefined
+        return value.toString().toLowerCase().includes(lowerCaseSearchTerm);
+      });
+    });
+
+    setFilteredMenus(filteredResults); // Cập nhật danh sách sau khi tìm kiếm
+  };
 
   return (
     <Box>
@@ -637,7 +490,7 @@ const MenuManager = () => {
             type="search"
             className="admin-input-search"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => handleSearch(e.target.value)}
           />
         </div>
 
@@ -671,33 +524,24 @@ const MenuManager = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredMenus.map((menus) => (
-              <TableRow key={menus.menuId}>
-                {/* Tên menu */}
-                <TableCell>{menus.name}</TableCell>
-
-                {/* Mô tả menu */}
-                <TableCell>{menus.description}</TableCell>
-
-                {/* Tổng chi phí */}
+            {filteredMenus.slice().reverse().map((menu) => (
+              <TableRow key={menu.menuId}>
+                <TableCell>{menu.name}</TableCell>
+                <TableCell>{menu.description}</TableCell>
                 <TableCell>
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
                     currency: "VND",
                     currencyDisplay: "code",
-                  }).format(menus.totalcost)}
+                  }).format(menu.totalcost)}
                 </TableCell>
-
-                {/* Tên sự kiện liên kết */}
-                <TableCell>{menus.events?.name}</TableCell>
-
-                {/* Nút sửa và xóa */}
+                <TableCell>{menu.events?.name}</TableCell>
                 <TableCell>
                   <Button
                     variant="outlined"
                     color="primary"
                     sx={{ mr: 1 }}
-                    onClick={() => {handleEditClick(menus)}}
+                    onClick={() => handleEditClick(menu)}
                   >
                     <EditIcon />
                   </Button>
@@ -705,7 +549,7 @@ const MenuManager = () => {
                     variant="outlined"
                     color="error"
                     style={{ marginLeft: "8px" }}
-                    onClick={() => handleDeleteMenu(menus.menuId)}
+                    onClick={() => handleDeleteMenu(menu.menuId)}
                   >
                     <DeleteIcon />
                   </Button>
@@ -713,7 +557,7 @@ const MenuManager = () => {
                     variant="outlined"
                     color="info"
                     style={{ marginLeft: "8px" }}
-                    onClick={() => handleViewDetailsClick(menus)}  // Mở chi tiết menu
+                    onClick={() => handleViewDetailsClick(menu)}
                   >
                     <ErrorOutlineIcon />
                   </Button>
@@ -721,6 +565,7 @@ const MenuManager = () => {
               </TableRow>
             ))}
           </TableBody>
+
         </Table>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
@@ -760,18 +605,43 @@ const MenuManager = () => {
       </TableContainer>
 
       {/* Dialog thêm/sửa menu */}
-      <Dialog open={openDialog} onClose={handleCloseDialog} maxWidth="lg" fullWidth>
-        <DialogTitle sx={{ padding: '8px 16px', fontSize: '20px' }}>
+      <Dialog
+        open={openDialog}
+        onClose={handleCloseDialog}
+        maxWidth="sm"  // Giới hạn chiều rộng tối đa của dialog
+        fullWidth
+        sx={{
+          "& .MuiDialog-paper": {
+            boxShadow: "none",
+            padding: "0",
+            border: "none",
+            width: "90%",  // Đảm bảo chiều rộng không quá rộng, có thể điều chỉnh
+            maxWidth: "600px",  // Giới hạn chiều rộng tối đa
+            margin: "auto",  // Căn giữa dialog
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            padding: '16px 32px',  // Tăng khoảng cách padding cho tiêu đề
+            fontSize: '24px',  // Tăng kích thước chữ để tiêu đề nổi bật hơn
+            fontWeight: 'bold',  // Đậm chữ để làm tiêu đề nổi bật
+            textAlign: 'center',  // Căn giữa tiêu đề
+            color: '#3f51b5',  // Màu sắc tiêu đề (có thể thay đổi theo ý muốn)
+            marginBottom: '16px',  // Khoảng cách dưới tiêu đề để tách khỏi các phần tử khác
+          }}
+        >
           {isEdit ? "Chỉnh sửa Menu" : "Thêm Menu Mới"}
         </DialogTitle>
         <DialogContent className="custom-input" dividers sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 150px)', position: 'relative' }}>
+          {/* Nội dung của Dialog */}
           <Box sx={{ marginBottom: "16px" }}>
             <Typography
               sx={{
                 marginBottom: "4px",
-                fontWeight: "bold",
                 fontSize: "14px",
                 color: "#000", // Màu đen cho label
+
               }}
             >
               Tên menu
@@ -800,30 +670,31 @@ const MenuManager = () => {
             <Typography
               sx={{
                 marginBottom: "4px",
-                fontWeight: "bold",
                 fontSize: "14px",
                 color: "#000", // Màu đen cho label
+
               }}
             >
               Sự kiện
             </Typography>
             <FormControl fullWidth>
+              {/* Autocomplete cho Sự kiện */}
               <Autocomplete
-                value={menuData.event || null}
+                value={menuData.events || null}  // Đảm bảo rằng menuData.events là đối tượng sự kiện
                 options={events}
                 getOptionLabel={(option) => option.name}
                 isOptionEqualToValue={(option, value) => option.eventId === value?.eventId}
                 onChange={(event, newValue) => {
                   setMenuData((prevState) => ({
                     ...prevState,
-                    eventId: newValue?.eventId || 0,
-                    event: newValue || null,
+                    eventId: newValue?.eventId || 0,  // Lưu lại eventId
+                    events: newValue || null,  // Lưu lại đối tượng sự kiện
                   }));
                 }}
                 renderInput={(params) => (
                   <TextField
                     {...params}
-                    label="Chọn sự kiện"
+                    // label="Chọn sự kiện"
                     variant="outlined"
                     sx={{
                       '.MuiOutlinedInput-root': {
@@ -885,10 +756,6 @@ const MenuManager = () => {
             >
               Chọn món ăn
             </Button>
-
-
-
-
             {/* Modal */}
             <Dialog
               open={open}
@@ -923,32 +790,76 @@ const MenuManager = () => {
                   }}
                 >
                   <Box>
-                    {groupedOptions.map((group) => (
-                      <Box key={group.categoryId} sx={{ marginBottom: "32px" }}>
-                        {/* Autocomplete cho danh mục */}
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: "bold", color: "#3f51b5", marginBottom: "16px" }}
-                        >
-                          {group.label}
-                        </Typography>
-                        <Autocomplete
-                          multiple
-                          options={group.options} // Chỉ món ăn thuộc danh mục
-                          value={selectedDishesByCategory[group.categoryId] || []}
-                          onChange={(event, selectedDishes) => {
-                            console.log("Selected Dishes for Category:", group.label, selectedDishes); // Kiểm tra món ăn được chọn
-                            handleDishChangeByCategory(group.categoryId, selectedDishes);
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
+                      {groupedOptions.map((group) => (
+                        <Box
+                          key={group.categoryId}
+                          sx={{
+                            width: '48%', // Chiếm 48% chiều rộng mỗi mục (giúp để vừa hai danh mục trên một hàng)
+                            marginBottom: '32px',
+                            boxSizing: 'border-box',
                           }}
-                          getOptionLabel={(option) => option.name || ""}
-                          isOptionEqualToValue={(option, value) => option.dishId === value.dishId}
-                          renderInput={(params) => (
-                            <TextField {...params} label="Chọn món ăn" variant="outlined" />
-                          )}
-                        />
-                        {/* Table hiển thị món ăn đã chọn */}
-                      </Box>
-                    ))}
+                        >
+                          {/* Tiêu đề cho mỗi danh mục */}
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 'bold', color: '#3f51b5', marginBottom: '16px' }}
+                          >
+                            {categoryTranslation[group.label] || group.label} {/* Sử dụng tên danh mục tiếng Việt nếu có, nếu không thì giữ nguyên tên tiếng Anh */}
+                          </Typography>
+
+                          {/* Autocomplete cho danh mục */}
+                          <Autocomplete
+                            multiple
+                            options={group.options} // Sử dụng danh sách món ăn của nhóm
+                            value={selectedDishesByCategory[group.categoryId] || []} // Lấy món ăn đã chọn cho nhóm
+                            onChange={(event, updatedDishes) => {
+                              handleDishUpdate(group.categoryId, updatedDishes); // Gọi hàm gộp
+                            }}
+                            getOptionLabel={(option) => option.name || ''}
+                            isOptionEqualToValue={(option, value) => option.dishId === value.dishId}
+                            renderTags={(value, getTagProps) => {
+                              return value.map((option, index) => (
+                                <Box key={option.dishId} sx={{ display: 'flex', alignItems: 'center', marginRight: '8px' }}>
+                                  <span {...getTagProps({ index })}>{option.name}</span>
+                                  <button
+                                    style={{
+                                      background: 'transparent',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      marginLeft: '8px',
+                                      color: '#f44336', // Màu đỏ để xóa
+                                    }}
+                                    onClick={(e) => {
+                                      e.stopPropagation(); // Ngừng sự kiện bubbling
+                                      handleRemoveDish(group.categoryId, option.dishId); // Xóa món ăn khỏi danh sách đã chọn
+                                    }}
+                                  >
+                                    Xóa
+                                  </button>
+                                </Box>
+                              ));
+                            }}
+                            renderInput={(params) => <TextField {...params} variant="outlined" />}
+                            sx={{
+                              '& .MuiAutocomplete-listbox': {
+                                maxHeight: '300px',
+                                overflowY: 'auto',
+                              },
+                              '& .MuiAutocomplete-option': {
+                                fontSize: '16px',
+                                padding: '8px',
+                                color: '#000',
+                                '&:hover': {
+                                  backgroundColor: '#f5f5f5',
+                                },
+                              },
+                            }}
+                          />
+                        </Box>
+                      ))}
+                    </Box>
+
                     <Table>
                       <TableHead>
                         <TableRow>
@@ -965,7 +876,7 @@ const MenuManager = () => {
                             {/* Dòng chứa tên danh mục */}
                             <TableRow key={group.categoryId}>
                               <TableCell colSpan={4} style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
-                                {group.label} {/* Tên danh mục */}
+                                {categoryTranslation[group.label] || group.label} {/* Tên danh mục */}
                               </TableCell>
                             </TableRow>
 
@@ -997,7 +908,7 @@ const MenuManager = () => {
                 <Button onClick={handleClose} color="secondary" sx={{ padding: '8px 16px', fontSize: '16px' }}>
                   Hủy
                 </Button>
-                <Button onClick={handleAddDishToMenu} color="primary" sx={{ padding: '8px 16px', fontSize: '16px' }}>
+                <Button onClick={handleAddToMenu} color="primary" sx={{ padding: '8px 16px', fontSize: '16px' }}>
                   Thêm vào menu
                 </Button>
               </DialogActions>
@@ -1007,7 +918,6 @@ const MenuManager = () => {
             <Typography
               sx={{
                 marginBottom: "4px",
-                fontWeight: "bold",
                 fontSize: "14px",
                 color: "#000", // Màu đen cho label
               }}
@@ -1016,6 +926,8 @@ const MenuManager = () => {
             </Typography>
             <TextField
               fullWidth
+              multiline  // Cho phép nhập nhiều dòng
+              rows={4}   // Số dòng hiển thị mặc định
               value={menuData.description}
               onChange={(e) => setMenuData({ ...menuData, description: e.target.value })}
               sx={{
@@ -1034,8 +946,9 @@ const MenuManager = () => {
               }}
             />
           </Box>
+
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ padding: '8px 16px' }}>
           <Button onClick={handleCloseDialog} color="primary">
             Hủy
           </Button>
@@ -1098,6 +1011,39 @@ const MenuManager = () => {
         <DialogActions>
           <Button onClick={handleCloseDetailDialog} color="primary">
             Đóng
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
+        <DialogTitle
+          sx={{
+            fontSize: "1.6rem",
+            color: "#d32f2f",
+            display: "flex",
+            alignItems: "center",
+          }}
+        >
+          <ErrorOutlineIcon sx={{ color: "error.main", mr: 1 }} />
+          Xác nhận xóa
+        </DialogTitle>
+        <DialogContent>
+          <p>Bạn có chắc chắn muốn xóa thực đơn này ?</p>
+        </DialogContent>
+        <DialogActions>
+          <Button
+            onClick={handleCancelDelete}
+            color="primary"
+            sx={{ fontSize: "1.3rem" }}
+          >
+            Đóng
+          </Button>
+          <Button
+            onClick={handleConfirmDelete}
+            color="secondary"
+            sx={{ fontSize: "1.3rem" }}
+          >
+            Đồng ý
           </Button>
         </DialogActions>
       </Dialog>

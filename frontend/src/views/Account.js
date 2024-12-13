@@ -39,13 +39,13 @@ const AccountSection = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState("");
   const [formData, setFormData] = useState({
-    fullname: userDetails.fullname || "",
-    gender: userDetails.gender ? "Male" : "Female",
-    residence: userDetails.residence || "",
-    email: userDetails.email || "",
-    phone: userDetails.phone || "",
-    citizenIdentity: userDetails.citizenIdentity || "",
-    dob: userDetails.dob || "",
+    fullname: userDetails?.fullname || "",
+    gender: userDetails?.gender ? "Male" : "Female",
+    residence: userDetails?.residence || "",
+    email: userDetails?.email || "",
+    phone: userDetails?.phone || "",
+    citizenIdentity: userDetails?.citizenIdentity || "",
+    dob: userDetails?.dob || "",
   });
   const [imageFile, setImageFile] = useState(null);
   const toggleEdit = () => {
@@ -208,6 +208,8 @@ const AccountSection = () => {
   }, [navigate]);
 
   const handleUpdate = async () => {
+
+    const userId = localStorage.getItem("userId");
     const updatedData = {
       fullname: document.getElementById("fullname").value.trim(),
       email: document.getElementById("email_address").value.trim(),
@@ -233,6 +235,7 @@ const AccountSection = () => {
       });
       return;
     }
+
 
     try {
       const userId = localStorage.getItem("userId");
@@ -327,6 +330,7 @@ const AccountSection = () => {
 
     fetchUserDetails();
   }, []);
+
 
   return (
     <main style={{ marginTop: "50px" }}>
@@ -488,6 +492,7 @@ const AccountSection = () => {
                           }
                         }}
                       >
+
                         {userDetails.image ? ( // Ưu tiên hiển thị ảnh từ CSDL
                           <img
                             src={userDetails.image}
@@ -495,6 +500,7 @@ const AccountSection = () => {
                             style={{ maxWidth: "100%", maxHeight: "100%" }}
                           />
                         ) : imageSrc ? ( // Nếu không có ảnh từ CSDL, kiểm tra ảnh từ imageSrc
+
                           <img
                             src={imageSrc}
                             alt="Selected"
@@ -504,6 +510,7 @@ const AccountSection = () => {
                           <span style={{ color: "#888" }}>
                             Ảnh căn cước công dân
                           </span> // Nếu không có cả hai, hiển thị placeholder
+
                         )}
                       </div>
 
@@ -599,6 +606,7 @@ const AccountSection = () => {
                         setIsEditing(true); // Bật chế độ chỉnh sửa
                       }
                     }}
+
                     style={{
                       position: "absolute",
                       bottom: "80px",
@@ -633,6 +641,37 @@ const AccountSection = () => {
                     </div>
                   )}
                 </div>
+                {userDetails.noPassword && (
+                  <div
+                    style={{
+                      textAlign: "left",
+                      position: "absolute",
+                      bottom: "75px",
+                      left: "230px",
+                      cursor: "pointer",
+                      textAlign: "center",
+                    }}
+                  >
+                    <p style={{ display: "inline", marginRight: "4px" }}>
+                      Chú ý: Tài khoản bạn chưa có mật khẩu,
+                    </p>
+                    <button
+                      onClick={() => {
+                        navigate("/create-password");
+                      }}
+                      style={{
+                        display: "inline",
+                        background: "none",
+                        border: "none",
+                        color: "var(--dark-orange)",
+                        textDecoration: "underline",
+                        cursor: "pointer",
+                      }}
+                    >
+                      Tạo mật khẩu
+                    </button>
+                  </div>
+                )}
               </form>
             </div>
           </div>

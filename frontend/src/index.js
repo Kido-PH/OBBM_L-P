@@ -5,6 +5,7 @@ import {
   Routes,
   Route,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
@@ -29,13 +30,17 @@ import IngredientManager from "./components/Admin/Admin-Ingredient";
 import MenuManagement from "./components/Admin/Admin-Menu";
 import Authenticate from "./views/Authenticate";
 import PaymentCoordinatorPage from "views/PaymentCoordinator";
-
 import AdminRoute from "components/Admin/AdminRouter";
-import Test from "views/save";
 import CreatePasswordForm from "views/_createPassword";
+import userApi from "api/userApi";
+import Cookies from "js-cookie";
+import Swal from "sweetalert2";
+import TabContractInfo from "components/GuestContract/TabContractInfo";
+
 
 const App = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdmin = JSON.parse(localStorage.getItem("isAdmin"));
   const shouldShowHeaderFooter =
     !location.pathname.startsWith("/admin") &&
@@ -43,6 +48,66 @@ const App = () => {
     location.pathname !== "/register" &&
     location.pathname !== "/resetpassword" &&
     location.pathname !== "/create-password";
+
+  function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  const checkAccessToken = async () => {
+    if (location.pathname === "/" || location.pathname.startsWith("/menu"))
+      return; // Loại trừ trang chủ
+    const accessToken = localStorage.getItem("accessToken");
+    const refreshTokenValue = Cookies.get("refreshToken");
+
+    // Kiểm tra accessToken
+    if (!accessToken || isTokenExpired(accessToken)) {
+      if (refreshTokenValue) {
+        const success = await userApi.refreshToken(refreshTokenValue);
+        sleep(5000);
+        console.log("trạng thái fetch refreshToken: ", success);
+        if (success) {
+          // Làm mới trang nếu thành công
+          window.location.reload();
+        } else {
+          // Nếu refresh token thất bại => chuyển hướng đến trang đăng nhập
+          if (refreshTokenValue) {
+            Swal.fire({
+              icon: "warning",
+              title: "Hết phiên đăng nhập",
+              text: "Vui lòng đăng nhập lại để tiếp tục sử dụng",
+              timer: 3000, // Tự động đóng sau 8 giây
+              showConfirmButton: true,
+            });
+          }
+
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          Cookies.remove("refreshToken");
+
+          navigate("/login");
+        }
+      } else {
+        navigate("/login");
+      }
+    }
+  };
+
+  // Hàm kiểm tra token hết hạn
+  const isTokenExpired = (token) => {
+    try {
+      const [, payload] = token.split(".");
+      const decoded = JSON.parse(atob(payload));
+      const currentTime = Math.floor(Date.now() / 1000);
+      return decoded.exp < currentTime;
+    } catch (e) {
+      console.error("Invalid token:", e);
+      return true; // Nếu không decode được, coi như token hết hạn
+    }
+  };
+
+  React.useEffect(() => {
+    checkAccessToken();
+  }, [location.pathname]); // Chạy lại mỗi khi đường dẫn thay đổi
 
   return (
     <>
@@ -52,7 +117,7 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/contract" element={<StepContext />} />
         <Route path="/user/contract-list" element={<GuestContractList />} />
-        <Route path="/contract/info/:id" element={<GuestContractInfo />} />
+        <Route path="/contract/info/:id" element={<TabContractInfo />} />
         <Route path="/payment/cancel" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/cancle" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/success" element={<PaymentCoordinatorPage />} />

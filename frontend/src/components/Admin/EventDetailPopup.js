@@ -16,8 +16,7 @@ import {
   TableRow,
   TextField,
   CircularProgress,
-  TablePagination,
-  Checkbox,
+  Autocomplete,
 } from "@mui/material";
 import toast from "react-hot-toast";
 import { Divider } from "antd";
@@ -26,190 +25,191 @@ import serviceApi from "api/serviceApi";
 
 const EventDetailPopup = ({ open, handleClose, event }) => {
   const [activeTab, setActiveTab] = useState(0);
-  const [service, setservice] = useState([]);
   const [loading, setLoading] = useState(false);
   const [totalElements, setTotalElements] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5);
-  const [page, setPage] = useState(0);
-  const [selectedService, setSelectedService] = useState([]);
-  const [allServices, setAllServicess] = useState([]);
-  const [services, setServices] = useState([]); // Dịch vụ đã chọn
-  const [availableServices, setAvailableServices] = useState([]); // Dịch vụ có sẵn từ backend
-  const [addServicePopupOpen, setAddServicePopupOpen] = useState(false); // Popup thêm dịch vụ
-  const [updatedServices, setUpdatedServices] = useState([]); // Tạo state lưu dữ liệu tạm thời
+  const [services, setServices] = useState([]);
+  const [availableServices, setAvailableServices] = useState([]);
 
+
+  const eventId = event?.eventId;
 
   useEffect(() => {
-    if (open && event?.eventId) {
-      fetchService(event?.eventId, page, rowsPerPage);
-      console.log("Event ID:", event?.eventId);
-      console.log("Page:", page, "Rows per Page:", rowsPerPage);
+    if (open && eventId) {
+      fetchServices(eventId);
     }
-  }, [open, event, page, rowsPerPage]);
+  }, [open, eventId]);
 
   useEffect(() => {
-    const fetchAllService = async (page, size) => {
+    const fetchAllService = async () => {
       try {
         const response = await serviceApi.getPaginate(1, 20);
-        console.log("Dữ liệu API trả về:", response);
-        const services = response?.result?.content?.map((service) => ({
+        if (!response?.result?.content) {
+          throw new Error("Dữ liệu phản hồi không hợp lệ.");
+        }
+        const services = response.result.content.map((service) => ({
           ...service,
-          selected: false, // Mặc định chưa chọn
+          selected: false,
         }));
-        setAvailableServices(services || []); // Lưu vào state availableServices
+        setAvailableServices(services);
       } catch (error) {
-        console.error("Lỗi khi lấy nguyên liệu:", error);
+        console.error("Lỗi khi lấy danh sách dịch vụ:", error);
         toast.error("Không thể tải danh sách dịch vụ.");
       }
     };
-
     fetchAllService();
   }, []);
 
-  const fetchService = async (eventId, page, size) => {
+  const fetchServices = async (menuId) => {
     try {
-      setLoading(true); // Hiển thị loading
-      const response = await eventserviceApi.getServicesByEvent(
-        page + 1,
-        size,
-        eventId
-      );
-      console.log("API Response:", response);
+      setLoading(true);
 
-      if (response?.code === 1000) {
-        setservice(
-          response.result.content.map((item) => ({
-            ...item,
-            eventId: item.events?.eventId,
-            serviceName: item.services?.name,
-          }))
-        );
-        setTotalElements(response.result.totalElements || 0);
-      } else {
-        throw new Error("API trả về lỗi");
+      const response = await eventserviceApi.getServicesByEvent(1, 100, menuId);
+
+      if (!response || !response.content) {
+        throw new Error("API trả về lỗi hoặc không có dữ liệu.");
       }
+
+      const content = response.content;
+
+      // Kiểm tra trường eventserviceId trong mỗi dịch vụ
+      content.forEach((item) => {
+        if (!item.eventserviceId) {
+          console.error("eventserviceId không có trong dịch vụ:", item);
+        }
+      });
+
+      const validServices = content.filter((item) => !item.services?.deleted_at);
+
+      const extractedServices = validServices.map((item) => ({
+        eventserviceId: item.eventserviceId, // Đảm bảo rằng eventserviceId có giá trị
+        serviceId: item.services?.serviceId || "unknown",
+        name: item.services?.name || "Không xác định",
+        price: item.services?.price || 0,
+        quantity: item.quantity || 1,
+        cost: item.cost || 0,
+      }));
+
+      setServices(extractedServices);
     } catch (error) {
-      console.error(error);
-      toast.error("Không thể tải danh sách dịch vụ.");
+      console.error("Lỗi khi tải danh sách dịch vụ:", error);
+      toast.error("Không thể tải danh sách dịch vụ. Vui lòng thử lại sau!");
     } finally {
       setLoading(false);
     }
   };
 
+  useEffect(() => {
+    const updatedAvailableServices = availableServices.filter(
+      (service) => !services.some((selected) => selected.serviceId === service.serviceId)
+    );
+    setAvailableServices(updatedAvailableServices);
+  }, [services]);
+
   const saveSelectedServices = async () => {
     try {
-      const payload = availableServices
-        .filter((service) => service.selected)
-        .map((service) => ({
-          quantity: service.quantity || 1, // Đảm bảo có số lượng
-          cost: service.price,
-          eventId: event?.eventId,
-          serviceId: service.serviceId,
-        }));
+      // Tách biệt các dịch vụ cần thêm mới và các dịch vụ cần cập nhật
+      const servicesToAdd = services.filter((service) => service.eventserviceId === undefined); // Dịch vụ chưa có eventserviceId
+      const servicesToUpdate = services.filter((service) => service.eventserviceId !== undefined); // Dịch vụ đã có eventserviceId
 
-      console.log("Payload gửi đi:", payload);
+      // Payload cho các dịch vụ cần thêm mới
+      const payloadToAdd = servicesToAdd.map((service) => ({
+        eventId: eventId,
+        serviceId: service.serviceId,
+        quantity: service.quantity,
+        cost: service.cost,
+      }));
 
-      if (payload.length > 0) {
-        await Promise.all(payload.map((data) => eventserviceApi.add(data)));
-        toast.success("Thêm dịch vụ thành công!");
-        fetchService(event?.eventId, page, rowsPerPage); // Cập nhật lại danh sách dịch vụ
-        setAddServicePopupOpen(false); // Đóng popup
-      } else {
-        toast.warning("Vui lòng chọn ít nhất một dịch vụ.");
+      // Payload cho các dịch vụ cần cập nhật
+      const payloadToUpdate = servicesToUpdate.map((service) => ({
+        eventserviceId: service.eventserviceId,
+        eventId: eventId,
+        serviceId: service.serviceId,
+        quantity: service.quantity,
+        cost: service.cost,
+      }));
+
+      // Lưu các dịch vụ mới
+      if (payloadToAdd.length > 0) {
+        await eventserviceApi.saveAllMenuDish(payloadToAdd); // Gửi các dịch vụ mới
+        toast.success("Dịch vụ mới đã được thêm!");
+        handleClose(); // Đóng popup
       }
+
+      // Cập nhật các dịch vụ đã có
+      // Cập nhật các dịch vụ đã có (nếu API hỗ trợ cập nhật hàng loạt)
+      if (payloadToUpdate.length > 0) {
+        const updatePromises = payloadToUpdate.map(async (service) => {
+          try {
+            console.log("Updating service:", service); // Xem chi tiết payload
+            await eventserviceApi.updateEventService(service.eventserviceId, service);
+            console.log(`Service ${service.eventserviceId} updated successfully!`);
+            return { success: true, serviceId: service.eventserviceId };
+          } catch (error) {
+         //   console.error(`Failed to update service ${service.eventserviceId}:`, error.response?.data || error);
+            return { success: false, serviceId: service.eventserviceId, error };
+          }
+        });
+
+        const results = await Promise.all(updatePromises);
+        results.forEach(result => {
+          if (!result.success) {
+          //  toast.error(`Lỗi cập nhật dịch vụ ${result.serviceId}.`);
+          }
+        });
+      }
+
+      // // Cập nhật lại danh sách dịch vụ
+      fetchServices(eventId);
+      handleClose(); // Đóng popup
+
     } catch (error) {
-      console.error("Lỗi khi lưu dịch vụ:", error);
-      toast.error("Không thể thêm dịch vụ.");
+    console.error("Lỗi khi lưu dịch vụ:", error);
+      toast.error("Không thể lưu dịch vụ.");
     }
   };
 
-  const handleChangeQuantity = (serviceId, newQuantity) => {
-    setUpdatedServices((prevServices) => {
-      // Tìm dịch vụ có serviceId và cập nhật số lượng
-      const updated = prevServices.map((service) =>
-        service.serviceId === serviceId
-          ? { ...service, quantity: newQuantity }
-          : service
-      );
-      return updated;
-    });
-  };
 
+  const handleSelectService = (event, selectedServices) => {
+    if (!selectedServices || !selectedServices.length) return;
 
-const handleSaveQuantity = async (serviceId, newQuantity) => {
-  const updatedService = services.find(
-    (service) => service.serviceId === serviceId
-  );
-
-  if (!updatedService) {
-    toast.error(`Không tìm thấy dịch vụ với ID: ${serviceId}`);
-    return;
-  }
-
-  const updatedData = {
-    eventId: event?.eventId,
-    serviceId: updatedService?.serviceId,
-    quantity: newQuantity,
-    cost: updatedService?.price * newQuantity,
-  };
-
-  try {
-    const response = await eventserviceApi.updateEventService(service?.serviceId ,updatedData);
-    console.log("API Response:", response);
-    toast.success("Cập nhật số lượng dịch vụ thành công!");
-
-    // Sau khi cập nhật thành công từ API, update lại state services
-    setServices((prev) =>
-      prev.map((service) =>
-        service.serviceId === serviceId
-          ? { ...service, quantity: newQuantity, cost: updatedData.cost }
-          : service
-      )
+    const newServices = selectedServices.filter(
+      (selected) => !services.some((service) => service.serviceId === selected.serviceId)
     );
-  } catch (error) {
-    console.error("Lỗi khi cập nhật số lượng dịch vụ:", error);
-    toast.error("Không thể cập nhật số lượng dịch vụ.");
-  }
-};
 
-  // Thay đổi tab
+    setServices((prev) => [...prev, ...newServices]);
+  };
+
+  const removeService = async (eventserviceId) => {
+    try {
+      await eventserviceApi.delete(eventserviceId); // Gọi API xóa dịch vụ từ eventservice
+
+      // Cập nhật lại bảng dịch vụ
+      setServices((prev) => prev.filter((service) => service.eventserviceId !== eventserviceId));
+
+      // Cập nhật lại autocomplete để dịch vụ bị xóa sẽ lại xuất hiện
+      const removedService = services.find((service) => service.eventserviceId === eventserviceId);
+      setAvailableServices((prev) => [...prev, removedService]); // Thêm lại vào danh sách dịch vụ sẵn có
+
+      toast.success("Dịch vụ đã được xóa!");
+    } catch (error) {
+      console.error("Error removing service:", error);
+      toast.error("Không thể xóa dịch vụ.");
+    }
+  };
+
+
+
+  const handleSave = () => {
+    if (services.length > 0) {
+      saveSelectedServices();
+    } else {
+      toast.warning("Không có dịch vụ nào để lưu!");
+    }
+  };
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
-
-  const handleChangePage = (event, newPage) => {
-    setPage(newPage);
-  };
-
-  const handleChangeRowsPerPage = (event) => {
-    setRowsPerPage(parseInt(event.target.value, 10));
-    setPage(0);
-  };
-
-  const handleSelectService = (serviceId) => {
-    setAvailableServices((prev) =>
-      prev.map((service) =>
-        service.serviceId === serviceId
-          ? { ...service, selected: !service.selected }
-          : service
-      )
-    );
-  };
-
-  // const handleDeleteService = async (serviceId) => {
-  //   try {
-  //     // Gọi API để xóa dịch vụ bằng serviceId
-  //     await eventserviceApi.delete(serviceId); // Gọi API delete với serviceId
-
-  //     // Xóa dịch vụ khỏi state (cập nhật giao diện)
-  //     setServices((prev) => prev.filter((service) => service.serviceId !== serviceId));
-
-  //     toast.success("Dịch vụ đã được xóa!");
-  //   } catch (error) {
-  //     console.error("Lỗi khi xóa dịch vụ:", error);
-  //     toast.error("Không thể xóa dịch vụ.");
-  //   }
-  // };
 
   if (!event) return null;
 
@@ -277,7 +277,7 @@ const handleSaveQuantity = async (serviceId, newQuantity) => {
               }}
             >
               <Box flex={1}>
-                <img
+                <img  
                   src={event?.image}
                   alt={event?.name}
                   style={{
@@ -290,201 +290,106 @@ const handleSaveQuantity = async (serviceId, newQuantity) => {
               </Box>
               <Box flex={2} display="flex" flexDirection="column" gap={3}>
                 <Typography sx={{ fontSize: "1.5rem" }}>
-                  <strong>Mã sự kiện:</strong>{" "}
-                  {event?.eventId || "Không xác định"}
+                  <strong>Mã sự kiện:</strong> {event?.eventId || "Không xác định"}
                 </Typography>
                 <Typography sx={{ fontSize: "1.5rem" }}>
-                  <strong>Tổng:</strong>{" "}
-                  {new Intl.NumberFormat("vi-VN", {
+                  <strong>Tổng:</strong> {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
                     currency: "VND",
                   }).format(event?.totalcost)}
                 </Typography>
                 <Typography sx={{ fontSize: "1.5rem" }}>
-                  <strong>Mô tả:</strong>{" "}
-                  {event?.description || "Không có mô tả"}
+                  <strong>Mô tả:</strong> {event?.description || "Không có mô tả"}
                 </Typography>
               </Box>
             </Box>
           </Box>
         ) : (
           <Box>
-            <Button
-              variant="contained"
-              color="primary"
-              sx={{ fontSize: "1.3rem", marginBottom: "16px" }}
-              onClick={() => setAddServicePopupOpen(true)}
-            >
-              Thêm dịch vụ
-            </Button>
+            <Autocomplete
+              multiple
+              options={availableServices} // Dùng availableServices để hiển thị dịch vụ sẵn có (bao gồm dịch vụ đã bị xóa)
+              getOptionLabel={(option) => option.name}
+              value={services} // Hiển thị các dịch vụ đã chọn
+              onChange={(event, selectedOptions) => {
+                // Lọc các dịch vụ mới được thêm
+                const newServices = selectedOptions.filter(
+                  (selected) => !services.some((service) => service.serviceId === selected.serviceId)
+                );
+
+                // Chuẩn bị các dịch vụ mới với dữ liệu cần thiết
+                const mappedServices = newServices.map((service) => ({
+                  //  eventserviceId: null, // Để null vì đây là dịch vụ mới, backend sẽ tự tăng giá trị này
+                  serviceId: service.serviceId,
+                  name: service.name,
+                  price: service.price,
+                  quantity: 1, // Giá trị mặc định
+                  cost: service.price, // Giá trị mặc định
+                }));
+
+                // Cập nhật bảng và thêm dịch vụ mới vào danh sách dịch vụ đã chọn
+                setServices((prev) => [...prev, ...mappedServices]);
+              }}
+              renderInput={(params) => (
+                <TextField {...params} placeholder="Chọn dịch vụ" variant="outlined" fullWidth />
+              )}
+              isOptionEqualToValue={(option, value) => option.serviceId === value.serviceId}
+              sx={{ marginBottom: 2 }}
+            />
+
+
             <Table>
               <TableHead>
                 <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
-                    #
-                  </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>STT</TableCell>
                   <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
                     Tên dịch vụ
                   </TableCell>
                   <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
-                    Số lượng
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
                     Chi phí
                   </TableCell>
+                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
+                    Hành động
+                  </TableCell>
                 </TableRow>
               </TableHead>
-              <TableBody>
-  {service.length > 0 ? (
-    service.map((service, index) => (
-      <TableRow key={service.serviceId}>
-        <TableCell sx={{ fontSize: "1.4rem" }}>
-          {index + 1}
-        </TableCell>
-        <TableCell sx={{ fontSize: "1.4rem" }}>
-          {service.serviceName}
-        </TableCell>
-        <TableCell sx={{ fontSize: "1.4rem" }}>
-        <TextField
-            sx={{ fontSize: "1.4rem" }}
-            size="small"
-            type="number"
-            value={service.quantity || 1}
-            onChange={(e) =>
-              handleChangeQuantity(service.serviceId, parseInt(e.target.value, 10))
-            }
-          />
-        </TableCell>
-        <TableCell sx={{ fontSize: "1.4rem" }}>
-          {service.cost.toLocaleString()} VND
-        </TableCell>
-        <TableCell>
-          <Button
-            color="primary"
-            onClick={() =>
-              handleSaveQuantity(service.serviceId, updatedServices.find(s => s.serviceId === service.serviceId)?.quantity || service.quantity)
-            }
-          >
-            Lưu
-          </Button>
-        </TableCell>
-      </TableRow>
-    ))
-  ) : (
-    <TableRow>
-      <TableCell
-        colSpan={4}
-        style={{ textAlign: "center", fontSize: "1.3rem" }}
-      >
-        Không có dữ liệu dịch vụ nào!
-      </TableCell>
-    </TableRow>
-  )}
-</TableBody>
-            </Table>
-            <TablePagination
-              rowsPerPageOptions={[2, 5, 10]}
-              component="div"
-              count={totalElements}
-              rowsPerPage={rowsPerPage}
-              page={page}
-              onPageChange={handleChangePage}
-              onRowsPerPageChange={handleChangeRowsPerPage}
-              sx={{
-                fontSize: "1.5rem",
-                display: "flex",
-                justifyContent: "center",
-                marginTop: 2,
-                ".MuiTablePagination-selectLabel, .MuiTablePagination-displayedRows":
-                  {
-                    fontSize: "1.5rem",
-                  },
-                ".MuiTablePagination-actions button": {
-                  fontSize: "2.5rem",
-                  padding: "10px",
-                },
-              }}
-            />
-          </Box>
-        )}
 
-        {/* Dialog thêm dịch vụ */}
-        <Dialog
-          open={addServicePopupOpen}
-          onClose={() => setAddServicePopupOpen(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle variant="h4" fontWeight={"bold"}>
-            Thêm dịch vụ
-          </DialogTitle>
-          <DialogContent dividers>
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell style={{ fontSize: "17px", fontWeight:"bold" }}>Chọn</TableCell>
-                  <TableCell style={{ fontSize: "17px", fontWeight:"bold" }}>Tên dịch vụ</TableCell>
-                  <TableCell style={{ fontSize: "17px", fontWeight:"bold" }}>Chi phí</TableCell>
-                </TableRow>
-              </TableHead>
               <TableBody>
-                {availableServices.length > 0 ? (
-                  availableServices.map((service, index) => (
-                    <TableRow key={service.serviceId}>
-                      <TableCell style={{ fontSize: "15px" }}>
-                        <Checkbox
-                          checked={service.selected || false}
-                          onChange={() =>
-                            handleSelectService(service.serviceId)
-                          }
-                        />
-                      </TableCell>
-                      <TableCell style={{ fontSize: "15px" }}>{service.name}</TableCell>
-                      <TableCell style={{ fontSize: "15px" }}>
+                {services.length > 0 ? (
+                  services.map((service, index) => (
+                    <TableRow key={service.eventserviceId}> {/* Sử dụng eventserviceId làm key */}
+                      <TableCell sx={{ fontSize: "1.4rem" }}>{index + 1}</TableCell>
+                      <TableCell sx={{ fontSize: "1.4rem" }}>{service.name}</TableCell>
+                      <TableCell sx={{ fontSize: "1.4rem" }}>
                         {service.price.toLocaleString()} VND
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="outlined"
+                          color="error"
+                          onClick={() => removeService(service.eventserviceId)}
+                        >
+                          Xóa
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={3} style={{ textAlign: "center" }}>
+                    <TableCell colSpan={4} style={{ textAlign: "center", fontSize: "1.3rem" }}>
                       Không có dịch vụ nào!
                     </TableCell>
                   </TableRow>
                 )}
               </TableBody>
+
             </Table>
-          </DialogContent>
-          <DialogActions>
-            <Button
-              onClick={() => setAddServicePopupOpen(false)}
-              sx={{ fontSize: "1.3rem" }}
-              variant="outlined"
-              color="secondary"
-            >
-              Hủy
-            </Button>
-            <Button
-              onClick={saveSelectedServices}
-              sx={{ fontSize: "1.3rem" }}
-              variant="contained"
-              color="primary"
-            >
-              Lưu
-            </Button>
-          </DialogActions>
-        </Dialog>
+          </Box>
+        )}
       </DialogContent>
       <DialogActions>
-        <Button
-          onClick={handleClose}
-          variant="contained"
-          color="secondary"
-          sx={{ fontSize: "1.2rem" }}
-        >
-          Đóng
-        </Button>
-        <Button variant="contained" color="primary" sx={{ fontSize: "1.2rem" }}>
+        <Button onClick={handleClose} color="primary">Đóng</Button>
+        <Button onClick={handleSave} color="primary" variant="contained">
           Lưu
         </Button>
       </DialogActions>

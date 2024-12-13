@@ -7,13 +7,12 @@ import {
   Typography,
   InputAdornment,
   IconButton,
-  InputLabel,
   MenuItem,
+  FormControl,
 } from "@mui/material";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Divider, Select } from "antd";
-import toast from "react-hot-toast";
-import { FormControl } from "react-bootstrap";
+import toast, { Toaster } from "react-hot-toast";
 
 // Modal style
 const modalStyle = {
@@ -30,14 +29,13 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     username: "",
     password: "",
-    fullname: "",
-    dob: "",
+    email: "",
+    roles: [], // Khởi tạo roles là một mảng rỗng
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [selectedRole, setSelectedRole] = useState(""); // Vai trò hiện tại
   const [roles, setRoles] = useState([]); // Dữ liệu vai trò từ API
-  const [selectedPermissions, setSelectedPermissions] = useState([]); // Danh sách quyền
 
   useEffect(() => {
     fetchRoles();
@@ -52,7 +50,7 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
   // Xử lý việc gửi biểu mẫu
   const handleSubmit = () => {
     onSubmit(formData);
-    setFormData({ username: "", password: "", fullname: "", dob: "" });
+    setFormData({ username: "", password: "", email: "", roles: [], });
     onClose();
   };
 
@@ -76,6 +74,8 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
           role.name.startsWith("STAFF")
         );
 
+        console.log("List Roles: ", fillterRoles);
+
         setRoles(fillterRoles); // Lưu danh sách vai trò
       } else {
         console.error("Failed to fetch roles:", response.status);
@@ -86,18 +86,9 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
   };
 
   // Khi chọn vai trò
-  const handleRoleSelect = (roleName) => {
-    setSelectedRole(roleName);
-
-    // Lấy danh sách quyền của vai trò được chọn
-    const selectedRole = roles.find((role) => role.name === roleName);
-
-    // Cập nhật danh sách quyền đã chọn từ vai trò
-    if (selectedRole && selectedRole.permissions) {
-      setSelectedPermissions(selectedRole.permissions); // Gán toàn bộ quyền của vai trò
-    } else {
-      setSelectedPermissions([]); // Nếu không có quyền nào, reset
-    }
+  const handleRoleSelect = (role) => {
+    setSelectedRole(role); // Lưu vai trò đã chọn vào state
+    setFormData({ ...formData, roles: [...formData.roles, role], }); // Lưu vai trò vào formData
   };
 
   return (
@@ -107,7 +98,7 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
           Thêm người dùng mới
         </Typography>
 
-        <Divider></Divider>
+        <Divider />
 
         {/* Tên đăng nhập */}
         <Box sx={{ mb: 2 }}>
@@ -186,7 +177,7 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
           />
         </Box>
 
-        {/* Họ và tên */}
+        {/* Email */}
         <Box sx={{ mb: 2 }}>
           <Typography
             sx={{
@@ -197,14 +188,14 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
               marginBottom: "5px",
             }}
           >
-            Họ và tên <span style={{ color: "red", marginLeft: "4px" }}>*</span>
+            Email <span style={{ color: "red", marginLeft: "4px" }}>*</span>
           </Typography>
           <TextField
             fullWidth
             variant="outlined"
-            name="fullname"
-            placeholder="Nhập họ và tên"
-            value={formData.fullname}
+            name="email"
+            placeholder="Nhập email"
+            value={formData.email}
             onChange={handleChange}
             sx={{
               height: "40px",
@@ -219,38 +210,24 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
           />
         </Box>
 
-        {/* Ngày sinh */}
-        <Box sx={{ mb: 3 }}>
-          <Typography
-            sx={{
-              fontSize: "1.2rem",
-              fontWeight: "bold",
-              display: "flex",
-              alignItems: "center",
-              marginBottom: "5px",
-            }}
-          >
-            Ngày sinh <span style={{ color: "red", marginLeft: "4px" }}>*</span>
-          </Typography>
-          <TextField
-            fullWidth
-            variant="outlined"
-            name="dob"
-            placeholder="YYYY-MM-DD"
-            type="date"
-            value={formData.dob}
-            onChange={handleChange}
-            sx={{
-              height: "40px",
-              "& .MuiOutlinedInput-root": {
-                height: "40px",
-                fontSize: "1.2rem",
-              },
-              "& .MuiInputLabel-root": {
-                fontSize: "1.2rem",
-              },
-            }}
-          />
+        {/* Vai trò - ComboBox */}
+        <Box sx={{ mb: 2 }}>
+          <FormControl size="small" variant="outlined" fullWidth>
+            <Select
+              value={selectedRole}
+              onChange={handleRoleSelect} // Lưu giá trị vai trò đã chọn
+              getPopupContainer={(trigger) => trigger.parentNode} // Điều này giúp Popup hiển thị bên ngoài Modal
+            >
+              <MenuItem value="">
+                <span>--- Chọn vai trò ---</span>
+              </MenuItem>
+              {roles.map((role) => (
+                <MenuItem key={role.name} value={role.name}>
+                  {role.description}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
         </Box>
 
         <Divider></Divider>
@@ -309,45 +286,52 @@ const AddUserStaff = ({ onUserAdded }) => {
   // Handle API submission
   const handleAddUser = async (formData) => {
     try {
-      // Chuẩn hóa ngày tháng năm
-      if (formData) {
-        const date = new Date(formData.dob);
-        formData.dob = date.toISOString().split("T")[0]; // Format thành YYYY-MM-DD
-      }
-
       console.log("Dữ liệu gửi đi:", formData); // Kiểm tra dữ liệu
-
-      const response = await fetch(`http://localhost:8080/obbm/users/staff`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const responseBody = await response.json();
-
-      if (response.ok) {
-        // console.log("User added successfully:", responseBody);
-        onUserAdded(responseBody.result); // Cập nhật danh sách người dùng
-        toast.success("Người dùng mới đã được thêm thành công!");
-      } else {
-        console.error("Failed to add user:", response.status, responseBody);
-        toast.error(
-          `Không thể thêm người dùng. Lỗi: ${
-            responseBody.message || response.status
-          }`
-        );
+      console.log("Dữ liệu gửi đi:", JSON.stringify(formData));
+  
+      const response = await fetch(
+        `http://localhost:8080/obbm/users/userForAdmin`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+  
+      // Kiểm tra response status và body trả về
+      console.log("Response Status:", response.status);
+  
+      // Nếu response không phải JSON, ta sẽ sử dụng response.text() để lấy nội dung thô
+      const responseText = await response.text();
+      console.log("Response Body:", responseText);
+  
+      // Kiểm tra mã trạng thái trả về từ API
+      if (!response.ok) {
+        // Trả về lỗi nếu response.status không phải 2xx
+        const errorMessage = responseText || `Lỗi: ${response.status}`;
+        console.error("Lỗi từ server:", errorMessage);
+        toast.error(`Không thể thêm người dùng. Lỗi: ${errorMessage}`);
+        return;
       }
+  
+      // Nếu có lỗi, phản hồi của server có thể là một JSON object
+      const responseBody = JSON.parse(responseText); // Chuyển thành đối tượng JSON từ chuỗi thô
+      console.log("User added successfully:", responseBody);
+  
+      onUserAdded(responseBody?.result); // Cập nhật danh sách người dùng
+      toast.success("Người dùng mới đã được thêm thành công!");
     } catch (error) {
       console.error("Error adding user:", error);
       toast.error("Đã xảy ra lỗi. Vui lòng thử lại.");
     }
   };
-
+  
   return (
     <Box>
+    <Toaster position="top-center" reverseOrder={false} />
       <Button
         variant="contained"
         color="primary"

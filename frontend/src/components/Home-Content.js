@@ -21,6 +21,8 @@ import eventApi from "../api/eventApi.js";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
 import { getToken, setToken } from "../services/localStorageService";
 import LoadingPage from "./LoadingPage";
+import { checkAccessToken } from "services/checkAccessToken";
+
 
 const blogPosts = [
   {
@@ -161,19 +163,23 @@ const Content = () => {
     }
   }, []);
 
-  const fetchDanhMuc = async () => {
-    const danhMucList = await danhMucApi.getAll();
-    setCategories(danhMucList.result.content);
+  const fetchDanhMucVaEvent = async () => {
+    try {
+      const danhMucList = await danhMucApi.getAll();
+      const EventsList = await eventApi.getAll();
+      setEvents(EventsList.result.content);
+      setCategories(danhMucList.result.content);
+    } catch (error) {
+      checkAccessToken(navigate);
+    }
   };
 
-  const fetchEvent = async () => {
-    const EventsList = await eventApi.getAll();
-    setEvents(EventsList.result.content);
-  };
+
+
   useEffect(() => {
-    fetchDanhMuc(); // Giả sử fetchDanhMuc là hàm async
-    fetchEvent();
+    fetchDanhMucVaEvent();
   }, [activeCategoryId]);
+
   const handleScroll = (direction, categoryId) => {
     const menuList = document.querySelector(
       `#category-${categoryId} .food-menu-list`
@@ -447,10 +453,10 @@ const Content = () => {
                               loading="lazy"
                               className="w-100"
                             />
-
                             <button className="btn food-menu-btn">
                               <a href="/menu">Thêm vào Thực đơn</a>
                             </button>
+
                           </div>
 
                           <div className="wrapper">
@@ -467,6 +473,12 @@ const Content = () => {
                       </li>
                     ))}
                   </ul>
+                  <button
+                    className="scroll-btn right"
+                    onClick={() => handleScroll("right", category.categoryId)}
+                  >
+                    &gt;
+                  </button>
                 </div>
               ))}
             </div>
