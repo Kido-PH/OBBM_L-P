@@ -543,7 +543,16 @@ const AccountSection = () => {
                   </button>
                 </div>
                 {userDetails.noPassword && (
-                  <div style={{ textAlign: "left" }}>
+                  <div
+                    style={{
+                      textAlign: "left",
+                      position: "absolute",
+                      bottom: "75px",
+                      left: "230px",
+                      cursor: "pointer",
+                      textAlign: "center",
+                    }}
+                  >
                     <p style={{ display: "inline", marginRight: "4px" }}>
                       Chú ý: Tài khoản bạn chưa có mật khẩu,
                     </p>

@@ -187,3 +187,8 @@ a {
 .menu-contract-font {
   font-family: 'Lobster, cursive' !important;
 }
+
+.card-location:hover {
+  background-color: rgba(108, 108, 108, 0.1);
+  cursor: pointer;
+}

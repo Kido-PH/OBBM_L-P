@@ -15,6 +15,7 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
   const [selectedWard, setSelectedWard] = useState(null);
   const [name, setName] = useState(locationData.name || "");
   const [houseNumber, setHouseNumber] = useState("");
+  const [cost, setCost] = useState(0);
   const [errors, setErrors] = useState({});
 
   // Lấy dữ liệu tỉnh, quận, phường từ API
@@ -66,6 +67,15 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
         value: ward.code,
         label: ward.name,
       }));
+      if (selectedDistrictData?.value === 916) setCost(0); //Ninh Kiều
+      if (selectedDistrictData?.value === 919) setCost(150000); //Cái Răng
+      if (selectedDistrictData?.value === 918) setCost(300000); //Bình Thủy
+      if (selectedDistrictData?.value === 926) setCost(500000); //Phong Điền
+      if (selectedDistrictData?.value === 927) setCost(500000); //Thới Lai
+      if (selectedDistrictData?.value === 917) setCost(1000000); //Ô Môn
+      if (selectedDistrictData?.value === 925) setCost(1100000); //Cờ đỏ
+      if (selectedDistrictData?.value === 923) setCost(1200000); //Thốt Nốt
+      if (selectedDistrictData?.value === 924) setCost(1500000); //Vĩnh Thạnh
       setWards(wardsData || []);
       setSelectedWard(
         wardsData?.find((ward) => ward.value === locationData.wardCode) || null
@@ -106,7 +116,7 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
       address: address,
       capacity: 0,
       table: 0,
-      cost: 0,
+      cost: cost,
       description: 0,
       status: locationData.status,
     };
@@ -135,7 +145,7 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
   };
 
   return (
-    <Card className="my-3 px-5 pb-5">
+    <Card className="my-3 px-5 pb-3">
       <IoIosClose
         style={{ position: "relative", left: "100%", top: "-1px" }}
         size={24}
@@ -211,11 +221,13 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
       <div className="d-flex justify-content-center">
         <Button
           onClick={handleUpdateLocation}
-          className="btn-sua btn-hover mt-3"
+          style={{ width: "12%" }}
+          className="btn-sua btn-hover mt-4"
         >
-          Cập nhật địa điểm
+          Cập nhật
         </Button>
       </div>
+      <h4>Miễn phí vận chuyển nội ô Ninh Kiều!</h4>
     </Card>
   );
 }
