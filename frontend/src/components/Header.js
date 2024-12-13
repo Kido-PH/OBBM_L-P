@@ -7,7 +7,7 @@ import { GiKnifeFork } from "react-icons/gi";
 import "../assets/css/mainStyle.css";
 import "../assets/css/customStyle.css";
 import "../assets/css/headerStyle.css";
-import Menu from "../assets/images/menu_header.jpg";
+import Menu from "../assets/images/br-menu.png";
 import Cookies from "js-cookie";
 import { FiLogOut } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
@@ -179,7 +179,8 @@ const Header = () => {
           <Tooltip title="Thực đơn">
             <a href="/menu" className="navbar-link header-icon">
               {/* <GiKnifeFork /> */}
-              <AiOutlineMenu />
+              {/* <AiOutlineMenu /> */}
+              <img src={Menu} alt="Menu" style={{width:"28px"}} />
             </a>
           </Tooltip>
 

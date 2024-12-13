@@ -3,12 +3,17 @@ import axiosClient from "../config/axiosClient";
 const eventserviceApi = {
     getAll(params) {
         const url = "/eventservice";
-        return axiosClient.get(url, {params});
+        return axiosClient.get(url, { params });
     },
 
-    get(id) {
+    async get(id) {
         const url = `/eventservice/${id}`;
-        return axiosClient.get(url);
+        try {
+            return await axiosClient.get(url);
+        } catch (error) {
+            console.error(`Error fetching eventservice with id ${id}:`, error);
+            throw error;
+        }
     },
 
     add(data) {
@@ -26,26 +31,40 @@ const eventserviceApi = {
         return axiosClient.delete(url);
     },
 
-    getPaginate(page, size) {
+    getPaginate(page = 1, size = 10) {
         const url = `/eventservice?page=${page}&size=${size}`;
         return axiosClient.get(url);
     },
 
-    getEventServiceByService(page, size, dishId) {
-        const url = `/eventservice/byService?dishId=${dishId}&page=${page}&size=${size}`;
+    getEventServiceByService(page = 1, size = 10, dishId) {
+        const params = new URLSearchParams();
+        if (dishId) params.append("dishId", dishId);
+        params.append("page", page);
+        params.append("size", size);
+
+        const url = `/eventservice/byService?${params.toString()}`;
         return axiosClient.get(url);
     },
 
-    getServicesByEvent(page, size, menuId) {
-        const url = `/eventservice/byEvent?menuId=${menuId}&page=${page}&size=${size}`;
-        return axiosClient.get(url);
+    getServicesByEvent(page = 1, size = 10, menuId) {
+        const params = new URLSearchParams();
+        if (menuId) params.append("menuId", menuId);
+        params.append("page", page);
+        params.append("size", size);
+
+        const url = `/eventservice/byEvent?${params.toString()}`;
+        return axiosClient.get(url).then((response) => {
+            if (response?.code !== 1000 || !response?.result?.content) {
+                throw new Error("Invalid API response structure.");
+            }
+            return response.result;
+        });
     },
-    
+
     saveAllMenuDish(data) {
         const url = `/eventservice/saveAllMenuDish`;
         return axiosClient.post(url, data);
     },
-
 };
 
 export default eventserviceApi;

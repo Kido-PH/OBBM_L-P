@@ -205,10 +205,35 @@ const ManageContracts = () => {
   const fetchContractWithPaginate = async (page, rowsPerPage) => {
     try {
       const res = await contractApi.getPaginate(page, rowsPerPage);
-      setContracts(res.result?.content.reverse());
+      const newContracts = res.result?.content.reverse(); // Đảo ngược danh sách từ backend
       setTotalElements(res.result?.totalElements);
-      setFilteredContracts(res.result?.content.reverse());
-      console.log(res.result?.content);
+  
+      // Cập nhật danh sách hợp đồng cục bộ
+      setContracts((prevContracts) => {
+        const updatedContracts = [...newContracts]; // Dữ liệu mới từ API
+        const existingIds = new Set(prevContracts.map((contract) => contract.id));
+  
+        // Thêm hợp đồng cũ chưa có trong danh sách mới
+        prevContracts.forEach((contract) => {
+          if (!existingIds.has(contract.id)) {
+            updatedContracts.unshift(contract); // Thêm vào đầu
+          }
+        });
+  
+        // Sắp xếp danh sách để hợp đồng mới luôn ở trên
+        return updatedContracts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      });
+  
+      // Cập nhật danh sách phân trang hiển thị
+      setFilteredContracts((prevContracts) => {
+        const allContracts = [...newContracts, ...prevContracts]; // Kết hợp dữ liệu mới và cũ
+        const sortedContracts = allContracts.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        ); // Sắp xếp theo thời gian
+        return sortedContracts.slice((page - 1) * rowsPerPage, page * rowsPerPage); // Phân trang
+      });
+  
+      console.log(newContracts);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
     }
@@ -405,6 +430,45 @@ const ManageContracts = () => {
 
       // Kiểm tra mã trạng thái trả về từ server
       if (res.code === 1000) {
+
+        // Gửi thông báo qua email
+      const message = `Kính gửi ${selecterContract.custname}, tổng chi phí hợp đồng của bạn đã được cập nhật thành ${new Intl.NumberFormat("vi-VN", {
+        style: "currency",
+        currency: "VND",
+      }).format(selecterContract.totalcost)}. Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.`;
+
+
+      const emailData = {
+        emailTo: selecterContract.custmail,
+        subject: "Cập nhật chi phí hợp đồng",
+        message: `Kính gửi ${selecterContract.custname}, tổng chi phí hợp đồng của bạn đã được cập nhật thành ${new Intl.NumberFormat("vi-VN", {
+          style: "currency",
+          currency: "VND",
+        }).format(selecterContract.totalcost)}. Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.`,
+        template: `<p>Kính gửi <strong>${selecterContract.custname}</strong>,</p>
+                   <p>Tổng chi phí hợp đồng của bạn đã được cập nhật thành: <strong>${new Intl.NumberFormat("vi-VN", {
+                     style: "currency",
+                     currency: "VND",
+                   }).format(selecterContract.totalcost)}</strong>.</p>
+                   <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi. Hotline: 01234567789 Công ty TNHH L&P</p>`,
+      };      
+
+      try {
+        await axios.post("http://emailserivce.somee.com/Email/sendMail", emailData);
+        showSuccess("Email thông báo cập nhật tổng chi phí được gửi thành công!");
+      } catch (emailError) {
+        console.error("Lỗi khi gửi email:", emailError);
+      
+        // Kiểm tra xem phản hồi lỗi có chi tiết từ server không
+        if (emailError.response && emailError.response.data) {
+          toast.error(
+            `Gửi email thất bại: ${emailError.response.data.message || "Lỗi không xác định"}`
+          );
+        } else {
+          toast.error("Gửi email thất bại. Vui lòng thử lại sau.");
+        }
+      }      
+
         // Cập nhật hợp đồng trong state sau khi sửa thành công
         setContracts((prevContracts) => {
           return prevContracts.map((contractItem) =>

@@ -23,11 +23,11 @@
   border: none;
   font-size: 24px;
   cursor: pointer;
-  color: #333;
+  color: hsl(32, 100%, 69%);
 }
 
 .scroll-button:hover {
-  color: hsl(32, 100%, 59%);
+  color: #333;
 }
 
 
