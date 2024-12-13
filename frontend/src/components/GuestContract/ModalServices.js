@@ -8,6 +8,8 @@ import { multiStepContext } from "../../StepContext";
 import serviceApi from "api/serviceApi";
 import guestEventServiceApi from "api/guestEventServicesApi";
 import AudioRecorderWithAPI from "./SpeechToTextInput";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
   const {
@@ -28,6 +30,7 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
   const [total, setTotal] = React.useState(0);
 
   const [searchTerm, setSearchTerm] = React.useState("");
+  const navigate = useNavigate();
 
   //Khởi tạo dịch vụ mặc định theo Event
   React.useEffect(() => {
@@ -71,7 +74,7 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
           setEventServicesData(eventServicesSendToApi);
         }
       } catch (error) {
-        console.error("Error initializing services:", error);
+        checkAccessToken(navigate);
       }
     };
 
@@ -150,7 +153,7 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
     console.log("Services còn lại gửi đi API:", updatedEventServicesData);
   };
 
-  const handleSearch = () => {}
+  const handleSearch = () => {};
 
   // Lấy style cho từng card
   const getCardStyle = (service) => {
@@ -215,7 +218,7 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
             {/* Ô tìm kiếm */}
             <Row lg={2} sm={2} className="d-flex align-items-center">
               <Col className="p-2">
-               <AudioRecorderWithAPI onSearch={handleSearch}/>
+                <AudioRecorderWithAPI onSearch={handleSearch} />
               </Col>
             </Row>
 

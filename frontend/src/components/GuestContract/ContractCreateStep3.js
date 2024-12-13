@@ -10,6 +10,7 @@ import LoadingPage from "components/LoadingPage";
 import ModalServices from "./ModalServices";
 import ModalInfoServices from "./ModalInfoServices";
 import eventApi from "api/eventApi";
+import { checkAccessToken } from "services/checkAccessToken";
 
 const ContractCreateStep3 = () => {
   const {
@@ -46,8 +47,12 @@ const ContractCreateStep3 = () => {
   const [showModalConfirm, setShowModalConfirm] = React.useState(false);
 
   const fetchEvent = async () => {
-    const currentEvent = await eventApi.get(currentEventId);
-    setCurrentEventChoosen(currentEvent.result);
+    try {
+      const currentEvent = await eventApi.get(currentEventId);
+      setCurrentEventChoosen(currentEvent.result);
+    } catch (error) {
+      checkAccessToken(navigate);
+    }
   };
 
   const initStateEvent = async () => {

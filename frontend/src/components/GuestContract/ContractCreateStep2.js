@@ -1,16 +1,19 @@
 import * as React from "react";
 import moment from "moment";
 import { Form, Card } from "react-bootstrap";
-import { FaEye } from "react-icons/fa6";
 import { multiStepContext } from "../../StepContext";
 import ModalLocations from "./ModalLocations";
 import ModalServices from "./ModalServices";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
-import ModalInfoMenu from "./ModalInfoMenu";
 import eventApi from "api/eventApi";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+import { IoIosInformationCircle } from "react-icons/io";
 
 const ContractCreateStep2 = () => {
+  const navigate = useNavigate();
+
   const { setStep, contractData, setContractData } =
     React.useContext(multiStepContext);
   const location = JSON.parse(localStorage.getItem("currentLocation")); // Parse chuỗi JSON thành đối tượng
@@ -19,13 +22,15 @@ const ContractCreateStep2 = () => {
   ); // Parse chuỗi JSON thành đối tượng
   const currentEventId = JSON.parse(localStorage.getItem("currentEventId")); // Parse chuỗi JSON thành đối tượng
   const createdMenu = JSON.parse(localStorage.getItem("createdMenu")); // Parse chuỗi JSON thành đối tượng
+  const [errors, setErrors] = React.useState({});
+  const [isInvalid, setIsInvalid] = React.useState(true);
 
   const [currentEventInfo, setCurrentEventInfo] = React.useState({});
 
   const [totalMenuCost, setTotalMenuCost] = React.useState(0);
   const [totalServicesCost, setTotalServicesCost] = React.useState(0);
 
-  const [guestPerTable, setGuestPerTable] = React.useState(10);
+  const [guestPerTable, setGuestPerTable] = React.useState(6);
   const [minTableCount, setMinTableCount] = React.useState(0);
 
   const [showModalMenu, setShowModalMenu] = React.useState(false);
@@ -36,8 +41,12 @@ const ContractCreateStep2 = () => {
   // };
 
   const fetchEvent = async () => {
-    const currentEvent = await eventApi.get(currentEventId);
-    setCurrentEventInfo(currentEvent.result);
+    try {
+      const currentEvent = await eventApi.get(currentEventId);
+      setCurrentEventInfo(currentEvent.result);
+    } catch (error) {
+      checkAccessToken(navigate);
+    }
   };
 
   const handleShowModalMenu = () => {
@@ -95,6 +104,15 @@ const ContractCreateStep2 = () => {
     fetchEvent();
   }, []);
 
+  React.useEffect(() => {
+    if (contractData.guest === 0 || contractData.guest === null) {
+      setErrors({
+        ...errors,
+        guestCount: null,
+      });
+    }
+  }, [contractData.guest]);
+
   const formatCurrency = (amount) => {
     return amount
       ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
@@ -124,22 +142,94 @@ const ContractCreateStep2 = () => {
   };
 
   const handleGuestChange = (e) => {
-    // Lấy giá trị từ input và chuyển sang số
     const value = parseInt(e.target.value) || 0;
 
-    // Kiểm tra nếu giá trị là số âm
     if (value < 0) {
-      // Nếu là số âm, không làm gì hoặc đặt lại giá trị thành 0
+      setErrors({
+        ...errors,
+        guestCount: "Số lượng khách không thể là số âm.",
+      });
+      setIsInvalid(true);
       setContractData({
         ...contractData,
-        guest: 0, // Hoặc bạn có thể giữ lại giá trị cũ nếu cần
+        guest: 0,
+        table: 0,
       });
+      setMinTableCount(0);
+    } else if (location) {
+      const maxGuest = location.isCustom ? 5000 : location.capacity;
+      if (value > maxGuest) {
+        setErrors({
+          ...errors,
+          guestCount: `Sức chứa của địa điểm tối đa là: ${maxGuest}.`,
+        });
+        setContractData({
+          ...contractData,
+          guest: maxGuest,
+          table: Math.ceil(maxGuest / guestPerTable),
+        });
+        setMinTableCount(Math.ceil(maxGuest / guestPerTable));
+        setIsInvalid(true);
+      } else {
+        setErrors({
+          ...errors,
+          guestCount: null,
+        });
+        setIsInvalid(false);
+        const tableCount = Math.ceil(value / guestPerTable);
+        setContractData({
+          ...contractData,
+          guest: value,
+          table: tableCount,
+        });
+        setMinTableCount(tableCount);
+      }
     } else {
-      // Giới hạn giá trị tối đa là 10,000 và cập nhật giá trị
+      setErrors({
+        ...errors,
+        guestCount: "Vui lòng chọn địa điểm trước.",
+      });
+      setIsInvalid(true);
+    }
+  };
+
+  const handleGuestPerTableChange = (e) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setGuestPerTable(value);
+      if (contractData.guest >= 6) {
+        const tableCount = Math.ceil(contractData.guest / value);
+        setContractData({
+          ...contractData,
+          table: tableCount,
+        });
+        setMinTableCount(tableCount);
+      }
+    }
+  };
+
+  const handleTableChange = (e) => {
+    let value = e.target.value.replace(/^0+/, "").replace(/\D+/g, "");
+    value = parseInt(value) || 0;
+    const minTable = minTableCount;
+    const maxTable = minTableCount + 3;
+
+    if (contractData.guest > 0) {
       setContractData({
         ...contractData,
-        guest: Math.min(value, 10000),
+        table: Math.max(Math.min(value, maxTable), minTable),
       });
+      if (value > maxTable) {
+        setErrors({
+          ...errors,
+          table: "Tối đa đặt dư 3 bàn.",
+        });
+      } else {
+        setErrors({
+          ...errors,
+          table: null,
+        });
+      }
     }
   };
 
@@ -202,7 +292,9 @@ const ContractCreateStep2 = () => {
                     showTimeSelect
                     dateFormat="dd/MM/yyyy HH:mm"
                     timeFormat="HH:mm"
-                    minDate={new Date()}
+                    minDate={
+                      new Date(new Date().setDate(new Date().getDate() + 8))
+                    }
                     required
                     className="form-control fs-4 w-100"
                   />
@@ -251,13 +343,20 @@ const ContractCreateStep2 = () => {
                   name="guest"
                   id="guest"
                   placeholder="Số lượng khách"
-                  className="form-control fs-4"
-                  value={contractData["guest"]}
+                  className={`form-control fs-4 ${
+                    errors.guestCount ? "is-invalid" : ""
+                  }`}
+                  value={contractData.guest}
                   onChange={handleGuestChange}
                   required
                 />
+                {errors.guestCount && (
+                  <div className="text-danger fs-5">{errors.guestCount}</div>
+                )}
               </div>
             </div>
+
+            {/* Select Số lượng khách / bàn */}
             <div className="col">
               <div className="mb-3">
                 <label className="form-label fw-bold">
@@ -269,12 +368,7 @@ const ContractCreateStep2 = () => {
                   id="guestPerTable"
                   className="form-select fs-4"
                   value={guestPerTable}
-                  onChange={(e) => {
-                    const value = parseInt(e.target.value);
-                    if (!isNaN(value) && value > 0) {
-                      setGuestPerTable(value); // Chỉ cập nhật state nếu giá trị hợp lệ
-                    }
-                  }}
+                  onChange={handleGuestPerTableChange}
                   required
                 >
                   <option value={6}>6 người/bàn</option>
@@ -284,32 +378,29 @@ const ContractCreateStep2 = () => {
               </div>
             </div>
 
+            {/* Input Số bàn */}
             <div className="col">
               <div className="mb-3">
-                <label className="form-label fw-bold">Số bàn</label>
-                <span className="text-danger d-inline-block">*</span>
+                <label className="form-label fw-bold">
+                  Số bàn
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
                 <input
                   type="number"
                   name="table"
                   id="table"
                   className="form-control input-hienthi-popup fs-4"
                   value={contractData.table}
-                  min={minTableCount} // Đặt giá trị tối thiểu
-                  max={1000} // Đặt giá trị tối thiểu
-                  readOnly={false} // Cho phép chỉnh sửa nếu cần
+                  min={minTableCount}
+                  max={200}
+                  readOnly={false}
                   placeholder={minTableCount}
                   required
-                  onChange={(e) => {
-                    const value = Math.max(
-                      parseInt(e.target.value) || 0,
-                      minTableCount
-                    ); // Không cho nhập nhỏ hơn minTableCount
-                    setContractData((prevData) => ({
-                      ...prevData,
-                      table: value,
-                    }));
-                  }}
+                  onChange={handleTableChange}
                 />
+                {errors.table && (
+                  <div className="text-danger fs-5">{errors.table}</div>
+                )}
               </div>
             </div>
           </div>
@@ -384,13 +475,23 @@ const ContractCreateStep2 = () => {
             >
               Tiếp theo
             </button>
-            <p
-              className="text-secondary fw-bold"
-              style={{ textAlign: "left", marginBottom: "0px" }}
-            >
-              Lưu ý: Nhập số bàn và chọn số người / bàn để tính tổng giá trị
-              thực đơn.
-            </p>
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <p
+                className="text-danger fw-bold mb-0"
+                style={{
+                  marginRight: "4px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+              >
+                <IoIosInformationCircle className="mt-1 me-2" />
+                Lưu ý:{" "}
+              </p>
+              <span className="text-secondary fw-bold">
+                Nhập vào "Số lượng khách ước tính" để tự động tính số bàn tối
+                thiểu.
+              </span>
+            </div>
           </div>
         </Form>
       </Card>

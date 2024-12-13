@@ -43,6 +43,8 @@ const Header = () => {
       if (response.ok) {
         // Xóa thông tin đăng nhập sau khi logout thành công
         localStorage.removeItem("accessToken");
+        localStorage.removeItem("isAdmin");
+        localStorage.removeItem("currentLocation");
         localStorage.removeItem("userId");
         Cookies.remove("refreshToken");
         navigate("/login");
@@ -218,8 +220,8 @@ const Header = () => {
                     <AiFillLock />
                     Đổi mật khẩu
                   </a>
-                  <a
-                    className="dropdown-item navbar-link"
+                  <button
+                    className="dropdown-item navbar-link w-100"
                     onClick={handleLogout}
                     style={{
                       display: "flex",
@@ -229,7 +231,7 @@ const Header = () => {
                   >
                     <FiLogOut />
                     Đăng xuất
-                  </a>
+                  </button>
                 </div>
               </div>
             )}
@@ -238,7 +240,11 @@ const Header = () => {
           {/* Hiển thị tên người dùng khi đã đăng nhập */}
           {isLoggedIn && userDetails && (
             <div className="user-name">
-              <p className="navbar-link">Chào, {userDetails.fullname}</p>{" "}
+              <p className="navbar-link mb-0">
+                {userDetails.fullname !== null
+                  ? "Chào, " + userDetails.fullname
+                  : "Xin chào!"}
+              </p>{" "}
               {/* Hiển thị tên người dùng */}
             </div>
           )}
