@@ -20,7 +20,7 @@ import {
   Typography,
   TablePagination,
   Autocomplete,
-  FormControlLabel,
+  Popover,
 } from "@mui/material";
 import menudishApi from "../../api/menudishAdminApi";
 import dishApi from "../../api/dishApi";
@@ -32,8 +32,8 @@ import AddIcon from "@mui/icons-material/Add";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteIcon from "@mui/icons-material/Delete";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import { Snackbar, Alert } from '@mui/material';
-
+import SnackBarNotification from "./SnackBarNotification";
+import { FaFilter } from 'react-icons/fa';
 
 const MenuManager = () => {
 
@@ -63,11 +63,29 @@ const MenuManager = () => {
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [menuToDelete, setMenuToDelete] = useState(null);
 
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
   const categoryTranslation = {
     "Appetizers": "Món khai vị",
     "Main Courses": "Món chính",
     "Desserts": "Món tráng miệng",
-    "Beverages": "Nước giải khát",
+    "Beverages": "Đồ uống",
     // Thêm các danh mục khác ở đây
   };
   const [filteredMenus, setFilteredMenus] = useState(menus); // Khởi tạo danh sách đã lọc với toàn bộ dữ liệu ban đầu
@@ -242,7 +260,7 @@ const MenuManager = () => {
         }))
       );
 
-      toast.success("Cập nhật menu thành công!");
+      showSuccess("Cập nhật menu thành công!");
       setOpenDialog(false);
       handleClose();
       // Cập nhật bảng
@@ -295,7 +313,7 @@ const MenuManager = () => {
 
       await menudishApi.saveAllDish(menuDishPayload);
 
-      toast.success("Thêm menu thành công!");
+      showSuccess("Thêm menu thành công!");
       setOpenDialog(false);
       handleClose();
       // Cập nhật bảng bằng cách thêm menu mới vào đầu danh sách
@@ -336,7 +354,7 @@ const MenuManager = () => {
     const res = await menuApi.delete(menuToDelete);
     if (res.code === 1000) {
       fetchMenusWithPagination(page + 1);
-      toast.success("Menu đã được xóa thành công !");
+      showSuccess("Menu đã được xóa thành công !");
     }
     setOpenConfirmDialog(false);
     setMenuToDelete(null);
@@ -406,10 +424,7 @@ const MenuManager = () => {
         listMenuDish: [...prev.listMenuDish, ...newDishes], // Giữ lại các món cũ và thêm món mới
       };
     });
-    setSnackbarMessage('Đã cập nhật danh sách món ăn vào menu!');
-    setSnackbarSeverity('success');
-    setSnackbarOpen(true); // Hiển thị Snackbar
-
+    showSuccess('Đã cập nhật danh sách món ăn vào menu!');
   };
 
   const handleAddToMenu = () => {
@@ -458,22 +473,42 @@ const MenuManager = () => {
     setFilteredMenus(filteredResults); // Cập nhật danh sách sau khi tìm kiếm
   };
 
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedEvent, setSelectedEvent] = useState('');
+
+  const eventNames = [...new Set(menus.map(menu => menu.events?.name).filter(Boolean))];
+
+  const handleOpenPopover = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  // Đóng Popover
+  const handleClosePopover = () => {
+    setAnchorEl(null);
+  };
+
+  const handleFilterEvent = (event, value) => {
+    setSelectedEvent(value);
+    setFilteredMenus(
+      menus.filter(menu => !value || menu.events?.name === value)
+    );
+    handleClosePopover(); // Đóng Popover sau khi chọn
+  };
+
+  const handleEventButtonClick = () => {
+    // Ví dụ: Đặt lại bộ lọc sự kiện
+    setSelectedEvent('');
+    console.log('Đã reset bộ lọc sự kiện!');
+  };
+
   return (
     <Box>
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={3000} // Ẩn sau 3 giây
-        onClose={handleSnackbarClose}
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }} // Vị trí hiển thị
-      >
-        <Alert
-          onClose={handleSnackbarClose}
-          severity={snackbarSeverity} // success, error, info, warning
-          sx={{ width: '100%' }}
-        >
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
       <div className="admin-toolbar">
         <div className="admin-group">
           <svg
@@ -512,20 +547,71 @@ const MenuManager = () => {
       </div>
 
       {/* Danh sách menu */}
-      <TableContainer component={Paper}>
-        <Table className="table-container">
+      <TableContainer component={Paper} className="table-container">
+        <Table>
           <TableHead>
             <TableRow>
-              <TableCell>Tên menu</TableCell>
+              <TableCell>STT</TableCell>
+              <TableCell>
+                Tên thực đơn
+              </TableCell>
               <TableCell>Mô tả</TableCell>
               <TableCell>Tổng chi phí</TableCell>
-              <TableCell>Sự kiện</TableCell>
+              <TableCell>
+                <Box display="flex" alignItems="center">
+                  <span>Sự kiện</span>
+                  <Button
+                    size="small"
+                    color=""
+                    style={{
+                      marginLeft: '-8px',  // Lệch sang trái một chút
+                      marginTop: '1px',    // Hạ xuống một chút
+                      minWidth: '40px',     // Tăng chiều rộng của nút để dễ dàng nhấn
+                      height: '30px',       // Tăng chiều cao để tạo khoảng trống cho vùng nhấn
+                      padding: '8px',       // Thêm padding để tăng kích thước vùng nhấn mà không thay đổi icon
+                      display: 'flex',      // Sử dụng flex để đảm bảo icon được căn giữa trong nút
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                    onClick={handleOpenPopover}
+                  >
+                    <FaFilter className="text-gray-500 h-6 w-6" />
+                  </Button>
+
+                </Box>
+                <Popover
+                  open={Boolean(anchorEl)}
+                  anchorEl={anchorEl}
+                  onClose={handleClosePopover}
+                  anchorOrigin={{
+                    vertical: 'bottom',
+                    horizontal: 'center',
+                  }}
+                  transformOrigin={{
+                    vertical: 'top',
+                    horizontal: 'center',
+                  }}
+                >
+                  <Box p={2} width={300}>
+                    <Autocomplete
+                      options={eventNames}
+                      getOptionLabel={(option) => option || 'Tất cả'}
+                      renderInput={(params) => (
+                        <TextField {...params} label="Lọc sự kiện" variant="outlined" size="small" />
+                      )}
+                      value={selectedEvent}
+                      onChange={handleFilterEvent}
+                    />
+                  </Box>
+                </Popover>
+              </TableCell>
               <TableCell>Hành động</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {filteredMenus.slice().reverse().map((menu) => (
+            {filteredMenus.map((menu, index) => (
               <TableRow key={menu.menuId}>
+                <TableCell>{index + 1}</TableCell>
                 <TableCell>{menu.name}</TableCell>
                 <TableCell>{menu.description}</TableCell>
                 <TableCell>
@@ -565,7 +651,6 @@ const MenuManager = () => {
               </TableRow>
             ))}
           </TableBody>
-
         </Table>
         <TablePagination
           rowsPerPageOptions={[5, 10, 25]}
@@ -575,29 +660,30 @@ const MenuManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",
             fontSize: "1.2rem",
             padding: "16px",
-            color: "#333", // Đổi màu chữ thành màu tối hơn
-            backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
-            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
-            borderRadius: "8px", // Thêm bo góc
+            color: "#333",
+            backgroundColor: "#f9f9f9",
+            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
+            borderRadius: "8px",
             "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
             {
               fontSize: "1.2rem",
             },
             "& .MuiTablePagination-actions > button": {
               fontSize: "1.2rem",
-              margin: "0 8px", // Thêm khoảng cách giữa các nút
-              backgroundColor: "#1976d2", // Màu nền của các nút
-              color: "#fff", // Màu chữ của các nút
-              borderRadius: "50%", // Nút bấm hình tròn
-              padding: "8px", // Tăng kích thước nút
-              transition: "background-color 0.3s", // Hiệu ứng hover
+              margin: "0 8px",
+              backgroundColor: "#1976d2",
+              color: "#fff",
+              borderRadius: "50%",
+              padding: "8px",
+              transition: "background-color 0.3s",
               "&:hover": {
-                backgroundColor: "#1565c0", // Đổi màu khi hover
+                backgroundColor: "#1565c0",
               },
             },
           }}
@@ -760,159 +846,125 @@ const MenuManager = () => {
             <Dialog
               open={open}
               onClose={handleClose}
-              maxWidth="md"
+              maxWidth="md" // Thay maxWidth="lg" thành "md" để giảm chiều ngang
               fullWidth
               sx={{
-                "& .MuiDialog-paper": {
-                  boxShadow: "none",
-                  padding: "0",
-                  border: "none",
+                '& .MuiDialog-container': {
+                  alignItems: 'flex-start', // Đặt Dialog gần phía trên
+                },
+                '& .MuiDialog-paper': {
+                  padding: '8px',
+                  maxHeight: '95vh', // Giới hạn chiều cao
+                  overflow: 'hidden', // Ẩn thanh trượt
                 },
               }}
             >
               <DialogTitle
                 sx={{
-                  padding: '16px 24px',
+                  padding: '8px 16px',
                   fontWeight: 'bold',
                   fontSize: '18px',
                 }}
               >
                 Chọn món ăn
               </DialogTitle>
-              <DialogContent sx={{ minWidth: '400px', padding: '16px' }}>
+              <DialogContent
+                sx={{
+                  padding: '8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                }}
+              >
+                {/* Phần Autocomplete */}
                 <Box
                   sx={{
-                    maxHeight: 400,
-                    overflowY: 'auto',
                     display: 'flex',
-                    flexDirection: 'column',
-                    gap: '16px',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                    justifyContent: 'space-between',
                   }}
                 >
-                  <Box>
-                    <Box sx={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between' }}>
-                      {groupedOptions.map((group) => (
-                        <Box
-                          key={group.categoryId}
-                          sx={{
-                            width: '48%', // Chiếm 48% chiều rộng mỗi mục (giúp để vừa hai danh mục trên một hàng)
-                            marginBottom: '32px',
-                            boxSizing: 'border-box',
-                          }}
-                        >
-                          {/* Tiêu đề cho mỗi danh mục */}
-                          <Typography
-                            variant="h6"
-                            sx={{ fontWeight: 'bold', color: '#3f51b5', marginBottom: '16px' }}
-                          >
-                            {categoryTranslation[group.label] || group.label} {/* Sử dụng tên danh mục tiếng Việt nếu có, nếu không thì giữ nguyên tên tiếng Anh */}
-                          </Typography>
-
-                          {/* Autocomplete cho danh mục */}
-                          <Autocomplete
-                            multiple
-                            options={group.options} // Sử dụng danh sách món ăn của nhóm
-                            value={selectedDishesByCategory[group.categoryId] || []} // Lấy món ăn đã chọn cho nhóm
-                            onChange={(event, updatedDishes) => {
-                              handleDishUpdate(group.categoryId, updatedDishes); // Gọi hàm gộp
-                            }}
-                            getOptionLabel={(option) => option.name || ''}
-                            isOptionEqualToValue={(option, value) => option.dishId === value.dishId}
-                            renderTags={(value, getTagProps) => {
-                              return value.map((option, index) => (
-                                <Box key={option.dishId} sx={{ display: 'flex', alignItems: 'center', marginRight: '8px' }}>
-                                  <span {...getTagProps({ index })}>{option.name}</span>
-                                  <button
-                                    style={{
-                                      background: 'transparent',
-                                      border: 'none',
-                                      cursor: 'pointer',
-                                      marginLeft: '8px',
-                                      color: '#f44336', // Màu đỏ để xóa
-                                    }}
-                                    onClick={(e) => {
-                                      e.stopPropagation(); // Ngừng sự kiện bubbling
-                                      handleRemoveDish(group.categoryId, option.dishId); // Xóa món ăn khỏi danh sách đã chọn
-                                    }}
-                                  >
-                                    Xóa
-                                  </button>
-                                </Box>
-                              ));
-                            }}
-                            renderInput={(params) => <TextField {...params} variant="outlined" />}
-                            sx={{
-                              '& .MuiAutocomplete-listbox': {
-                                maxHeight: '300px',
-                                overflowY: 'auto',
-                              },
-                              '& .MuiAutocomplete-option': {
-                                fontSize: '16px',
-                                padding: '8px',
-                                color: '#000',
-                                '&:hover': {
-                                  backgroundColor: '#f5f5f5',
-                                },
-                              },
-                            }}
-                          />
-                        </Box>
-                      ))}
+                  {groupedOptions.map((group) => (
+                    <Box
+                      key={group.categoryId}
+                      sx={{
+                        width: '48%', // Mỗi nhóm chiếm 48% chiều rộng
+                        boxSizing: 'border-box',
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 'bold', color: '#3f51b5', marginBottom: '8px' }}
+                      >
+                        {categoryTranslation[group.label] || group.label}
+                      </Typography>
+                      <Autocomplete
+                        multiple
+                        options={group.options}
+                        value={selectedDishesByCategory[group.categoryId] || []}
+                        onChange={(event, updatedDishes) => handleDishUpdate(group.categoryId, updatedDishes)}
+                        getOptionLabel={(option) => option.name || ''}
+                        isOptionEqualToValue={(option, value) => option.dishId === value.dishId}
+                        renderInput={(params) => <TextField {...params} variant="outlined" />}
+                        sx={{
+                          '& .MuiAutocomplete-listbox': {
+                            maxHeight: '200px',
+                          },
+                        }}
+                      />
                     </Box>
-
-                    <Table>
-                      <TableHead>
-                        <TableRow>
-                          <TableCell>Tên món ăn</TableCell>
-                          <TableCell>Giá gốc</TableCell>
-                          <TableCell>Danh mục</TableCell>
-                          <TableCell>Hành động</TableCell>
-                        </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {/* Duyệt qua các nhóm danh mục */}
-                        {groupedOptions.map((group) => (
-                          <>
-                            {/* Dòng chứa tên danh mục */}
-                            <TableRow key={group.categoryId}>
-                              <TableCell colSpan={4} style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
-                                {categoryTranslation[group.label] || group.label} {/* Tên danh mục */}
-                              </TableCell>
-                            </TableRow>
-
-                            {/* Duyệt qua món ăn của danh mục này */}
-                            {(selectedDishesByCategory[group.categoryId] || []).map((dish) => (
-                              <TableRow key={dish.dishId}>
-                                <TableCell>{dish.name}</TableCell>
-                                <TableCell>{dish.price}</TableCell>
-                                <TableCell>{group.label}</TableCell> {/* Hiển thị danh mục của món ăn */}
-                                <TableCell>
-                                  <Button
-                                    color="error"
-                                    onClick={() => handleRemoveDish(group.categoryId, dish.dishId)}
-                                  >
-                                    Xóa
-                                  </Button>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </Box>
-
+                  ))}
                 </Box>
+
+                {/* Phần Table */}
+                <Table className="table-container">
+                  <TableHead>
+                    <TableRow>
+                      <TableCell>Tên món ăn</TableCell>
+                      <TableCell>Giá gốc</TableCell>
+                      <TableCell>Danh mục</TableCell>
+                      <TableCell>Hành động</TableCell>
+                    </TableRow>
+                  </TableHead>
+                  <TableBody>
+                    {groupedOptions.map((group) => (
+                      <>
+                        <TableRow key={group.categoryId}>
+                          <TableCell colSpan={4} style={{ fontWeight: 'bold', backgroundColor: '#f0f0f0' }}>
+                            {categoryTranslation[group.label] || group.label}
+                          </TableCell>
+                        </TableRow>
+                        {(selectedDishesByCategory[group.categoryId] || []).map((dish) => (
+                          <TableRow key={dish.dishId}>
+                            <TableCell>{dish.name}</TableCell>
+                            <TableCell>{dish.price}</TableCell>
+                            <TableCell>{categoryTranslation[group.label] || group.label}</TableCell>
+                            <TableCell>
+                              <Button
+                                color="error"
+                                onClick={() => handleRemoveDish(group.categoryId, dish.dishId)}
+                              >
+                                Xóa
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </>
+                    ))}
+                  </TableBody>
+                </Table>
               </DialogContent>
-              <DialogActions sx={{ padding: '8px 16px' }}>
-                <Button onClick={handleClose} color="secondary" sx={{ padding: '8px 16px', fontSize: '16px' }}>
+              <DialogActions sx={{ padding: '8px' }}>
+                <Button onClick={handleClose} color="secondary" sx={{ fontSize: '14px' }}>
                   Hủy
                 </Button>
-                <Button onClick={handleAddToMenu} color="primary" sx={{ padding: '8px 16px', fontSize: '16px' }}>
+                <Button onClick={handleAddToMenu} color="primary" sx={{ fontSize: '14px' }}>
                   Thêm vào menu
                 </Button>
               </DialogActions>
             </Dialog>
+
           </Box>
           <Box sx={{ marginBottom: "16px" }}>
             <Typography
