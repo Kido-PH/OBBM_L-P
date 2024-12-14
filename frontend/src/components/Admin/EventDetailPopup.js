@@ -22,6 +22,8 @@ import toast from "react-hot-toast";
 import { Divider } from "antd";
 import eventserviceApi from "api/EventServiceApi";
 import serviceApi from "api/serviceApi";
+import SnackBarNotification from "./SnackBarNotification";
+
 
 const EventDetailPopup = ({ open, handleClose, event }) => {
   const [activeTab, setActiveTab] = useState(0);
@@ -30,6 +32,25 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
   const [services, setServices] = useState([]);
   const [availableServices, setAvailableServices] = useState([]);
 
+
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   const eventId = event?.eventId;
 
@@ -131,7 +152,7 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
       // Lưu các dịch vụ mới
       if (payloadToAdd.length > 0) {
         await eventserviceApi.saveAllMenuDish(payloadToAdd); // Gửi các dịch vụ mới
-        toast.success("Dịch vụ mới đã được thêm!");
+        showSuccess("Dịch vụ mới đã được thêm!");
         handleClose(); // Đóng popup
       }
 
@@ -145,7 +166,7 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
             console.log(`Service ${service.eventserviceId} updated successfully!`);
             return { success: true, serviceId: service.eventserviceId };
           } catch (error) {
-         //   console.error(`Failed to update service ${service.eventserviceId}:`, error.response?.data || error);
+            //   console.error(`Failed to update service ${service.eventserviceId}:`, error.response?.data || error);
             return { success: false, serviceId: service.eventserviceId, error };
           }
         });
@@ -153,7 +174,7 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
         const results = await Promise.all(updatePromises);
         results.forEach(result => {
           if (!result.success) {
-          //  toast.error(`Lỗi cập nhật dịch vụ ${result.serviceId}.`);
+            //  toast.error(`Lỗi cập nhật dịch vụ ${result.serviceId}.`);
           }
         });
       }
@@ -163,7 +184,7 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
       handleClose(); // Đóng popup
 
     } catch (error) {
-    console.error("Lỗi khi lưu dịch vụ:", error);
+      console.error("Lỗi khi lưu dịch vụ:", error);
       toast.error("Không thể lưu dịch vụ.");
     }
   };
@@ -190,7 +211,7 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
       const removedService = services.find((service) => service.eventserviceId === eventserviceId);
       setAvailableServices((prev) => [...prev, removedService]); // Thêm lại vào danh sách dịch vụ sẵn có
 
-      toast.success("Dịch vụ đã được xóa!");
+      showSuccess("Dịch vụ đã được xóa!");
     } catch (error) {
       console.error("Error removing service:", error);
       toast.error("Không thể xóa dịch vụ.");
@@ -214,186 +235,194 @@ const EventDetailPopup = ({ open, handleClose, event }) => {
   if (!event) return null;
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle
-        sx={{
-          fontSize: "2rem",
-          fontWeight: "bold",
-          backgroundColor: "#f5f5f5",
-          color: "#333",
-          textAlign: "center",
-        }}
-      >
-        Chi tiết sự kiện
-      </DialogTitle>
-      <Tabs
-        value={activeTab}
-        onChange={handleTabChange}
-        indicatorColor="primary"
-        textColor="primary"
-        sx={{
-          backgroundColor: "#fafafa",
-          borderBottom: "1px solid #ddd",
-          ".MuiTab-root": {
-            fontSize: "1.3rem",
+    <Box>
+      <SnackBarNotification
+      open={snackBarOpen}
+      handleClose={handleCloseSnackBar}
+      message={snackBarMessage}
+      snackType={snackType}
+    />
+      <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+        <DialogTitle
+          sx={{
+            fontSize: "2rem",
             fontWeight: "bold",
-          },
-        }}
-      >
-        <Tab label="Thông tin" />
-        <Tab label="Dịch vụ" />
-      </Tabs>
-      <DialogContent
-        dividers
-        sx={{
-          padding: "20px",
-          backgroundColor: "#fff",
-        }}
-      >
-        {loading ? (
-          <CircularProgress />
-        ) : activeTab === 0 ? (
-          <Box>
-            <Typography
-              variant="h4"
-              sx={{
-                fontWeight: "bold",
-                color: "#1976d2",
-                marginBottom: "1rem",
-                textAlign: "center",
-              }}
-            >
-              {event?.name}
-            </Typography>
-            <Divider />
-            <Box
-              display="flex"
-              flexDirection="row"
-              gap={4}
-              mt={2}
-              sx={{
-                fontSize: "1.2rem",
-                color: "#555",
-              }}
-            >
-              <Box flex={1}>
-                <img  
-                  src={event?.image}
-                  alt={event?.name}
-                  style={{
-                    width: "100%",
-                    height: "auto",
-                    borderRadius: "8px",
-                    border: "1px solid #ddd",
-                  }}
-                />
-              </Box>
-              <Box flex={2} display="flex" flexDirection="column" gap={3}>
-                <Typography sx={{ fontSize: "1.5rem" }}>
-                  <strong>Mã sự kiện:</strong> {event?.eventId || "Không xác định"}
-                </Typography>
-                <Typography sx={{ fontSize: "1.5rem" }}>
-                  <strong>Tổng:</strong> {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(event?.totalcost)}
-                </Typography>
-                <Typography sx={{ fontSize: "1.5rem" }}>
-                  <strong>Mô tả:</strong> {event?.description || "Không có mô tả"}
-                </Typography>
+            backgroundColor: "#f5f5f5",
+            color: "#333",
+            textAlign: "center",
+          }}
+        >
+          Chi tiết sự kiện
+        </DialogTitle>
+        <Tabs
+          value={activeTab}
+          onChange={handleTabChange}
+          indicatorColor="primary"
+          textColor="primary"
+          sx={{
+            backgroundColor: "#fafafa",
+            borderBottom: "1px solid #ddd",
+            ".MuiTab-root": {
+              fontSize: "1.3rem",
+              fontWeight: "bold",
+            },
+          }}
+        >
+          <Tab label="Thông tin" />
+          <Tab label="Dịch vụ" />
+        </Tabs>
+        <DialogContent
+          dividers
+          sx={{
+            padding: "20px",
+            backgroundColor: "#fff",
+          }}
+        >
+          {loading ? (
+            <CircularProgress />
+          ) : activeTab === 0 ? (
+            <Box>
+              <Typography
+                variant="h4"
+                sx={{
+                  fontWeight: "bold",
+                  color: "#1976d2",
+                  marginBottom: "1rem",
+                  textAlign: "center",
+                }}
+              >
+                {event?.name}
+              </Typography>
+              <Divider />
+              <Box
+                display="flex"
+                flexDirection="row"
+                gap={4}
+                mt={2}
+                sx={{
+                  fontSize: "1.2rem",
+                  color: "#555",
+                }}
+              >
+                <Box flex={1}>
+                  <img
+                    src={event?.image}
+                    alt={event?.name}
+                    style={{
+                      width: "100%",
+                      height: "auto",
+                      borderRadius: "8px",
+                      border: "1px solid #ddd",
+                    }}
+                  />
+                </Box>
+                <Box flex={2} display="flex" flexDirection="column" gap={3}>
+                  <Typography sx={{ fontSize: "1.5rem" }}>
+                    <strong>Mã sự kiện:</strong> {event?.eventId || "Không xác định"}
+                  </Typography>
+                  <Typography sx={{ fontSize: "1.5rem" }}>
+                    <strong>Tổng:</strong> {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(event?.totalcost)}
+                  </Typography>
+                  <Typography sx={{ fontSize: "1.5rem" }}>
+                    <strong>Mô tả:</strong> {event?.description || "Không có mô tả"}
+                  </Typography>
+                </Box>
               </Box>
             </Box>
-          </Box>
-        ) : (
-          <Box>
-            <Autocomplete
-              multiple
-              options={availableServices} // Dùng availableServices để hiển thị dịch vụ sẵn có (bao gồm dịch vụ đã bị xóa)
-              getOptionLabel={(option) => option.name}
-              value={services} // Hiển thị các dịch vụ đã chọn
-              onChange={(event, selectedOptions) => {
-                // Lọc các dịch vụ mới được thêm
-                const newServices = selectedOptions.filter(
-                  (selected) => !services.some((service) => service.serviceId === selected.serviceId)
-                );
+          ) : (
+            <Box>
+              <Autocomplete
+                multiple
+                options={availableServices} // Dùng availableServices để hiển thị dịch vụ sẵn có (bao gồm dịch vụ đã bị xóa)
+                getOptionLabel={(option) => option.name}
+                value={services} // Hiển thị các dịch vụ đã chọn
+                onChange={(event, selectedOptions) => {
+                  // Lọc các dịch vụ mới được thêm
+                  const newServices = selectedOptions.filter(
+                    (selected) => !services.some((service) => service.serviceId === selected.serviceId)
+                  );
 
-                // Chuẩn bị các dịch vụ mới với dữ liệu cần thiết
-                const mappedServices = newServices.map((service) => ({
-                  //  eventserviceId: null, // Để null vì đây là dịch vụ mới, backend sẽ tự tăng giá trị này
-                  serviceId: service.serviceId,
-                  name: service.name,
-                  price: service.price,
-                  quantity: 1, // Giá trị mặc định
-                  cost: service.price, // Giá trị mặc định
-                }));
+                  // Chuẩn bị các dịch vụ mới với dữ liệu cần thiết
+                  const mappedServices = newServices.map((service) => ({
+                    //  eventserviceId: null, // Để null vì đây là dịch vụ mới, backend sẽ tự tăng giá trị này
+                    serviceId: service.serviceId,
+                    name: service.name,
+                    price: service.price,
+                    quantity: 1, // Giá trị mặc định
+                    cost: service.price, // Giá trị mặc định
+                  }));
 
-                // Cập nhật bảng và thêm dịch vụ mới vào danh sách dịch vụ đã chọn
-                setServices((prev) => [...prev, ...mappedServices]);
-              }}
-              renderInput={(params) => (
-                <TextField {...params} placeholder="Chọn dịch vụ" variant="outlined" fullWidth />
-              )}
-              isOptionEqualToValue={(option, value) => option.serviceId === value.serviceId}
-              sx={{ marginBottom: 2 }}
-            />
+                  // Cập nhật bảng và thêm dịch vụ mới vào danh sách dịch vụ đã chọn
+                  setServices((prev) => [...prev, ...mappedServices]);
+                }}
+                renderInput={(params) => (
+                  <TextField {...params} placeholder="Chọn dịch vụ" variant="outlined" fullWidth />
+                )}
+                isOptionEqualToValue={(option, value) => option.serviceId === value.serviceId}
+                sx={{ marginBottom: 2 }}
+              />
 
 
-            <Table>
-              <TableHead>
-                <TableRow>
-                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>STT</TableCell>
-                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
-                    Tên dịch vụ
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
-                    Chi phí
-                  </TableCell>
-                  <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
-                    Hành động
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-
-              <TableBody>
-                {services.length > 0 ? (
-                  services.map((service, index) => (
-                    <TableRow key={service.eventserviceId}> {/* Sử dụng eventserviceId làm key */}
-                      <TableCell sx={{ fontSize: "1.4rem" }}>{index + 1}</TableCell>
-                      <TableCell sx={{ fontSize: "1.4rem" }}>{service.name}</TableCell>
-                      <TableCell sx={{ fontSize: "1.4rem" }}>
-                        {service.price.toLocaleString()} VND
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="outlined"
-                          color="error"
-                          onClick={() => removeService(service.eventserviceId)}
-                        >
-                          Xóa
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
+              <Table>
+                <TableHead>
                   <TableRow>
-                    <TableCell colSpan={4} style={{ textAlign: "center", fontSize: "1.3rem" }}>
-                      Không có dịch vụ nào!
+                    <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>STT</TableCell>
+                    <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
+                      Tên dịch vụ
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
+                      Chi phí
+                    </TableCell>
+                    <TableCell sx={{ fontWeight: "bold", fontSize: "1.5rem" }}>
+                      Hành động
                     </TableCell>
                   </TableRow>
-                )}
-              </TableBody>
+                </TableHead>
 
-            </Table>
-          </Box>
-        )}
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose} color="primary">Đóng</Button>
-        <Button onClick={handleSave} color="primary" variant="contained">
-          Lưu
-        </Button>
-      </DialogActions>
-    </Dialog>
+                <TableBody>
+                  {services.length > 0 ? (
+                    services.map((service, index) => (
+                      <TableRow key={service.eventserviceId}> {/* Sử dụng eventserviceId làm key */}
+                        <TableCell sx={{ fontSize: "1.4rem" }}>{index + 1}</TableCell>
+                        <TableCell sx={{ fontSize: "1.4rem" }}>{service.name}</TableCell>
+                        <TableCell sx={{ fontSize: "1.4rem" }}>
+                          {service.price.toLocaleString()} VND
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => removeService(service.eventserviceId)}
+                          >
+                            Xóa
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} style={{ textAlign: "center", fontSize: "1.3rem" }}>
+                        Không có dịch vụ nào!
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+
+              </Table>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary">Đóng</Button>
+          <Button onClick={handleSave} color="primary" variant="contained">
+            Lưu
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </Box>
   );
 };
 

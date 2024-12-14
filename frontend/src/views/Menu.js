@@ -24,7 +24,7 @@ const Menu = ({ accessToken }) => {
   const scrollableRefs = useRef([]);
   const listRef = useRef(null);
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
-  const categoriesOrder = ["Appetizers", "Main Courses", "Desserts"];
+  const categoriesOrder = ["Appetizers", "Main_Courses", "Desserts"];
   const [menuDishesDetails, setMenuDishesDetails] = useState([]);
   const [latestMenuId, setLatestMenuId] = useState(0);
   const [selectedId, setSelectedId] = useState(null); // Lưu sectionId
@@ -133,6 +133,8 @@ const Menu = ({ accessToken }) => {
 
   const handleSelectMenu = (menu) => {
     const userId = localStorage.getItem("userId");
+
+
     if (!isStatus) {
       Swal.fire({
         icon: "warning",
@@ -255,7 +257,7 @@ const Menu = ({ accessToken }) => {
 
       return dishAcc;
     }, {});
-
+    
     acc[category.menuId] = {
       ...category,
       groupedDishes,
@@ -601,7 +603,7 @@ const Menu = ({ accessToken }) => {
                                   <h6>
                                     {categoryName === "Appetizers"
                                       ? "Khai vị và thức uống"
-                                      : categoryName === "Main Courses"
+                                      : categoryName === "Main_Courses"
                                       ? "Món chính"
                                       : categoryName === "Desserts"
                                       ? "Tráng miệng"
@@ -733,7 +735,7 @@ const Menu = ({ accessToken }) => {
                     style={{ marginLeft: "30px", marginRight: "30px" }}
                   >
                     <ul className="promo-list has-scrollbar">
-                      {Events.map((event) => (
+                      {Events.reverse().map((event) => (
                         <li
                           key={event.eventId}
                           className="promo-item"

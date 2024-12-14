@@ -51,6 +51,32 @@ const AccountSection = () => {
   const toggleEdit = () => {
     setIsEditing(!isEditing);
   };
+  const [newErrors, setNewErrors] = useState({
+    phone: '', // Lỗi số điện thoại
+  });
+
+  // Biểu thức chính quy kiểm tra số điện thoại
+  const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+
+  // Hàm xử lý thay đổi số điện thoại
+  const handlePhoneChange = (e) => {
+    const phoneValue = e.target.value;
+
+    // Chỉ cho phép nhập tối đa 10 ký tự và kiểm tra xem liệu số điện thoại có hợp lệ không
+    if (/^\d{0,10}$/.test(phoneValue)) {
+      setUserDetails({ ...userDetails, phone: phoneValue });
+
+      // Kiểm tra số điện thoại
+      if (!phoneValue || !phoneRegex.test(phoneValue)) {
+        setNewErrors({
+          ...newErrors,
+          phone: 'Số điện thoại phải có đúng 10 số và hợp lệ ở Việt Nam.',
+        });
+      } else {
+        setNewErrors({ ...newErrors, phone: '' }); // Xóa lỗi nếu hợp lệ
+      }
+    }
+  };
   useEffect(() => {
     // Cập nhật dữ liệu gốc và dữ liệu form khi nhận được userDetails mới
     setUserDetails(userDetails);
@@ -96,16 +122,6 @@ const AccountSection = () => {
     setUserDetails(data.result);
   };
 
-  const validatePhone = (phone) => {
-    const phoneRegex = /^[0-9]{10}$/; // Chỉ cho phép 10 chữ số.
-    if (!phone) {
-      setError("Phone number is required.");
-    } else if (!phoneRegex.test(phone)) {
-      setError("Invalid phone number. It must be 10 digits.");
-    } else {
-      setError("");
-    }
-  };
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -170,7 +186,7 @@ const AccountSection = () => {
     fetch("https://api.fpt.ai/vision/idr/vnm", {
       method: "POST",
       headers: {
-        "api-key": "CmxrJlqn1ulabQJ6IctH5JjAzZLyUERv", // API key của bạn
+        "api-key": "vgK0or7LveLhfyy9y1A9N7dOw17CfXb9", // API key của bạn
       },
       body: formData,
     })
@@ -207,9 +223,24 @@ const AccountSection = () => {
     getUserDetails(accessToken);
   }, [navigate]);
 
-  const handleUpdate = async () => {
+  const handleUpdate = async (event) => {
+    let isValid = true;
 
+    if (!userDetails.phone || !phoneRegex.test(userDetails.phone)) {
+      setNewErrors({
+        ...newErrors,
+        phone: 'Số điện thoại phải có đúng 10 số và hợp lệ ở Việt Nam.',
+      });
+      isValid = false;
+    }
+
+    if (isValid) {
+      // Gửi dữ liệu hoặc thực hiện hành động khi tất cả hợp lệ
+      console.log('Dữ liệu hợp lệ:', userDetails);
+    }
     const userId = localStorage.getItem("userId");
+
+    // Lấy dữ liệu từ form
     const updatedData = {
       fullname: document.getElementById("fullname").value.trim(),
       email: document.getElementById("email_address").value.trim(),
@@ -220,7 +251,6 @@ const AccountSection = () => {
       citizenIdentity: document.getElementById("IdCard").value.trim(),
       image: imageSrc || userDetails.image, // Giữ ảnh hiện tại nếu không upload ảnh mới
     };
-
     // Lấy danh sách các trường bị thiếu
     const missingFields = validateForm(updatedData);
 
@@ -236,9 +266,30 @@ const AccountSection = () => {
       return;
     }
 
+    // Kiểm tra nếu không có thay đổi nào
+    const isUnchanged =
+      updatedData.fullname === userDetails.fullname &&
+      updatedData.email === userDetails.email &&
+      updatedData.phone === userDetails.phone &&
+      updatedData.residence === userDetails.residence &&
+      updatedData.dob === userDetails.dob &&
+      updatedData.gender === userDetails.gender &&
+      updatedData.citizenIdentity === userDetails.citizenIdentity &&
+      updatedData.image === userDetails.image;
 
+    if (isUnchanged) {
+      // Hiển thị thông báo nếu không có thay đổi
+      Swal.fire({
+        icon: "info",
+        title: "Không có thay đổi",
+        text: "Bạn chưa chỉnh sửa bất kỳ thông tin nào.",
+        showConfirmButton: true,
+      });
+      return; // Dừng hàm nếu không có thay đổi
+    }
+
+    // Tiến hành gửi request nếu có thay đổi
     try {
-      const userId = localStorage.getItem("userId");
       const response = await fetch(
         `http://localhost:8080/obbm/users/user/${userId}`,
         {
@@ -253,12 +304,30 @@ const AccountSection = () => {
 
       if (response.ok) {
         const data = await response.json();
+
+        // Hiển thị thông báo cập nhật thành công
         Swal.fire({
           icon: "success",
           title: "Thành công",
           text: "Cập nhật thông tin thành công",
-          showConfirmButton: true,
+          showCancelButton: true,
+          confirmButtonText: "Tiếp tục với menu",
+          cancelButtonText: "Hủy",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            // Lấy eventId từ localStorage
+            const eventId = localStorage.getItem("currentEventId"); // Đảm bảo rằng bạn đã lưu eventId vào localStorage trước đó
+
+            if (eventId) {
+              // Điều hướng đến menu với eventId
+              window.location.href = `/menu/${eventId}`;
+            } else {
+              window.location.href = "/menu";
+            }
+          }
         });
+
         setIsEditing(false);
       } else {
         Swal.fire({
@@ -331,7 +400,6 @@ const AccountSection = () => {
     fetchUserDetails();
   }, []);
 
-
   return (
     <main style={{ marginTop: "50px" }}>
       {userDetails ? (
@@ -387,23 +455,16 @@ const AccountSection = () => {
                     <label htmlFor="phone">Số điện thoại</label>
                     <input
                       type="text"
-                      name="phone"
                       id="phone"
-                      required
-                      placeholder="Số điện thoại"
-                      aria-label="Phone Number"
-                      className={`input-field ${isEditing ? "highlight" : ""}`}
                       value={userDetails.phone || ""}
-                      disabled={!isEditing}
-                      onChange={(e) => {
-                        const phoneValue = e.target.value;
-                        if (/^\d{0,10}$/.test(phoneValue)) {
-                          setUserDetails({ ...userDetails, phone: phoneValue });
-                        }
-                      }}
-                      pattern="\d{10}"
-                      title="Please enter a valid 10-digit phone number"
+                      
+                      className={`input-field ${isEditing ? "highlight" : ""}`}
+                      onChange={handlePhoneChange}
+                      placeholder="Số điện thoại"
+                      required
+                      maxLength={10}
                     />
+                    {newErrors.phone && <p style={{ color: 'red' }}>{newErrors.phone}</p>}
                     <label htmlFor="username">Tên đăng nhập</label>
                     <input
                       type="text"
@@ -492,7 +553,6 @@ const AccountSection = () => {
                           }
                         }}
                       >
-
                         {userDetails.image ? ( // Ưu tiên hiển thị ảnh từ CSDL
                           <img
                             src={userDetails.image}
@@ -500,7 +560,6 @@ const AccountSection = () => {
                             style={{ maxWidth: "100%", maxHeight: "100%" }}
                           />
                         ) : imageSrc ? ( // Nếu không có ảnh từ CSDL, kiểm tra ảnh từ imageSrc
-
                           <img
                             src={imageSrc}
                             alt="Selected"
@@ -510,7 +569,6 @@ const AccountSection = () => {
                           <span style={{ color: "#888" }}>
                             Ảnh căn cước công dân
                           </span> // Nếu không có cả hai, hiển thị placeholder
-
                         )}
                       </div>
 
@@ -606,7 +664,6 @@ const AccountSection = () => {
                         setIsEditing(true); // Bật chế độ chỉnh sửa
                       }
                     }}
-
                     style={{
                       position: "absolute",
                       bottom: "80px",
@@ -617,29 +674,6 @@ const AccountSection = () => {
                   >
                     {isEditing ? "Hủy" : "Chỉnh sửa"}
                   </button>
-
-                  {userDetails.noPassword && (
-                    <div style={{ textAlign: "left" }}>
-                      <p style={{ display: "inline", marginRight: "4px" }}>
-                        Chú ý: Tài khoản bạn chưa có mật khẩu,
-                      </p>
-                      <button
-                        onClick={() => {
-                          navigate("/create-password");
-                        }}
-                        style={{
-                          display: "inline",
-                          background: "none",
-                          border: "none",
-                          color: "var(--dark-orange)",
-                          textDecoration: "underline",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Tạo mật khẩu
-                      </button>
-                    </div>
-                  )}
                 </div>
                 {userDetails.noPassword && (
                   <div
