@@ -102,7 +102,6 @@ const LoginForm = ({ toggleForm }) => {
         }
 
         localStorage.setItem("userId", userDetails.userId);
-        localStorage.setItem("userId", userDetails.userId);
 
         const currentEventId = localStorage.getItem("currentEventId");
 

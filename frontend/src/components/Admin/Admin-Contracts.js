@@ -36,6 +36,7 @@ import { Divider, Typography } from "antd";
 import SnackBarNotification from "./SnackBarNotification";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
+import { useSearchParams } from "react-router-dom"; // Import để lấy tham số URL
 
 const ManageContracts = () => {
 
@@ -56,6 +57,7 @@ const ManageContracts = () => {
     custphone: "",
     description: "",
   });
+
   //select button
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -72,6 +74,8 @@ const ManageContracts = () => {
     setSelectedContract(null);
   };
 
+
+  const [searchParams] = useSearchParams(); // Lấy tham số URL
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
   const [totalElements, setTotalElements] = useState(0);
@@ -105,6 +109,50 @@ const ManageContracts = () => {
     setSnackBarOpen(true);
   };
 
+
+  useEffect(() => {
+    const status = searchParams.get("status"); // Lấy trạng thái từ URL
+    const startDate = new Date(); // Ngày bắt đầu (hoặc lấy từ input)
+    const endDate = new Date(); // Ngày kết thúc (hoặc lấy từ input)
+  
+    if (status) {
+      fetchContractsByStatus(status, startDate, endDate, page + 1, rowsPerPage); // Gọi API
+    }
+  }, [searchParams, page, rowsPerPage]);
+  
+
+  const fetchContractsByStatus = async (status, startDate, endDate, page, rowsPerPage) => {
+    try {
+      // Chuyển đổi ngày sang định dạng ISO
+      const startDateFormatted = startDate ? new Date(startDate).toISOString() : "";
+      const endDateFormatted = endDate ? new Date(endDate).toISOString() : "";
+  
+      // Tạo URL API với tham số truyền vào
+      const url = `http://localhost:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=${page}&size=${rowsPerPage}`;
+  
+      // Gửi request GET
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+        },
+      });
+  
+      if (!response.ok) throw new Error("Failed to fetch contracts");
+  
+      const data = await response.json();
+      if (data.code === 1000) {
+        setContracts(data?.result.content); // Cập nhật danh sách hợp đồng
+        setTotalElements(data?.result.totalElements); // Cập nhật tổng số hợp đồng
+      } else {
+        console.error("API Error: ", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching contracts: ", error);
+    }
+  };
+  
 
   // Fetch xem chi tiết nguyên liệu hợp đồng
   const handleViewStockRequests = async (contractId) => {
@@ -226,7 +274,7 @@ const ManageContracts = () => {
   const fetchContractWithPaginate = async (page, rowsPerPage) => {
     try {
       const res = await contractApi.getPaginate(page, rowsPerPage);
-      const newContracts = res.result?.content.reverse(); // Đảo ngược danh sách từ backend
+      const newContracts = res.result?.content;
       setTotalElements(res.result?.totalElements);
   
       // Cập nhật danh sách hợp đồng cục bộ
