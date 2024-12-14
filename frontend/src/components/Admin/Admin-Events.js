@@ -27,7 +27,7 @@ import eventsApi from "../../api/eventsApi";
 import { message, Typography } from "antd";
 import EventDetailPopup from "./EventDetailPopup";
 import serviceApi from "api/serviceApi";
-
+import SnackBarNotification from "./SnackBarNotification";
 const EventManager = () => {
   const [events, setEvents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -51,6 +51,24 @@ const EventManager = () => {
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [detailPopupOpen, setDetailPopupOpen] = useState(false);
   const [allService, setAlllServices] = useState([]);
+
+const [snackBarOpen, setSnackBarOpen] = useState(false);
+    const [snackBarMessage, setSnackBarMessage] = useState("");
+    const [snackType, setSnackType] = useState("success");
+  
+    const handleCloseSnackBar = (event, reason) => {
+      if (reason === "clickaway") {
+        return;
+      }
+  
+      setSnackBarOpen(false);
+    };
+  
+    const showSuccess = (message) => {
+      setSnackType("success");
+      setSnackBarMessage(message);
+      setSnackBarOpen(true);
+    };
 
   const handleOpenServicePopup = (event) => {
     setSelectedEvent(event);
@@ -236,9 +254,9 @@ const EventManager = () => {
       newErrors.description = "Mô tả không được bỏ trống.";
     }
 
-    if (!currentEvent.totalcost || currentEvent.totalcost <= 0) {
-      newErrors.totalcost = "Tổng chi phí phải lớn hơn 0.";
-    }
+    // if (!currentEvent.totalcost || currentEvent.totalcost <= 0) {
+    //   newErrors.totalcost = "Tổng chi phí phải lớn hơn 0.";
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -248,34 +266,52 @@ const EventManager = () => {
   const handleSave = async () => {
     // Kiểm tra dữ liệu nhập vào có hợp lệ không
     if (!validate()) return;
-
+  
     // Kiểm tra `userId` trước khi thực hiện hành động
     if (!userId) {
       console.error("userId chưa được khởi tạo:", userId);
       toast.error("Không thể lưu sự kiện. Vui lòng đăng nhập lại!");
       return;
     }
-
+  
     try {
-      // Chuẩn bị payload sự kiện
+      // Kiểm tra dữ liệu sự kiện và lấy danh sách dịch vụ
+      if (!currentEvent || !currentEvent.listEventServices) {
+        toast.error("Không có dịch vụ nào trong sự kiện!");
+        return;
+      }
+  
+      // Tính tổng chi phí từ các dịch vụ của sự kiện
+      const totalCost = currentEvent.listEventServices.reduce((total, eventService) => {
+        // Lấy giá và số lượng dịch vụ
+        const serviceCost = eventService.cost || 0; // Giá dịch vụ (có thể là 0 nếu không có)
+        const quantity = eventService.quantity || 0; // Số lượng dịch vụ (có thể là 0 nếu không có)
+  
+        // Cộng dồn chi phí
+        return total + (serviceCost * quantity);
+      }, 0);
+  
+      console.log("Tổng chi phí của sự kiện:", totalCost); // Hiển thị tổng chi phí
+  
+      // Cập nhật lại totalcost trong payload sự kiện
       const eventPayload = {
         name: currentEvent.name,
-        totalcost: currentEvent.totalcost,
+        totalcost: totalCost, // Tổng chi phí tính được
         description: currentEvent.description,
         image: currentEvent.image,
         userId: userId, // Đảm bảo `userId` được gửi cho cả thêm và sửa
       };
-
+  
       console.log("Payload gửi đi:", eventPayload);
-
+  
       let res; // Kết quả phản hồi từ API
       if (dialogMode === "add") {
         // Nếu là thêm mới sự kiện
         res = await eventsApi.add(eventPayload);
-
+  
         if (res.code === 1000) {
           fetchEventsWithPaginate(page + 1); // Load lại danh sách sự kiện
-          toast.success("Thêm sự kiện thành công!");
+          showSuccess("Thêm sự kiện thành công!");
         } else {
           toast.error("Lỗi thêm sự kiện: " + res.message);
         }
@@ -284,10 +320,10 @@ const EventManager = () => {
         const updatedPayload = { ...eventPayload }; // Payload cập nhật
         delete updatedPayload.userId; // Bỏ `userId` nếu backend không yêu cầu khi sửa
         res = await eventsApi.update(currentEvent.eventId, updatedPayload);
-
+  
         if (res.code === 1000) {
           fetchEventsWithPaginate(page + 1); // Load lại danh sách sự kiện
-          toast.success("Sự kiện đã được cập nhật thành công!");
+          showSuccess("Sự kiện đã được cập nhật thành công!");
         } else {
           toast.error("Lỗi cập nhật sự kiện: " + res.message);
         }
@@ -299,6 +335,9 @@ const EventManager = () => {
       handleCloseDialog(); // Đóng dialog sau khi thực hiện xong
     }
   };
+  
+  
+  
 
   // Xử lý click "Delete" để cập nhật trạng thái "Status" và ẩn sự kiện
   const handleDeleteClick = (eventId) => {
@@ -310,7 +349,7 @@ const EventManager = () => {
     const res = await eventsApi.delete(eventToDelete);
     if (res.code === 1000) {
       fetchEventsWithPaginate(page + 1);
-      toast.success("Sự kiện đã được xóa thành công !");
+      showSuccess("Sự kiện đã được xóa thành công !");
     }
     setOpenConfirmDialog(false);
     setEventToDelete(null);
@@ -351,6 +390,12 @@ const EventManager = () => {
     <div>
       <Toaster position="top-center" reverseOrder={false} />
       <Box>
+      <SnackBarNotification
+      open={snackBarOpen}
+      handleClose={handleCloseSnackBar}
+      message={snackBarMessage}
+      snackType={snackType}
+    />
         {/* Ô tìm kiếm */}
         <div className="admin-toolbar">
           <div className="admin-group">
@@ -396,7 +441,7 @@ const EventManager = () => {
               <TableCell>STT</TableCell>
               <TableCell>Tên sự kiện</TableCell>
               <TableCell>Mô tả</TableCell>
-              <TableCell>Tổng chi phí</TableCell>
+              {/* <TableCell>Tổng chi phí</TableCell> */}
               <TableCell>Hình ảnh</TableCell>
               <TableCell
                 sx={{
@@ -413,18 +458,18 @@ const EventManager = () => {
           <TableBody>
             {filteredEvents
               .filter((event) => !event.Status) // Chỉ hiển thị sự kiện không bị xóa tạm thời
-              .map((event) => (
+              .map((event, index) => (
                 <TableRow key={event.eventId}>
-                  <TableCell>{event.eventId}</TableCell>
+                  <TableCell>{index + 1}</TableCell>
                   <TableCell>{event.name}</TableCell>
                   <TableCell>{event.description}</TableCell>
-                  <TableCell>
+                  {/* <TableCell>
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
                       currency: "VND",
                       currencyDisplay: "code",
                     }).format(event.totalcost)}
-                  </TableCell>
+                  </TableCell> */}
                   <TableCell>
                     <img src={`${event.image}`} alt={event.name} width="70" />
                   </TableCell>
@@ -499,6 +544,7 @@ const EventManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",
