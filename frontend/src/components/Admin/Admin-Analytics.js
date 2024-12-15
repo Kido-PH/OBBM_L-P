@@ -40,7 +40,7 @@ import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 // import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 // import LogoutIcon from "@mui/icons-material/Logout";
 import { DatePicker, message, Select, Modal } from "antd";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom"; // Thêm import này ở đầu file
 // Đăng ký các thành phần của biểu đồ
 ChartJS.register(
@@ -88,20 +88,18 @@ const AdminAnalytics = () => {
       },
     ],
   });
-  
 
   useEffect(() => {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Đầu tháng hiện tại
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Ngày cuối cùng của tháng hiện tại
-  
+
     setStartDate(startOfMonth);
     setEndDate(endOfMonth);
-  
+
     // Gọi API để lấy dữ liệu thống kê của tháng hiện tại
     fetchDataByDateRange(startOfMonth, endOfMonth);
   }, []);
-  
 
   const handleDateChange = (field, value) => {
     if (field === "start") {
@@ -117,56 +115,57 @@ const AdminAnalytics = () => {
         return;
       }
     }
-  
+
     // Gọi API khi cả startDate và endDate đều tồn tại và hợp lệ
     const updatedStartDate = field === "start" ? value : startDate;
     const updatedEndDate = field === "end" ? value : endDate;
-  
+
     if (updatedStartDate && updatedEndDate) {
       fetchDataByDateRange(updatedStartDate, updatedEndDate);
     }
-  };  
-  
-  // Hàm gọi API để lấy hợp đồng chờ duyệt
-  const fetchPendingContracts = async (status, startDate, endDate) => {
-    
-    try {
-      // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
-      const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
-      const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
-
-      // Gửi yêu cầu GET với query parameters
-      const response = await fetch(
-        `http://localhost:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=1&size=10`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
-        }
-      );
-
-      const data = await response.json();
-      console.log("Dữ danh sách chờ duyệt: ", data);
-
-      // Cập nhật state với dữ liệu trả về từ API
-      if (data.code === 1000) {
-        setPendingContracts(data?.result?.content);
-      } else {
-        message.error("Không thể tải dữ liệu.");
-      }
-    } catch (error) {
-      console.error("Lỗi khi lấy dữ liệu:", error);
-    }
   };
+
+  // Hàm gọi API để lấy hợp đồng chờ duyệt
+  // const fetchPendingContracts = async (status, startDate, endDate) => {
+
+  //   try {
+  //     // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
+  //     const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
+  //     const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
+
+  //     // Gửi yêu cầu GET với query parameters
+  //     const response = await fetch(
+  //       `https://798b-2001-ee0-5722-4dc0-a8e7-eaeb-2e68-34e5.ngrok-free.app/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=1&size=10`,
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+  //         },
+  //       }
+  //     );
+
+  //     const data = await response.json();
+  //     console.log("Dữ danh sách chờ duyệt: ", data);
+
+  //     // Cập nhật state với dữ liệu trả về từ API
+  //     if (data.code === 1000) {
+  //       setPendingContracts(data?.result?.content);
+  //     } else {
+  //       message.error("Không thể tải dữ liệu.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Lỗi khi lấy dữ liệu:", error);
+  //   }
+  // };
 
   // Hàm gọi khi click vào card
   const handlePendingClick = (status) => {
-    fetchPendingContracts(status, startDate, endDate); // Gọi API khi click vào card
-    setOpenModal(true); // Mở modal
-    // navigate(`/admin/ManageContracts?status=${status}`);  
-    
+    // fetchPendingContracts(status, startDate, endDate); // Gọi API khi click vào card
+    // setOpenModal(true); // Mở modal
+    navigate(
+      `/admin/ManageContracts?status=${status}&startDate=${startDate?.toISOString()}&endDate=${endDate?.toISOString()}`
+    );
   };
 
   // Hàm đóng modal
@@ -243,42 +242,90 @@ const AdminAnalytics = () => {
 
     switch (selectedValue) {
       case "today":
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
         break;
       case "yesterday":
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 23, 59, 59);
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1
+        );
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1,
+          23,
+          59,
+          59
+        );
         break;
       case "last7days":
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 7
+        );
         break;
       case "thisMonth":
         startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
         break;
       case "lastMonth":
         const lastMonth = new Date(today);
         lastMonth.setMonth(lastMonth.getMonth() - 1);
         startDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
-        endDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0, 23, 59, 59);
+        endDate = new Date(
+          lastMonth.getFullYear(),
+          lastMonth.getMonth() + 1,
+          0,
+          23,
+          59,
+          59
+        );
         break;
       default:
         return;
-    }    
+    }
 
     // Gọi API lấy dữ liệu theo khoảng thời gian
     fetchDataByDateRange(startDate, endDate);
   };
 
-
   useEffect(() => {
     if (!apiData || !apiData.revenueByDay) return;
-  
+
     const revenueByDay = apiData?.revenueByDay || {};
-    const sortedDates = Object.keys(revenueByDay).sort((a, b) => new Date(a) - new Date(b)); // Sắp xếp ngày
-  
+    const sortedDates = Object.keys(revenueByDay).sort(
+      (a, b) => new Date(a) - new Date(b)
+    ); // Sắp xếp ngày
+
     setChartData({
       labels: sortedDates.map((date) => date.split("-")[2].padStart(2, "0")), // Chỉ lấy ngày (dd)
       datasets: [
@@ -293,7 +340,6 @@ const AdminAnalytics = () => {
       ],
     });
   }, [apiData]); // Chạy lại khi `apiData` thay đổi
-  
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -357,7 +403,9 @@ const AdminAnalytics = () => {
                   variant="body2"
                   style={{ color: "gray", fontSize: "13px" }}
                 >
-                  {contract.status} - {new Intl.NumberFormat('vi-VN').format(contract.totalcost)} VND
+                  {contract.status} -{" "}
+                  {new Intl.NumberFormat("vi-VN").format(contract.totalcost)}{" "}
+                  VND
                 </Typography>
                 <Typography
                   variant="body2"

@@ -12,14 +12,18 @@ import {
   UnorderedListOutlined,
   AppstoreOutlined,
   ForkOutlined,
-  BellOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
+import {
+  Outlet,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
 import ManageContracts from "../components/Admin/Admin-Contracts";
 import AdminUserAvatar from "components/Admin/Admin-UserAvatar";
-import { CoffeeOutlined } from "@mui/icons-material";
 
 const { Header, Sider, Content, Footer } = Layout;
 
@@ -131,6 +135,12 @@ function DashboardPage() {
         ]
       : []),
   ];
+  const location = useLocation();
+  const currentPath = location.pathname;
+  const selectedKey = menuItems.find((item) => {
+    return currentPath === item.path; // So sánh path chính xác
+  })?.key;
+  console.log(selectedKey, "selectedKey");
   return (
     <Layout>
       <Sider
@@ -161,6 +171,7 @@ function DashboardPage() {
             label: item.label,
             onClick: () => navigate(item.path),
           }))}
+          selectedKeys={[selectedKey]}
         />
       </Sider>
       <Layout style={siteLayoutStyle}>
