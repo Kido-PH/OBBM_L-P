@@ -16,7 +16,6 @@ function LocationForm({ onClose, onAddLocation }) {
   const [selectedWard, setSelectedWard] = useState(null);
   const [name, setName] = useState("");
   const [houseNumber, setHouseNumber] = useState("");
-  const [cost, setCost] = useState(0);
   const [errors, setErrors] = useState({});
 
   useEffect(() => {
@@ -64,15 +63,6 @@ function LocationForm({ onClose, onAddLocation }) {
         value: ward.code,
         label: ward.name,
       }));
-      if (selectedDistrictData?.value === 916) setCost(0); //Ninh Kiều
-      if (selectedDistrictData?.value === 919) setCost(150000); //Cái Răng
-      if (selectedDistrictData?.value === 918) setCost(300000); //Bình Thủy
-      if (selectedDistrictData?.value === 926) setCost(500000); //Phong Điền
-      if (selectedDistrictData?.value === 927) setCost(500000); //Thới Lai
-      if (selectedDistrictData?.value === 917) setCost(1000000); //Ô Môn
-      if (selectedDistrictData?.value === 925) setCost(1100000); //Cờ đỏ
-      if (selectedDistrictData?.value === 923) setCost(1200000); //Thốt Nốt
-      if (selectedDistrictData?.value === 924) setCost(1500000); //Vĩnh Thạnh
       setWards(wardsData || []);
       setSelectedWard(null);
     }
@@ -99,7 +89,7 @@ function LocationForm({ onClose, onAddLocation }) {
       name,
       type: "cá nhân",
       address,
-      cost: cost,
+      cost: 0,
       userId: userId,
     };
 
@@ -221,7 +211,6 @@ function LocationForm({ onClose, onAddLocation }) {
           Thêm mới
         </Button>
       </Row>
-      <h4>Miễn phí vận chuyển nội ô Ninh Kiều!</h4>
     </Card>
   );
 }

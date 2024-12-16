@@ -67,15 +67,6 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
         value: ward.code,
         label: ward.name,
       }));
-      if (selectedDistrictData?.value === 916) setCost(0); //Ninh Kiều
-      if (selectedDistrictData?.value === 919) setCost(150000); //Cái Răng
-      if (selectedDistrictData?.value === 918) setCost(300000); //Bình Thủy
-      if (selectedDistrictData?.value === 926) setCost(500000); //Phong Điền
-      if (selectedDistrictData?.value === 927) setCost(500000); //Thới Lai
-      if (selectedDistrictData?.value === 917) setCost(1000000); //Ô Môn
-      if (selectedDistrictData?.value === 925) setCost(1100000); //Cờ đỏ
-      if (selectedDistrictData?.value === 923) setCost(1200000); //Thốt Nốt
-      if (selectedDistrictData?.value === 924) setCost(1500000); //Vĩnh Thạnh
       setWards(wardsData || []);
       setSelectedWard(
         wardsData?.find((ward) => ward.value === locationData.wardCode) || null
@@ -116,7 +107,7 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
       address: address,
       capacity: 0,
       table: 0,
-      cost: cost,
+      cost: 0,
       description: 0,
       status: locationData.status,
     };
@@ -227,7 +218,6 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
           Cập nhật
         </Button>
       </div>
-      <h4>Miễn phí vận chuyển nội ô Ninh Kiều!</h4>
     </Card>
   );
 }

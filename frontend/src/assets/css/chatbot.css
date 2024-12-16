@@ -1,0 +1,16 @@
+.tab2-content .MuiTypography-root {
+  font-size: 14px !important;
+}
+
+.tab2-content .MuiInputBase-input {
+  font-size: 14px !important;
+}
+
+.tab2-content .card-menu-select {
+  background-color: antiquewhite;
+  cursor: pointer;
+}
+
+.tab2-content .card-menu-select:hover {
+  background-color: rgba(224, 224, 224, 0.819);
+}
