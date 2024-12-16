@@ -189,17 +189,23 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
         onClick={() => setLgShow(true)}
         style={{ cursor: "pointer" }}
       >
-        <p
-          className="mb-0"
-          style={{
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {tempServicesData[0]?.name} -{" "}
-          {formatCurrency(tempServicesData[0]?.price)} ...
-        </p>
+        <div className="row">
+          <div className="col-6">
+            <p
+              className="mb-0"
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              Tổng số lượng dịch vụ đã chọn: {tempServicesData.length}
+            </p>
+          </div>
+          <div className="col-6" style={{ textAlign: "right" }}>
+            Tổng cộng: {formatCurrency(total)} VND
+          </div>
+        </div>
       </div>
 
       <Modal
