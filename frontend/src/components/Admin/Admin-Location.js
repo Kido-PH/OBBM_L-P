@@ -34,7 +34,7 @@ import toast, { Toaster } from "react-hot-toast";
 import userApi from "../../api/userApi";
 import { Typography } from "antd";
 import SnackBarNotification from "./SnackBarNotification";
- 
+
 const LocationManager = () => {
   const [locations, setLocations] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -118,50 +118,37 @@ const LocationManager = () => {
 
     setFilteredLocations(filtered);
   };
+  const [hasPermission, setHasPermission] = useState(false);
+  const [hasPermission2, setHasPermission2] = useState(false);
+  const [hasPermission3, setHasPermission3] = useState(false);
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
 
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền CREATE_EVENT khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_LOCATION");
+    const permissionGranted2 = checkPermission("DELETE_LOCATION");
+    const permissionGranted3 = checkPermission("UPDATE_LOCATION");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+  }, []); // Chạy 1 lần khi component mount
   const fetchDanhMucWithPaginate = async (page, rowsPerPage) => {
     try {
       const resLocation = await locationApi.getPaginate(page, rowsPerPage);
       const locations = resLocation.result?.content || [];
 
-      // Gọi API để lấy danh sách người dùng
-      const resUsers = await userApi.getAll();
-      const users = resUsers.result || [];
+      setLocations(locations);
+      console.log("Dữ liệu địa điểm: ", resLocation);
 
-      // Tạo một map để đối chiếu userId với thông tin người dùng
-      const userMap = new Map();
-      users.forEach((user) => {
-        const role = user.roles?.name || "User";
-        userMap.set(user.userId, {
-          fullname: user.fullname || "Unknown",
-          role,
-        });
-      });
-
-      // Cập nhật thông tin người tạo cho từng địa điểm
-      const updatedLocations = locations.map((location) => {
-        const userId = location.users?.userId;
-        const isCustom = location.isCustom;
-
-        // Nếu `isCustom` là `false`, địa điểm được tạo bởi Admin
-        if (!isCustom) {
-          return {
-            ...location,
-            creatorName: "Admin",
-            creatorRole: "ADMIN",
-          };
-        }
-
-        // Lấy thông tin người tạo từ `userMap` nếu là người dùng thông thường
-        const user = userMap.get(userId) || {};
-        return {
-          ...location,
-          creatorName: user.fullname || "Unknown",
-          creatorRole: user.role || "User",
-        };
-      });
-
-      setLocations(updatedLocations);
       setTotalElements(resLocation.result?.totalElements);
     } catch (error) {
       console.error("Lỗi khi nạp dữ liệu:", error);
@@ -284,7 +271,7 @@ const LocationManager = () => {
     if (!currentLocation.address || currentLocation.address.trim() === "") {
       newErrors.address = "Địa chỉ không được để trống";
     }
-   
+
     setErrors(newErrors);
 
     // Trả về true nếu không có lỗi
@@ -293,7 +280,6 @@ const LocationManager = () => {
 
   const addLocation = async () => {
     try {
-      
       // Chuẩn bị dữ liệu cho request
       const diaDiemMoi = {
         name: currentLocation.name,
@@ -488,7 +474,10 @@ const LocationManager = () => {
             borderBottom: "1px solid #ddd", // Thêm đường kẻ dưới tất cả các tab
           }}
         >
-          <Tab label="QUẢN LÝ" style={{ fontSize: "11px", fontWeight: "bold" }} />
+          <Tab
+            label="QUẢN LÝ"
+            style={{ fontSize: "11px", fontWeight: "bold" }}
+          />
           <Tab
             label="KHÁCH HÀNG"
             style={{ fontSize: "11px", fontWeight: "bold" }}
@@ -521,7 +510,7 @@ const LocationManager = () => {
               onChange={(e) => handleSearch(e.target.value)}
             />
           </div>
-          {activeTab === 0 && (
+          {hasPermission && activeTab === 0 && (
             <Button
               sx={{ fontSize: "10px" }}
               variant="contained"
@@ -567,6 +556,7 @@ const LocationManager = () => {
             {filteredLocations.map((location, index) => (
               <TableRow key={location.locationId}>
                 <TableCell>{index + 1}</TableCell>
+
                 <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{location.name}</span>} arrow placement="top">
                     <TableCell 
                         sx={{
@@ -581,6 +571,7 @@ const LocationManager = () => {
                   <img src={location.image} alt={location.name} width="70" />
                 </TableCell>
                 <TableCell>{location.type}</TableCell>
+
                 <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{location.address}</span>} arrow placement="top">
                     <TableCell 
                         sx={{
@@ -591,6 +582,7 @@ const LocationManager = () => {
                           }}
                       >{location.address}</TableCell>
                   </Tooltip>
+
                 <TableCell>
                   {location.capacity
                     ? `${location.capacity} người`
@@ -604,39 +596,43 @@ const LocationManager = () => {
                     zIndex: 1,
                   }}
                 >
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    sx={{ mr: 1 }}
-                    onClick={() => handleOpenDialog("edit", location)}
-                  >
-                    <Tooltip
-                      title={
-                        <span style={{ fontSize: "1.25rem" }}>
-                          Sửa địa điểm
-                        </span>
-                      }
-                      placement="top"
+                  {hasPermission3 && (
+                    <Button
+                      variant="outlined"
+                      color="primary"
+                      sx={{ mr: 1 }}
+                      onClick={() => handleOpenDialog("edit", location)}
                     >
-                      <EditIcon />
-                    </Tooltip>
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    onClick={() => handleDeleteClick(location.locationId)}
-                  >
-                    <Tooltip
-                      title={
-                        <span style={{ fontSize: "1.25rem" }}>
-                          Xóa địa điểm
-                        </span>
-                      }
-                      placement="top"
+                      <Tooltip
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Sửa địa điểm
+                          </span>
+                        }
+                        placement="top"
+                      >
+                        <EditIcon />
+                      </Tooltip>
+                    </Button>
+                  )}
+                  {hasPermission2 && (
+                    <Button
+                      variant="outlined"
+                      color="error"
+                      onClick={() => handleDeleteClick(location.locationId)}
                     >
-                      <DeleteIcon />
-                    </Tooltip>
-                  </Button>
+                      <Tooltip
+                        title={
+                          <span style={{ fontSize: "1.25rem" }}>
+                            Xóa địa điểm
+                          </span>
+                        }
+                        placement="top"
+                      >
+                        <DeleteIcon />
+                      </Tooltip>
+                    </Button>
+                  )}
                 </TableCell>
               </TableRow>
             ))}
@@ -682,9 +678,7 @@ const LocationManager = () => {
 
       {/* Dialog thêm và sửa */}
       <Dialog open={openDialog} onClose={handleCloseDialog}>
-        <DialogTitle
-          sx={{ fontSize: "1.7rem" }}
-        >
+        <DialogTitle sx={{ fontSize: "1.7rem" }}>
           {dialogMode === "add" ? "Thêm địa điểm" : "Chỉnh sửa địa điểm"}
         </DialogTitle>
 

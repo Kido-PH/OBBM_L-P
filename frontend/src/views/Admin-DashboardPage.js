@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect} from "react";
 import "../assets/css/DashboardPage.css";
 import {
   CustomerServiceOutlined,
@@ -14,7 +14,7 @@ import {
   ForkOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { Outlet, useNavigate } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
 import AdminUserAvatar from "components/Admin/Admin-UserAvatar";
 
@@ -23,11 +23,35 @@ const { Header, Sider, Content, Footer } = Layout;
 function DashboardPage() {
   const [marginLeft, setMarginLeft] = useState(200);
   const [collapsed, setCollapsed] = useState(false);
+  const [footerVisible, setFooterVisible] = useState(false); // Trạng thái hiển thị Footer
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Thêm cờ trạng thái
+  const location = useLocation();
   const navigate = useNavigate();
   const siteLayoutStyle = { marginLeft: marginLeft };
+  
   const {
     token: { colorBgContainer },
   } = theme.useToken();
+
+  // Xử lý khi cuộn trang
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.scrollY > 100) {
+        // Nếu cuộn xuống hơn 100px
+        setFooterVisible(true); // Hiển thị Footer
+      } else {
+        setFooterVisible(false); // Ẩn Footer khi cuộn lên
+      }
+    };
+
+    // Thêm sự kiện scroll
+    window.addEventListener("scroll", handleScroll);
+
+    // Cleanup event listener khi component unmount
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
 
   const userRole = localStorage.getItem("roles")
     ? JSON.parse(localStorage.getItem("roles")).name
@@ -105,15 +129,15 @@ function DashboardPage() {
       path: "/admin/ManagerIngredient",
       requiredPermission: "READ_INGREDIENT",
     },
+    {
+      key: "8",
+      icon: <UsergroupAddOutlined />,
+      label: "KHÁCH HÀNG",
+      path: "/admin/ManageAccounts",
+      requiredPermission: "READ_ACCOUNTS",
+    },
     ...(userRole === "ADMIN"
-      ? [
-          {
-            key: "8",
-            icon: <UsergroupAddOutlined />,
-            label: "KHÁCH HÀNG",
-            path: "/admin/ManageAccounts",
-            requiredPermission: "READ_ACCOUNTS",
-          },
+      ? [          
           {
             key: "11",
             icon: <SisternodeOutlined />,
@@ -129,7 +153,26 @@ function DashboardPage() {
   const filteredMenuItems = menuItems.filter(item => 
     userRole === "ADMIN" || hasPermission(item.requiredPermission)
   );
+
+  // Trong hàm DashboardPage:
+  useEffect(() => {
+    if (userRole !== "ADMIN" && isInitialLoad) {
+      const firstAccessiblePage = filteredMenuItems.find(item => 
+        hasPermission(item.requiredPermission)
+      )?.path;
+
+      if (firstAccessiblePage && location.pathname === "/admin") {
+        navigate(firstAccessiblePage, { replace: true });
+      }
+      setIsInitialLoad(false); // Đánh dấu đã chạy xong
+    }
+  }, [navigate, userPermissions, location.pathname, isInitialLoad]);
   
+  const currentPath = location.pathname;
+  const selectedKey = filteredMenuItems.find((item) => {
+    return currentPath === item.path; // So sánh path chính xác
+  })?.key;
+  console.log(selectedKey, "selectedKey");
 
   return (
     <Layout>
@@ -161,21 +204,24 @@ function DashboardPage() {
             label: item.label,
             onClick: () => navigate(item.path),
           }))}
+          selectedKeys={[selectedKey]}
         />
       </Sider>
       <Layout style={siteLayoutStyle}>
         {/* Header */}
         <Header
-          style={{
+           style={{
             padding: 0,
             background: colorBgContainer,
-            left: marginLeft + 2,
+            left: marginLeft + 2 /* Đảm bảo trừ đi phần sidebar */,
             top: 0,
             position: "fixed",
-            width: `calc(100% - ${marginLeft + 6}px)`,
+            width: `calc(100% - ${
+              marginLeft + 6
+            }px)` /* Trừ khoảng cách cho sidebar */,
             height: 65,
-            zIndex: 1000,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+            zIndex: 1000 /* Đảm bảo Header luôn nằm trên cùng */,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" /* Bóng đổ nhẹ */,
           }}
         >
           <Row>
@@ -207,12 +253,13 @@ function DashboardPage() {
         {/* Content */}
         <Content
           style={{
-            marginTop: 66,
-            padding: 10,
-            minHeight: "100%",
+            marginTop: 66 /* Đẩy nội dung xuống dưới Header */,
+            padding: 10 /* Padding để tạo khoảng cách */,
+            minHeight:
+              "100%" /* Chiếm toàn bộ chiều cao còn lại trừ Header và Footer */,
             background: colorBgContainer,
             borderRadius: 0,
-            overflow: "auto",
+            overflow: "auto" /* Đảm bảo cuộn khi nội dung dài */,
           }}
         >
           <div className="content-panel">
@@ -229,10 +276,10 @@ function DashboardPage() {
             height: "0px",
             background: "#f0f2f5",
             position: "fixed",
-            bottom: "0",
+            bottom: footerVisible ? "0" : "-60px", // Chỉnh sửa vị trí của Footer
             width: `calc(100% - ${marginLeft + 32}px)`,
             left: marginLeft + 16,
-            transition: "bottom 0.3s ease",
+            transition: "bottom 0.3s ease", // Thêm hiệu ứng chuyển động mượt mà khi Footer xuất hiện/ẩn
           }}
         >
           OBBM ©{new Date().getFullYear()} Created by L&P

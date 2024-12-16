@@ -125,44 +125,9 @@ const AdminAnalytics = () => {
     }
   };
 
-  // Hàm gọi API để lấy hợp đồng chờ duyệt
-  // const fetchPendingContracts = async (status, startDate, endDate) => {
-
-  //   try {
-  //     // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
-  //     const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
-  //     const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
-
-  //     // Gửi yêu cầu GET với query parameters
-  //     const response = await fetch(
-  //       `https://798b-2001-ee0-5722-4dc0-a8e7-eaeb-2e68-34e5.ngrok-free.app/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=1&size=10`,
-  //       {
-  //         method: "GET",
-  //         headers: {
-  //           "Content-Type": "application/json",
-  //           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-  //         },
-  //       }
-  //     );
-
-  //     const data = await response.json();
-  //     console.log("Dữ danh sách chờ duyệt: ", data);
-
-  //     // Cập nhật state với dữ liệu trả về từ API
-  //     if (data.code === 1000) {
-  //       setPendingContracts(data?.result?.content);
-  //     } else {
-  //       message.error("Không thể tải dữ liệu.");
-  //     }
-  //   } catch (error) {
-  //     console.error("Lỗi khi lấy dữ liệu:", error);
-  //   }
-  // };
 
   // Hàm gọi khi click vào card
   const handlePendingClick = (status) => {
-    // fetchPendingContracts(status, startDate, endDate); // Gọi API khi click vào card
-    // setOpenModal(true); // Mở modal
     navigate(
       `/admin/ManageContracts?status=${status}&startDate=${startDate?.toISOString()}&endDate=${endDate?.toISOString()}`
     );
