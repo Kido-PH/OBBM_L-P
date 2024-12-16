@@ -11,7 +11,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
 
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = React.useState([]);
-
+  const [sortOrder, setSortOrder] = useState("asc");
   useEffect(() => {
     const fetchDanhMuc = async () => {
       try {
@@ -52,13 +52,30 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
     console.log("result mảng tìm kiếm:", results);
   };
 
-  const categoriesToDisplay = isSearching ? searchResults : filteredCategories;
 
   const handleViewDetails = (dish) => {
     setSelectedDish(dish);
     setShowPopup(true);
   };
+  const handleSort = () => {
+    setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc")); // Chuyển đổi trạng thái
+  
+    setCategories((prevCategories) =>
+      prevCategories.map((category) => ({
+        ...category,
+        listDish: [...category.listDish].sort((a, b) => {
+          if (sortOrder === "asc") {
+            return a.name.localeCompare(b.name); // Sắp xếp A-Z
+          } else {
+            return b.name.localeCompare(a.name); // Sắp xếp Z-A
+          }
+        }),
+      }))
+    );
+  };
+  
 
+  const categoriesToDisplay = isSearching ? searchResults : filteredCategories;
   return (
     <div
       className={`list-food-container ${
@@ -73,11 +90,12 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
             onSearch={handleSearch}
             visibleSearchButton="none"
           />
-          <button className="filter-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover" style={{width:"80px"}}>
-            Lọc
-          </button>
-          <button className="sort-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover" style={{width:"130px"}}>
-            Sắp xếp
+          <button
+            className="sort-button btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover"
+            onClick={handleSort}
+            style={{ width: "130px" }}
+          >
+            {sortOrder === "asc" ? "Sắp xếp" : "Sắp xếp"}
           </button>
           {/* Nút đóng ListFood */}
           <button className="add-button" onClick={closeListFood} style={{marginLeft:"20px"}}>

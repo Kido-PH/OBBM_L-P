@@ -31,6 +31,7 @@ const Menu = ({ accessToken }) => {
   const [menuList, setMenuList] = useState([]);
   const [selectedDishes, setSelectedDishes] = useState([]);
   const [selectedMenu, setSelectedMenu] = useState(null);
+  const [selectedMenuId, setSelectedMenuId] = useState([]);
   const [selectedMenuDishes, setSelectedMenuDishes] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [Events, setEvents] = useState([]);
@@ -41,6 +42,7 @@ const Menu = ({ accessToken }) => {
   const [showWarning, setShowWarning] = useState(false);
   const [userDetails, setUserDetails] = useState({});
   const [isStatus, setIsStatus] = useState(true);
+
   const getUserDetails = async (accessToken) => {
     try {
       const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
@@ -87,15 +89,9 @@ const Menu = ({ accessToken }) => {
   const handleCloseModalEvents = () => {
     setIsModalEventsOpen(false);
   };
-  const setMenuIdUrl = (eventId) => {
-    setEventToMenuUrl(`menu/${eventId}`);
-    // Lưu eventId vào localStorage
-    localStorage.setItem("currentEventId", eventId);
-  };
   const pushEventIdtoMenu = (newEventId) => {
     // Lưu eventId vào localStorage
     localStorage.setItem("currentEventId", newEventId);
-
     // Điều hướng đến trang menu mới với eventId
     navigate(`/menu/${newEventId}`);
   };
@@ -124,58 +120,146 @@ const Menu = ({ accessToken }) => {
   const [menu, setMenu] = useState([]);
 
   const handleShowMenuPopup = (menu) => {
-
     setShowModal(true); // Hiển thị modal
   };
   const handleCloseModal = () => setShowModal(false);
 
   const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
-
+  const handleCreateMenu = async () => {
+    try {
+      const userId = localStorage.getItem("userId");
+  
+      // Kiểm tra trạng thái isStatus
+      if (userDetails && userDetails.isStatus === false) {
+        Swal.fire({
+          icon: "warning",
+          title: "Cập nhật đầy đủ thông tin",
+          text: "Bạn cần Cập nhật đầy đủ thông tin để có thể chọn thực đơn.",
+          showCancelButton: true,
+          confirmButtonText: "Cập nhật ngay",
+          cancelButtonText: "Hủy",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            window.location.href = "/account";
+          }
+        });
+        return;
+      }
+  
+      const profitMargin = 0.2;
+      const totalCost = Object.values(selectedMenu.groupedDishes)
+        .flat()
+        .reduce((total, dish) => {
+          const sellingPrice = dish.price / (1 - profitMargin);
+          return total + (sellingPrice || 0);
+        }, 0);
+  
+      const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
+        if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
+          acc.push(currentDish);
+        }
+        return acc;
+      }, []);
+  
+      if (uniqueDishes.length === 0) {
+        Swal.fire({
+          icon: "error",
+          title: "Thất bại!",
+          text: "Thực đơn phải có ít nhất 1 món ăn.",
+        });
+        return;
+      }
+  
+      const currentEventId = localStorage.getItem("currentEventId");
+      const dataToSave = {
+        name: selectedMenu.name,
+        totalcost: totalCost,
+        description: selectedMenu.description,
+        userId: userId || "guest",
+        eventId: currentEventId || selectedMenu.events.eventId,
+      };
+  
+      // Lưu vào localStorage
+      localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
+      localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
+      localStorage.setItem("MenuDishesDetail", JSON.stringify(selectedMenu.groupedDishes));
+  
+      if (!userId) {
+        Swal.fire({
+          icon: "warning",
+          title: "Chưa đăng nhập",
+          text: "Bạn cần đăng nhập để hoàn tất tạo thực đơn.",
+          showCancelButton: true,
+          confirmButtonText: "Đăng nhập ngay",
+          cancelButtonText: "Hủy",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            localStorage.setItem("createdMenu", JSON.stringify(dataToSave)); // Lưu lại menu trước khi chuyển hướng
+            window.location.href = "/login"; // Chuyển hướng tới trang đăng nhập
+          }
+        });
+      } else {
+        Swal.fire({
+          icon: "success",
+          title: "Thành công!",
+          text: "Thực đơn và món ăn đã được tạo thành công!",
+        });
+        navigate("/contract");
+      }
+    } catch (error) {
+      console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Thất bại!",
+        text: "Không thể tạo thực đơn hoặc món ăn. Vui lòng thử lại.",
+      });
+    }
+  };
+  
   const handleSelectMenu = (menu) => {
     const userId = localStorage.getItem("userId");
 
+    // if (!isStatus) {
+    //   Swal.fire({
+    //     icon: "warning",
+    //     title: "Cập nhật đầy đủ thông tin",
+    //     text: "Bạn cần Cập nhật đầy đủ thông tin để có thể chọn thực đơn.",
+    //     showCancelButton: true,
+    //     confirmButtonText: "Cập nhật ngay",
+    //     cancelButtonText: "Hủy",
+    //     reverseButtons: true,
+    //   }).then((result) => {
+    //     if (result.isConfirmed) {
+    //       window.location.href = "/account";
+    //     }
+    //   });
+    //   return;
+    // }
 
-    if (!isStatus) {
-      Swal.fire({
-        icon: "warning",
-        title: "Cập nhật đầy đủ thông tin",
-        text: "Bạn cần Cập nhật đầy đủ thông tin để có thể chọn thực đơn.",
-        showCancelButton: true,
-        confirmButtonText: "Cập nhật ngay",
-        cancelButtonText: "Hủy",
-        reverseButtons: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = "/account";
-        }
-      });
-      return;
-    }
-    // Nếu không tìm thấy userId trong local, hiển thị cảnh báo
-    if (!userId) {
-      Swal.fire({
-        icon: "warning",
-        title: "Chưa đăng nhập",
-        text: "Bạn cần đăng nhập để chọn tạo thực đơn.",
-        showCancelButton: true,
-        confirmButtonText: "Đăng nhập ngay",
-        cancelButtonText: "Hủy",
-        reverseButtons: true,
-      }).then((result) => {
-        if (result.isConfirmed) {
-          window.location.href = "/login";
-        }
-      });
-      return; // Dừng hàm nếu không có userId
-    }
+    // if (!userId) {
+    //   // Lưu thực đơn vào localStorage để sử dụng sau khi đăng nhập
+    //   localStorage.setItem("pendingMenu", JSON.stringify(menu));
 
-    // Nếu có userId, tiếp tục thực hiện hành động
+    //   Swal.fire({
+    //     icon: "warning",
+    //     title: "Chưa đăng nhập",
+    //     text: "Bạn cần đăng nhập để chọn tạo thực đơn.",
+    //     showCancelButton: true,
+    //     confirmButtonText: "Đăng nhập ngay",
+    //     cancelButtonText: "Hủy",
+    //     reverseButtons: true,
+    //   }).then((result) => {
+    //     if (result.isConfirmed) {
+    //       window.location.href = "/login";
+    //     }
+    //   });
+    //   return;
+    // }
+
+    // Nếu đã đăng nhập, thực hiện các thao tác chọn menu
     setSelectedMenu(menu);
-    const latestMenuId =
-      menuList && menuList.length > 0
-        ? Math.max(...menuList.map((menu) => menu.menuId), 0)
-        : 0;
-
     const menuDishesList = menu.listMenuDish.map((menuDishes) => {
       return {
         dishesId: menuDishes?.dishes?.dishId,
@@ -185,9 +269,25 @@ const Menu = ({ accessToken }) => {
       };
     });
 
-    console.log("dữ liệu menu", menu);
     setSelectedMenuDishes(menuDishesList);
+    setSelectedMenuId(menu.menuId);
+    localStorage.setItem("MenuSelectedId", menu.menuId);
   };
+
+  useEffect(() => {
+    const createdMenu = JSON.parse(localStorage.getItem("createdMenu"));
+    const createdMenuDishes = JSON.parse(localStorage.getItem("createdMenuDishes"));
+    const MenuDishesDetail = JSON.parse(localStorage.getItem("MenuDishesDetail"));
+
+    if (createdMenu && createdMenuDishes && MenuDishesDetail) {
+      // Tái tạo lại state hoặc data để hiển thị menu đã chỉnh sửa
+      setSelectedMenu({
+        ...createdMenu,
+        groupedDishes: MenuDishesDetail,
+      });
+      setSelectedMenuDishes(createdMenuDishes);
+    }
+  }, []);
 
   useEffect(() => {
     const fetchMenu = async () => {
@@ -240,27 +340,52 @@ const Menu = ({ accessToken }) => {
     }
   }, [id, location]);
 
-  const groupedMenu = menu.reduce((acc, category) => {
+  // Lấy MenuSelectedId từ localStorage
+  const menuSelectedId = localStorage.getItem("MenuSelectedId");
+
+  // Chuyển menu thành mảng để dễ sắp xếp
+  const menuArray = Object.values(menu);
+
+  // Sắp xếp danh sách menu, đưa menuId khớp với MenuSelectedId lên đầu
+  const sortedMenuArray = menuArray.sort((a, b) => {
+    if (menuSelectedId) {
+      if (a.menuId.toString() === menuSelectedId) return -1; // Đẩy menu khớp lên đầu
+      if (b.menuId.toString() === menuSelectedId) return 1; // Đẩy menu không khớp xuống
+    }
+    return 0; // Giữ nguyên thứ tự nếu không có MenuSelectedId
+  });
+
+  // Chuyển menu trở lại thành object với key là menuId
+  const sortedMenu = sortedMenuArray.reduce((acc, item) => {
+    acc[item.menuId] = item;
+    return acc;
+  }, {});
+
+  // Xử lý tiếp với sortedMenu
+  const groupedMenu = Object.keys(sortedMenu).reduce((acc, key) => {
+    const category = sortedMenu[key];
+
+    // Xử lý danh sách món ăn và loại bỏ những món bị xóa
     const groupedDishes = category.listMenuDish.reduce((dishAcc, menuDish) => {
       const categoryName = menuDish.dishes.categories.name;
 
-      // Bỏ qua món ăn nếu deletedAt không phải null
-      if (menuDish.dishes.deletedAt !== null) {
-        return dishAcc;
-      }
-
+      // Tạo nhóm món ăn theo danh mục nếu chưa tồn tại
       if (!dishAcc[categoryName]) {
         dishAcc[categoryName] = [];
       }
 
-      dishAcc[categoryName].push(menuDish.dishes);
+      // Thêm món ăn vào nhóm nếu món chưa bị xóa
+      if (menuDish.dishes.deletedAt === null) {
+        dishAcc[categoryName].push(menuDish.dishes);
+      }
 
       return dishAcc;
     }, {});
-    
+
+    // Giữ menu ngay cả khi không có món ăn nào trong danh mục
     acc[category.menuId] = {
       ...category,
-      groupedDishes,
+      groupedDishes, // Luôn bao gồm danh mục món ăn (dù rỗng)
     };
 
     return acc;
@@ -268,92 +393,7 @@ const Menu = ({ accessToken }) => {
 
   const groupedMenuArray = Object.values(groupedMenu);
 
-  const handleCreateMenu = async () => {
-    try {
-      const userId = localStorage.getItem("userId");
 
-      // Kiểm tra trạng thái isStatus
-      if (userDetails && userDetails.isStatus === false) {
-        Swal.fire({
-          icon: "error",
-          title: "Không thể tạo thực đơn",
-          text: "Tài khoản của bạn chưa được kích hoạt. Vui lòng liên hệ hỗ trợ.",
-        });
-        return; // Dừng quá trình tạo menu
-      }
-
-      const profitMargin = 0.2;
-      const totalCost = Object.values(selectedMenu.groupedDishes)
-        .flat()
-        .reduce((total, dish) => {
-          const sellingPrice = dish.price / (1 - profitMargin);
-          return total + (sellingPrice || 0);
-        }, 0);
-
-      const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
-        if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
-          acc.push(currentDish);
-        }
-        return acc;
-      }, []);
-
-      if (uniqueDishes.length === 0) {
-        Swal.fire({
-          icon: "error",
-          title: "Thất bại!",
-          text: "Thực đơn phải có ít nhất 1 món ăn.",
-        });
-        return;
-      }
-      const currentEventId = localStorage.getItem("currentEventId"); // Lấy giá trị eventId từ localStorage
-      const dataToSave = {
-        name: selectedMenu.name,
-        totalcost: totalCost,
-        description: selectedMenu.description,
-        userId: userId || "guest",
-        eventId: currentEventId || selectedMenu.events.eventId, // Nếu không có currentEventId trong session, dùng eventId từ selectedMenu
-      };
-
-      // Lưu dữ liệu vào localStorage
-      localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
-      localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-      localStorage.setItem(
-        "MenuDishesDetail",
-        JSON.stringify(selectedMenu.groupedDishes)
-      );
-
-      if (!userId) {
-        Swal.fire({
-          icon: "warning",
-          title: "Chưa đăng nhập",
-          text: "Bạn cần đăng nhập để hoàn tất tạo thực đơn.",
-          showCancelButton: true,
-          confirmButtonText: "Đăng nhập ngay",
-          cancelButtonText: "Hủy",
-          reverseButtons: true,
-        }).then((result) => {
-          if (result.isConfirmed) {
-            localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
-            window.location.href = "/login";
-          }
-        });
-      } else {
-        Swal.fire({
-          icon: "success",
-          title: "Thành công!",
-          text: "Thực đơn và món ăn đã được tạo thành công!",
-        });
-        navigate("/contract");
-      }
-    } catch (error) {
-      console.error("Lỗi khi tạo thực đơn hoặc món ăn:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Thất bại!",
-        text: "Không thể tạo thực đơn hoặc món ăn. Vui lòng thử lại.",
-      });
-    }
-  };
 
   const toggleListFood = (id) => {
     setSelectedId(id);
@@ -453,7 +493,10 @@ const Menu = ({ accessToken }) => {
   };
 
   const handleRefreshMenu = () => {
-    setSelectedMenu(null); // Reset the menu
+    localStorage.removeItem("createdMenu");
+    localStorage.removeItem("createdMenuDishes");
+    localStorage.removeItem("MenuDishesDetail");
+    setSelectedMenu(null); 
   };
 
   const handleRemoveDish = (categoryName, dishId) => {
@@ -524,10 +567,6 @@ const Menu = ({ accessToken }) => {
 
   let swiperRef = null;
 
-  groupedMenuArray.filter(
-    (category) => Object.values(category.groupedDishes).flat().length >= 9
-  );
-
   return (
     <div className="Menu">
       <div className="menu-container">
@@ -578,10 +617,10 @@ const Menu = ({ accessToken }) => {
                   className="swiper-container"
                 >
                   {groupedMenuArray
-                    .filter(
-                      (category) =>
-                        Object.values(category.groupedDishes).flat().length >= 9 // Chỉ lấy các menu có >= 9 món
-                    )
+                    // .filter(
+                    //   (category) =>
+                    //     Object.values(category.groupedDishes).flat().length >= 9
+                    // )
                     .map((category, index) => (
                       <SwiperSlide
                         key={index}
@@ -688,9 +727,23 @@ const Menu = ({ accessToken }) => {
 
                 <div
                   className="choose-button-container"
-                  style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
                 >
-                  <p style={{ marginLeft: "5px",marginTop:"25px", fontWeight:"600px", color:"black" }}><span style={{color:"red", display:"inline"}}>* </span> Lưu ý: Lưu ý!</p>
+                  <p
+                    style={{
+                      marginLeft: "5px",
+                      marginTop: "25px",
+                      fontWeight: "600px",
+                      color: "black",
+                    }}
+                  >
+                    <span style={{ color: "red", display: "inline" }}>* </span>{" "}
+                    Lưu ý: Lưu ý!
+                  </p>
                   <button
                     className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
                     onClick={handleOpenModalEvents}
@@ -835,7 +888,7 @@ const Menu = ({ accessToken }) => {
                           fontWeight: "bold",
                           display: "inline-block", // Đảm bảo span không bị ép co dãn
                           textAlign: "center", // Căn giữa nội dung
-                          marginBottom: "10px",
+                          
                         }}
                       >
                         {`${
@@ -991,7 +1044,9 @@ const Menu = ({ accessToken }) => {
               </div>
             </div>
           ) : (
+            <div className="empty-menu">
             <p>Chọn một thực đơn để hiển thị chi tiết.</p>
+          </div>
           )}
           <div>
             {selectedMenu && (
