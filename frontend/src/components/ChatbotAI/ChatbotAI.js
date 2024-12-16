@@ -11,7 +11,7 @@ import { checkAccessToken } from "services/checkAccessToken";
 const ChatBotContainer = () => {
   const navigate = useNavigate();
 
-  const { currentStep, setStep } = React.useContext(chatbotContext);
+  const { currentStep, setStep, data } = React.useContext(chatbotContext);
   const [buttonsVisible, setButtonsVisible] = useState(1);
   const [nextStep, setNextStep] = useState(null); // Điều khiển bước tiếp theo của bot
   const [costNguoiDung, setCostNguoiDung] = useState(0); // Điều khiển bước tiếp theo của bot
@@ -51,7 +51,7 @@ const ChatBotContainer = () => {
     <div
       style={{
         height: "100%",
-        width: "100%" // Fixed total height for the chatbox
+        width: "100%", // Fixed total height for the chatbox
       }}
     >
       {/* Chat History (scrollable area) */}
@@ -94,14 +94,18 @@ const ChatBotContainer = () => {
               content="create_menu"
               costNguoiDung={costNguoiDung}
             />
-            <ChatResponse step={3} content="create_menu" />
+            <ChatResponse
+              step={3}
+              content="create_menu"
+              costNguoiDung={costNguoiDung}
+            />
           </>
         )}
       </Box>
 
       {/* Input Area (fixed at the bottom) */}
       {currentStep === 1 && (
-        <div className="mb-3">
+        <div style={{ marginBottom: "6px" }}>
           <Button
             variant="contained"
             color="primary"
@@ -122,7 +126,7 @@ const ChatBotContainer = () => {
       )}
 
       {currentStep === 2 && nextStep === "change_event" && (
-        <div className="mb-3">
+        <div style={{ marginBottom: "6px" }}>
           <Button
             variant="contained"
             color="primary"
@@ -135,7 +139,7 @@ const ChatBotContainer = () => {
       )}
 
       {currentStep === 2 && nextStep === "start_menu" && (
-        <div className="mb-3">
+        <div style={{ marginBottom: "6px" }}>
           <Button
             variant="contained"
             color="primary"
@@ -182,7 +186,13 @@ const ChatBotContainer = () => {
             marginRight: "8px",
           }}
         />
-        <IconButton color="primary" aria-label="send message">
+        <IconButton
+          color="primary"
+          aria-label="send message"
+          onClick={() => {
+            console.log("Dữ liệu gửi đi API: ", data);
+          }}
+        >
           <FiSend />
         </IconButton>
       </Box>
