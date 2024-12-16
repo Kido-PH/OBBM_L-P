@@ -33,6 +33,7 @@ import locationApi from "../../api/locationApi";
 import toast, { Toaster } from "react-hot-toast";
 import userApi from "../../api/userApi";
 import { Typography } from "antd";
+import SnackBarNotification from "./SnackBarNotification";
  
 const LocationManager = () => {
   const [locations, setLocations] = useState([]);
@@ -59,6 +60,24 @@ const LocationManager = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState(0); // 0: Admin, 1: Customer
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   useEffect(() => {
     fetchDanhMucWithPaginate(page + 1, rowsPerPage);
@@ -112,7 +131,7 @@ const LocationManager = () => {
       // Tạo một map để đối chiếu userId với thông tin người dùng
       const userMap = new Map();
       users.forEach((user) => {
-        const role = user.roles?.[0]?.name || "User";
+        const role = user.roles?.name || "User";
         userMap.set(user.userId, {
           fullname: user.fullname || "Unknown",
           role,
@@ -172,39 +191,83 @@ const LocationManager = () => {
     setOpenDialog(false);
   };
 
-  const handleInputChange = (event) => {
-    const { name, value, files } = event.target;
+  const handleInputChange = async (e) => {
+    const { type, name, value, files } = e.target;
 
-    // Cập nhật dữ liệu món ăn
-    if (name === "image" && files) {
-      setCurrentLocation((prevState) => ({
-        ...prevState,
-        image: URL.createObjectURL(files[0]),
-      }));
+    // Xử lý ảnh
+    if (name === "image" && files && files.length > 0) {
+      const file = files[0];
+
+      // Tạo URL tạm thời cho ảnh (preview)
+      const imagePreviewUrl = URL.createObjectURL(file);
+
+      // Cập nhật ảnh vào state để hiển thị preview
+      setCurrentLocation({
+        ...currentLocation,
+        image: imagePreviewUrl,
+      });
+
+      try {
+        // Tạo FormData để gửi file
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Gửi yêu cầu lên API để tải ảnh lên
+        const response = await fetch(
+          "http://localhost:8080/obbm/upload/image",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+            body: formData, // Đưa formData vào body
+          }
+        );
+
+        const data = await response.json();
+        console.log("Response Data:", data);
+        if (response.ok) {
+          console.log("Upload thành công:", data);
+          // Lấy URL từ API Cloudinary
+          const imageUrl = data.result; // Kết quả trả về là URL của ảnh đã được upload
+          setCurrentLocation({
+            ...currentLocation,
+            image: imageUrl,
+          });
+          // Xóa lỗi nếu người dùng chọn ảnh
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            image: undefined,
+          }));
+        } else {
+          console.error("Lỗi tải ảnh:", data);
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            image: "Không thể tải ảnh lên",
+          }));
+        }
+      } catch (error) {
+        console.error("Lỗi tải ảnh:", error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          image: "Không thể tải ảnh lên",
+        }));
+      }
     } else {
-      setCurrentLocation((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
+      // Xử lý các trường khác
+      setCurrentLocation({
+        ...currentLocation,
+        [name]: type === "number" ? Number(value) : value,
+      });
+
+      // Xóa lỗi nếu người dùng nhập đúng
+      if (value.trim() !== "") {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: undefined,
+        }));
+      }
     }
-
-    // Xóa thông báo lỗi nếu dữ liệu nhập vào hợp lệ
-    setErrors((prevErrors) => {
-      const newErrors = { ...prevErrors };
-
-      // Kiểm tra từng trường và xóa lỗi nếu dữ liệu hợp lệ
-      if (name === "name" && value.trim() !== "") {
-        delete newErrors.name;
-      }
-      if (name === "type" && value.trim() !== "") {
-        delete newErrors.type;
-      }
-      if (name === "address" && value.trim() !== "") {
-        delete newErrors.address;
-      }
-      
-      return newErrors;
-    });
   };
 
   // Bắt lỗi
@@ -269,13 +332,7 @@ const LocationManager = () => {
         // Thêm địa điểm mới vào danh sách
         savedLocations.unshift(locationWithCreator);
 
-        // Lưu lại vào LocalStorage
-        localStorage.setItem("locations", JSON.stringify(savedLocations));
-
-        // Kiểm tra dữ liệu sau khi lưu
-        console.log("Dữ liệu lưu vào LocalStorage:", savedLocations);
-
-        toast.success("Địa điểm mới được thêm thành công!");
+        showSuccess("Địa điểm mới được thêm thành công!");
       } else {
         toast.error("Không nhận được phản hồi từ API.");
       }
@@ -339,7 +396,7 @@ const LocationManager = () => {
       await locationApi.update(locationId, data);
 
       // Hiển thị thông báo thành công
-      toast.success("Địa điểm đã được cập nhật thành công!");
+      showSuccess("Địa điểm đã được cập nhật thành công!");
 
       // Cập nhật danh sách địa điểm trong state mà không cần tải lại trang
       setLocations((prevLocations) =>
@@ -382,7 +439,7 @@ const LocationManager = () => {
         )
       );
 
-      toast.success("Địa điểm đã được xóa thành công!");
+      showSuccess("Địa điểm đã được xóa thành công!");
 
       // Đóng dialog và reset state
       setOpenConfirmDialog(false);
@@ -438,7 +495,12 @@ const LocationManager = () => {
           />
         </Tabs>
       </Box>
-      <Toaster position="top-center" reverseOrder={false} />
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
       <Box>
         <div className="admin-toolbar" style={{ marginTop: "12px" }}>
           <div className="admin-group">
@@ -505,12 +567,30 @@ const LocationManager = () => {
             {filteredLocations.map((location, index) => (
               <TableRow key={location.locationId}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{location.name}</TableCell>
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{location.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{location.name}</TableCell>
+                  </Tooltip>
                 <TableCell>
                   <img src={location.image} alt={location.name} width="70" />
                 </TableCell>
                 <TableCell>{location.type}</TableCell>
-                <TableCell>{location.address}</TableCell>
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{location.address}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{location.address}</TableCell>
+                  </Tooltip>
                 <TableCell>
                   {location.capacity
                     ? `${location.capacity} người`

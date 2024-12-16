@@ -497,13 +497,13 @@ const AccessControl = () => {
                         >
                           Cập nhật quyền
                         </Button>
-                        <Button
+                        {/* <Button
                           variant="contained"
                           color="error"
                           sx={{ fontSize: "1.2rem", textTransform: "none" }}
                         >
                           Xóa người dùng
-                        </Button>
+                        </Button> */}
                       </Box>
                     </TableCell>
                   </TableRow>

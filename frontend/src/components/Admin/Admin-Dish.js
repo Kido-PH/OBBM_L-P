@@ -69,6 +69,31 @@ const DishManager = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
 
+  const [hasPermission, setHasPermission] = useState(false);
+  const [hasPermission2, setHasPermission2] = useState(false);
+  const [hasPermission3, setHasPermission3] = useState(false);
+
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
+
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền CREATE_DISH khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_DISH");
+    const permissionGranted2 = checkPermission("UPDATE_DISH");
+    const permissionGranted3 = checkPermission("DELETE_DISH");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+  }, []); // Chạy 1 lần khi component mount
+
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -516,28 +541,31 @@ const DishManager = () => {
         </div>
 
         {/* Nút thêm món ăn */}
-        <Button
-          sx={{
-            fontSize: "10px",
-            display: "flex",
-            alignItems: "center",
-            padding: "6px 12px", // Adjust padding if needed
-            lineHeight: "1.5", // Ensures proper vertical alignment
-          }}
-          variant="contained"
-          color="primary"
-          onClick={handleOpen}
-        >
-          <AddIcon
+        {hasPermission && (
+          <Button
             sx={{
-              marginRight: "5px",
-              fontSize: "16px",
-              verticalAlign: "middle",
+              fontSize: "10px",
+              display: "flex",
+              alignItems: "center",
+              padding: "6px 12px", // Adjust padding if needed
+              lineHeight: "1.5", // Ensures proper vertical alignment
             }}
-          />
-          Thêm Món Ăn
-        </Button>
+            variant="contained"
+            color="primary"
+            onClick={handleOpen}
+          >
+            <AddIcon
+              sx={{
+                marginRight: "5px",
+                fontSize: "16px",
+                verticalAlign: "middle",
+              }}
+            />
+            Thêm Món Ăn
+          </Button>
+        )}
       </div>
+        
 
       <Dialog
         open={deleteDialogOpen}
@@ -696,6 +724,7 @@ const DishManager = () => {
                   padding: "1em",
                   cursor: "pointer",
                   textAlign: "center",
+                  position: "relative",
                 }}
                 onClick={() => document.getElementById("file-upload").click()}
               >
@@ -718,7 +747,7 @@ const DishManager = () => {
                     />
                     <Typography variant="body2" sx={{ color: "#aaa" }}>
                       Nhấn để chọn ảnh
-                    </Typography>
+                    </Typography>                   
                   </>
                 )}
                 <input
@@ -729,7 +758,28 @@ const DishManager = () => {
                   style={{ display: "none" }}
                   id="file-upload"
                 />
-              </Box>
+                {dishData.image && (
+                  <Button
+                    variant="contained"
+                    sx={{
+                      position: "absolute",
+                      top: "10px",
+                      right: "10px",
+                      backgroundColor: "#dc3545",
+                      color: "#fff",
+                      "&:hover": {
+                        backgroundColor: "#c82333",
+                      },
+                    }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveImage();
+                    }}
+                  >
+                    Xóa ảnh
+                  </Button>
+                )}
+              </Box>          
             </Grid>
 
             {/* Hàng 4: Mô tả */}
@@ -821,7 +871,16 @@ const DishManager = () => {
             {filteredDishes.map((dish, index) => (
               <TableRow key={dish.dishId}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{dish.name}</TableCell>
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{dish.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{dish.name}</TableCell>
+                  </Tooltip>
                 <TableCell>
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
@@ -831,9 +890,19 @@ const DishManager = () => {
                 <TableCell>
                   <img src={`${dish.image}`} alt={dish.name} width="70" />
                 </TableCell>
-                <TableCell>{dish.description}</TableCell>
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{dish.description}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{dish.description}</TableCell>
+                  </Tooltip>
                 <TableCell>{dish.existing}</TableCell>
                 <TableCell>
+                {hasPermission2 && (
                   <Button
                     variant="outlined"
                     onClick={() =>
@@ -851,6 +920,7 @@ const DishManager = () => {
                       <EditIcon />
                     </Tooltip>
                   </Button>
+                )}
                   <Button
                     variant="outlined"
                     onClick={() => handleViewDetails(dish)} // Gọi hàm mở popup
@@ -868,6 +938,7 @@ const DishManager = () => {
                       <ErrorOutlineIcon />
                     </Tooltip>
                   </Button>
+                {hasPermission3 && (
                   <Button
                     variant="outlined"
                     onClick={() => handleDeleteDish(dish.dishId)}
@@ -890,6 +961,7 @@ const DishManager = () => {
                       <DeleteIcon />
                     </Tooltip>
                   </Button>
+                )}
                 </TableCell>
               </TableRow>
             ))}

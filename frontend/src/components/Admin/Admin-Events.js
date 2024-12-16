@@ -275,28 +275,9 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
     }
   
     try {
-      // Kiểm tra dữ liệu sự kiện và lấy danh sách dịch vụ
-      if (!currentEvent || !currentEvent.listEventServices) {
-        toast.error("Không có dịch vụ nào trong sự kiện!");
-        return;
-      }
-  
-      // Tính tổng chi phí từ các dịch vụ của sự kiện
-      const totalCost = currentEvent.listEventServices.reduce((total, eventService) => {
-        // Lấy giá và số lượng dịch vụ
-        const serviceCost = eventService.cost || 0; // Giá dịch vụ (có thể là 0 nếu không có)
-        const quantity = eventService.quantity || 0; // Số lượng dịch vụ (có thể là 0 nếu không có)
-  
-        // Cộng dồn chi phí
-        return total + (serviceCost * quantity);
-      }, 0);
-  
-      console.log("Tổng chi phí của sự kiện:", totalCost); // Hiển thị tổng chi phí
-  
       // Cập nhật lại totalcost trong payload sự kiện
       const eventPayload = {
         name: currentEvent.name,
-        totalcost: totalCost, // Tổng chi phí tính được
         description: currentEvent.description,
         image: currentEvent.image,
         userId: userId, // Đảm bảo `userId` được gửi cho cả thêm và sửa
@@ -461,15 +442,26 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
               .map((event, index) => (
                 <TableRow key={event.eventId}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{event.name}</TableCell>
-                  <TableCell>{event.description}</TableCell>
-                  {/* <TableCell>
-                    {new Intl.NumberFormat("vi-VN", {
-                      style: "currency",
-                      currency: "VND",
-                      currencyDisplay: "code",
-                    }).format(event.totalcost)}
-                  </TableCell> */}
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{event.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{event.name}</TableCell>
+                  </Tooltip>
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{event.description}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{event.description}</TableCell>
+                  </Tooltip>
                   <TableCell>
                     <img src={`${event.image}`} alt={event.name} width="70" />
                   </TableCell>

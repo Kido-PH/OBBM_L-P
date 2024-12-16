@@ -45,6 +45,7 @@ const ManageContracts = () => {
   const [showModal, setShowModal] = useState(false); // Hiển thị modal
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
   const [showModalPDF, setShowModalPDF] = useState(false);
+
   const [selecterContract, setSelecterContract] = useState({
     name: "",
     type: "",
@@ -873,6 +874,38 @@ const ManageContracts = () => {
     setDefS(startOfMonth);
     setDefE(endOfMonth);
   }, []);
+
+  const [hasPermission, setHasPermission] = useState(false);
+  const [hasPermission2, setHasPermission2] = useState(false);
+  const [hasPermission3, setHasPermission3] = useState(false);
+  const [hasPermission4, setHasPermission4] = useState(false);
+  const [hasPermission5, setHasPermission5] = useState(false);
+
+  const userPermissions = localStorage.getItem("roles")
+  ? JSON.parse(localStorage.getItem("roles")).permissions
+  : [];
+
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền CREATE_CONTRACT khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_CONTRACT");
+    const permissionGranted2 = checkPermission("UPDATE_CONTRACT");
+    const permissionGranted3 = checkPermission("DELETE_CONTRACT");
+    const permissionGranted4 = checkPermission("READ_DETAIL_CONTRACT");
+    const permissionGranted5 = checkPermission("READ_CONTRACT_INGREDIENT");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+    setHasPermission4(permissionGranted4);
+    setHasPermission5(permissionGranted5);
+  }, []); // Chạy 1 lần khi component mount
+
   return (
     <div>
       <Toaster position="top-center" reverseOrder={false} />
@@ -1039,7 +1072,16 @@ const ManageContracts = () => {
               .map((contract, index) => (
                 <TableRow key={contract.contractId}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{contract.name}</TableCell>
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{contract.name}</span>} arrow placement="top">
+                    <TableCell
+                      sx={{
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        width: '250px',
+                      }}
+                    >{contract.name}</TableCell>
+                  </Tooltip>               
                   <TableCell>
                     {new Intl.NumberFormat("vi-VN", {
                       style: "currency",
@@ -1123,6 +1165,7 @@ const ManageContracts = () => {
                     }}
                   >
                     <span>
+                    {hasPermission && (
                       <Button
                         variant="outlined"
                         onClick={() => handleConfirmContract(contract)}
@@ -1178,6 +1221,7 @@ const ManageContracts = () => {
                           <CheckCircleIcon />
                         </Tooltip>
                       </Button>
+                    )}
                       {/* Nút mở menu */}
                       <Button
                         variant="outlined"
@@ -1212,6 +1256,7 @@ const ManageContracts = () => {
                         }}
                       >
                         {/* Nút sửa hợp đồng */}
+                        {hasPermission2 && (
                         <MenuItem
                           onClick={() => {
                             handleEditContract(contract);
@@ -1249,8 +1294,10 @@ const ManageContracts = () => {
                             </Tooltip>
                           </Button>
                         </MenuItem>
+                      )}
 
                         {/* Nút hủy hợp đồng */}
+                        {hasPermission3 && (
                         <MenuItem
                           onClick={() => {
                             handleCancelContract(contract);
@@ -1288,14 +1335,17 @@ const ManageContracts = () => {
                             </Tooltip>
                           </Button>
                         </MenuItem>
+                      )}
 
+                      
                         {/* Nút xem thông tin */}
+                      {hasPermission4 && (
                         <MenuItem
                           onClick={() => {
                             handleModalPDF(contract);
                             handleClose();
                           }}
-                        >
+                        >               
                           <Button
                             variant="outlined"
                             sx={{
@@ -1322,14 +1372,18 @@ const ManageContracts = () => {
                             </Tooltip>
                           </Button>
                         </MenuItem>
+                      )}
+
 
                         {/* Nút xem nguyên liệu */}
+                      {hasPermission5 && (
                         <MenuItem
                           onClick={() => {
                             handleViewStockRequests(contract.contractId);
                             handleClose();
                           }}
                         >
+                        {hasPermission && (
                           <Button
                             variant="outlined"
                             sx={{
@@ -1354,7 +1408,10 @@ const ManageContracts = () => {
                               <VisibilityIcon style={{ fontSize: "1.5rem" }} />
                             </IconButton>
                           </Button>
+                        )}
                         </MenuItem>
+                      )}
+
                       </Menu>
                     </span>
                   </TableCell>

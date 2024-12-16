@@ -21,6 +21,7 @@ import {
   TablePagination,
   Autocomplete,
   Popover,
+  Tooltip,
 } from "@mui/material";
 import menudishApi from "../../api/menudishAdminApi";
 import dishApi from "../../api/dishApi";
@@ -612,8 +613,26 @@ const MenuManager = () => {
             {filteredMenus.map((menu, index) => (
               <TableRow key={menu.menuId}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{menu.name}</TableCell>
-                <TableCell>{menu.description}</TableCell>
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{menu.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{menu.name}</TableCell>
+                  </Tooltip>
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{menu.description}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{menu.description}</TableCell>
+                  </Tooltip>
                 <TableCell>
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
