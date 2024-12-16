@@ -17,6 +17,13 @@
   
 }
 
+.empty-menu {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%; /* Đảm bảo nội dung chiếm toàn bộ chiều cao container */
+  text-align: center;
+}
 
 .scroll-button {
   background-color: transparent;
