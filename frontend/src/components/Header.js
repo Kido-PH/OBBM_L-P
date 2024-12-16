@@ -13,6 +13,7 @@ import { FiLogOut } from "react-icons/fi";
 import { FaUserCircle } from "react-icons/fa";
 import { AiFillLock } from "react-icons/ai";
 import { getToken } from "services/localStorageService";
+import { MdMenuBook } from "react-icons/md";
 const Header = () => {
   const [isActive, setIsActive] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -34,8 +35,8 @@ const Header = () => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          access_token: accessToken,  // Truyền access_token
-          refresh_token: refreshToken,  // Truyền refresh_token
+          access_token: accessToken, // Truyền access_token
+          refresh_token: refreshToken, // Truyền refresh_token
         }),
       });
 
@@ -77,6 +78,7 @@ const Header = () => {
           setIsAdmin(true);
           localStorage.setItem("isAdmin", true); // Lưu trạng thái vào localStorage
           localStorage.setItem("roles", JSON.stringify(adminRole));
+          localStorage.setItem("userId", data?.result?.userId);
           navigate("/admin");
         } else {
           setIsAdmin(false);
@@ -177,14 +179,13 @@ const Header = () => {
           </button>
 
           <Tooltip title="Thực đơn">
-  <a
-    href={eventId ? `/menu/${eventId}` : '/menu'}  // Kiểm tra nếu có eventId, nếu không thì về '/menu'
-    className="navbar-link header-icon"
-  >
-    <img src={Menu} alt="Menu" style={{ width: "28px" }} />
-  </a>
-</Tooltip>
-
+            <a
+              href={eventId ? `/menu/${eventId}` : "/menu"} // Kiểm tra nếu có eventId, nếu không thì về '/menu'
+              className="navbar-link header-icon"
+            >
+              <MdMenuBook />
+            </a>
+          </Tooltip>
 
           {isLoggedIn && (
             <Tooltip title="Danh sách hợp đồng">

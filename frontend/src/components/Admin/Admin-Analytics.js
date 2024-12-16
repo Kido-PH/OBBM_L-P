@@ -41,7 +41,7 @@ import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 // import LogoutIcon from "@mui/icons-material/Logout";
 import { DatePicker, message, Select, Modal } from "antd";
 import dayjs from 'dayjs';
-
+import { useNavigate } from "react-router-dom"; // Thêm import này ở đầu file
 // Đăng ký các thành phần của biểu đồ
 ChartJS.register(
   CategoryScale,
@@ -59,6 +59,7 @@ const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth");
   const [openModal, setOpenModal] = useState(false);
+  const navigate = useNavigate(); // Khởi tạo hook điều hướng
 
   const [pendingContracts, setPendingContracts] = useState([]); // Lưu trữ chi tiết hợp đồng
   const [selectedContract, setSelectedContract] = useState(null); // Lưu hợp đồng được chọn
@@ -92,7 +93,7 @@ const AdminAnalytics = () => {
   useEffect(() => {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Đầu tháng hiện tại
-    const endOfMonth = today; // Ngày hiện tại
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Ngày cuối cùng của tháng hiện tại
   
     setStartDate(startOfMonth);
     setEndDate(endOfMonth);
@@ -164,6 +165,8 @@ const AdminAnalytics = () => {
   const handlePendingClick = (status) => {
     fetchPendingContracts(status, startDate, endDate); // Gọi API khi click vào card
     setOpenModal(true); // Mở modal
+    // navigate(`/admin/ManageContracts?status=${status}`);  
+    
   };
 
   // Hàm đóng modal
