@@ -46,6 +46,7 @@ const Header = () => {
         localStorage.removeItem("isAdmin");
         localStorage.removeItem("currentLocation");
         localStorage.removeItem("userId");
+        localStorage.clear();
         Cookies.remove("refreshToken");
         navigate("/login");
       } else {
