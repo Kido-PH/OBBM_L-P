@@ -1,6 +1,5 @@
 import React from "react";
 import { Box, Button, styled, Typography } from "@mui/material";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { chatbotContext } from "./ChatbotContext";
 import { Image, Modal } from "react-bootstrap";
 import eventApi from "api/eventApi";
@@ -49,7 +48,15 @@ const ChatResponse = ({ step, eventName, content }) => {
   }, []);
 
   return (
-    <div className="w-100 d-flex align-items-start mb-3">
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        alignItems: "flex-start",
+        marginBottom: "1rem",
+      }}
+    >
+      {" "}
       {/* Avatar */}
       <Box
         sx={{
@@ -67,7 +74,6 @@ const ChatResponse = ({ step, eventName, content }) => {
           height={36}
         />
       </Box>
-
       <ChatBubble>
         {step === 1 && (
           <Typography variant="body2" color="textPrimary">
@@ -106,13 +112,10 @@ const ChatResponse = ({ step, eventName, content }) => {
           </div>
         )}
       </ChatBubble>
-
-
       <Modal
         show={isModalEventsOpen}
         onHide={handleCloseModalEvents}
         className="Modal-events"
-        size="xl"
         style={{ maxH: "75%" }}
       >
         <section
@@ -140,7 +143,10 @@ const ChatResponse = ({ step, eventName, content }) => {
                 <li
                   key={event.eventId}
                   className="promo-item"
-                  style={{ width: "285px", height: "443px", marginRight: "50px" }}
+                  style={{
+                    width: "285px",
+                    height: "443px",
+                  }}
                 >
                   <button
                     onClick={() => {

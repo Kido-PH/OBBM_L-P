@@ -226,17 +226,16 @@ const Menu = ({ accessToken }) => {
 
   const handleSelectMenu = (menu) => {
     const userId = localStorage.getItem("userId");
-    // Nếu đã đăng nhập, thực hiện các thao tác chọn menu
-    setSelectedMenu(menu);
-    const menuDishesList = menu.listMenuDish.map((menuDishes) => {
-      return {
-        dishesId: menuDishes?.dishes?.dishId,
-        quantity: 1,
-        price: menuDishes.dishes?.price,
-        menuId: null,
-      };
-    });
+    console.log(groupedMenuArray);
+    // Thiết lập selectedMenu và các dữ liệu liên quan
+    const menuDishesList = menu.listMenuDish.map((menuDishes) => ({
+      dishesId: menuDishes?.dishes?.dishId,
+      quantity: 1,
+      price: menuDishes.dishes?.price,
+      menuId: null,
+    }));
 
+    setSelectedMenu(menu); // Cập nhật menu được chọn
     setSelectedMenuDishes(menuDishesList);
     setSelectedMenuId(menu.menuId);
     localStorage.setItem("MenuSelectedId", menu.menuId);
@@ -354,6 +353,33 @@ const Menu = ({ accessToken }) => {
       return dishAcc;
     }, {});
 
+    // Kiểm tra món thức uống trong "Beverages" và thêm vào nhóm "Appetizers"
+    category.listMenuDish.forEach((menuDish) => {
+      if (
+        menuDish.dishes.categories.name === "Beverages" &&
+        menuDish.dishes.deletedAt === null
+      ) {
+        // Đảm bảo nhóm "Appetizers" luôn tồn tại
+        if (!groupedDishes["Appetizers"]) {
+          groupedDishes["Appetizers"] = [];
+        }
+
+        // Đổ thức uống vào nhóm "Appetizers"
+        groupedDishes["Appetizers"].push(menuDish.dishes);
+
+        // Xóa món này khỏi "Beverages"
+        // Tạo nhóm "Beverages" nếu chưa tồn tại và đảm bảo nhóm không còn món thức uống
+        if (!groupedDishes["Beverages"]) {
+          groupedDishes["Beverages"] = [];
+        }
+
+        // Xóa món thức uống khỏi nhóm "Beverages"
+        groupedDishes["Beverages"] = groupedDishes["Beverages"].filter(
+          (dish) => dish.id !== menuDish.dishes.id
+        );
+      }
+    });
+
     // Giữ menu ngay cả khi không có món ăn nào trong danh mục
     acc[category.menuId] = {
       ...category,
@@ -363,9 +389,24 @@ const Menu = ({ accessToken }) => {
     return acc;
   }, {});
 
+  // Chuyển nhóm menu thành một mảng
   const groupedMenuArray = Object.values(groupedMenu);
 
-  const toggleListFood = (id) => {
+  // Lặp qua mảng và in ra groupedDishes cho từng menu
+  groupedMenuArray.forEach((menu) => {
+    console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
+  });
+
+  const toggleListFood = (categoryName) => {
+    let id;
+    if (categoryName === "Appetizers") {
+      id = 1;
+    } else if (categoryName === "Main_Courses") {
+      id = 2;
+    } else if (categoryName === "Desserts") {
+      id = 3;
+    }
+
     setSelectedId(id);
     setShowListFood(true);
   };
@@ -395,43 +436,49 @@ const Menu = ({ accessToken }) => {
       const categoryName = dish.categories.name; // Lấy tên category từ dish
       const updatedGroupedDishes = { ...prevMenu.groupedDishes };
 
-      // Nếu category chưa tồn tại, tạo mảng mới
-      if (!updatedGroupedDishes[categoryName]) {
-        updatedGroupedDishes[categoryName] = [];
-      }
+      // Nếu category là Appetizers hoặc Beverages, xử lý
+      if (categoryName === "Appetizers" || categoryName === "Beverages") {
+        // Nếu chưa có Appetizers, tạo mới
+        if (!updatedGroupedDishes["Appetizers"]) {
+          updatedGroupedDishes["Appetizers"] = [];
+        }
 
-      // Thêm món ăn vào category
-      updatedGroupedDishes[categoryName] = [
-        ...updatedGroupedDishes[categoryName],
-        dish,
-      ];
-
-      // Cập nhật selectedMenuDishes với món ăn mới
-      setSelectedMenuDishes((prevDishes) => [
-        ...prevDishes,
-        {
-          dishesId: dish.dishId,
-          quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
-          price: dish.price,
-          menuId: null,
-        },
-      ]);
-      setMenuDishesDetails((prevDetails) => {
-        const updatedDetails = [
-          ...prevDetails,
-          {
-            dishes: {
-              ...dish, // Lưu tất cả thông tin chi tiết của món ăn
-              categories: dish.categories, // Lưu thông tin categories của món ăn
-              existing: "Còn hàng", // Thêm trạng thái của món ăn
-            },
-            menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
-          },
+        updatedGroupedDishes["Appetizers"] = [
+          ...updatedGroupedDishes["Appetizers"],
+          dish,
         ];
 
-        return updatedDetails;
-      });
-      console.log(menuDishesDetails);
+        // Cập nhật selectedMenuDishes với món ăn mới
+        setSelectedMenuDishes((prevDishes) => [
+          ...prevDishes,
+          {
+            dishesId: dish.dishId,
+            quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
+            price: dish.price,
+            menuId: null,
+          },
+        ]);
+
+        setMenuDishesDetails((prevDetails) => {
+          const updatedDetails = [
+            ...prevDetails,
+            {
+              dishes: {
+                ...dish, // Lưu tất cả thông tin chi tiết của món ăn
+                categories: dish.categories, // Lưu thông tin categories của món ăn
+                existing: "Còn hàng", // Thêm trạng thái của món ăn
+              },
+              menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
+            },
+          ];
+
+          return updatedDetails;
+        });
+
+        console.log(menuDishesDetails);
+      }
+
+      // Trả về đối tượng đã cập nhật, chỉ giữ Appetizers
       return {
         ...prevMenu,
         groupedDishes: updatedGroupedDishes,
@@ -535,8 +582,6 @@ const Menu = ({ accessToken }) => {
     }
   };
 
-  let swiperRef = null;
-
   return (
     <div className="Menu">
       <div className="menu-container">
@@ -548,7 +593,7 @@ const Menu = ({ accessToken }) => {
               }`}
               onClick={() => setActiveTab("tab1")}
             >
-              Thực đơn nổi bật
+              Thực đơn gợi ý
             </button>
             <button
               className={`tab btn-save-form ${
@@ -556,7 +601,7 @@ const Menu = ({ accessToken }) => {
               }`}
               onClick={() => setActiveTab("tab2")}
             >
-              Hỗ trợ lên thực đơn
+             Hỗ trợ lên thực đơn
             </button>
           </div>
           <div className="tab-content">
@@ -589,47 +634,40 @@ const Menu = ({ accessToken }) => {
                     modules={[EffectCoverflow, Pagination, Navigation]}
                     className="swiper-container"
                   >
-                    {groupedMenuArray
-                      // .filter(
-                      //   (category) =>
-                      //     Object.values(category.groupedDishes).flat().length >= 9
-                      // )
-                      .map((category, index) => (
-                        <SwiperSlide
-                          key={index}
-                          onClick={() => handleSelectMenu(category)}
-                        >
-                          <div className="food-category">
-                            <h4 style={{ textAlign: "center" }}>
-                              {category.name}
-                            </h4>
+                    {groupedMenuArray.map((category, index) => (
+                      <SwiperSlide
+                        key={index}
+                        onClick={() => handleSelectMenu(category)}
+                      >
+                        <div className="food-category">
+                          <h4 style={{ textAlign: "center" }}>
+                            {category.name}
+                          </h4>
+                          {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
+                          {categoriesOrder.map(
+                            (categoryName) =>
+                              category.groupedDishes[categoryName] && (
+                                <div
+                                  key={categoryName}
+                                  className="menu-category"
+                                >
+                                  <h6>
+                                    {categoryName === "Appetizers"
+                                      ? "Khai vị và thức uống"
+                                      : categoryName === "Main_Courses"
+                                      ? "Món chính"
+                                      : categoryName === "Desserts"
+                                      ? "Tráng miệng"
+                                      : categoryName}
+                                  </h6>
 
-                            {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
-                            {categoriesOrder.map(
-                              (categoryName) =>
-                                category.groupedDishes[categoryName] && (
-                                  <div
-                                    key={categoryName}
-                                    className="menu-category"
-                                  >
-                                    <h6>
-                                      {categoryName === "Appetizers"
-                                        ? "Khai vị và thức uống"
-                                        : categoryName === "Main_Courses"
-                                        ? "Món chính"
-                                        : categoryName === "Desserts"
-                                        ? "Tráng miệng"
-                                        : categoryName}
-                                    </h6>
-
-                                    <div className="menu-category-dish">
-                                      <ul
-                                        className="promo-list has-scrollbar"
-                                        style={{ paddingTop: "10px" }}
-                                      >
-                                        {category.groupedDishes[
-                                          categoryName
-                                        ].map((dish, index) => (
+                                  <div className="menu-category-dish">
+                                    <ul
+                                      className="promo-list has-scrollbar"
+                                      style={{ paddingTop: "10px" }}
+                                    >
+                                      {category.groupedDishes[categoryName].map(
+                                        (dish, index) => (
                                           <li
                                             key={index}
                                             style={{ width: "77px" }}
@@ -656,37 +694,38 @@ const Menu = ({ accessToken }) => {
                                               {dish.name}
                                             </p>
                                           </li>
-                                        ))}
-                                      </ul>
-                                    </div>
+                                        )
+                                      )}
+                                    </ul>
                                   </div>
-                                )
-                            )}
+                                </div>
+                              )
+                          )}
 
-                            <div
-                              style={{
-                                textAlign: "center",
-                                fontWeight: "bold",
-                                paddingTop: "10px",
-                              }}
-                            >
-                              <p style={{ color: "rgb(66 66 66)" }}>
-                                Giá tiền:{" "}
-                                {Object.values(category.groupedDishes)
-                                  .flat()
-                                  .reduce((total, dish) => {
-                                    const profitMargin = 0.2;
-                                    const sellingPrice =
-                                      dish.price / (1 - profitMargin);
-                                    return total + (sellingPrice || 0);
-                                  }, 0)
-                                  .toLocaleString()}{" "}
-                                VND/người
-                              </p>
-                            </div>
+                          <div
+                            style={{
+                              textAlign: "center",
+                              fontWeight: "bold",
+                              paddingTop: "10px",
+                            }}
+                          >
+                            <p style={{ color: "rgb(66 66 66)" }}>
+                              Giá tiền:{" "}
+                              {Object.values(category.groupedDishes)
+                                .flat()
+                                .reduce((total, dish) => {
+                                  const profitMargin = 0.2;
+                                  const sellingPrice =
+                                    dish.price / (1 - profitMargin);
+                                  return total + (sellingPrice || 0);
+                                }, 0)
+                                .toLocaleString()}{" "}
+                              VND/người
+                            </p>
                           </div>
-                        </SwiperSlide>
-                      ))}
+                        </div>
+                      </SwiperSlide>
+                    ))}
 
                     <div className="slider-controler">
                       <div className="swiper-button-prev slider-arrow">
@@ -728,14 +767,13 @@ const Menu = ({ accessToken }) => {
                         marginBottom: "20px",
                       }}
                     >
-                      <p className="mb-0">Đổi sự kiện</p>
+                      <p>Đổi sự kiện</p>
                     </button>
                   </div>
                 </div>
 
                 <Modal
                   show={isModalEventsOpen}
-                  onHide={handleCloseModalEvents}
                   className="Modal-events"
                   style={{ maxH: "75%" }}
                 >
@@ -749,13 +787,13 @@ const Menu = ({ accessToken }) => {
                       width: "100%",
                     }}
                   >
-                    <button
+                    {/* <button
                       className="add-button"
                       onClick={handleCloseModalEvents}
                       style={{ color: "hsl(32, 100%, 59%)" }}
                     >
                       x
-                    </button>
+                    </button> */}
                     <h2 style={{ textAlign: "center" }}>Sự kiện</h2>
 
                     <div
@@ -816,7 +854,7 @@ const Menu = ({ accessToken }) => {
               </div>
             )}
             {activeTab === "tab2" && (
-              <div className="tab2-contents" style={{ height: "100%" }}>
+              <div className="tab2-content">
                 <ChatContext />
               </div>
             )}
@@ -839,185 +877,170 @@ const Menu = ({ accessToken }) => {
           {selectedMenu ? (
             <div>
               {/* Sắp xếp các category theo thứ tự trong categoriesOrder */}
-              {Object.keys(selectedMenu.groupedDishes)
-                .sort(
-                  (a, b) =>
-                    categoriesOrder.indexOf(a) - categoriesOrder.indexOf(b)
-                ) // Sắp xếp
-                .map((categoryName, index) => (
-                  <div key={categoryName} className="menu-category-dish">
-                    <h4
-                      style={{
-                        display: "flex",
-                        alignItems: "center",
-                      }}
-                    >
-                      {index === 0
-                        ? "Khai vị và thức uống"
-                        : index === 1
-                        ? "Món chính"
-                        : index === 2
-                        ? "Tráng miệng"
-                        : "Đồ uống"}
-                      <span
-                        style={{
-                          // backgroundColor: "hsl(213, 100%, 67%)",
-                          color: "red",
-                          // borderRadius: "50%",
-                          padding: "3px 6px", // Điều chỉnh padding để tạo khoảng cách xung quanh số
-                          fontSize: "12px",
-                          fontWeight: "bold",
-                          display: "inline-block", // Đảm bảo span không bị ép co dãn
-                          textAlign: "center", // Căn giữa nội dung
-                        }}
-                      >
-                        {`${
-                          selectedMenu.groupedDishes[categoryName]?.length || 0
-                        } món`}
-                      </span>
+              {categoriesOrder.map((categoryName) => {
+                if (
+                  categoryName === "Appetizers" ||
+                  categoryName === "Main_Courses" ||
+                  categoryName === "Desserts"
+                ) {
+                  return (
+                    <div key={categoryName} className="menu-category-dish">
+                      <h4 style={{ display: "flex", alignItems: "center" }}>
+                        {categoryName === "Appetizers"
+                          ? "Khai vị và thức uống"
+                          : categoryName === "Main_Courses"
+                          ? "Món chính"
+                          : "Tráng miệng"}
+                        <span
+                          style={{
+                            color: "red",
+                            padding: "3px 6px",
+                            fontSize: "12px",
+                            fontWeight: "bold",
+                            display: "inline-block",
+                            textAlign: "center",
+                          }}
+                        >
+                          {`${
+                            selectedMenu.groupedDishes[categoryName]?.length ||
+                            0
+                          } món`}
+                        </span>
 
-                      <button
-                        onClick={() => toggleListFood(index + 1)}
-                        className="add-button"
-                        style={{ color: "#02AF55", marginLeft: "auto" }} // Đẩy nút sang bên phải nếu cần
-                      >
-                        {/* <FaPlus style={{ width: "14px" }} /> */}
-                        <img
-                          src={AddButton}
-                          alt="Thêm món ăn"
-                          className="add-button-image"
-                          style={{ width: "25px" }}
-                        />
-                      </button>
-                    </h4>
+                        <button
+                          onClick={() => toggleListFood(categoryName)} // Truyền categoryName vào hàm toggleListFood
+                          className="add-button"
+                          style={{ color: "#02AF55", marginLeft: "auto" }}
+                        >
+                          <img
+                            src={AddButton}
+                            alt="Thêm món ăn"
+                            className="add-button-image"
+                            style={{ width: "25px" }}
+                          />
+                        </button>
+                      </h4>
 
-                    <div
-                      className="promo-list-container"
-                      style={{ position: "relative" }}
-                    >
-                      <button
-                        className="scroll-button left"
-                        onClick={() => handleScroll("left", categoryName)} // Pass categoryName here
-                        style={{
-                          position: "absolute",
-                          left: "0",
-                          top: "50%",
-                          transform: "translateY(-90%)",
-                          zIndex: 10,
-                          display:
-                            selectedMenu.groupedDishes[categoryName].length >= 4
-                              ? "block"
-                              : "none", // Show only when there are 4 or more items
-                        }}
+                      <div
+                        className="promo-list-container"
+                        style={{ position: "relative" }}
                       >
-                        &lt;
-                      </button>
+                        <button
+                          className="scroll-button left"
+                          onClick={() => handleScroll("left", categoryName)}
+                          style={{
+                            position: "absolute",
+                            left: "0",
+                            top: "50%",
+                            transform: "translateY(-90%)",
+                            zIndex: 10,
+                            display:
+                              selectedMenu.groupedDishes[categoryName]
+                                ?.length >= 4
+                                ? "block"
+                                : "none",
+                          }}
+                        >
+                          &lt;
+                        </button>
 
-                      <ul
-                        className={`promo-list ${categoryName} has-scrollbar`}
-                        style={{
-                          paddingBottom: "10px",
-                          overflowX:
-                            selectedMenu.groupedDishes[categoryName].length >= 4
-                              ? "auto"
-                              : "hidden", // Hiển thị thanh cuộn khi có đủ 4 món
-                          display: "flex",
-                          alignItems: "center",
-                          width: "100%", // Đảm bảo chiều rộng đầy đủ
-                        }}
-                      >
-                        {selectedMenu.groupedDishes[categoryName].map(
-                          (dish, index) => (
-                            <li
-                              key={index}
-                              style={{
-                                width: "119px",
-                                display: "inline-block",
-                              }}
-                            >
-                              <button
-                                onClick={() =>
-                                  handleRemoveDish(categoryName, dish.dishId)
-                                }
+                        <ul
+                          className={`promo-list ${categoryName} has-scrollbar`}
+                          style={{
+                            paddingBottom: "10px",
+                            overflowX:
+                              selectedMenu.groupedDishes[categoryName]
+                                ?.length >= 4
+                                ? "auto"
+                                : "hidden",
+                            display: "flex",
+                            alignItems: "center",
+                            width: "100%",
+                          }}
+                        >
+                          {selectedMenu.groupedDishes[categoryName]?.map(
+                            (dish, index) => (
+                              <li
+                                key={index}
                                 style={{
-                                  color: "red",
-                                  marginLeft: "90px",
-                                  width: "10px",
-                                }}
-                                title="Xóa món ăn"
-                              >
-                                <FaMinus style={{ width: "10px" }} />
-                              </button>
-                              <img
-                                src={dish.image}
-                                alt={dish.name}
-                                style={{
-                                  width: "63px",
-                                  height: "60px",
-                                  marginLeft: "25px",
-                                  borderRadius: "2rem",
-                                }}
-                              />
-                              <p
-                                style={{
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                  textAlign: "center",
-                                  fontWeight: "bold",
-                                  marginTop: "5px",
-                                  fontSize: "10px",
-                                  color: "#1e1e1e",
+                                  width: "119px",
+                                  display: "inline-block",
                                 }}
                               >
-                                {dish.name}
-                              </p>
-                              <p
-                                style={{
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                  textAlign: "center",
-                                  fontSize: "10px",
-                                  color: "#1e1e1e",
-                                }}
-                              >
-                                {/* {dish.price.toLocaleString()} VND */}
-                              </p>
-                            </li>
-                          )
-                        )}
-                      </ul>
+                                <button
+                                  onClick={() =>
+                                    handleRemoveDish(categoryName, dish.dishId)
+                                  }
+                                  style={{
+                                    color: "red",
+                                    marginLeft: "90px",
+                                    width: "10px",
+                                  }}
+                                  title="Xóa món ăn"
+                                >
+                                  <FaMinus style={{ width: "10px" }} />
+                                </button>
+                                <img
+                                  src={dish.image}
+                                  alt={dish.name}
+                                  style={{
+                                    width: "63px",
+                                    height: "60px",
+                                    marginLeft: "25px",
+                                    borderRadius: "2rem",
+                                  }}
+                                />
+                                <p
+                                  style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    textAlign: "center",
+                                    fontWeight: "bold",
+                                    marginTop: "5px",
+                                    fontSize: "10px",
+                                    color: "#1e1e1e",
+                                  }}
+                                >
+                                  {dish.name}
+                                </p>
+                              </li>
+                            )
+                          )}
+                        </ul>
 
-                      <button
-                        className="scroll-button right"
-                        onClick={() => handleScroll("right", categoryName)} // Pass categoryName here
-                        style={{
-                          position: "absolute",
-                          right: "0",
-                          top: "50%",
-                          transform: "translateY(-90%)",
-                          zIndex: 10,
-                          display:
-                            selectedMenu.groupedDishes[categoryName].length >= 4
-                              ? "block"
-                              : "none", // Show only when there are 4 or more items
-                        }}
-                      >
-                        &gt;
-                      </button>
+                        <button
+                          className="scroll-button right"
+                          onClick={() => handleScroll("right", categoryName)}
+                          style={{
+                            position: "absolute",
+                            right: "0",
+                            top: "50%",
+                            transform: "translateY(-90%)",
+                            zIndex: 10,
+                            display:
+                              selectedMenu.groupedDishes[categoryName]
+                                ?.length >= 4
+                                ? "block"
+                                : "none",
+                          }}
+                        >
+                          &gt;
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                }
+                return null; // Nếu không phải 3 category trên, không hiển thị gì
+              })}
               <div style={{ textAlign: "right", fontWeight: "bold" }}>
                 Giá tiền:{" "}
                 {Object.values(selectedMenu.groupedDishes)
                   .flat()
                   .reduce((total, dish) => {
-                    // Giả sử `dish.cost` là giá cost và `profitMargin` là tỷ lệ lợi nhuận mong muốn (ví dụ 0.2 cho 20%)
                     const profitMargin = 0.2; // Thay đổi theo tỷ lệ lợi nhuận mong muốn
-                    const sellingPrice = dish.price / (1 - profitMargin); // Tính giá bán theo công thức
-                    return total + (sellingPrice || 0); // Cộng dồn tổng tiền
+                    const sellingPrice = dish.price / (1 - profitMargin);
+                    return total + (sellingPrice || 0);
                   }, 0)
                   .toLocaleString()}{" "}
                 VND/người
@@ -1028,14 +1051,12 @@ const Menu = ({ accessToken }) => {
               <p>Chọn một thực đơn để hiển thị chi tiết.</p>
             </div>
           )}
+
           <div>
             {selectedMenu && (
               <div
                 className="button-container d-flex"
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                }}
+                style={{ display: "flex", justifyContent: "center" }}
               >
                 <button
                   className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover view-menu"

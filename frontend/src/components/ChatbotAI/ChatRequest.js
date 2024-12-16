@@ -1,9 +1,8 @@
 import React from "react";
 import { Box, styled, Typography } from "@mui/material";
-import "bootstrap/dist/css/bootstrap.min.css";
 import { Image } from "react-bootstrap";
 
-const ChatRequest = ({ step, eventName ,content, costNguoiDung }) => {
+const ChatRequest = ({ step, eventName, content, costNguoiDung }) => {
   const ChatBubble = styled(Box)({
     maxWidth: "40%",
     backgroundColor: "#e3f2fd", // Màu nền khác cho user
@@ -13,7 +12,16 @@ const ChatRequest = ({ step, eventName ,content, costNguoiDung }) => {
   });
 
   return (
-    <div className="w-100 d-flex justify-content-end align-items-start mb-3">
+    <div
+      style={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "flex-end",
+        alignItems: "flex-start",
+        marginBottom: "1rem",
+      }}
+    >
+      {" "}
       {/* Chat bubble */}
       <ChatBubble>
         {step === 2 && content === "change_event" && (
@@ -32,7 +40,6 @@ const ChatRequest = ({ step, eventName ,content, costNguoiDung }) => {
           </Typography>
         )}
       </ChatBubble>
-
       {/* Avatar */}
       <Box
         sx={{

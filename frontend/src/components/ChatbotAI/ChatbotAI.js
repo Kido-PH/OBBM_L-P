@@ -50,7 +50,8 @@ const ChatBotContainer = () => {
   return (
     <div
       style={{
-        height: "100%", // Fixed total height for the chatbox
+        height: "100%",
+        width: "100%" // Fixed total height for the chatbox
       }}
     >
       {/* Chat History (scrollable area) */}

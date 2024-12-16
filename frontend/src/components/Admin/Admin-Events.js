@@ -86,7 +86,30 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
     fetchUserData();
     fetchServiceEvent();
   }, [page, rowsPerPage]);
+  const [hasPermission, setHasPermission] = useState(false);
+    const [hasPermission2, setHasPermission2] = useState(false);
+    const [hasPermission3, setHasPermission3] = useState(false);
 
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
+
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền CREATE_EVENT khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_EVENT");
+    const permissionGranted2 = checkPermission("DELETE_EVENT");
+    const permissionGranted3 = checkPermission("UPDATE_EVENT");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+  }, []); // Chạy 1 lần khi component mount
   const fetchEventsWithPaginate = async (page) => {
     try {
       const res = await eventsApi.getPaginate(page, rowsPerPage);
@@ -417,21 +440,23 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
             />
           </div>
 
-          <Button
-            sx={{ fontSize: "10px" }}
-            variant="contained"
-            color="primary"
-            onClick={() => handleOpenDialog("add", null)}
-          >
-            <AddIcon
-              sx={{
-                marginRight: "5px",
-                fontSize: "16px",
-                verticalAlign: "middle",
-              }}
-            />
-            Thêm sự kiện
-          </Button>
+          {hasPermission && (
+            <Button
+              sx={{ fontSize: "10px" }}
+              variant="contained"
+              color="primary"
+              onClick={() => handleOpenDialog("add", null)} // Thêm logic xử lý mở dialog
+            >
+              <AddIcon
+                sx={{
+                  marginRight: "5px",
+                  fontSize: "16px",
+                  verticalAlign: "middle",
+                }}
+              />
+              Thêm sự kiện
+            </Button>
+          )}
         </div>
       </Box>
       <TableContainer component={Paper} className="table-container">
@@ -481,23 +506,26 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
                       zIndex: 1,
                     }}
                   >
-                    <Button
-                      variant="outlined"
-                      onClick={() => handleOpenDialog("edit", event)}
-                      sx={{ mr: 1 }}
-                      color="primary"
-                    >
-                      <Tooltip
-                        title={
-                          <span style={{ fontSize: "1.25rem" }}>
-                            Sửa sự kiện
-                          </span>
-                        }
-                        placement="top"
+                    {hasPermission3 && (
+                      <Button
+                        variant="outlined"
+                        onClick={() => handleOpenDialog("edit", event)}
+                        sx={{ mr: 1 }}
+                        color="primary"
                       >
-                        <EditIcon />
-                      </Tooltip>
-                    </Button>
+                        <Tooltip
+                          title={
+                            <span style={{ fontSize: "1.25rem" }}>
+                              Sửa sự kiện
+                            </span>
+                          }
+                          placement="top"
+                        >
+                          <EditIcon />
+                        </Tooltip>
+                      </Button>
+                    )}
+                    {hasPermission2 && (
                     <Tooltip
                       title={
                         <span style={{ fontSize: "1.25rem" }}>Xóa sự kiện</span>
@@ -512,7 +540,7 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
                         <DeleteIcon />
                       </Button>
                     </Tooltip>
-
+                  )}
                     <Button
                       variant="outlined"
                       onClick={() => handleOpenServicePopup(event)}
