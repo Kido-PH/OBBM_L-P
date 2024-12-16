@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../assets/css/menu.css";
 import "../assets/css/listFood.css";
 import "../assets/css/swipermenu.css";
+import "../assets/css/chatbot.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ListFood from "../components/Menu/listfood";
@@ -19,6 +20,7 @@ import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import AddButton from "../assets/images/add.png";
+import ChatContext from "components/ChatbotAI/ChatbotContext";
 
 const Menu = ({ accessToken }) => {
   const scrollableRefs = useRef([]);
@@ -27,6 +29,7 @@ const Menu = ({ accessToken }) => {
   const categoriesOrder = ["Appetizers", "Main_Courses", "Desserts"];
   const [menuDishesDetails, setMenuDishesDetails] = useState([]);
   const [latestMenuId, setLatestMenuId] = useState(0);
+  const [activeTab, setActiveTab] = useState("tab1");
   const [selectedId, setSelectedId] = useState(null); // Lưu sectionId
   const [menuList, setMenuList] = useState([]);
   const [selectedDishes, setSelectedDishes] = useState([]);
@@ -128,7 +131,7 @@ const Menu = ({ accessToken }) => {
   const handleCreateMenu = async () => {
     try {
       const userId = localStorage.getItem("userId");
-  
+
       // Kiểm tra trạng thái isStatus
       if (userDetails && userDetails.isStatus === false) {
         Swal.fire({
@@ -146,7 +149,7 @@ const Menu = ({ accessToken }) => {
         });
         return;
       }
-  
+
       const profitMargin = 0.2;
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
@@ -154,14 +157,14 @@ const Menu = ({ accessToken }) => {
           const sellingPrice = dish.price / (1 - profitMargin);
           return total + (sellingPrice || 0);
         }, 0);
-  
+
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
           acc.push(currentDish);
         }
         return acc;
       }, []);
-  
+
       if (uniqueDishes.length === 0) {
         Swal.fire({
           icon: "error",
@@ -170,7 +173,7 @@ const Menu = ({ accessToken }) => {
         });
         return;
       }
-  
+
       const currentEventId = localStorage.getItem("currentEventId");
       const dataToSave = {
         name: selectedMenu.name,
@@ -179,12 +182,15 @@ const Menu = ({ accessToken }) => {
         userId: userId || "guest",
         eventId: currentEventId || selectedMenu.events.eventId,
       };
-  
+
       // Lưu vào localStorage
       localStorage.setItem("createdMenu", JSON.stringify(dataToSave));
       localStorage.setItem("createdMenuDishes", JSON.stringify(uniqueDishes));
-      localStorage.setItem("MenuDishesDetail", JSON.stringify(selectedMenu.groupedDishes));
-  
+      localStorage.setItem(
+        "MenuDishesDetail",
+        JSON.stringify(selectedMenu.groupedDishes)
+      );
+
       if (!userId) {
         Swal.fire({
           icon: "warning",
@@ -217,47 +223,9 @@ const Menu = ({ accessToken }) => {
       });
     }
   };
-  
+
   const handleSelectMenu = (menu) => {
     const userId = localStorage.getItem("userId");
-
-    // if (!isStatus) {
-    //   Swal.fire({
-    //     icon: "warning",
-    //     title: "Cập nhật đầy đủ thông tin",
-    //     text: "Bạn cần Cập nhật đầy đủ thông tin để có thể chọn thực đơn.",
-    //     showCancelButton: true,
-    //     confirmButtonText: "Cập nhật ngay",
-    //     cancelButtonText: "Hủy",
-    //     reverseButtons: true,
-    //   }).then((result) => {
-    //     if (result.isConfirmed) {
-    //       window.location.href = "/account";
-    //     }
-    //   });
-    //   return;
-    // }
-
-    // if (!userId) {
-    //   // Lưu thực đơn vào localStorage để sử dụng sau khi đăng nhập
-    //   localStorage.setItem("pendingMenu", JSON.stringify(menu));
-
-    //   Swal.fire({
-    //     icon: "warning",
-    //     title: "Chưa đăng nhập",
-    //     text: "Bạn cần đăng nhập để chọn tạo thực đơn.",
-    //     showCancelButton: true,
-    //     confirmButtonText: "Đăng nhập ngay",
-    //     cancelButtonText: "Hủy",
-    //     reverseButtons: true,
-    //   }).then((result) => {
-    //     if (result.isConfirmed) {
-    //       window.location.href = "/login";
-    //     }
-    //   });
-    //   return;
-    // }
-
     // Nếu đã đăng nhập, thực hiện các thao tác chọn menu
     setSelectedMenu(menu);
     const menuDishesList = menu.listMenuDish.map((menuDishes) => {
@@ -276,8 +244,12 @@ const Menu = ({ accessToken }) => {
 
   useEffect(() => {
     const createdMenu = JSON.parse(localStorage.getItem("createdMenu"));
-    const createdMenuDishes = JSON.parse(localStorage.getItem("createdMenuDishes"));
-    const MenuDishesDetail = JSON.parse(localStorage.getItem("MenuDishesDetail"));
+    const createdMenuDishes = JSON.parse(
+      localStorage.getItem("createdMenuDishes")
+    );
+    const MenuDishesDetail = JSON.parse(
+      localStorage.getItem("MenuDishesDetail")
+    );
 
     if (createdMenu && createdMenuDishes && MenuDishesDetail) {
       // Tái tạo lại state hoặc data để hiển thị menu đã chỉnh sửa
@@ -393,8 +365,6 @@ const Menu = ({ accessToken }) => {
 
   const groupedMenuArray = Object.values(groupedMenu);
 
-
-
   const toggleListFood = (id) => {
     setSelectedId(id);
     setShowListFood(true);
@@ -496,7 +466,7 @@ const Menu = ({ accessToken }) => {
     localStorage.removeItem("createdMenu");
     localStorage.removeItem("createdMenuDishes");
     localStorage.removeItem("MenuDishesDetail");
-    setSelectedMenu(null); 
+    setSelectedMenu(null);
   };
 
   const handleRemoveDish = (categoryName, dishId) => {
@@ -572,90 +542,94 @@ const Menu = ({ accessToken }) => {
       <div className="menu-container">
         <div className="menu-left">
           <div className="tabs">
-            {/* <button
-            className={`tab btn-save-form ${
-              activeTab === "tab1" ? "active" : ""
-            }`}
-            onClick={() => setActiveTab("tab1")}>
-            Top menu
-          </button> */}
-            {/* <button
-            className={`tab btn-save-form ${
-              activeTab === "tab2" ? "active" : ""
-            }`}
-            onClick={() => setActiveTab("tab2")}>
-            Chat Suggestion
-          </button> */}
+            <button
+              className={`tab btn-save-form ${
+                activeTab === "tab1" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("tab1")}
+            >
+              Thực đơn nổi bật
+            </button>
+            <button
+              className={`tab btn-save-form ${
+                activeTab === "tab2" ? "active" : ""
+              }`}
+              onClick={() => setActiveTab("tab2")}
+            >
+              Hỗ trợ lên thực đơn
+            </button>
           </div>
           <div className="tab-content">
-            <div>
-              <div className="container">
-                <h3
-                  className="heading"
-                  style={{ fontSize: "25px", color: "#191919" }}
-                >
-                  Thực đơn gợi ý
-                </h3>
-                <Swiper
-                  effect={"coverflow"}
-                  grabCursor={true}
-                  centeredSlides={true}
-                  loop={groupedMenuArray.length > 1}
-                  slidesPerView={"auto"}
-                  coverflowEffect={{
-                    rotate: 0,
-                    stretch: 0,
-                    depth: 100,
-                    modifier: 2.5,
-                  }}
-                  pagination={{ el: ".swiper-pagination", clickable: true }}
-                  navigation={{
-                    nextEl: ".swiper-button-next",
-                    prevEl: ".swiper-button-prev",
-                  }}
-                  modules={[EffectCoverflow, Pagination, Navigation]}
-                  className="swiper-container"
-                >
-                  {groupedMenuArray
-                    // .filter(
-                    //   (category) =>
-                    //     Object.values(category.groupedDishes).flat().length >= 9
-                    // )
-                    .map((category, index) => (
-                      <SwiperSlide
-                        key={index}
-                        onClick={() => handleSelectMenu(category)}
-                      >
-                        <div className="food-category">
-                          <h4 style={{ textAlign: "center" }}>
-                            {category.name}
-                          </h4>
+            {activeTab === "tab1" && (
+              <div>
+                <div className="container">
+                  <h3
+                    className="heading"
+                    style={{ fontSize: "25px", color: "#191919" }}
+                  >
+                    Thực đơn gợi ý
+                  </h3>
+                  <Swiper
+                    effect={"coverflow"}
+                    grabCursor={true}
+                    centeredSlides={true}
+                    loop={groupedMenuArray.length > 1}
+                    slidesPerView={"auto"}
+                    coverflowEffect={{
+                      rotate: 0,
+                      stretch: 0,
+                      depth: 100,
+                      modifier: 2.5,
+                    }}
+                    pagination={{ el: ".swiper-pagination", clickable: true }}
+                    navigation={{
+                      nextEl: ".swiper-button-next",
+                      prevEl: ".swiper-button-prev",
+                    }}
+                    modules={[EffectCoverflow, Pagination, Navigation]}
+                    className="swiper-container"
+                  >
+                    {groupedMenuArray
+                      // .filter(
+                      //   (category) =>
+                      //     Object.values(category.groupedDishes).flat().length >= 9
+                      // )
+                      .map((category, index) => (
+                        <SwiperSlide
+                          key={index}
+                          onClick={() => handleSelectMenu(category)}
+                        >
+                          <div className="food-category">
+                            <h4 style={{ textAlign: "center" }}>
+                              {category.name}
+                            </h4>
 
-                          {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
-                          {categoriesOrder.map(
-                            (categoryName) =>
-                              category.groupedDishes[categoryName] && (
-                                <div
-                                  key={categoryName}
-                                  className="menu-category"
-                                >
-                                  <h6>
-                                    {categoryName === "Appetizers"
-                                      ? "Khai vị và thức uống"
-                                      : categoryName === "Main_Courses"
-                                      ? "Món chính"
-                                      : categoryName === "Desserts"
-                                      ? "Tráng miệng"
-                                      : categoryName}
-                                  </h6>
+                            {/* Sắp xếp lại các món ăn theo thứ tự trong categoriesOrder */}
+                            {categoriesOrder.map(
+                              (categoryName) =>
+                                category.groupedDishes[categoryName] && (
+                                  <div
+                                    key={categoryName}
+                                    className="menu-category"
+                                  >
+                                    <h6>
+                                      {categoryName === "Appetizers"
+                                        ? "Khai vị và thức uống"
+                                        : categoryName === "Main_Courses"
+                                        ? "Món chính"
+                                        : categoryName === "Desserts"
+                                        ? "Tráng miệng"
+                                        : categoryName}
+                                    </h6>
 
-                                  <div className="menu-category-dish">
-                                    <ul
-                                      className="promo-list has-scrollbar"
-                                      style={{ paddingTop: "10px" }}
-                                    >
-                                      {category.groupedDishes[categoryName].map(
-                                        (dish, index) => (
+                                    <div className="menu-category-dish">
+                                      <ul
+                                        className="promo-list has-scrollbar"
+                                        style={{ paddingTop: "10px" }}
+                                      >
+                                        {category.groupedDishes[
+                                          categoryName
+                                        ].map((dish, index) => (
                                           <li
                                             key={index}
                                             style={{ width: "77px" }}
@@ -682,163 +656,170 @@ const Menu = ({ accessToken }) => {
                                               {dish.name}
                                             </p>
                                           </li>
-                                        )
-                                      )}
-                                    </ul>
+                                        ))}
+                                      </ul>
+                                    </div>
                                   </div>
-                                </div>
-                              )
-                          )}
+                                )
+                            )}
 
-                          <div
-                            style={{
-                              textAlign: "center",
-                              fontWeight: "bold",
-                              paddingTop: "10px",
-                            }}
-                          >
-                            <p style={{ color: "rgb(66 66 66)" }}>
-                              Giá tiền:{" "}
-                              {Object.values(category.groupedDishes)
-                                .flat()
-                                .reduce((total, dish) => {
-                                  const profitMargin = 0.2;
-                                  const sellingPrice =
-                                    dish.price / (1 - profitMargin);
-                                  return total + (sellingPrice || 0);
-                                }, 0)
-                                .toLocaleString()}{" "}
-                              VND/người
-                            </p>
+                            <div
+                              style={{
+                                textAlign: "center",
+                                fontWeight: "bold",
+                                paddingTop: "10px",
+                              }}
+                            >
+                              <p style={{ color: "rgb(66 66 66)" }}>
+                                Giá tiền:{" "}
+                                {Object.values(category.groupedDishes)
+                                  .flat()
+                                  .reduce((total, dish) => {
+                                    const profitMargin = 0.2;
+                                    const sellingPrice =
+                                      dish.price / (1 - profitMargin);
+                                    return total + (sellingPrice || 0);
+                                  }, 0)
+                                  .toLocaleString()}{" "}
+                                VND/người
+                              </p>
+                            </div>
                           </div>
-                        </div>
-                      </SwiperSlide>
-                    ))}
+                        </SwiperSlide>
+                      ))}
 
-                  <div className="slider-controler">
-                    <div className="swiper-button-prev slider-arrow">
-                      <ion-icon name="arrow-back-outline"></ion-icon>
+                    <div className="slider-controler">
+                      <div className="swiper-button-prev slider-arrow">
+                        <ion-icon name="arrow-back-outline"></ion-icon>
+                      </div>
+                      <div className="swiper-button-next slider-arrow">
+                        <ion-icon name="arrow-forward-outline"></ion-icon>
+                      </div>
                     </div>
-                    <div className="swiper-button-next slider-arrow">
-                      <ion-icon name="arrow-forward-outline"></ion-icon>
-                    </div>
-                  </div>
-                </Swiper>
-
-                <div
-                  className="choose-button-container"
-                  style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <p
-                    style={{
-                      marginLeft: "5px",
-                      marginTop: "25px",
-                      fontWeight: "600px",
-                      color: "black",
-                    }}
-                  >
-                    <span style={{ color: "red", display: "inline" }}>* </span>{" "}
-                    Lưu ý: Lưu ý!
-                  </p>
-                  <button
-                    className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
-                    onClick={handleOpenModalEvents}
-                    style={{
-                      marginRight: "0px",
-                      marginTop: "0px",
-                      marginBottom: "20px",
-                    }}
-                  >
-                    <p>Đổi sự kiện</p>
-                  </button>
-                </div>
-              </div>
-
-              <Modal
-                show={isModalEventsOpen}
-                onHide={handleCloseModalEvents}
-                className="Modal-events"
-                style={{ maxH: "75%" }}
-              >
-                <section
-                  className="section section-divider white promo"
-                  id="events"
-                  style={{
-                    paddingTop: "20px",
-                    paddingBottom: "30px",
-                    marginTop: "50px",
-                    width: "100%",
-                  }}
-                >
-                  <button
-                    className="add-button"
-                    onClick={handleCloseModalEvents}
-                    style={{ color: "hsl(32, 100%, 59%)" }}
-                  >
-                    x
-                  </button>
-                  <h2 style={{ textAlign: "center" }}>Sự kiện</h2>
+                  </Swiper>
 
                   <div
-                    className=""
-                    style={{ marginLeft: "30px", marginRight: "30px" }}
+                    className="choose-button-container"
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
                   >
-                    <ul className="promo-list has-scrollbar">
-                      {Events.reverse().map((event) => (
-                        <li
-                          key={event.eventId}
-                          className="promo-item"
-                          style={{ width: "285px", height: "443px" }}
-                        >
-                          <button
-                            onClick={() => {
-                              pushEventIdtoMenu(event.eventId); // Gọi hàm để lưu eventId vào URL
-                              handleCloseModalEvents(); // Đóng modal ngay sau khi chọn sự kiện
-                            }}
-                          >
-                            <div
-                              className="promo-card"
-                              style={{ width: "285px", height: "443px" }}
-                            >
-                              <div className="card-icon">
-                                {/* Add any specific icons or elements here if needed */}
-                              </div>
-
-                              <h3 className="h3 card-title">{event.name}</h3>
-
-                              <p
-                                className="card-text"
-                                style={{
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
-                                  whiteSpace: "nowrap",
-                                  textAlign: "center",
-                                }}
-                              >
-                                {event.description}
-                              </p>
-
-                              <img
-                                src={event.image}
-                                width="300"
-                                height="300"
-                                loading="lazy"
-                                alt={event.name}
-                                className="w-100 card-banner"
-                              />
-                            </div>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
+                    <p
+                      style={{
+                        marginLeft: "5px",
+                        marginTop: "25px",
+                        fontWeight: "600px",
+                        color: "black",
+                      }}
+                    >
+                      <span style={{ color: "red", display: "inline" }}>
+                        *{" "}
+                      </span>{" "}
+                      Lưu ý: Lưu ý!
+                    </p>
+                    <button
+                      className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
+                      onClick={handleOpenModalEvents}
+                      style={{
+                        marginRight: "0px",
+                        marginTop: "0px",
+                        marginBottom: "20px",
+                      }}
+                    >
+                      <p className="mb-0">Đổi sự kiện</p>
+                    </button>
                   </div>
-                </section>
-              </Modal>
-            </div>
+                </div>
+
+                <Modal
+                  show={isModalEventsOpen}
+                  onHide={handleCloseModalEvents}
+                  className="Modal-events"
+                  style={{ maxH: "75%" }}
+                >
+                  <section
+                    className="section section-divider white promo"
+                    id="events"
+                    style={{
+                      paddingTop: "20px",
+                      paddingBottom: "30px",
+                      marginTop: "50px",
+                      width: "100%",
+                    }}
+                  >
+                    <button
+                      className="add-button"
+                      onClick={handleCloseModalEvents}
+                      style={{ color: "hsl(32, 100%, 59%)" }}
+                    >
+                      x
+                    </button>
+                    <h2 style={{ textAlign: "center" }}>Sự kiện</h2>
+
+                    <div
+                      className=""
+                      style={{ marginLeft: "30px", marginRight: "30px" }}
+                    >
+                      <ul className="promo-list has-scrollbar">
+                        {Events.reverse().map((event) => (
+                          <li
+                            key={event.eventId}
+                            className="promo-item"
+                            style={{ width: "285px", height: "443px" }}
+                          >
+                            <button
+                              onClick={() => {
+                                pushEventIdtoMenu(event.eventId); // Gọi hàm để lưu eventId vào URL
+                                handleCloseModalEvents(); // Đóng modal ngay sau khi chọn sự kiện
+                              }}
+                            >
+                              <div
+                                className="promo-card"
+                                style={{ width: "285px", height: "443px" }}
+                              >
+                                <div className="card-icon">
+                                  {/* Add any specific icons or elements here if needed */}
+                                </div>
+
+                                <h3 className="h3 card-title">{event.name}</h3>
+
+                                <p
+                                  className="card-text"
+                                  style={{
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                    textAlign: "center",
+                                  }}
+                                >
+                                  {event.description}
+                                </p>
+
+                                <img
+                                  src={event.image}
+                                  width="300"
+                                  height="300"
+                                  loading="lazy"
+                                  alt={event.name}
+                                  className="w-100 card-banner"
+                                />
+                              </div>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </section>
+                </Modal>
+              </div>
+            )}
+            {activeTab === "tab2" && (
+              <div className="tab2-contents" style={{ height: "100%" }}>
+                <ChatContext />
+              </div>
+            )}
           </div>
         </div>
 
@@ -854,7 +835,7 @@ const Menu = ({ accessToken }) => {
         {/* Menu Right */}
 
         <div className="menu-right">
-          <h2 style={{ marginBottom: "0px" }}>Thực đơn</h2>
+          <h2 style={{ marginBottom: "10px" }}>Thực đơn của bạn</h2>
           {selectedMenu ? (
             <div>
               {/* Sắp xếp các category theo thứ tự trong categoriesOrder */}
@@ -888,7 +869,6 @@ const Menu = ({ accessToken }) => {
                           fontWeight: "bold",
                           display: "inline-block", // Đảm bảo span không bị ép co dãn
                           textAlign: "center", // Căn giữa nội dung
-                          
                         }}
                       >
                         {`${
@@ -1045,8 +1025,8 @@ const Menu = ({ accessToken }) => {
             </div>
           ) : (
             <div className="empty-menu">
-            <p>Chọn một thực đơn để hiển thị chi tiết.</p>
-          </div>
+              <p>Chọn một thực đơn để hiển thị chi tiết.</p>
+            </div>
           )}
           <div>
             {selectedMenu && (
