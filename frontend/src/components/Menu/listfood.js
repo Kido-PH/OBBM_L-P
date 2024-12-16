@@ -123,9 +123,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
                         className="food-image"
                       />
                       <span className="food-name">{dish.name}</span>
-                      <span className="food-price">
-                        {/* {dish.price.toLocaleString()} VND */}
-                      </span>
+                      
                     </div>
                     <button
                       className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
@@ -198,7 +196,6 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
               alt={selectedDish.name}
               className="food-image-large"
             />
-            <p>Giá: {selectedDish.price.toLocaleString()} VND</p>
             <p>Mô tả: {selectedDish.description}</p>
             {/* Các thông tin chi tiết khác của món ăn */}
           </div>

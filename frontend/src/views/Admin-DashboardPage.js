@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import "../assets/css/DashboardPage.css";
 import {
   CustomerServiceOutlined,
@@ -15,47 +15,33 @@ import {
   BellOutlined,
   ShoppingCartOutlined,
 } from "@ant-design/icons";
-import { Outlet, Route, Routes, useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
 import ManageContracts from "../components/Admin/Admin-Contracts";
 import AdminUserAvatar from "components/Admin/Admin-UserAvatar";
-import { CoffeeOutlined } from "@mui/icons-material";
 
 const { Header, Sider, Content, Footer } = Layout;
 
 function DashboardPage() {
   const [marginLeft, setMarginLeft] = useState(200);
   const [collapsed, setCollapsed] = useState(false);
-  const [footerVisible, setFooterVisible] = useState(false); // Trạng thái hiển thị Footer
   const navigate = useNavigate();
   const siteLayoutStyle = { marginLeft: marginLeft };
   const {
     token: { colorBgContainer },
   } = theme.useToken();
 
-  // Xử lý khi cuộn trang
-  useEffect(() => {
-    const handleScroll = () => {
-      if (window.scrollY > 100) {
-        // Nếu cuộn xuống hơn 100px
-        setFooterVisible(true); // Hiển thị Footer
-      } else {
-        setFooterVisible(false); // Ẩn Footer khi cuộn lên
-      }
-    };
-
-    // Thêm sự kiện scroll
-    window.addEventListener("scroll", handleScroll);
-
-    // Cleanup event listener khi component unmount
-    return () => {
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   const userRole = localStorage.getItem("roles")
     ? JSON.parse(localStorage.getItem("roles")).name
     : null;
+
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
+
+  const hasPermission = (permissionName) => {
+    return userPermissions.some(permission => permission.name === permissionName);
+  };
 
   const menuItems = [
     {
@@ -63,74 +49,91 @@ function DashboardPage() {
       icon: <BarChartOutlined />,
       label: "TỔNG QUAN",
       path: "/admin",
+      requiredPermission: "READ_DASHBOARD", // Example permission
     },
     {
       key: "2",
       icon: <FileDoneOutlined />,
       label: "HỢP ĐỒNG",
       path: "/admin/ManageContracts",
+      requiredPermission: "READ_CONTRACT",
     },
     {
       key: "3",
       icon: <UnorderedListOutlined />,
       label: "DANH MỤC MÓN ĂN",
       path: "/admin/ManageCategoryDish",
+      requiredPermission: "READ_MENU",
     },
     {
       key: "4",
       icon: <ForkOutlined />,
       label: "MÓN ĂN",
       path: "/admin/ManageDish",
+      requiredPermission: "READ_DISH",
     },
     {
       key: "5",
       icon: <CustomerServiceOutlined />,
       label: "DỊCH VỤ",
       path: "/admin/ManageServices",
+      requiredPermission: "READ_SERVICES",
     },
     {
       key: "6",
       icon: <StarOutlined />,
       label: "SỰ KIỆN",
       path: "/admin/ManageEvents",
+      requiredPermission: "READ_EVENT",
     },
     {
       key: "7",
       icon: <EnvironmentOutlined />,
       label: "ĐỊA ĐIỂM",
       path: "/admin/ManageLocation",
+      requiredPermission: "READ_LOCATION",
     },
-    // Các mục chỉ dành cho ADMIN
-
     {
       key: "9",
       icon: <AppstoreOutlined />,
       label: "THỰC ĐƠN",
       path: "/admin/MenuManagement",
+      requiredPermission: "READ_MENU",
     },
     {
       key: "10",
       icon: <ShoppingCartOutlined />,
       label: "NGUYÊN LIỆU",
       path: "/admin/ManagerIngredient",
+      requiredPermission: "READ_INGREDIENT",
+    },
+    {
+      key: "8",
+      icon: <UsergroupAddOutlined />,
+      label: "KHÁCH HÀNG",
+      path: "/admin/ManageAccounts",
+      requiredPermission: "READ_ACCOUNTS",
     },
     ...(userRole === "ADMIN"
       ? [
-          {
-            key: "8",
-            icon: <UsergroupAddOutlined />,
-            label: "KHÁCH HÀNG",
-            path: "/admin/ManageAccounts",
-          },
+          
           {
             key: "11",
             icon: <SisternodeOutlined />,
             label: "PHÂN QUYỀN",
             path: "/admin/AccessControl",
+            requiredPermission: "READ_ROLE",
           },
         ]
       : []),
   ];
+  
+  // Filter menu items based on permissions
+  const filteredMenuItems = menuItems.filter(item => 
+    userRole === "ADMIN" || hasPermission(item.requiredPermission)
+  );
+  
+
   return (
     <Layout>
       <Sider
@@ -155,7 +158,7 @@ function DashboardPage() {
           theme="dark"
           mode="inline"
           defaultSelectedKeys={["1"]}
-          items={menuItems.map((item) => ({
+          items={filteredMenuItems.map((item) => ({
             key: item.key,
             icon: item.icon,
             label: item.label,
@@ -169,15 +172,13 @@ function DashboardPage() {
           style={{
             padding: 0,
             background: colorBgContainer,
-            left: marginLeft + 2 /* Đảm bảo trừ đi phần sidebar */,
+            left: marginLeft + 2,
             top: 0,
             position: "fixed",
-            width: `calc(100% - ${
-              marginLeft + 6
-            }px)` /* Trừ khoảng cách cho sidebar */,
+            width: `calc(100% - ${marginLeft + 6}px)`,
             height: 65,
-            zIndex: 1000 /* Đảm bảo Header luôn nằm trên cùng */,
-            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)" /* Bóng đổ nhẹ */,
+            zIndex: 1000,
+            boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
           }}
         >
           <Row>
@@ -209,22 +210,15 @@ function DashboardPage() {
         {/* Content */}
         <Content
           style={{
-            marginTop: 66 /* Đẩy nội dung xuống dưới Header */,
-            padding: 10 /* Padding để tạo khoảng cách */,
-            minHeight:
-              "100%" /* Chiếm toàn bộ chiều cao còn lại trừ Header và Footer */,
+            marginTop: 66,
+            padding: 10,
+            minHeight: "100%",
             background: colorBgContainer,
             borderRadius: 0,
-            overflow: "auto" /* Đảm bảo cuộn khi nội dung dài */,
+            overflow: "auto",
           }}
         >
           <div className="content-panel">
-            <Routes>
-              <Route
-                path="/admin/ManageContracts"
-                element={<ManageContracts />}
-              />
-            </Routes>
             <Outlet />
           </div>
         </Content>
@@ -238,10 +232,10 @@ function DashboardPage() {
             height: "0px",
             background: "#f0f2f5",
             position: "fixed",
-            bottom: footerVisible ? "0" : "-60px", // Chỉnh sửa vị trí của Footer
+            bottom: "0",
             width: `calc(100% - ${marginLeft + 32}px)`,
             left: marginLeft + 16,
-            transition: "bottom 0.3s ease", // Thêm hiệu ứng chuyển động mượt mà khi Footer xuất hiện/ẩn
+            transition: "bottom 0.3s ease",
           }}
         >
           OBBM ©{new Date().getFullYear()} Created by L&P
