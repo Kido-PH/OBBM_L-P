@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-
-import danhMucApi from "api/danhMucApi";
 import { FaPlus, FaEye, FaTimes } from "react-icons/fa";
 import AudioRecorderWithAPI from "components/GuestContract/SpeechToTextInput";
 
@@ -36,32 +34,28 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
       category.categoryId === categoryId || // Đổ dữ liệu theo categoryId hiện tại
       (categoryId === 1 && category.categoryId === 4) // Nếu categoryId là 1, thêm cả categoryId = 4
   );
-  
-  
+
   const handleSearch = (value) => {
     setIsSearching(true);
     if (!value.trim()) {
       setIsSearching(false);
       return;
     }
-  
+
     // Kết hợp món ăn từ categoryId = 0 và categoryId = 1 (kiểm tra nếu có)
     const listDishes = [
       ...filteredCategories[0]?.listDish,
-      ...(filteredCategories[1]?.listDish || []),  // Nếu filteredCategories[1] không có, trả về mảng rỗng
+      ...(filteredCategories[1]?.listDish || []), // Nếu filteredCategories[1] không có, trả về mảng rỗng
     ];
-  
+
     // Lọc các món ăn theo từ khóa tìm kiếm
     const results = listDishes?.filter((dish) =>
       dish?.name?.toLowerCase().includes(value.toLowerCase())
     );
-  
+
     setSearchResults(results);
     console.log("result mảng tìm kiếm:", results);
   };
-  
-
-
 
   const handleViewDetails = (dish) => {
     setSelectedDish(dish);
@@ -69,7 +63,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   };
   const handleSort = () => {
     setSortOrder((prevOrder) => (prevOrder === "asc" ? "desc" : "asc")); // Chuyển đổi trạng thái
-  
+
     setCategories((prevCategories) =>
       prevCategories.map((category) => ({
         ...category,
@@ -83,9 +77,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
       }))
     );
   };
-  
 
-  const categoriesToDisplay = isSearching ? searchResults : filteredCategories;
   return (
     <div
       className={`list-food-container ${
@@ -95,7 +87,6 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
       <div className="listfood-header">
         <h1>Danh mục món ăn</h1>
         <div className="action-buttons">
-          
           <AudioRecorderWithAPI
             onSearch={handleSearch}
             visibleSearchButton="none"
@@ -108,88 +99,98 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
             {sortOrder === "asc" ? "Sắp xếp" : "Sắp xếp"}
           </button>
           {/* Nút đóng ListFood */}
-          <button className="add-button" onClick={closeListFood} style={{marginLeft:"20px"}}>
-          <FaTimes style={{color:"red"}} /> {/* X icon for "Remove" */}
+          <button
+            className="add-button"
+            onClick={closeListFood}
+            style={{ marginLeft: "20px" }}
+          >
+            <FaTimes style={{ color: "red" }} /> {/* X icon for "Remove" */}
           </button>
         </div>
       </div>
 
-      {filteredCategories.map((category) => (
-        <div
-          key={category.categoryId}
-          className="listfood-category"
-          style={{ marginTop: "70px" }}
-        >
-          <h3>{category.description}</h3>
-          <ul className="foodList">
-            {isSearching === false ? (
-              category.listDish.length > 0 ? (
-                category.listDish.map((dish, index) => (
-                  <li key={index} className="food-item">
-                    <div className="food-details">
-                      <img
-                        src={dish.image}
-                        alt={dish.name}
-                        className="food-image"
-                      />
-                      <span className="food-name">{dish.name}</span>
-                      
-                    </div>
-                    <button
-                      className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
-                      title="Thêm"
-                      onClick={() => onAddDish(dish)}
-                    >
-                      <FaPlus /> {/* Plus icon for "Add" */}
-                    </button>
-                    <button
-                      className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-view"
-                      onClick={() => handleViewDetails(dish)}
-                      title="Xem Chi Tiết"
-                    >
-                      <FaEye /> {/* Eye icon for "View Details" */}
-                    </button>
-                  </li>
-                ))
-              ) : (
-                <p>Không có món ăn trong danh mục này.</p>
-              )
-            ) : searchResults.length > 0 ? (
-              searchResults.map((dish, index) => (
-                <li key={index} className="food-item">
-                  <div className="food-details">
-                    <img
-                      src={dish.image}
-                      alt={dish.name}
-                      className="food-image"
-                    />
-                    <span className="food-name">{dish.name}</span>
-                    <span className="food-price">
-                      {/* {dish.price.toLocaleString()} VND */}
-                    </span>
-                  </div>
-                  <button
-                    className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
-                    title="Thêm"
-                    onClick={() => onAddDish(dish)}
-                  >
-                    <FaPlus /> {/* Plus icon for "Add" */}
-                  </button>
-                  <button
-                    className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-view"
-                    onClick={() => handleViewDetails(dish)}
-                    title="Xem Chi Tiết"
-                  >
-                    <FaEye /> {/* Eye icon for "View Details" */}
-                  </button>
-                </li>
-              ))
-            ) : (
-              <p>Không có món ăn trong danh mục này.</p>
-            )}
-          </ul>
-        </div>
-      ))}
+      {filteredCategories
+        .filter((category) => !(isSearching && category.categoryId === 4)) // Lọc bỏ categoryId = 4 khi đang tìm kiếm
+        .map((category) => {
+          // Kiểm tra và thay đổi tên nếu cần
+          const categoryName =
+            isSearching && category.categoryId === 1
+              ? "Khai vị và thức uống"
+              : category.description;
+
+          return (
+            <div
+              key={category.categoryId}
+              className="listfood-category"
+              style={{ marginTop: "70px" }}
+            >
+              <h3>{categoryName}</h3>
+              <ul className="foodList">
+                {isSearching === false ? (
+                  category.listDish.length > 0 ? (
+                    category.listDish.map((dish, index) => (
+                      <li key={index} className="food-item">
+                        <div className="food-details">
+                          <img
+                            src={dish.image}
+                            alt={dish.name}
+                            className="food-image"
+                          />
+                          <span className="food-name">{dish.name}</span>
+                        </div>
+                        <button
+                          className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
+                          title="Thêm"
+                          onClick={() => onAddDish(dish)}
+                        >
+                          <FaPlus /> {/* Plus icon for "Add" */}
+                        </button>
+                        <button
+                          className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-view"
+                          onClick={() => handleViewDetails(dish)}
+                          title="Xem Chi Tiết"
+                        >
+                          <FaEye /> {/* Eye icon for "View Details" */}
+                        </button>
+                      </li>
+                    ))
+                  ) : (
+                    <p>Không có món ăn trong danh mục này.</p>
+                  )
+                ) : searchResults.length > 0 ? (
+                  searchResults.map((dish, index) => (
+                    <li key={index} className="food-item">
+                      <div className="food-details">
+                        <img
+                          src={dish.image}
+                          alt={dish.name}
+                          className="food-image"
+                        />
+                        <span className="food-name">{dish.name}</span>
+                      </div>
+                      <button
+                        className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-add"
+                        title="Thêm"
+                        onClick={() => onAddDish(dish)}
+                      >
+                        <FaPlus />
+                      </button>
+                      <button
+                        className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu listfood-button-view"
+                        onClick={() => handleViewDetails(dish)}
+                        title="Xem Chi Tiết"
+                      >
+                        <FaEye /> {/* Eye icon for "View Details" */}
+                      </button>
+                    </li>
+                  ))
+                ) : (
+                  <p>Không có món ăn trong danh mục này.</p>
+                )}
+              </ul>
+            </div>
+          );
+        })}
 
       {showPopup && selectedDish && (
         <div className="modal" onClick={() => setShowPopup(false)}>
