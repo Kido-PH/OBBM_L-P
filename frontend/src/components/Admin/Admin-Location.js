@@ -162,6 +162,7 @@ const LocationManager = () => {
         cost: 0,
         description: "",
         status: "",
+        image:"",
       }
     );
     setLocationId(location?.locationId || null);
@@ -172,39 +173,83 @@ const LocationManager = () => {
     setOpenDialog(false);
   };
 
-  const handleInputChange = (event) => {
-    const { name, value, files } = event.target;
+  const handleInputChange = async (e) => {
+    const { type, name, value, files } = e.target;
 
-    // Cập nhật dữ liệu món ăn
-    if (name === "image" && files) {
-      setCurrentLocation((prevState) => ({
-        ...prevState,
-        image: URL.createObjectURL(files[0]),
-      }));
+    // Xử lý ảnh
+    if (name === "image" && files && files.length > 0) {
+      const file = files[0];
+
+      // Tạo URL tạm thời cho ảnh (preview)
+      const imagePreviewUrl = URL.createObjectURL(file);
+
+      // Cập nhật ảnh vào state để hiển thị preview
+      setCurrentLocation({
+        ...currentLocation,
+        image: imagePreviewUrl,
+      });
+
+      try {
+        // Tạo FormData để gửi file
+        const formData = new FormData();
+        formData.append("file", file);
+
+        // Gửi yêu cầu lên API để tải ảnh lên
+        const response = await fetch(
+          "http://localhost:8080/obbm/upload/image",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+            },
+            body: formData, // Đưa formData vào body
+          }
+        );
+
+        const data = await response.json();
+        console.log("Response Data:", data);
+        if (response.ok) {
+          console.log("Upload thành công:", data);
+          // Lấy URL từ API Cloudinary
+          const imageUrl = data.result; // Kết quả trả về là URL của ảnh đã được upload
+          setCurrentLocation({
+            ...currentLocation,
+            image: imageUrl,
+          });
+          // Xóa lỗi nếu người dùng chọn ảnh
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            image: undefined,
+          }));
+        } else {
+          console.error("Lỗi tải ảnh:", data);
+          setErrors((prevErrors) => ({
+            ...prevErrors,
+            image: "Không thể tải ảnh lên",
+          }));
+        }
+      } catch (error) {
+        console.error("Lỗi tải ảnh:", error);
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          image: "Không thể tải ảnh lên",
+        }));
+      }
     } else {
-      setCurrentLocation((prevData) => ({
-        ...prevData,
-        [name]: value,
-      }));
+      // Xử lý các trường khác
+      setCurrentLocation({
+        ...currentLocation,
+        [name]: type === "number" ? Number(value) : value,
+      });
+
+      // Xóa lỗi nếu người dùng nhập đúng
+      if (value.trim() !== "") {
+        setErrors((prevErrors) => ({
+          ...prevErrors,
+          [name]: undefined,
+        }));
+      }
     }
-
-    // Xóa thông báo lỗi nếu dữ liệu nhập vào hợp lệ
-    setErrors((prevErrors) => {
-      const newErrors = { ...prevErrors };
-
-      // Kiểm tra từng trường và xóa lỗi nếu dữ liệu hợp lệ
-      if (name === "name" && value.trim() !== "") {
-        delete newErrors.name;
-      }
-      if (name === "type" && value.trim() !== "") {
-        delete newErrors.type;
-      }
-      if (name === "address" && value.trim() !== "") {
-        delete newErrors.address;
-      }
-      
-      return newErrors;
-    });
   };
 
   // Bắt lỗi
