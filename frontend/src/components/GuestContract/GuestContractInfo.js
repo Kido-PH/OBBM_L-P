@@ -26,7 +26,6 @@ const ContractInfo = () => {
   const [showModalCancel, setShowModalCancel] = React.useState(false);
   const [showModalMenu, setShowModalMenu] = React.useState(false);
   const [showModalServices, setShowModalServices] = React.useState(false);
-  const [showPaymentCard, setShowPaymentCard] = React.useState(false);
 
   const finaltotalMenuCost =
     contractInfo.totalcost - (totalServicesCost + contractInfo.locations?.cost);
@@ -55,10 +54,6 @@ const ContractInfo = () => {
 
   const handleCloseModalServices = () => {
     setShowModalServices(false);
-  };
-
-  const handleTogglePaymentCard = () => {
-    setShowPaymentCard((prevShowForm) => !prevShowForm);
   };
 
   const alertPaymentStatus = () => {
@@ -171,12 +166,6 @@ const ContractInfo = () => {
     }
   };
 
-  const checkStates = () => {
-    console.log("Fetch contract thành công", contractInfo);
-    console.log("Fetch event Services thành công:", eventServicesInfo);
-    console.log("Fetch menu dishes thành công", menuDishesInfo);
-  };
-
   React.useEffect(() => {
     // Dynamically import Bootstrap CSS
     import("bootstrap/dist/css/bootstrap.min.css");
@@ -187,7 +176,7 @@ const ContractInfo = () => {
     console.log("paymentStatus hứng được:", paymentStatus);
     alertPaymentStatus();
     fetchContractInfo();
-  }, []);
+  });
 
   const formatCurrency = (amount) => {
     return amount

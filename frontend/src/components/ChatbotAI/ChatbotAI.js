@@ -10,12 +10,23 @@ import { checkAccessToken } from "services/checkAccessToken";
 
 const ChatBotContainer = () => {
   const navigate = useNavigate();
+  // const ChatBubble = styled(Box)({
+  //   maxWidth: "60%",
+  //   backgroundColor: "#fff8ec",
+  //   borderRadius: "12px",
+  //   padding: "10px 16px",
+  //   boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
+  // });
 
-  const { currentStep, setStep, data } = React.useContext(chatbotContext);
-  const [buttonsVisible, setButtonsVisible] = useState(1);
+  const { currentStep, setStep } =
+    React.useContext(chatbotContext);
   const [nextStep, setNextStep] = useState(null); // Điều khiển bước tiếp theo của bot
   const [costNguoiDung, setCostNguoiDung] = useState(0); // Điều khiển bước tiếp theo của bot
   const [currentEventInfo, setCurrentEventInfo] = React.useState(null);
+  const [skipChangeEvent, setSkipChangeEvent] = React.useState(false);
+  const [isCostumCost, setIsCostumCost] = React.useState(false);
+  const [inputValue, setInputValue] = useState("");
+  const [errorM, setErrorM] = useState(false);
 
   const fetchEvent = async () => {
     const currentEventId = JSON.parse(localStorage.getItem("currentEventId"));
@@ -34,7 +45,7 @@ const ChatBotContainer = () => {
       setNextStep("change_event");
     } else if (choice === "back_to_start_menu") {
       setStep(currentStep);
-      setNextStep("start_menu");
+      setNextStep("back_to_start_menu");
     } else if (choice === "start_menu") {
       setNextStep("start_menu");
     } else if (choice === "create_menu") {
@@ -43,9 +54,43 @@ const ChatBotContainer = () => {
     }
   };
 
+  const handleKeyPress = (event) => {
+    if (event.key === "Enter") {
+      handleSendClick();
+    }
+  };
+
+  const handleSendClick = () => {
+    // Tách chuỗi thành các cụm dựa vào khoảng trắng
+    const segments = inputValue.split(/\s+/);
+
+    // Tìm cụm đầu tiên có thể parse được thành số nguyên
+    const numericValue = segments
+      .map((segment) => parseInt(segment, 10)) // Chuyển các cụm thành số nguyên
+      .find((num) => !isNaN(num)); // Lấy cụm đầu tiên parse thành công
+
+    // Kiểm tra nếu giá trị tìm thấy thỏa mãn điều kiện
+    if (numericValue && numericValue >= 100000 && numericValue <= 500000) {
+      setErrorM(false);
+      handleChoice("create_menu", numericValue.toString()); // Gửi giá trị hợp lệ
+      setInputValue(""); // Reset giá trị input
+    } else {
+      setErrorM(true); // Đặt trạng thái lỗi nếu không hợp lệ
+    }
+  };
+
+  // const handleInputChange = (event) => {
+  //   const value = event.target.value;
+  //   // Chỉ cho phép ký tự số và tối đa 6 ký tự
+  //   if (/^\d{0,6}$/.test(value)) {
+  //     setInputValue(value);
+  //   }
+  // };
+
   React.useEffect(() => {
     fetchEvent();
-  }, []);
+    setStep(1);
+  });
 
   return (
     <div
@@ -66,25 +111,30 @@ const ChatBotContainer = () => {
         {currentStep >= 1 && (
           <>
             <ChatResponse step={1} eventName={currentEventInfo?.name} />{" "}
-            {/* Đoạn chào mừng ban đầu */}
-            {/* Hiển thị các lựa chọn ban đầu */}
           </>
         )}
 
         {((currentStep >= 2 && nextStep === "change_event") ||
-          (currentStep >= 3 && nextStep === "start_menu")) && (
-          <>
-            <ChatRequest step={2} content="change_event" />
-            <ChatResponse step={2} content="change_event" />
-          </>
-        )}
+          (currentStep >= 3 && nextStep === "create_menu") ||
+          (currentStep >= 2 && nextStep === "back_to_start_menu")) &&
+          skipChangeEvent === false && (
+            <>
+              <ChatRequest step={2} content="change_event" />
+              <ChatResponse step={2} content="change_event" />
+            </>
+          )}
 
         {((currentStep >= 2 && nextStep === "start_menu") ||
-          currentStep >= 3) && (
+          (currentStep >= 3 && nextStep === "create_menu") ||
+          (currentStep >= 2 && nextStep === "back_to_start_menu")) && (
           <>
             <ChatRequest step={2} content="start_menu" />
             <ChatResponse step={2} content="start_menu" />
           </>
+        )}
+
+        {errorM === true && (
+          <ChatResponse step={3} content="error" costNguoiDung={0} />
         )}
 
         {currentStep >= 3 && nextStep === "create_menu" && (
@@ -110,15 +160,18 @@ const ChatBotContainer = () => {
             variant="contained"
             color="primary"
             onClick={() => handleChoice("change_event")}
-            sx={{ marginLeft: "12px", fontSize: "12px" }}
+            sx={{ marginLeft: "12px", fontSize: "12px", borderRadius: "20px" }}
           >
             Tôi muốn đổi sự kiện tiệc
           </Button>
           <Button
             variant="contained"
             color="primary"
-            onClick={() => handleChoice("start_menu")}
-            sx={{ marginLeft: "8px", fontSize: "12px" }}
+            onClick={() => {
+              handleChoice("start_menu");
+              setSkipChangeEvent(true);
+            }}
+            sx={{ marginLeft: "8px", fontSize: "12px", borderRadius: "20px" }}
           >
             Bắt đầu tạo thực đơn
           </Button>
@@ -131,38 +184,113 @@ const ChatBotContainer = () => {
             variant="contained"
             color="primary"
             onClick={() => handleChoice("back_to_start_menu")}
-            sx={{ marginLeft: "8px", fontSize: "12px" }}
+            sx={{ marginLeft: "8px", fontSize: "12px", borderRadius: "20px" }}
           >
             Bắt đầu tạo thực đơn
           </Button>
         </div>
       )}
 
-      {currentStep === 2 && nextStep === "start_menu" && (
-        <div style={{ marginBottom: "6px" }}>
+      {((currentStep === 2 && nextStep === "start_menu") ||
+        (currentStep === 2 && nextStep === "back_to_start_menu")) && (
+        <div
+          style={{
+            marginBottom: "6px",
+            display: "flex",
+            justifyContent: "center",
+          }}
+        >
           <Button
-            variant="contained"
+            variant="outlined"
             color="primary"
             onClick={() => handleChoice("create_menu", 100000)}
-            sx={{ marginLeft: "12px", fontSize: "12px" }}
+            sx={{
+              marginLeft: "12px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              border: 1,
+            }}
           >
             100.000/người
           </Button>
           <Button
-            variant="contained"
+            variant="outlined"
             color="primary"
             onClick={() => handleChoice("create_menu", 120000)}
-            sx={{ marginLeft: "8px", fontSize: "12px" }}
+            sx={{
+              marginLeft: "8px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              border: 1,
+            }}
           >
             120.000/người
           </Button>
           <Button
-            variant="contained"
+            variant="outlined"
             color="primary"
             onClick={() => handleChoice("create_menu", 180000)}
-            sx={{ marginLeft: "8px", fontSize: "12px" }}
+            sx={{
+              marginLeft: "8px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              border: 1,
+            }}
           >
             180.000/người
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => handleChoice("create_menu", 220000)}
+            sx={{
+              marginLeft: "8px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              border: 1,
+            }}
+          >
+            220.000/người
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => handleChoice("create_menu", 250000)}
+            sx={{
+              marginLeft: "8px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              border: 1,
+            }}
+          >
+            250.000/người
+          </Button>
+          <Button
+            variant="outlined"
+            color="primary"
+            onClick={() => handleChoice("create_menu", 300000)}
+            sx={{
+              marginLeft: "8px",
+              fontSize: "12px",
+              borderRadius: "20px",
+              border: 1,
+            }}
+          >
+            300.000/người
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => {
+              setIsCostumCost(true);
+            }}
+            sx={{
+              marginLeft: "8px",
+              fontSize: "12px",
+              borderRadius: "20px",
+            }}
+          >
+            Nhập giá khác
           </Button>
         </div>
       )}
@@ -182,6 +310,10 @@ const ChatBotContainer = () => {
           size="small"
           placeholder="Nhập tin nhắn..."
           fullWidth
+          value={inputValue}
+          onChange={(e) => setInputValue(e.target.value)}
+          onKeyPress={handleKeyPress}
+          disabled={!isCostumCost}
           sx={{
             marginRight: "8px",
           }}
@@ -189,9 +321,8 @@ const ChatBotContainer = () => {
         <IconButton
           color="primary"
           aria-label="send message"
-          onClick={() => {
-            console.log("Dữ liệu gửi đi API: ", data);
-          }}
+          disabled={!isCostumCost}
+          onClick={handleSendClick}
         >
           <FiSend />
         </IconButton>

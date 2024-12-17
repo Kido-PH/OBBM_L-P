@@ -21,7 +21,7 @@ const Contract = () => {
     "Bước 3: Xác nhận hợp đồng",
   ];
 
-  const { currentStep, finalData } = useContext(multiStepContext);
+  const { currentStep } = useContext(multiStepContext);
 
   function showStep(step) {
     console.log(step);

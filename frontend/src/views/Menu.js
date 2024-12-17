@@ -19,8 +19,11 @@ import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import AddButton from "../assets/images/add.png";
 import ChatContext from "components/ChatbotAI/ChatbotContext";
+import { chatbotContext } from "components/ChatbotAI/ChatbotContext";
+import ChatBotContainer from "components/ChatbotAI/ChatbotAI";
 
 const Menu = ({ accessToken }) => {
+  const { selectedMenuFromAI } = React.useContext(chatbotContext);
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
   const categoriesOrder = ["Appetizers", "Main_Courses", "Desserts"];
   const [menuDishesDetails, setMenuDishesDetails] = useState([]);
@@ -144,16 +147,16 @@ const Menu = ({ accessToken }) => {
         });
         return;
       }
-      const totalCost = (Math.ceil(
-        Object.values(selectedMenu.groupedDishes)
-          .flat()
-          .reduce((total, dish) => {
-            const profitMargin = 0.3;
-            const sellingPrice = dish.price / (1 - profitMargin);
-            return total + (sellingPrice || 0);
-          }, 0) / 1000 ) *1000
-      );
-      
+      const totalCost =
+        Math.ceil(
+          Object.values(selectedMenu.groupedDishes)
+            .flat()
+            .reduce((total, dish) => {
+              const profitMargin = 0.3;
+              const sellingPrice = dish.price / (1 - profitMargin);
+              return total + (sellingPrice || 0);
+            }, 0) / 1000
+        ) * 1000;
 
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
@@ -235,6 +238,39 @@ const Menu = ({ accessToken }) => {
     setSelectedMenuDishes(menuDishesList);
     console.log(menuDishesList);
   };
+
+  const isMenuAISelect = () => {
+    if (selectedMenuFromAI !== null) {
+      console.log(
+        "Bắt đầu làm hành động select menu theo AI:",
+        selectedMenuFromAI
+      );
+      let menu = selectedMenuFromAI;
+
+      const menuDishesList = menu.listMenuDish.map((menuDishes) => ({
+        dishesId: menuDishes?.dishId,
+        quantity: 1,
+        price: menuDishes?.price,
+        menuId: null,
+      }));
+
+      setSelectedMenu(menu);
+      setSelectedMenuDishes(menuDishesList);
+    } else {
+      console.log("Không tìm thấy selectedMenuAI", selectedMenuFromAI);
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      console.log("Set selected menu sau khi delay:", selectedMenuFromAI);
+      console.log(
+        "Set selected menu dishes sau khi delay:",
+        selectedMenuFromAI
+      );
+      isMenuAISelect();
+    }, 100); // Delay 100ms để kiểm tra
+  }, [selectedMenuFromAI]);
 
   useEffect(() => {
     const createdMenu = JSON.parse(localStorage.getItem("createdMenu"));
@@ -387,10 +423,10 @@ const Menu = ({ accessToken }) => {
   // Chuyển nhóm menu thành một mảng
   const groupedMenuArray = Object.values(groupedMenu);
 
-  // Lặp qua mảng và in ra groupedDishes cho từng menu
-  groupedMenuArray.forEach((menu) => {
-    console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
-  });
+  // // Lặp qua mảng và in ra groupedDishes cho từng menu
+  // groupedMenuArray.forEach((menu) => {
+  //   console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
+  // });
 
   const toggleListFood = (categoryName) => {
     let id;
@@ -628,7 +664,6 @@ const Menu = ({ accessToken }) => {
               onClick={() => setActiveTab("tab2")}
             >
               Chat gợi ý với AI
-
             </button>
           </div>
           <div className="tab-content">
@@ -887,7 +922,7 @@ const Menu = ({ accessToken }) => {
 
             {activeTab === "tab2" && (
               <div className="tab2-content">
-                <ChatContext />
+                <ChatBotContainer />
               </div>
             )}
           </div>

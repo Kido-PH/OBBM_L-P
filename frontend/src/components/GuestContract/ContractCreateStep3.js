@@ -59,12 +59,12 @@ const ContractCreateStep3 = () => {
     try {
       const currentEvent = await eventApi.get(currentEventId);
       setEventData({
-        name: currentEvent?.result.name + " của " + contractData.custname,
+        name: currentEvent?.result.name + " của " + contractData?.custname,
         totalcost: calculateTotalCost(),
         description:
           currentEvent?.result.name +
           " của " +
-          contractData.custname +
+          contractData?.custname +
           " hoành tráng",
         image: "",
         userId: currentUserId,
@@ -76,7 +76,7 @@ const ContractCreateStep3 = () => {
           "Hợp đồng " +
           (currentEvent?.result.name?.toLowerCase() || "") +
           " của " +
-          contractData.custname,
+          contractData?.custname,
         type: currentEvent?.result.name,
       }));
 
@@ -106,14 +106,9 @@ const ContractCreateStep3 = () => {
     setMenuDishesData(createdMenuDishes);
   };
 
-  const setInfoUrl = (contractId) => {
-    setContractInfoUrl(`info/${contractId}`);
-  };
-
   const createEverything = async () => {
     setShowModalConfirm(false);
     setLoading(true);
-    window.scrollTo({ top: -1000, behavior: "smooth" });
     await submitData();
     setLoading(false);
   };
@@ -139,16 +134,7 @@ const ContractCreateStep3 = () => {
   }, []);
 
   // Biến lưu URL trả về từ API
-  const [vnPayUrl, setVnPayUrl] = React.useState("");
   const [contractInfoUrl, setContractInfoUrl] = React.useState("");
-
-  const checkState = () => {
-    console.log("Contract data:", contractData);
-    console.log("Menu data: ", menuData);
-    console.log("Event data: ", eventData);
-    console.log("Services data: ", eventServicesData);
-    console.log("Menu Dishes Data: ", menuDishesData);
-  };
 
   React.useEffect(() => {
     if (contractInfoUrl) {
@@ -274,7 +260,7 @@ const ContractCreateStep3 = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Ghi chú</label>
                   <div className="form-control input-hienthi fs-4 me-2">
-                    {contractData.description ? (
+                    {contractData?.description ? (
                       <div>{contractData?.description}</div>
                     ) : (
                       <div>Không có ghi chú...</div>
@@ -297,7 +283,7 @@ const ContractCreateStep3 = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Số lượng khách</label>
                   <div className="form-control input-hienthi fs-4">
-                    {contractData.guest}
+                    {contractData?.guest}
                   </div>
                 </div>
               </div>
@@ -309,8 +295,8 @@ const ContractCreateStep3 = () => {
                   </label>
                   <div className="form-control input-hienthi fs-4">
                     {calculateGuestPerTable(
-                      contractData.guest,
-                      contractData.table
+                      contractData?.guest,
+                      contractData?.table
                     )}
                   </div>
                 </div>
@@ -320,7 +306,7 @@ const ContractCreateStep3 = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold">Số bàn</label>
                   <div className="form-control input-hienthi fs-4">
-                    {contractData.table}
+                    {contractData?.table}
                   </div>
                 </div>
               </div>
@@ -334,7 +320,7 @@ const ContractCreateStep3 = () => {
                 <div className="mb-3">
                   <label className="form-label fw-bold ">Tên Khách Hàng</label>
                   <div className="form-control input-hienthi fs-4">
-                    {contractData.custname}
+                    {contractData?.custname}
                   </div>
                 </div>
               </Col>
@@ -344,7 +330,7 @@ const ContractCreateStep3 = () => {
                     Số Điện Thoại Khách Hàng
                   </label>
                   <div className="form-control input-hienthi fs-4">
-                    {contractData.custphone}
+                    {contractData?.custphone}
                   </div>
                 </div>
               </Col>
@@ -397,7 +383,7 @@ const ContractCreateStep3 = () => {
                     style={{ color: "var(--deep-saffron)" }}
                   >
                     {formatCurrency(
-                      contractData.totalcost -
+                      contractData?.totalcost -
                         totalServicesCost -
                         currentLocation?.cost
                     )}{" "}
@@ -412,7 +398,7 @@ const ContractCreateStep3 = () => {
                   Tổng cộng:
                 </label>
                 <span className="text-success fw-bold">
-                  {formatCurrency(contractData.totalcost)} VND
+                  {formatCurrency(contractData?.totalcost)} VND
                 </span>
               </div>
             </div>

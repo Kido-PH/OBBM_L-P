@@ -17,9 +17,7 @@ const ContractCreateStep2 = () => {
   const { setStep, contractData, setContractData } =
     React.useContext(multiStepContext);
   const location = JSON.parse(localStorage.getItem("currentLocation")); // Parse chuỗi JSON thành đối tượng
-  const servicesStored = JSON.parse(
-    localStorage.getItem("currentEventServices")
-  ); // Parse chuỗi JSON thành đối tượng
+
   const currentEventId = JSON.parse(localStorage.getItem("currentEventId")); // Parse chuỗi JSON thành đối tượng
   const createdMenu = JSON.parse(localStorage.getItem("createdMenu")); // Parse chuỗi JSON thành đối tượng
   const [errors, setErrors] = React.useState({});
@@ -33,7 +31,6 @@ const ContractCreateStep2 = () => {
   const [guestPerTable, setGuestPerTable] = React.useState(6);
   const [minTableCount, setMinTableCount] = React.useState(0);
 
-  const [showModalMenu, setShowModalMenu] = React.useState(false);
 
   // const getCurrentMenuDishes = () => {
   //   const dishes = localStorage.getItem("currentMenuDishes");
@@ -49,14 +46,6 @@ const ContractCreateStep2 = () => {
     }
   };
 
-  const handleShowModalMenu = () => {
-    setShowModalMenu(true);
-  };
-
-  const handleCloseModalMenu = () => {
-    setShowModalMenu(false);
-  };
-
   const handleUpdateTotalCost = (newTotal) => {
     setTotalServicesCost(newTotal);
   };
@@ -70,7 +59,6 @@ const ContractCreateStep2 = () => {
   }, [contractData.guest, guestPerTable]);
 
   React.useEffect(() => {
-    const guestCount = parseInt(contractData.guest) || 0;
     const menuCost = parseInt(createdMenu.totalcost);
 
     //set total cost của contract
