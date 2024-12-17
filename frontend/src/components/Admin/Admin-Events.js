@@ -28,12 +28,8 @@ import { message, Typography } from "antd";
 import EventDetailPopup from "./EventDetailPopup";
 import serviceApi from "api/serviceApi";
 import SnackBarNotification from "./SnackBarNotification";
-import { checkAccessToken } from "services/checkAccessToken";
-import { useNavigate } from "react-router-dom";
 
-const EventManager = () => {
-
-  const navigate = useNavigate();
+const EventManager = () => { 
 
   const [events, setEvents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -250,10 +246,8 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
             image: "Không thể tải ảnh lên",
           }));
         }
-      } catch (error) {
-        
-        checkAccessToken(navigate);
-        console.error("Lỗi tải ảnh:", error);
+      } catch (error) {      
+       console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,
           image: "Không thể tải ảnh lên",
