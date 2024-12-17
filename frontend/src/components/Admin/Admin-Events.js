@@ -146,7 +146,7 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
         throw new Error("Token không tìm thấy trong localStorage.");
       }
 
-      const response = await fetch("http://localhost:8080/obbm/users/myInfo", {
+      const response = await fetch("http://59.153.218.244:8080/obbm/users/myInfo", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -214,7 +214,7 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
 
         // Gửi yêu cầu lên API để tải ảnh lên
         const response = await fetch(
-          "http://localhost:8080/obbm/upload/image",
+          "http://59.153.218.244:8080/obbm/upload/image",
           {
             method: "POST",
             headers: {

@@ -259,7 +259,7 @@ const DishManager = () => {
 
         // Gửi yêu cầu lên API để tải ảnh lên
         const response = await fetch(
-          "http://localhost:8080/obbm/upload/image",
+          "http://59.153.218.244:8080/obbm/upload/image",
           {
             method: "POST",
             headers: {

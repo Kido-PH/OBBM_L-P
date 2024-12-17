@@ -14,7 +14,7 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
     const fetchDanhMuc = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/obbm/category?page=1&size=5"
+          "http://59.153.218.244:8080/obbm/category?page=1&size=5"
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

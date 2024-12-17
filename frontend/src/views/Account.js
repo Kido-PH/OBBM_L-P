@@ -86,7 +86,7 @@ const AccountSection = () => {
   const getUserDetails = async () => {
     try {
       const userInfoFetch = await axiosClient.get(
-        "http://localhost:8080/obbm/users/myInfo"
+        "http://59.153.218.244:8080/obbm/users/myInfo"
       );
       console.log("Fetch thành công");
       setUserDetails(userInfoFetch.result);
@@ -114,7 +114,7 @@ const AccountSection = () => {
     formData.append("file", file);
 
     try {
-      const response = await fetch("http://localhost:8080/obbm/upload/image", {
+      const response = await fetch("http://59.153.218.244:8080/obbm/upload/image", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
@@ -159,7 +159,7 @@ const AccountSection = () => {
     fetch("https://api.fpt.ai/vision/idr/vnm", {
       method: "POST",
       headers: {
-        "api-key": "vgK0or7LveLhfyy9y1A9N7dOw17CfXb9", // API key của bạn
+        "api-key": "L80rrpBKhXP8u1iE88aFBXIbwZF8fSHn", // API key của bạn
       },
       body: formData,
     })
@@ -251,7 +251,7 @@ const AccountSection = () => {
   
     try {
       const response = await fetch(
-        `http://localhost:8080/obbm/users/user/${userId}`,
+        `http://59.153.218.244:8080/obbm/users/user/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -348,7 +348,7 @@ const AccountSection = () => {
       const userId = localStorage.getItem("userId");
       try {
         const response = await fetch(
-          `http://localhost:8080/obbm/users/user/${userId}`,
+          `http://59.153.218.244:8080/obbm/users/user/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${getToken()}`,

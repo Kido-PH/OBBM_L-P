@@ -71,7 +71,7 @@ const AdminUserAvatar = () => {
         throw new Error("Token không tìm thấy trong localStorage.");
       }
 
-      const response = await fetch("http://localhost:8080/obbm/users/myInfo", {
+      const response = await fetch("http://59.153.218.244:8080/obbm/users/myInfo", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -161,7 +161,7 @@ const AdminUserAvatar = () => {
       console.log("Request Body:", requestBody);
 
       const response = await fetch(
-        `http://localhost:8080/obbm/users/user/${userId}`,
+        `http://59.153.218.244:8080/obbm/users/user/${userId}`,
         {
           method: "PUT",
           headers: {
@@ -230,7 +230,7 @@ const AdminUserAvatar = () => {
 
         // Gửi yêu cầu lên API để tải ảnh lên
         const response = await fetch(
-          "http://localhost:8080/obbm/upload/image",
+          "http://59.153.218.244:8080/obbm/upload/image",
           {
             method: "POST",
             headers: {
@@ -273,7 +273,7 @@ const AdminUserAvatar = () => {
       }
   
       // Gửi request logout
-      const response = await fetch("http://localhost:8080/obbm/auth/logout", {
+      const response = await fetch("http://59.153.218.244:8080/obbm/auth/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

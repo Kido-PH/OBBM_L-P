@@ -48,7 +48,7 @@ const StepContext = () => {
     try {
       // Bước 2: Lấy eventId mới tạo
       const latestEventResponse = await axiosClient.get(
-        `http://localhost:8080/obbm/event/latestEvent/${currentUserId}`
+        `http://59.153.218.244:8080/obbm/event/latestEvent/${currentUserId}`
       );
       eventId = latestEventResponse?.result?.eventId;
       console.log("Event Id lấy được: ", eventId);
@@ -96,7 +96,7 @@ const StepContext = () => {
     try {
       // Bước 5: Lấy menuId mới tạo
       const latestMenuResponse = await axiosClient.get(
-        `http://localhost:8080/obbm/menu/latestMenu/${currentUserId}`
+        `http://59.153.218.244:8080/obbm/menu/latestMenu/${currentUserId}`
       );
       menuId = latestMenuResponse?.result?.menuId;
       console.log("Menu Id lấy được: ", menuId);
@@ -144,7 +144,7 @@ const StepContext = () => {
     try {
       // Bước 8: Lấy contractId
       const latestContractResponse = await axiosClient.get(
-        `http://localhost:8080/obbm/contract/latestContract/${currentUserId}`
+        `http://59.153.218.244:8080/obbm/contract/latestContract/${currentUserId}`
       );
       contractId = latestContractResponse?.result?.contractId;
 

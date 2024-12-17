@@ -66,7 +66,7 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
 
   const fetchRoles = async () => {
     try {
-      const response = await fetch("http://localhost:8080/obbm/roles", {
+      const response = await fetch("http://59.153.218.244:8080/obbm/roles", {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
           "Content-Type": "application/json",
@@ -301,7 +301,7 @@ const AddUserStaff = ({ onUserAdded }) => {
       console.log("Dữ liệu gửi đi:", JSON.stringify(formData));
   
       const response = await fetch(
-        `http://localhost:8080/obbm/users/userForAdmin`,
+        `http://59.153.218.244:8080/obbm/users/userForAdmin`,
         {
           method: "POST",
           headers: {

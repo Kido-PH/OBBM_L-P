@@ -19,6 +19,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
   const [Events, setEvents] = React.useState([]);
   const [currentEventInfo, setCurrentEventInfo] = React.useState(null);
   const [responseAI, setResponseAI] = React.useState(null); // Dữ liệu từ API
+  const [responseDishes, setResponseDishes] = React.useState(null);
 
   const ChatBubble = styled(Box)({
     maxWidth: "60%",
@@ -112,7 +113,10 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
   const fetchEvents = async () => {
     try {
       const response = await eventApi.getPaginate(1, 1000);
+      const responseListDish = await dishApi.getPaginate(1, 5000);
       setEvents(response.result.content.reverse());
+      setResponseDishes(responseListDish);
+      console.log("list dish fetch:", responseListDish);
     } catch (error) {
       checkAccessToken(navigate);
     }
@@ -123,7 +127,6 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
       console.log("responseAIResult", responseAIResult);
 
       // Gọi API để lấy dữ liệu listDishesFetch
-      const responseDishes = await dishApi.getPaginate(1, 5000);
 
       if (responseDishes.code === 1000) {
         const listDishesFetch = responseDishes?.result.content;
@@ -193,7 +196,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
 
   React.useEffect(() => {
     fetchEvents();
-  },[]);
+  }, []);
 
   React.useEffect(() => {
     console.log("response trả về: ", responseAI);

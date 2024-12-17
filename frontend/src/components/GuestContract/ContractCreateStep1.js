@@ -12,7 +12,7 @@ const ContractCreateStep1 = () => {
   const fetchUserInfo = async () => {
     try {
       const userInfoFetch = await axiosClient.get(
-        "http://localhost:8080/obbm/users/myInfo"
+        "http://59.153.218.244:8080/obbm/users/myInfo"
       );
       console.log("Fetch thành công");
       setUserInfo(userInfoFetch.result);

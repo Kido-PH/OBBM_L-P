@@ -136,7 +136,7 @@ const AdminAnalytics = () => {
 
       // Gửi yêu cầu GET với query parameters
       const response = await fetch(
-        `http://localhost:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=1&size=10`,
+        `http://59.153.218.244:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=1&size=10`,
         {
           method: "GET",
           headers: {

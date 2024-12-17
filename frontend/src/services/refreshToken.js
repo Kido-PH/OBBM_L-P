@@ -3,7 +3,7 @@ import Cookies from "js-cookie";
 import { getToken, setToken } from "../services/localStorageService";
 
 const apiClient = axios.create({
-  baseURL: "http://localhost:8080/obbm", // Base URL của API
+  baseURL: "http://59.153.218.244:8080/obbm", // Base URL của API
   headers: {
     "Content-Type": "application/json",
   },
@@ -22,7 +22,7 @@ apiClient.interceptors.response.use(
         }
 
         const { data } = await axios.post(
-          "http://localhost:8080/obbm/auth/refresh",
+          "http://59.153.218.244:8080/obbm/auth/refresh",
           { refreshToken },
           {
             headers: {
