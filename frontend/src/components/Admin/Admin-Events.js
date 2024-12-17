@@ -28,7 +28,6 @@ import { message, Typography } from "antd";
 import EventDetailPopup from "./EventDetailPopup";
 import serviceApi from "api/serviceApi";
 import SnackBarNotification from "./SnackBarNotification";
-import { checkAccessToken } from "services/checkAccessToken";
 import { useNavigate } from "react-router-dom";
 
 const EventManager = () => {
@@ -169,7 +168,6 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
       setUserId(data?.result?.userId);
     } catch (error) {
    
-      checkAccessToken(navigate);
       message.error("Không tải được dữ liệu.");
     }
   };
@@ -254,7 +252,6 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
         }
       } catch (error) {
         
-        checkAccessToken(navigate);
         console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,

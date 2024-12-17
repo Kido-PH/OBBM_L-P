@@ -540,9 +540,7 @@ const handleDeleteCategory = async (categoryId) => {
                           }}
                       >{category.description}</TableCell>
                   </Tooltip>
-
-                  <TableCell>{categoryTranslation[category.name]}</TableCell>
-                  <TableCell>{category.description}</TableCell>
+                 
                   <TableCell
                     sx={{
                       backgroundColor: "#f9f9f9",
