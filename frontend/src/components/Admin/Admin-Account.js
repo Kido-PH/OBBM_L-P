@@ -58,6 +58,8 @@ const AccountManager = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
 
+  // const navigate = useNavigate();
+
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -182,7 +184,6 @@ const AccountManager = () => {
         setAccounts(filteredUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
-        toast.error("Failed to fetch user data.");
       }
     };
 
@@ -221,45 +222,37 @@ const AccountManager = () => {
 
   const handleAddAccount = async () => {
     const newAccount = { ...currentAccount };
-
+  
     try {
-      const response = await fetch("http://localhost:8080/obbm/users/user", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(newAccount),
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! Status: ${response.status}`);
+      // Gọi API để tạo người dùng mới
+      const response = await userApi.createUser(newAccount);
+  
+      if (response && response.result) {
+        console.log("Thêm khách hàng thành công:", response);
+  
+        // Chuẩn hóa dữ liệu từ API trả về
+        const normalizedAccount = {
+          userId: response.result.userId || "",
+          username: response.result.username || "N/A",
+          fullname: response.result.fullname || "Chưa cập nhật",
+          email: response.result.email || "Không có email",
+          phone: response.result.phone || "Chưa cập nhật",
+          image: response.result.image || "",
+          noPassword: response.result.noPassword || false,
+          isStatus: response.result.isStatus || false,
+        };
+  
+        // Thêm tài khoản mới lên đầu danh sách
+        setAccounts((prevAccounts) => [normalizedAccount, ...prevAccounts]);
+  
+        setOpenDialog(false);
+        showSuccess("Thêm tài khoản thành công!");
+      } else {
+        toast.error("Thêm tài khoản thất bại!");
       }
-
-      const result = await response.json();
-      console.log("Thêm khách hàng thành công:", result);
-
-      // Chuẩn hóa dữ liệu
-      const normalizedAccount = {
-        userId: result.result.userId || "",
-        username: result.result.username || "N/A",
-        fullname: result.result.fullname || "Chưa cập nhật",
-        email: result.result.email || "Không có email",
-        phone: result.result.phone || "Chưa cập nhật",
-        image: result.result.image || "",
-        noPassword: result.result.noPassword || false,
-        isStatus: result.result.isStatus || false,
-      };
-
-      // Thêm tài khoản mới lên đầu danh sách
-      setAccounts((prevAccounts) => [normalizedAccount, ...prevAccounts]);
-
-      setOpenDialog(false);
-      showSuccess("Thêm tài khoản thành công!");
     } catch (error) {
        checkAccessToken(navigate);
       console.error("Error adding user:", error);
-      toast.error("Thêm tài khoản thất bại!");
     }
   };
 
@@ -280,25 +273,13 @@ const AccountManager = () => {
         dob: currentAccount.dob,
       };
   
-      // Gọi trực tiếp API bằng fetch
-      const response = await fetch(
-        `http://localhost:8080/obbm/users/user/${currentAccount.userId}`, // URL API
-        {
-          method: "PUT", // HTTP method
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Thêm token nếu cần
-          },
-          body: JSON.stringify(updatedAccount), // Dữ liệu gửi đi
-        }
-      );
+      // Gọi API để cập nhật thông tin người dùng
+      const response = await userApi.updateUser(currentAccount.userId, updatedAccount);
   
-      // Xử lý phản hồi từ API
-      if (response.ok) {
-        const result = await response.json(); // Chuyển đổi kết quả thành JSON
-        console.log("Thông tin cập nhật: ", result);
+      if (response && response.result) {
+        console.log("Thông tin cập nhật: ", response);
   
-        // Cập nhật danh sách accounts
+        // Cập nhật danh sách tài khoản
         const updatedAccounts = accounts.map((account) =>
           account.userId === currentAccount.userId
             ? { ...account, ...updatedAccount }
@@ -309,13 +290,11 @@ const AccountManager = () => {
         showSuccess("Thông tin tài khoản đã được cập nhật!");
         handleCloseDialog();
       } else {
-        console.error("Cập nhật thông tin thất bại!");
         toast.error("Cập nhật thông tin thất bại!");
       }
     } catch (error) {
       checkAccessToken(navigate);
       console.error("Error editing account:", error);
-      toast.error("Lỗi khi cập nhật thông tin.");
     }
   };
 
@@ -334,23 +313,14 @@ const AccountManager = () => {
   
     if (confirm.isConfirmed) {
       try {
-        const response = await fetch(
-          `http://localhost:8080/obbm/users/${userId}`, // URL API xóa tài khoản
-          {
-            method: "DELETE",
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem("accessToken")}`, // Thêm token nếu cần
-            },
-          }
-        );
+        // Gọi API xóa tài khoản
+        const response = await userApi.deleteUser(userId);
   
-        if (response.ok) {
+        if (response) {
           // Xóa tài khoản khỏi danh sách sau khi xóa thành công
           setAccounts((prevAccounts) =>
             prevAccounts.map((account) =>
-              account.userId === userId
-                ? { ...account, noPassword: true } // Đánh dấu là đã xóa
-                : account
+              account.userId === userId ? { ...account, noPassword: true } : account
             )
           );
           showSuccess("Tài khoản đã được khóa!");
@@ -368,19 +338,14 @@ const AccountManager = () => {
   const handleRestoreAccount = async (userId) => {
     try {
       // Lấy thông tin hiện tại của người dùng từ API
-      const response = await fetch(`http://localhost:8080/obbm/users/user/${userId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-      });
+      const response = await userApi.getById(userId);
   
-      if (!response.ok) {
+      if (!response) {
         toast.error("Không thể lấy thông tin người dùng. Vui lòng thử lại!");
         return;
       }
   
-      const userData = await response.json();
+      const userData = response.result; // Lấy thông tin người dùng từ phản hồi
   
       // Cập nhật trạng thái noPassword
       const updatedAccount = {
@@ -395,18 +360,11 @@ const AccountManager = () => {
         noPassword: false, // Thay đổi trạng thái
       };
   
-      // Gửi yêu cầu cập nhật
-      const updateResponse = await fetch(`http://localhost:8080/obbm/users/user/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-        },
-        body: JSON.stringify(updatedAccount),
-      });
+      // Gửi yêu cầu cập nhật thông tin người dùng
+      const updateResponse = await userApi.updateUser(userId, updatedAccount);
   
-      if (updateResponse.ok) {
-        // Cập nhật frontend
+      if (updateResponse) {
+        // Cập nhật lại trạng thái tài khoản trong frontend
         setAccounts((prevAccounts) =>
           prevAccounts.map((account) =>
             account.userId === userId ? { ...account, noPassword: false } : account
@@ -419,7 +377,6 @@ const AccountManager = () => {
     } catch (error) {
       checkAccessToken(navigate);
       console.error("Lỗi khi khôi phục tài khoản:", error);
-      toast.error("Có lỗi xảy ra khi khôi phục tài khoản.");
     }
   };
   

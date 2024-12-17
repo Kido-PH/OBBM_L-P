@@ -72,7 +72,7 @@ const Header = () => {
         setUserDetails(data.result);
         const roles = data.result.roles;
         const adminRole = roles.find(
-          (role) => role.name === "ADMIN" || role.name === "STAFF"
+          (role) => role.name === "ADMIN" || role.name === "STAFF" || role.name === "STAFF_EVENT" || role.name === "STAFF_MENUS" || role.name === "STAFF_WAREHOUSE" 
         );
         if (adminRole) {
           setIsAdmin(true);

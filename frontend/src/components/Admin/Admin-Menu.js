@@ -21,6 +21,7 @@ import {
   TablePagination,
   Autocomplete,
   Popover,
+  Tooltip,
 } from "@mui/material";
 import menudishApi from "../../api/menudishAdminApi";
 import dishApi from "../../api/dishApi";
@@ -63,6 +64,8 @@ const MenuManager = () => {
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
+
+  // const navigate = useNavigate();
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -116,14 +119,14 @@ const MenuManager = () => {
       setMenus(menuRes.result?.content || []);
       setPageCount(menuRes.result?.totalPages);
       setTotalElements(menuRes.result?.totalElements);
-    } catch (error) { console.error("Lỗi khi lấy danh sách menu: ", error); toast.error("Không thể tải danh sách menu!"); }
+    } catch (error) { console.error("Lỗi khi lấy danh sách menu: ", error); }
   };
 
   const fetchCategories = async () => {
     try {
       const response = await danhMucApi.getAll({});
       setCategories(response.result?.content || []);
-    } catch (error) { console.error("Lỗi khi lấy danh sách danh mục: ", error); console.log("Selected Dishes:", selectedDishes); }
+    } catch (error) { console.error("Lỗi khi lấy danh sách danh mục: ", error); }
   };
 
   const fetchData = async () => {
@@ -207,7 +210,6 @@ const MenuManager = () => {
 
     } catch (error) {
       console.error("Lỗi khi lấy danh sách món ăn:", error);
-      toast.error("Không thể lấy danh sách món ăn! Vui lòng thử lại.");
     }
   };
 
@@ -218,7 +220,6 @@ const MenuManager = () => {
       setMenus(updatedMenus); // Cập nhật state menus
     } catch (error) {
       console.error("Lỗi khi lấy danh sách menus:", error);
-      toast.error("Không thể tải lại danh sách menus!");
     }
   };
 
@@ -263,7 +264,6 @@ const MenuManager = () => {
       await fetchMenus(); // Gọi hàm làm mới danh sách menus
     } catch (error) {
       console.error("Lỗi khi cập nhật menu:", error.response?.data || error.message);
-      toast.error("Không thể cập nhật menu! Vui lòng thử lại.");
     }
   };
 
@@ -327,7 +327,6 @@ const MenuManager = () => {
 
     } catch (error) {
       console.error("Lỗi khi thêm menu:", error.response?.data || error.message);
-      toast.error("Không thể thêm menu! Vui lòng thử lại.");
     }
   };
 
@@ -629,8 +628,26 @@ const MenuManager = () => {
             {filteredMenus.map((menu, index) => (
               <TableRow key={menu.menuId}>
                 <TableCell>{index + 1}</TableCell>
-                <TableCell>{menu.name}</TableCell>
-                <TableCell>{menu.description}</TableCell>
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{menu.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{menu.name}</TableCell>
+                  </Tooltip>
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{menu.description}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{menu.description}</TableCell>
+                  </Tooltip>
                 <TableCell>
                   {new Intl.NumberFormat("vi-VN", {
                     style: "currency",
