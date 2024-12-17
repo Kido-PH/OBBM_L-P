@@ -116,8 +116,8 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
 
   const fetchEvents = async () => {
     try {
-      const response = await eventApi.getAll(1, 1000);
-      setEvents(response.result.content);
+      const response = await eventApi.getPaginate(1, 1000);
+      setEvents(response.result.content.reverse());
     } catch (error) {
       checkAccessToken(navigate);
     }
@@ -452,7 +452,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
 
           <div className="" style={{ marginLeft: "30px", marginRight: "30px" }}>
             <ul className="promo-list has-scrollbar">
-              {Events.reverse().map((event) => (
+              {Events.map((event) => (
                 <li
                   key={event.eventId}
                   className="promo-item"

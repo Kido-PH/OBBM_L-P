@@ -71,6 +71,13 @@ const CategoryDish = () => {
   //   setSnackBarOpen(true);
   // };
 
+  const categoryTranslation = {
+    "Appetizers": "Món khai vị",
+    "Main_Courses": "Món chính",
+    "Desserts": "Món tráng miệng",
+    "Beverages": "Đồ uống",
+    // Thêm các danh mục khác ở đây
+  };
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     fetchDanhMucWithPaginate(page + 1);
@@ -481,7 +488,7 @@ const handleDeleteCategory = async (categoryId) => {
               return (
                 <TableRow key={category.categoryId}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{category.name}</TableCell>
+                  <TableCell>{categoryTranslation[category.name]}</TableCell>
                   <TableCell>{category.description}</TableCell>
                   <TableCell
                     sx={{

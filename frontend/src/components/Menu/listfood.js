@@ -41,16 +41,26 @@ const ListFood = ({ categoryId, show, closeListFood, onAddDish }) => {
   const handleSearch = (value) => {
     setIsSearching(true);
     if (!value.trim()) {
-      setIsSearching(false); // Nếu chuỗi rỗng, quay về danh sách gốc
+      setIsSearching(false);
       return;
     }
-    const listDishes = filteredCategories[0].listDish;
-    const results = listDishes?.filter((list) =>
-      list?.name?.toLowerCase().includes(value.toLowerCase())
+  
+    // Kết hợp món ăn từ categoryId = 0 và categoryId = 1 (kiểm tra nếu có)
+    const listDishes = [
+      ...filteredCategories[0]?.listDish,
+      ...(filteredCategories[1]?.listDish || []),  // Nếu filteredCategories[1] không có, trả về mảng rỗng
+    ];
+  
+    // Lọc các món ăn theo từ khóa tìm kiếm
+    const results = listDishes?.filter((dish) =>
+      dish?.name?.toLowerCase().includes(value.toLowerCase())
     );
+  
     setSearchResults(results);
     console.log("result mảng tìm kiếm:", results);
   };
+  
+
 
 
   const handleViewDetails = (dish) => {
