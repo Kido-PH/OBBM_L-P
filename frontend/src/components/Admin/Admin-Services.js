@@ -27,8 +27,14 @@ import serviceApi from "../../api/serviceApi";
 import { Typography } from "antd";
 import SnackBarNotification from "./SnackBarNotification";
 import Swal from "sweetalert2";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
 
 const ServiceManager = () => {
+
+  const navigate = useNavigate();
+
   const [services, setServices] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentService, setCurrentService] = useState({
@@ -189,6 +195,8 @@ const ServiceManager = () => {
         }
 
       } catch (error) {
+      
+        checkAccessToken(navigate);
         console.error('Lỗi tải ảnh:', error);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -485,6 +493,7 @@ const ServiceManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",

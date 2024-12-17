@@ -32,6 +32,7 @@ import {
   LineElement,
   PointElement,
 } from "chart.js";
+import { checkAccessToken } from "services/checkAccessToken";
 import WarningIcon from "@mui/icons-material/Warning";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
@@ -54,7 +55,6 @@ ChartJS.register(
   LineElement,
   PointElement
 );
-
 const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth");
@@ -157,6 +157,8 @@ const AdminAnalytics = () => {
         message.error("Không thể tải dữ liệu.");
       }
     } catch (error) {
+
+      checkAccessToken(navigate);
       console.error("Lỗi khi lấy dữ liệu:", error);
     }
   };
@@ -219,6 +221,7 @@ const AdminAnalytics = () => {
         message.error("Không thể tải dữ liệu.");
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Lỗi khi lấy dữ liệu:", error);
       message.error("Có lỗi xảy ra khi lấy dữ liệu.");
     }

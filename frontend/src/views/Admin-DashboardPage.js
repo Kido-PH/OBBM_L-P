@@ -244,14 +244,13 @@ function DashboardPage() {
             color: "#858796",
             height: "0px",
             background: "#f0f2f5",
-            position: "fixed",
             bottom: "0",
             width: `calc(100% - ${marginLeft + 32}px)`,
             left: marginLeft + 16,
             transition: "bottom 0.3s ease",
           }}
         >
-          OBBM ©{new Date().getFullYear()} Created by L&P
+          OBBM ©{new Date().getFullYear()} được tạo bởi L&P
         </Footer>
       </Layout>
     </Layout>
