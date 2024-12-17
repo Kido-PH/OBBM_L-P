@@ -86,7 +86,7 @@ function ModalInfoMenu({ show, onClose, menuDishes, status, totalMenu }) {
                   <div key={index} style={{ marginBottom: "8px" }}>
                     <h3 className="fw-bold">
                       {category === "Appetizers"
-                        ? "Khai vị"
+                        ? "Khai vị và thức uống"
                         : category === "Main_Courses"
                         ? "Món chính"
                         : category === "Desserts"

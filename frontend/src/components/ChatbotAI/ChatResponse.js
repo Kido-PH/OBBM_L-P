@@ -56,7 +56,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
               ...apiResponse, // Sao chép toàn bộ dữ liệu ban đầu
               result: apiResponse.result.map((item) => ({
                 ...item, // Sao chép từng object trong mảng
-                totalCost: item.totalCost / 0.7, // Thay đổi giá trị totalCost
+                totalCost: Math.round(item.totalCost / 700) * 10 * 100,
               })),
             };
 
@@ -101,6 +101,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
       eventId: newEventId,
     }));
     fetchEventInfo(newEventId);
+    localStorage.setItem("currentEventId", newEventId);
     setIsNew(true);
   };
 
@@ -291,7 +292,12 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
             {step === 2 && content === "start_menu" && (
               <Typography variant="body2" color="textPrimary">
                 Tất nhiên rồi, bạn muốn thực đơn có giá trị khoảng bao nhiêu
-                trên 1 người?
+                tiền trên 1 người?
+              </Typography>
+            )}
+            {step === 3 && content === "error" && costNguoiDung === 0 && (
+              <Typography variant="body2" color="textPrimary">
+                Vui lòng nhập giá trị hợp lệ từ 100.000 VND - 500.000 VND.
               </Typography>
             )}
             {step === 3 &&
@@ -407,6 +413,13 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
                       </Card>
                     ))}
                   </div>
+                  <Typography
+                    variant="body2"
+                    color="textPrimary"
+                    sx={{ marginTop: "12px" }}
+                  >
+                    Hi vọng bạn tìm được thực đơn phù hợp với mong muốn.
+                  </Typography>
                 </div>
               )}
           </>

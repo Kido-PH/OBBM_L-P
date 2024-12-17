@@ -230,8 +230,6 @@ const Menu = ({ accessToken }) => {
 
   const handleSelectMenu = (menu) => {
     const userId = localStorage.getItem("userId");
-    console.log(groupedMenuArray);
-    console.log("Menu truyền dô có dạng:", menu);
     // Thiết lập selectedMenu và các dữ liệu liên quan
     const menuDishesList = menu.listMenuDish.map((menuDishes) => ({
       dishesId: menuDishes?.dishes?.dishId,
@@ -240,11 +238,9 @@ const Menu = ({ accessToken }) => {
       menuId: null,
     }));
 
-    setSelectedMenu(menu); // Cập nhật menu được chọn
-
+    setSelectedMenu(menu);
     setSelectedMenuDishes(menuDishesList);
-    setSelectedMenuId(menu.menuId);
-    localStorage.setItem("MenuSelectedId", menu.menuId);
+    console.log(menuDishesList);
   };
 
   const isMenuAISelect = () => {
@@ -467,11 +463,21 @@ const Menu = ({ accessToken }) => {
       });
       return; // Kết thúc hàm nếu món ăn đã tồn tại
     }
-
+    
     // Nếu chưa tồn tại, tiến hành thêm món
     setSelectedMenu((prevMenu) => {
       const categoryName = dish.categories.name; // Lấy tên category từ dish
       const updatedGroupedDishes = { ...prevMenu.groupedDishes };
+      // Nếu category chưa tồn tại, tạo mảng mới
+      if (!updatedGroupedDishes[categoryName]) {
+        updatedGroupedDishes[categoryName] = [];
+      }
+
+      // Thêm món ăn vào category
+      updatedGroupedDishes[categoryName] = [
+        ...updatedGroupedDishes[categoryName],
+        dish,
+      ];
 
       // Nếu category là Appetizers hoặc Beverages, xử lý
       if (categoryName === "Appetizers" || categoryName === "Beverages") {
@@ -638,7 +644,7 @@ const Menu = ({ accessToken }) => {
               }`}
               onClick={() => setActiveTab("tab2")}
             >
-              Hỗ trợ lên thực đơn
+              Chat gợi ý với AI
             </button>
           </div>
           <div className="tab-content">
@@ -748,15 +754,18 @@ const Menu = ({ accessToken }) => {
                           >
                             <p style={{ color: "rgb(66 66 66)" }}>
                               Giá tiền:{" "}
-                              {Object.values(category.groupedDishes)
-                                .flat()
-                                .reduce((total, dish) => {
-                                  const profitMargin = 0.2;
-                                  const sellingPrice =
-                                    dish.price / (1 - profitMargin);
-                                  return total + (sellingPrice || 0);
-                                }, 0)
-                                .toLocaleString()}{" "}
+                              {Math.ceil(
+                                Object.values(category.groupedDishes)
+                                  .flat()
+                                  .reduce((total, dish) => {
+                                    const profitMargin = 0.2;
+                                    const sellingPrice =
+                                      dish.price / (1 - profitMargin);
+                                    return total + (sellingPrice || 0);
+                                  }, 0) / 1000
+                              ) *
+                                10 *
+                                (100).toLocaleString()}{" "}
                               VND/người
                             </p>
                           </div>
@@ -793,7 +802,8 @@ const Menu = ({ accessToken }) => {
                       <span style={{ color: "red", display: "inline" }}>
                         *{" "}
                       </span>{" "}
-                      Lưu ý: Lưu ý!
+                      Lưu ý: Tổng số lượng thực đơn dựa trên số bàn và số người
+                      mỗi bàn!
                     </p>
                     <button
                       className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
@@ -890,6 +900,7 @@ const Menu = ({ accessToken }) => {
                 </Modal>
               </div>
             )}
+
             {activeTab === "tab2" && (
               <div className="tab2-content">
                   <ChatBotContainer />
@@ -1071,17 +1082,20 @@ const Menu = ({ accessToken }) => {
                 return null; // Nếu không phải 3 category trên, không hiển thị gì
               })}
               <div style={{ textAlign: "right", fontWeight: "bold" }}>
-                Giá tiền:{" "}
-                {Object.values(selectedMenu.groupedDishes)
-                  .flat()
-                  .reduce((total, dish) => {
-                    const profitMargin = 0.2; // Thay đổi theo tỷ lệ lợi nhuận mong muốn
-                    const sellingPrice = dish.price / (1 - profitMargin);
-                    return total + (sellingPrice || 0);
-                  }, 0)
-                  .toLocaleString()}{" "}
-                VND/người
-              </div>
+  Giá tiền:{" "}
+  {Math.round(
+    Object.values(selectedMenu.groupedDishes)
+      .flat()
+      .reduce((total, dish) => {
+        const profitMargin = 0.3; // Tỷ lệ lợi nhuận
+        const sellingPrice = dish.price / (1 - profitMargin);
+        return total + (sellingPrice || 0);
+      }, 0) / 1000 // Chia giá trị cho 1000 trước khi làm tròn
+  ) * 10 * 100 // Nhân lại với 1000 sau khi làm tròn
+    .toLocaleString()}{" "}
+  VND/người
+</div>
+
             </div>
           ) : (
             <div className="empty-menu">
@@ -1142,12 +1156,12 @@ const Menu = ({ accessToken }) => {
                       <div key={categoryName} style={{ marginBottom: "8px" }}>
                         <h3>
                           {index === 0
-                            ? "Khai vị"
+                            ? "Khai vị và đồ uống"
                             : index === 1
                             ? "Món chính"
                             : index === 2
                             ? "Tráng miệng"
-                            : "Đồ uống"}
+                            : ""}
                         </h3>
                         <ul>
                           {selectedMenu.groupedDishes[categoryName].map(

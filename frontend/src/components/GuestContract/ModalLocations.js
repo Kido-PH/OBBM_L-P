@@ -118,9 +118,14 @@ function Example({ selectedDate, isLocationCleared }) {
   React.useEffect(() => {
     if (!isLocationCleared) {
       const locationData = localStorage.getItem("currentLocation");
-      setSelectedLocation(locationData ? JSON.parse(locationData) : null);
+      const parsedLocation = locationData ? JSON.parse(locationData) : null;
+
+      // Chỉ cập nhật nếu giá trị thực sự thay đổi
+      if (JSON.stringify(parsedLocation) !== JSON.stringify(selectedLocation)) {
+        setSelectedLocation(parsedLocation);
+      }
     }
-  });
+  }, [isLocationCleared, selectedLocation]);
 
   const filteredLocations = locationList?.filter(
     (location) =>

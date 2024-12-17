@@ -113,7 +113,6 @@ const ContractCreateStep3 = () => {
   const createEverything = async () => {
     setShowModalConfirm(false);
     setLoading(true);
-    window.scrollTo({ top: -1000, behavior: "smooth" });
     await submitData();
     setLoading(false);
   };
