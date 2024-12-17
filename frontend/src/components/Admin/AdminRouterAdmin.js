@@ -1,8 +1,7 @@
 import React from "react";
 import { Navigate, Outlet } from "react-router-dom";
 
-const AdminRoute = ({ children, isAdmin }) => {
-  if (!isAdmin) {
+const AdminRoute = ({ children}) => {
     return (
       <div className="main">
       <svg
@@ -134,7 +133,7 @@ const AdminRoute = ({ children, isAdmin }) => {
     </div>
     );
     
-  }
+  
   return children;
 };
 
