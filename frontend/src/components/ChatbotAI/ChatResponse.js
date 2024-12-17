@@ -10,7 +10,7 @@ import dishApi from "api/dishApi";
 
 const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
   const navigate = useNavigate();
-  const { currentStep, selectedMenuFromAI, setSelectedMenuFromAI } =
+  const { selectedMenuFromAI, setSelectedMenuFromAI } =
     React.useContext(chatbotContext);
   const [isLoading, setIsLoading] = React.useState(true);
 
@@ -18,7 +18,6 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
   const [isNew, setIsNew] = React.useState(false);
   const [Events, setEvents] = React.useState([]);
   const [currentEventInfo, setCurrentEventInfo] = React.useState(null);
-  const [data, setData] = React.useState(null);
   const [responseAI, setResponseAI] = React.useState(null); // Dữ liệu từ API
 
   const ChatBubble = styled(Box)({
@@ -96,10 +95,6 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
   };
 
   const setNewCurrentEventId = (newEventId) => {
-    setData((prevData) => ({
-      ...prevData,
-      eventId: newEventId,
-    }));
     fetchEventInfo(newEventId);
     localStorage.setItem("currentEventId", newEventId);
     setIsNew(true);
@@ -198,7 +193,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
 
   React.useEffect(() => {
     fetchEvents();
-  }, []);
+  });
 
   React.useEffect(() => {
     console.log("response trả về: ", responseAI);

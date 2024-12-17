@@ -13,7 +13,6 @@ import AudioRecorder from "./SpeechToTextInput";
 import { checkAccessToken } from "services/checkAccessToken";
 import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
-import contractApi from "api/contractApi";
 import guestContractApi from "api/guestContractApi";
 import moment from "moment";
 
@@ -227,7 +226,7 @@ function Example({ selectedDate, isLocationCleared }) {
   React.useEffect(() => {
     fetchLocations();
     fetchContracts();
-  }, []);
+  });
 
   return (
     <>

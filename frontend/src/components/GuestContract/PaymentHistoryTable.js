@@ -11,7 +11,6 @@ import { Card } from "react-bootstrap";
 import { useParams, useNavigate } from "react-router-dom"; // Import useNavigate
 import { checkAccessToken } from "services/checkAccessToken";
 import paymentApi from "api/paymentApi";
-import { da } from "date-fns/locale";
 
 const columns = [
   { id: "orderCode", label: "Mã Thanh Toán", minWidth: 170, align: "center" },
@@ -64,24 +63,6 @@ const PaymentHistoryTable = () => {
   const handleChangeRowsPerPage = (event) => {
     setRowsPerPage(+event.target.value);
     setPage(0);
-  };
-
-  const createData = (
-    orderCode,
-    paymentMethod,
-    createdAt,
-    contractTotalCost,
-    amountPaid,
-    conLai
-  ) => {
-    return {
-      orderCode,
-      paymentMethod,
-      createdAt,
-      contractTotalCost,
-      amountPaid,
-      conLai,
-    };
   };
 
   React.useEffect(() => {

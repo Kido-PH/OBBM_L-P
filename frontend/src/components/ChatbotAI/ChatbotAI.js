@@ -18,9 +18,8 @@ const ChatBotContainer = () => {
   //   boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
   // });
 
-  const { currentStep, setStep, selectedMenuFromAI } =
+  const { currentStep, setStep } =
     React.useContext(chatbotContext);
-  const [buttonsVisible, setButtonsVisible] = useState(1);
   const [nextStep, setNextStep] = useState(null); // Điều khiển bước tiếp theo của bot
   const [costNguoiDung, setCostNguoiDung] = useState(0); // Điều khiển bước tiếp theo của bot
   const [currentEventInfo, setCurrentEventInfo] = React.useState(null);
@@ -80,18 +79,18 @@ const ChatBotContainer = () => {
     }
   };
 
-  const handleInputChange = (event) => {
-    const value = event.target.value;
-    // Chỉ cho phép ký tự số và tối đa 6 ký tự
-    if (/^\d{0,6}$/.test(value)) {
-      setInputValue(value);
-    }
-  };
+  // const handleInputChange = (event) => {
+  //   const value = event.target.value;
+  //   // Chỉ cho phép ký tự số và tối đa 6 ký tự
+  //   if (/^\d{0,6}$/.test(value)) {
+  //     setInputValue(value);
+  //   }
+  // };
 
   React.useEffect(() => {
     fetchEvent();
     setStep(1);
-  }, []);
+  });
 
   return (
     <div

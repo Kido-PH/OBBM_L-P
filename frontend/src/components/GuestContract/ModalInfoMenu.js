@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Button, Row, Col, Image } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { FaTimes } from "react-icons/fa";
 
 function ModalInfoMenu({ show, onClose, menuDishes, status, totalMenu }) {

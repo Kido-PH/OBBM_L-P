@@ -1,6 +1,5 @@
 import * as React from "react";
 import { multiStepContext } from "../../StepContext";
-import { IoIosInformationCircle } from "react-icons/io";
 import { Form, Card, Row, Col } from "react-bootstrap";
 import axiosClient from "config/axiosClient";
 

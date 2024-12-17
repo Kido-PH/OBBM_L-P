@@ -106,10 +106,6 @@ const ContractCreateStep3 = () => {
     setMenuDishesData(createdMenuDishes);
   };
 
-  const setInfoUrl = (contractId) => {
-    setContractInfoUrl(`info/${contractId}`);
-  };
-
   const createEverything = async () => {
     setShowModalConfirm(false);
     setLoading(true);
@@ -138,16 +134,7 @@ const ContractCreateStep3 = () => {
   }, []);
 
   // Biến lưu URL trả về từ API
-  const [vnPayUrl, setVnPayUrl] = React.useState("");
   const [contractInfoUrl, setContractInfoUrl] = React.useState("");
-
-  const checkState = () => {
-    console.log("Contract data:", contractData);
-    console.log("Menu data: ", menuData);
-    console.log("Event data: ", eventData);
-    console.log("Services data: ", eventServicesData);
-    console.log("Menu Dishes Data: ", menuDishesData);
-  };
 
   React.useEffect(() => {
     if (contractInfoUrl) {

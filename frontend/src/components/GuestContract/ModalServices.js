@@ -1,7 +1,5 @@
 import * as React from "react";
 import { Card, Col, Container, Row } from "react-bootstrap";
-import { CiSearch } from "react-icons/ci";
-import { FaRegTrashAlt, FaEdit } from "react-icons/fa";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
 import { multiStepContext } from "../../StepContext";
@@ -19,17 +17,14 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
     setTempServicesData,
   } = React.useContext(multiStepContext);
 
-  const currentUserId = JSON.parse(sessionStorage.getItem("currentUserId"));
   const currentEventId = JSON.parse(localStorage.getItem("currentEventId"));
 
   const [lgShow, setLgShow] = React.useState(false);
 
   const [servicesList, setServicesList] = React.useState([]);
   // const [selectedServices, setSelectedServices] = React.useState([]);
-  const [eventServices, setEventServices] = React.useState([]);
   const [total, setTotal] = React.useState(0);
 
-  const [searchTerm, setSearchTerm] = React.useState("");
   const navigate = useNavigate();
 
   //Khởi tạo dịch vụ mặc định theo Event
@@ -49,8 +44,6 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
 
         // Cập nhật state servicesList và eventServices
         setServicesList(fetchedServicesList);
-        setEventServices(fetchedEventServices);
-
         // Chỉ khởi tạo tempServicesData nếu nó đang rỗng
         if (tempServicesData.length === 0) {
           const eventServiceIds = new Set(
@@ -90,24 +83,6 @@ function ModalServices({ onUpdateTotalCost = () => {}, readOnly = false }) {
     setTotal(calculatedTotal);
     onUpdateTotalCost(calculatedTotal);
   }, [tempServicesData, onUpdateTotalCost]);
-
-  // Fetch danh sách dịch vụ
-  const fetchServices = async () => {
-    const List = await serviceApi.getPaginate(1, 5000);
-    setServicesList(List.result.content);
-    console.log("Services:", List);
-  };
-
-  // Fetch danh sách dịch vụ theo event
-  const fetchEventServices = async () => {
-    const List = await guestEventServiceApi.getByEventId(
-      currentEventId,
-      1,
-      5000
-    );
-    setEventServices(List.result.content);
-    console.log("Event Services:", List);
-  };
 
   // Đóng modal
   const handleClose = () => setLgShow(false);
