@@ -27,6 +27,13 @@ import toast from "react-hot-toast";
 import SnackBarNotification from "./SnackBarNotification";
 
 const DishDetailPopup = ({ open, handleClose, dish }) => {
+  const categoryTranslation = {
+    "Appetizers": "Món khai vị",
+    "Main_Courses": "Món chính",
+    "Desserts": "Món tráng miệng",
+    "Beverages": "Đồ uống",
+    // Thêm các danh mục khác ở đây
+  };
   const [activeTab, setActiveTab] = useState(0);
   const [ingredients, setIngredients] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -343,7 +350,7 @@ const DishDetailPopup = ({ open, handleClose, dish }) => {
                 </Typography>
                 <Typography sx={{ fontSize: "1.5rem" }}>
                   <strong>Danh mục:</strong>{" "}
-                  {dish.categories?.name || "Không xác định"}
+              {categoryTranslation [dish.categories?.name || "Không xác định"]} 
                 </Typography>
                 <Typography sx={{ fontSize: "1.5rem" }}>
                   <strong>Mô tả:</strong> {dish.description || "Không có mô tả"}

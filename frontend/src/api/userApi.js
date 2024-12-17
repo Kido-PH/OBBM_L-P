@@ -1,5 +1,6 @@
 import axios from "axios";
 import axiosClient from "../config/axiosClient";
+import { getRoles } from "@testing-library/react";
 
 const userApi = {
   getAll(params) {
@@ -49,11 +50,28 @@ const userApi = {
     return axiosClient.post(url, password);
   },
 
+  createUser(data) {
+    const url = "/users/user"; // Đảm bảo URL đúng với endpoint bạn đã khai báo trong backend
+    return axiosClient.post(url, data);
+  },
+
+  // API cập nhật thông tin người dùng
+  updateUser(userId, data) {
+    const url = `/users/user/${userId}`;
+    return axiosClient.put(url, data);
+  },
+
+  deleteUser(userId) {
+    const url = `/users/${userId}`;
+    return axiosClient.delete(url);
+  },
+
+
   // Đăng ký người dùng
   register(data) {
     const url = "/users/user"; // Endpoint cho đăng ký
     return axiosClient.post(url, data);
   },
-  
+
 };
 export default userApi;
