@@ -9,8 +9,6 @@ const AudioRecorderWithAPI = ({
 }) => {
   const [isRecording, setIsRecording] = useState(false);
   const [placeholderText, setPlaceholderText] = useState("Tìm kiếm");
-  const [audioFile, setAudioFile] = useState(null);
-  const [response, setResponse] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
@@ -33,7 +31,6 @@ const AudioRecorderWithAPI = ({
         const audioBlob = new Blob(audioChunksRef.current, {
           type: "audio/wav",
         });
-        setAudioFile(audioBlob);
         uploadAudio(audioBlob);
       };
 
@@ -73,7 +70,6 @@ const AudioRecorderWithAPI = ({
       }
 
       const data = await response.json();
-      setResponse(data);
       if (data?.hypotheses?.length > 0) {
         const recognizedText = data.hypotheses[0].utterance
           .replace(/\.\s*$/, "")

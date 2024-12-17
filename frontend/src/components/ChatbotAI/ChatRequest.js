@@ -11,6 +11,12 @@ const ChatRequest = ({ step, eventName, content, costNguoiDung }) => {
     boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
   });
 
+  const formatCurrency = (amount) => {
+    return amount
+      ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
+      : "0";
+  };
+
   return (
     <div
       style={{
@@ -36,7 +42,7 @@ const ChatRequest = ({ step, eventName, content, costNguoiDung }) => {
         )}
         {step === 3 && content === "create_menu" && (
           <Typography variant="body2" color="textPrimary">
-            Tôi muốn thực đơn {eventName} tầm giá {costNguoiDung}/người
+            Tôi muốn thực đơn {eventName} tầm giá {formatCurrency(costNguoiDung)} VND/người
           </Typography>
         )}
       </ChatBubble>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Modal, Button, Row, Col, Image } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { FaTimes } from "react-icons/fa";
 
 function ModalInfoMenu({ show, onClose, menuDishes, status, totalMenu }) {
@@ -81,13 +81,13 @@ function ModalInfoMenu({ show, onClose, menuDishes, status, totalMenu }) {
             {menuDishes &&
               status === false &&
               // Thứ tự và ánh xạ tiêu đề tiếng Việt
-              ["Appetizers", "Main Courses", "Desserts"].map(
+              ["Appetizers", "Main_Courses", "Desserts"].map(
                 (category, index) => (
                   <div key={index} style={{ marginBottom: "8px" }}>
                     <h3 className="fw-bold">
                       {category === "Appetizers"
-                        ? "Khai vị"
-                        : category === "Main Courses"
+                        ? "Khai vị và thức uống"
+                        : category === "Main_Courses"
                         ? "Món chính"
                         : category === "Desserts"
                         ? "Tráng miệng"

@@ -6,35 +6,31 @@ import "../assets/css/chatbot.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ListFood from "../components/Menu/listfood";
-import menuApi from "../api/menuApi.js";
-import axios from "axios";
-import eventApi from "../api/eventApi.js";
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import { Modal, Button } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import AddButton from "../assets/images/add.png";
 import ChatContext from "components/ChatbotAI/ChatbotContext";
+import { chatbotContext } from "components/ChatbotAI/ChatbotContext";
+import ChatBotContainer from "components/ChatbotAI/ChatbotAI";
 
 const Menu = ({ accessToken }) => {
-  const scrollableRefs = useRef([]);
-  const listRef = useRef(null);
+  const { selectedMenuFromAI } = React.useContext(chatbotContext);
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
   const categoriesOrder = ["Appetizers", "Main_Courses", "Desserts"];
   const [menuDishesDetails, setMenuDishesDetails] = useState([]);
-  const [latestMenuId, setLatestMenuId] = useState(0);
   const [activeTab, setActiveTab] = useState("tab1");
   const [selectedId, setSelectedId] = useState(null); // Lưu sectionId
   const [menuList, setMenuList] = useState([]);
-  const [selectedDishes, setSelectedDishes] = useState([]);
   const [selectedMenu, setSelectedMenu] = useState(null);
-  const [selectedMenuId, setSelectedMenuId] = useState([]);
   const [selectedMenuDishes, setSelectedMenuDishes] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [Events, setEvents] = useState([]);
@@ -101,18 +97,22 @@ const Menu = ({ accessToken }) => {
 
   const fetchEvent = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:8080/obbm/event?page=1&size=100"
-      );
+      const response = await fetch("http://localhost:8080/obbm/event?page=1&size=100");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json(); // Chuyển đổi kết quả thành JSON
-      setEvents(data.result.content); // Cập nhật state
+  
+      // Lọc các sự kiện có ismanaged = true
+      const filteredEvents = data.result.content.filter(event => event.ismanaged === true);
+  
+      // Cập nhật state với danh sách sự kiện đã lọc
+      setEvents(filteredEvents); 
     } catch (error) {
       console.error("Lỗi khi gọi API:", error); // Xử lý lỗi
     }
   };
+  
 
   React.useEffect(() => {
     if (EventToMenuUrl) {
@@ -126,8 +126,6 @@ const Menu = ({ accessToken }) => {
     setShowModal(true); // Hiển thị modal
   };
   const handleCloseModal = () => setShowModal(false);
-
-  const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
   const handleCreateMenu = async () => {
     try {
       const userId = localStorage.getItem("userId");
@@ -149,16 +147,16 @@ const Menu = ({ accessToken }) => {
         });
         return;
       }
-      const totalCost = (Math.ceil(
-        Object.values(selectedMenu.groupedDishes)
-          .flat()
-          .reduce((total, dish) => {
-            const profitMargin = 0.3;
-            const sellingPrice = dish.price / (1 - profitMargin);
-            return total + (sellingPrice || 0);
-          }, 0) / 1000 ) *1000
-      );
-      
+      const totalCost =
+        Math.ceil(
+          Object.values(selectedMenu.groupedDishes)
+            .flat()
+            .reduce((total, dish) => {
+              const profitMargin = 0.3;
+              const sellingPrice = dish.price / (1 - profitMargin);
+              return total + (sellingPrice || 0);
+            }, 0) / 1000
+        ) * 1000;
 
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
@@ -240,6 +238,39 @@ const Menu = ({ accessToken }) => {
     setSelectedMenuDishes(menuDishesList);
     console.log(menuDishesList);
   };
+
+  const isMenuAISelect = () => {
+    if (selectedMenuFromAI !== null) {
+      console.log(
+        "Bắt đầu làm hành động select menu theo AI:",
+        selectedMenuFromAI
+      );
+      let menu = selectedMenuFromAI;
+
+      const menuDishesList = menu.listMenuDish.map((menuDishes) => ({
+        dishesId: menuDishes?.dishId,
+        quantity: 1,
+        price: menuDishes?.price,
+        menuId: null,
+      }));
+
+      setSelectedMenu(menu);
+      setSelectedMenuDishes(menuDishesList);
+    } else {
+      console.log("Không tìm thấy selectedMenuAI", selectedMenuFromAI);
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      console.log("Set selected menu sau khi delay:", selectedMenuFromAI);
+      console.log(
+        "Set selected menu dishes sau khi delay:",
+        selectedMenuFromAI
+      );
+      isMenuAISelect();
+    }, 100); // Delay 100ms để kiểm tra
+  }, [selectedMenuFromAI]);
 
   useEffect(() => {
     const createdMenu = JSON.parse(localStorage.getItem("createdMenu"));
@@ -392,10 +423,10 @@ const Menu = ({ accessToken }) => {
   // Chuyển nhóm menu thành một mảng
   const groupedMenuArray = Object.values(groupedMenu);
 
-  // Lặp qua mảng và in ra groupedDishes cho từng menu
-  groupedMenuArray.forEach((menu) => {
-    console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
-  });
+  // // Lặp qua mảng và in ra groupedDishes cho từng menu
+  // groupedMenuArray.forEach((menu) => {
+  //   console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
+  // });
 
   const toggleListFood = (categoryName) => {
     let id;
@@ -611,6 +642,8 @@ const Menu = ({ accessToken }) => {
     }
   };
 
+  
+
   return (
     <div className="Menu">
       <div className="menu-container">
@@ -631,7 +664,6 @@ const Menu = ({ accessToken }) => {
               onClick={() => setActiveTab("tab2")}
             >
               Chat gợi ý với AI
-
             </button>
           </div>
           <div className="tab-content">
@@ -752,7 +784,7 @@ const Menu = ({ accessToken }) => {
                                   }, 0) / 1000
                               ) *
                                 10 *
-                                (100).toLocaleString()}{" "}
+                                (100).toLocaleString("vi-VN")}
                               VND/người
                             </p>
                           </div>
@@ -890,7 +922,7 @@ const Menu = ({ accessToken }) => {
 
             {activeTab === "tab2" && (
               <div className="tab2-content">
-                <ChatContext />
+                <ChatBotContainer />
               </div>
             )}
           </div>

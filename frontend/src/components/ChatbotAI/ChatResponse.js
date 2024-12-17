@@ -6,21 +6,22 @@ import eventApi from "api/eventApi";
 import { checkAccessToken } from "services/checkAccessToken";
 import { useNavigate } from "react-router-dom";
 import chatbotAIApi from "api/chatbotAIApi";
+import dishApi from "api/dishApi";
 
 const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
   const navigate = useNavigate();
-  const { currentStep } = React.useContext(chatbotContext);
+  const { selectedMenuFromAI, setSelectedMenuFromAI } =
+    React.useContext(chatbotContext);
   const [isLoading, setIsLoading] = React.useState(true);
 
   const [isModalEventsOpen, setIsModalEventsOpen] = React.useState(false);
   const [isNew, setIsNew] = React.useState(false);
   const [Events, setEvents] = React.useState([]);
   const [currentEventInfo, setCurrentEventInfo] = React.useState(null);
-  const [data, setData] = React.useState(null);
   const [responseAI, setResponseAI] = React.useState(null); // Dữ liệu từ API
 
   const ChatBubble = styled(Box)({
-    maxWidth: "50%",
+    maxWidth: "60%",
     backgroundColor: "#fff8ec",
     borderRadius: "12px",
     padding: "10px 16px",
@@ -49,12 +50,22 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
             currentEventId,
             costNguoiDung * 0.7
           );
-          setResponseAI(apiResponse);
+          if (apiResponse.code === 1000) {
+            const responseBackToCost = {
+              ...apiResponse, // Sao chép toàn bộ dữ liệu ban đầu
+              result: apiResponse.result.map((item) => ({
+                ...item, // Sao chép từng object trong mảng
+                totalCost: Math.round(item.totalCost / 700) * 10 * 100,
+              })),
+            };
+
+            setResponseAI(responseBackToCost); // Cập nhật state với dữ liệu đã chỉnh sửa
+          }
 
           // Sau khi có phản hồi API, delay thêm 2 giây nữa trước khi hiển thị nội dung
           timer = setTimeout(() => {
             setIsLoading(false);
-          }, 2000);
+          }, 1500);
         } catch (error) {
           console.error("Error fetching API:", error);
         }
@@ -62,7 +73,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
         // Nếu không phải "create_menu", chỉ cần delay 2 giây để hiển thị nội dung
         timer = setTimeout(() => {
           setIsLoading(false);
-        }, 2000);
+        }, 1000);
       }
     };
 
@@ -84,11 +95,8 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
   };
 
   const setNewCurrentEventId = (newEventId) => {
-    setData((prevData) => ({
-      ...prevData,
-      eventId: newEventId,
-    }));
     fetchEventInfo(newEventId);
+    localStorage.setItem("currentEventId", newEventId);
     setIsNew(true);
   };
 
@@ -103,16 +111,89 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
 
   const fetchEvents = async () => {
     try {
-      const response = await eventApi.getAll(1, 1000);
-      setEvents(response.result.content);
+      const response = await eventApi.getPaginate(1, 1000);
+      setEvents(response.result.content.reverse());
     } catch (error) {
       checkAccessToken(navigate);
     }
   };
 
+  const handleSelectMenu = async (responseAIResult) => {
+    try {
+      console.log("responseAIResult", responseAIResult);
+
+      // Gọi API để lấy dữ liệu listDishesFetch
+      const responseDishes = await dishApi.getPaginate(1, 5000);
+
+      if (responseDishes.code === 1000) {
+        const listDishesFetch = responseDishes?.result.content;
+
+        // Duyệt qua tất cả các listDish trong responseAIResult
+        const matchedDishes = responseAIResult.listDish.map((dish) => {
+          // Tìm object trong listDishesFetch khớp với dishId
+          const matchedDish = listDishesFetch.find(
+            (fetchDish) => fetchDish.dishId === dish.dishId
+          );
+          // Nếu tìm thấy, trả về object từ listDishesFetch, ngược lại trả về null
+          return matchedDish || null;
+        });
+
+        // Lọc bỏ các giá trị null
+        const filteredMatchedDishes = matchedDishes.filter(
+          (dish) => dish !== null
+        );
+        console.log("Matched dishes:", filteredMatchedDishes);
+
+        // Nhóm các món ăn theo categories.name
+        const groupedDishes = filteredMatchedDishes.reduce((acc, dish) => {
+          let categoryName = dish.categories.name;
+
+          // Nếu category là 'Beverages', gộp vào nhóm 'Appetizers'
+          if (categoryName === "Beverages") {
+            categoryName = "Appetizers";
+          }
+
+          // Nếu chưa có nhóm này, khởi tạo mảng
+          if (!acc[categoryName]) {
+            acc[categoryName] = [];
+          }
+
+          // Thêm món ăn vào nhóm tương ứng
+          acc[categoryName].push({
+            dishId: dish.dishId,
+            name: dish.name,
+            price: dish.price,
+            image: dish.image,
+            description: dish.description,
+          });
+
+          return acc;
+        }, {});
+
+        console.log("Grouped Dishes:", groupedDishes);
+        // sleep(1000);
+        const selectedMenu = {
+          groupedDishes: groupedDishes,
+          listMenuDish: filteredMatchedDishes,
+          totalCost: 100000, // Giá trị cố định
+        };
+
+        // Cập nhật vào context
+        setSelectedMenuFromAI(selectedMenu);
+        console.log("setSelectedMenuFromAI:", selectedMenuFromAI);
+
+        // return selectedMenu;
+      } else {
+        console.error("Đã có lỗi xảy ra khi fetch dishes", responseDishes);
+      }
+    } catch (error) {
+      console.error("Lỗi trong quá trình xử lý:", error);
+    }
+  };
+
   React.useEffect(() => {
     fetchEvents();
-  }, []);
+  });
 
   React.useEffect(() => {
     console.log("response trả về: ", responseAI);
@@ -206,7 +287,12 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
             {step === 2 && content === "start_menu" && (
               <Typography variant="body2" color="textPrimary">
                 Tất nhiên rồi, bạn muốn thực đơn có giá trị khoảng bao nhiêu
-                trên 1 người?
+                tiền trên 1 người?
+              </Typography>
+            )}
+            {step === 3 && content === "error" && costNguoiDung === 0 && (
+              <Typography variant="body2" color="textPrimary">
+                Vui lòng nhập giá trị hợp lệ từ 100.000 VND - 500.000 VND.
               </Typography>
             )}
             {step === 3 &&
@@ -214,18 +300,25 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
               responseAI?.result?.length === 2 && (
                 <div>
                   <Typography variant="body2" color="textPrimary">
-                    Đây là 2 menu có giá tiền phù hợp với yêu cầu của bạn (nhấn vào để xem chi tiết):
+                    Đây là 2 menu có giá tiền phù hợp với yêu cầu của bạn (nhấn
+                    vào để xem chi tiết):
                   </Typography>
                   <div style={{ display: "flex", gap: "20px" }}>
                     {responseAI.result.map((menu, index) => (
                       <Card
-                        className="card-menu-select"
-                        // onClick={} //thực hiện hành động đổ ra ở đây
                         key={index}
+                        className="card-menu-select"
+                        onClick={() => {
+                          handleSelectMenu(menu);
+                        }}
                         style={{
                           width: "300px",
                           padding: "16px",
                           marginTop: "6px",
+                          display: "flex",
+                          flexDirection: "column", // Sắp xếp các phần tử theo chiều dọc
+                          justifyContent: "space-between", // Đảm bảo "Tổng giá" nằm dưới cùng
+                          // height: "400px", // Đặt chiều cao cố định cho các thẻ đồng nhất
                         }}
                       >
                         <Typography
@@ -235,17 +328,72 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
                         >
                           Thực đơn {index + 1}
                         </Typography>
-                        <div>
-                          {menu.listDish.map((dish, dishIndex) => (
-                            <Typography
-                              key={dishIndex}
-                              variant="body2"
-                              color="textSecondary"
-                              sx={{ textAlign: "center" }}
-                            >
-                              {dish.name}
-                            </Typography>
-                          ))}
+                        <div style={{ flexGrow: 1 }}>
+                          <Typography
+                            variant="h6"
+                            color="textPrimary"
+                            sx={{ textAlign: "left", fontWeight: "bold" }}
+                          >
+                            Khai vị và đồ uống
+                          </Typography>
+                          {menu.listDish
+                            .filter(
+                              (dish) =>
+                                dish.category === "Appetizers" ||
+                                dish.category === "Beverages"
+                            )
+                            .map((dish, dishIndex) => (
+                              <Typography
+                                key={dishIndex}
+                                variant="body2"
+                                color="textSecondary"
+                                sx={{ textAlign: "center" }}
+                              >
+                                {dish.name}
+                              </Typography>
+                            ))}
+                        </div>
+                        <div style={{ flexGrow: 2 }}>
+                          <Typography
+                            variant="h6"
+                            color="textPrimary"
+                            sx={{ textAlign: "left", fontWeight: "bold" }}
+                          >
+                            Món chính
+                          </Typography>
+                          {menu.listDish
+                            .filter((dish) => dish.category === "Main_Courses")
+                            .map((dish, dishIndex) => (
+                              <Typography
+                                key={dishIndex}
+                                variant="body2"
+                                color="textSecondary"
+                                sx={{ textAlign: "center" }}
+                              >
+                                {dish.name}
+                              </Typography>
+                            ))}
+                        </div>
+                        <div style={{ flexGrow: 3 }}>
+                          <Typography
+                            variant="h6"
+                            color="textPrimary"
+                            sx={{ textAlign: "left", fontWeight: "bold" }}
+                          >
+                            Tráng miệng
+                          </Typography>
+                          {menu.listDish
+                            .filter((dish) => dish.category === "Desserts")
+                            .map((dish, dishIndex) => (
+                              <Typography
+                                key={dishIndex}
+                                variant="body2"
+                                color="textSecondary"
+                                sx={{ textAlign: "center" }}
+                              >
+                                {dish.name}
+                              </Typography>
+                            ))}
                         </div>
                         <Typography
                           variant="body1"
@@ -253,14 +401,20 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
                           sx={{
                             textAlign: "center",
                             fontWeight: "bold",
-                            marginTop: "auto", // Đẩy xuống cuối
                           }}
                         >
-                          Tổng giá: {menu.totalCost.toLocaleString()} VND
+                          Tổng giá: {menu?.totalCost.toLocaleString()} VND
                         </Typography>
                       </Card>
                     ))}
                   </div>
+                  <Typography
+                    variant="body2"
+                    color="textPrimary"
+                    sx={{ marginTop: "12px" }}
+                  >
+                    Hi vọng bạn tìm được thực đơn phù hợp với mong muốn.
+                  </Typography>
                 </div>
               )}
           </>
@@ -293,7 +447,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
 
           <div className="" style={{ marginLeft: "30px", marginRight: "30px" }}>
             <ul className="promo-list has-scrollbar">
-              {Events.reverse().map((event) => (
+              {Events.map((event) => (
                 <li
                   key={event.eventId}
                   className="promo-item"

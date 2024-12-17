@@ -15,7 +15,6 @@ function FormUpdateLocation({ onClose, locationData, onUpdateLocation }) {
   const [selectedWard, setSelectedWard] = useState(null);
   const [name, setName] = useState(locationData.name || "");
   const [houseNumber, setHouseNumber] = useState("");
-  const [cost, setCost] = useState(0);
   const [errors, setErrors] = useState({});
 
   // Lấy dữ liệu tỉnh, quận, phường từ API

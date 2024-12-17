@@ -1,7 +1,6 @@
 import guestContractApi from "api/guestContractApi";
 import React from "react";
-import { Card, Form, InputGroup } from "react-bootstrap";
-import { FaSearch } from "react-icons/fa"; // Icon tìm kiếm
+import { Card, Form } from "react-bootstrap";
 import {
   LuChevronFirst,
   LuChevronLast,
@@ -61,7 +60,7 @@ const ContractList = () => {
     import("../../assets/css/mainStyle.css");
     import("../../assets/css/contractGuestStyle.css");
     fetchContractListData(1, 6);
-  }, []);
+  });
 
   React.useEffect(() => {
     const filtered = contractList.filter(

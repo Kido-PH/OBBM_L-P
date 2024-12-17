@@ -41,8 +41,9 @@ import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 // import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 // import LogoutIcon from "@mui/icons-material/Logout";
 import { DatePicker, message, Select, Modal } from "antd";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom"; // Thêm import này ở đầu file
+import contractApi from "api/contractApi";
 // Đăng ký các thành phần của biểu đồ
 ChartJS.register(
   CategoryScale,
@@ -88,20 +89,18 @@ const AdminAnalytics = () => {
       },
     ],
   });
-  
 
   useEffect(() => {
     const today = new Date();
     const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Đầu tháng hiện tại
     const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Ngày cuối cùng của tháng hiện tại
-  
+
     setStartDate(startOfMonth);
     setEndDate(endOfMonth);
-  
+
     // Gọi API để lấy dữ liệu thống kê của tháng hiện tại
     fetchDataByDateRange(startOfMonth, endOfMonth);
   }, []);
-  
 
   const handleDateChange = (field, value) => {
     if (field === "start") {
@@ -117,11 +116,11 @@ const AdminAnalytics = () => {
         return;
       }
     }
-  
+
     // Gọi API khi cả startDate và endDate đều tồn tại và hợp lệ
     const updatedStartDate = field === "start" ? value : startDate;
     const updatedEndDate = field === "end" ? value : endDate;
-  
+
     if (updatedStartDate && updatedEndDate) {
       fetchDataByDateRange(updatedStartDate, updatedEndDate);
     }
@@ -163,12 +162,12 @@ const AdminAnalytics = () => {
     }
   };
 
+
   // Hàm gọi khi click vào card
   const handlePendingClick = (status) => {
-    fetchPendingContracts(status, startDate, endDate); // Gọi API khi click vào card
-    setOpenModal(true); // Mở modal
-    // navigate(`/admin/ManageContracts?status=${status}`);  
-    
+    navigate(
+      `/admin/ManageContracts?status=${status}&startDate=${startDate?.toISOString()}&endDate=${endDate?.toISOString()}`
+    );
   };
 
   // Hàm đóng modal
@@ -193,32 +192,25 @@ const AdminAnalytics = () => {
       message.error("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc.");
       return;
     }
-
+  
     try {
       // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
       const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
       const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
-
-      // Gửi yêu cầu GET với query parameters
-      const response = await fetch(
-        `http://localhost:8080/obbm/contract/statistics?startDate=${startDateFormatted}&endDate=${endDateFormatted}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+  
+      // Gọi API từ contractApi để lấy thống kê doanh thu
+      const response = await contractApi.getRevenueStatistics(startDateFormatted, endDateFormatted);
+  
+      if (response && response.result) {
+        console.log("Dữ liệu thống kê: ", response);
+  
+        if (response.code === 1000) {
+          setApiData(response.result); // Cập nhật state với dữ liệu trả về từ API
+        } else {
+          message.error("Không thể tải dữ liệu.");
         }
-      );
-
-      const data = await response.json();
-      console.log("Dữ liệu thống kê: ", data);
-
-      // Cập nhật state với dữ liệu trả về từ API
-      if (data.code === 1000) {
-        setApiData(data.result);
       } else {
-        message.error("Không thể tải dữ liệu.");
+        message.error("Không có dữ liệu.");
       }
     } catch (error) {
       checkAccessToken(navigate);
@@ -246,42 +238,90 @@ const AdminAnalytics = () => {
 
     switch (selectedValue) {
       case "today":
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
         break;
       case "yesterday":
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1);
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 1, 23, 59, 59);
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1
+        );
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1,
+          23,
+          59,
+          59
+        );
         break;
       case "last7days":
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
-        startDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 7);
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 7
+        );
         break;
       case "thisMonth":
         startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth(), today.getDate(), 23, 59, 59);
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
         break;
       case "lastMonth":
         const lastMonth = new Date(today);
         lastMonth.setMonth(lastMonth.getMonth() - 1);
         startDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
-        endDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth() + 1, 0, 23, 59, 59);
+        endDate = new Date(
+          lastMonth.getFullYear(),
+          lastMonth.getMonth() + 1,
+          0,
+          23,
+          59,
+          59
+        );
         break;
       default:
         return;
-    }    
+    }
 
     // Gọi API lấy dữ liệu theo khoảng thời gian
     fetchDataByDateRange(startDate, endDate);
   };
 
-
   useEffect(() => {
     if (!apiData || !apiData.revenueByDay) return;
-  
+
     const revenueByDay = apiData?.revenueByDay || {};
-    const sortedDates = Object.keys(revenueByDay).sort((a, b) => new Date(a) - new Date(b)); // Sắp xếp ngày
-  
+    const sortedDates = Object.keys(revenueByDay).sort(
+      (a, b) => new Date(a) - new Date(b)
+    ); // Sắp xếp ngày
+
     setChartData({
       labels: sortedDates.map((date) => date.split("-")[2].padStart(2, "0")), // Chỉ lấy ngày (dd)
       datasets: [
@@ -296,7 +336,6 @@ const AdminAnalytics = () => {
       ],
     });
   }, [apiData]); // Chạy lại khi `apiData` thay đổi
-  
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
@@ -360,7 +399,9 @@ const AdminAnalytics = () => {
                   variant="body2"
                   style={{ color: "gray", fontSize: "13px" }}
                 >
-                  {contract.status} - {new Intl.NumberFormat('vi-VN').format(contract.totalcost)} VND
+                  {contract.status} -{" "}
+                  {new Intl.NumberFormat("vi-VN").format(contract.totalcost)}{" "}
+                  VND
                 </Typography>
                 <Typography
                   variant="body2"

@@ -37,6 +37,7 @@ import userApi from "api/userApi";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
 import TabContractInfo from "components/GuestContract/TabContractInfo";
+import ChatContext from "components/ChatbotAI/ChatbotContext";
 
 const App = () => {
   const location = useLocation();
@@ -178,7 +179,7 @@ const App = () => {
           <Route path="ManageLocation" element={<LocationManager />} />
           <Route path="ManageAccounts" element={<AccountManager />} />
           <Route path="MenuManagement" element={<MenuManagement />} />
-          <Route path="" element={<AdminAnalytics />} />
+          <Route path="" element={<AdminAnalytics replace/> } />
           <Route path="AccessControl" element={<AccessControl />} />
           <Route path="login" element={<Login />} />
         </Route>
@@ -201,7 +202,9 @@ const App = () => {
 
 const RootApp = () => (
   <Router>
-    <App />
+    <ChatContext>
+      <App />
+    </ChatContext>
   </Router>
 );
 

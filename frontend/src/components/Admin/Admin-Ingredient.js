@@ -45,6 +45,8 @@ const IngredientManager = () => {
   const [openDialog, setOpenDialog] = useState(false);
   const [openDeleteDialog, setOpenDeleteDialog] = useState(false);
 
+  // const navigate = useNavigate();
+
   // Fetch ingredients with optional search term
   const fetchIngredients = async (page = 0, size = rowsPerPage) => {
     try {
@@ -54,7 +56,6 @@ const IngredientManager = () => {
       setTotalPages(totalPages); // Tổng số trang
     } catch (error) {
       console.error("Error fetching ingredients:", error);
-      toast.error("Không thể tải danh sách nguyên liệu.");
     }
   };
 
@@ -129,7 +130,6 @@ const IngredientManager = () => {
       }
     } catch (error) {
       console.error("Error deleting ingredient:", error);
-      toast.error("Có lỗi xảy ra khi xóa nguyên liệu!");
     }
   };
 
@@ -181,7 +181,6 @@ const IngredientManager = () => {
       }
     } catch (error) {
       console.error("Error saving ingredient:", error);
-      toast.error("Có lỗi xảy ra khi lưu nguyên liệu!");
     }
   };
 

@@ -25,6 +25,8 @@ import { toast } from "react-hot-toast";
 import { Typography } from "antd";
 import SnackBarNotification from "./SnackBarNotification";
 import Swal from "sweetalert2";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 const CategoryDish = () => {
   const [open, setOpen] = useState(false);
@@ -44,6 +46,8 @@ const CategoryDish = () => {
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
+
+  const navigate = useNavigate();
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -71,13 +75,6 @@ const CategoryDish = () => {
   //   setSnackBarOpen(true);
   // };
 
-  const categoryTranslation = {
-    "Appetizers": "Món khai vị",
-    "Main_Courses": "Món chính",
-    "Desserts": "Món tráng miệng",
-    "Beverages": "Đồ uống",
-    // Thêm các danh mục khác ở đây
-  };
   // Tìm và nạp Danh mục khi thành phần gắn liên kết
   useEffect(() => {
     fetchDanhMucWithPaginate(page + 1);
@@ -92,6 +89,7 @@ const CategoryDish = () => {
       console.log("res.dt = ", res.result.content);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
+      checkAccessToken(navigate);
     }
   };
 
@@ -134,7 +132,6 @@ const CategoryDish = () => {
       handleClose();
     } catch (error) {
       console.error("Lỗi khi thêm danh mục:", error);
-
       if (error.response && error.response.data) {
         const { name, description } = error.response.data;
         setNameError(name || "Tên danh mục không hợp lệ");
@@ -284,6 +281,39 @@ const handleDeleteCategory = async (categoryId) => {
     setPage(0); // Reset về trang đầu tiên khi thay đổi số mục trên mỗi trang
   };
 
+  const categoryTranslation = {
+    "Appetizers": "Món khai vị",
+    "Main_Courses": "Món chính",
+    "Desserts": "Món tráng miệng",
+    "Beverages": "Đồ uống",
+    // Thêm các danh mục khác ở đây
+  };
+
+  const [hasPermission, setHasPermission] = useState(false);
+  const [hasPermission2, setHasPermission2] = useState(false);
+  const [hasPermission3, setHasPermission3] = useState(false);
+
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
+
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền CATEGORY khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_CATEGORY");
+    const permissionGranted2 = checkPermission("UPDATE_CATEGORY");
+    const permissionGranted3 = checkPermission("DELETE_CATEGORY");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+  }, []); // Chạy 1 lần khi component mount
+
   return (
     <Box>
       <SnackBarNotification
@@ -315,6 +345,7 @@ const handleDeleteCategory = async (categoryId) => {
         </div>
 
         {/* Nút Thêm */}
+        {hasPermission && (
         <Button
           sx={{
             fontSize: "10px",
@@ -337,6 +368,7 @@ const handleDeleteCategory = async (categoryId) => {
           />
           Thêm danh mục
         </Button>
+      )}
       </div>
 
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
@@ -488,6 +520,27 @@ const handleDeleteCategory = async (categoryId) => {
               return (
                 <TableRow key={category.categoryId}>
                   <TableCell>{index + 1}</TableCell>
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{category.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{categoryTranslation[category.name]}</TableCell>
+                  </Tooltip>                  
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{category.description}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{category.description}</TableCell>
+                  </Tooltip>
+
                   <TableCell>{categoryTranslation[category.name]}</TableCell>
                   <TableCell>{category.description}</TableCell>
                   <TableCell
@@ -498,6 +551,7 @@ const handleDeleteCategory = async (categoryId) => {
                       zIndex: 1,
                     }}
                   >
+                  {hasPermission2 && (
                     <Button
                       variant="outlined"
                       onClick={() => handleEditCategory(category.categoryId)}
@@ -523,6 +577,8 @@ const handleDeleteCategory = async (categoryId) => {
                         <EditIcon />
                       </Tooltip>
                     </Button>
+                  )}
+                  {hasPermission3 && (
                     <Button
                       variant="outlined"
                       sx={{
@@ -551,6 +607,7 @@ const handleDeleteCategory = async (categoryId) => {
                         <DeleteIcon />
                       </Tooltip>
                     </Button>
+                  )}
                   </TableCell>
                 </TableRow>
               );

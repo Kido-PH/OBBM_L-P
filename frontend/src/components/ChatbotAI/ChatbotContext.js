@@ -1,22 +1,27 @@
 import React, { useState } from "react";
-import ChatBotContainer from "./ChatbotAI";
+
+// Tạo context cho chatbot
 export const chatbotContext = React.createContext();
-const ChatContext = () => {
+
+const ChatContext = ({ children }) => {
+  // Nhận children từ props
   const [currentStep, setStep] = React.useState(1);
   const [data, setData] = React.useState([]);
+  const [selectedMenuFromAI, setSelectedMenuFromAI] = useState(null); // Thêm state cho selectedMenuFromAI
+
   return (
-    <div>
-      <chatbotContext.Provider
-        value={{
-          currentStep,
-          setStep,
-          data,
-          setData,
-        }}
-      >
-        <ChatBotContainer />
-      </chatbotContext.Provider>
-    </div>
+    <chatbotContext.Provider
+      value={{
+        currentStep,
+        setStep,
+        data,
+        setData,
+        selectedMenuFromAI, // Cung cấp selectedMenuFromAI cho các component khác
+        setSelectedMenuFromAI, // Phương thức để cập nhật selectedMenuFromAI
+      }}
+    >
+      {children} {/* Truyền children vào */}
+    </chatbotContext.Provider>
   );
 };
 
