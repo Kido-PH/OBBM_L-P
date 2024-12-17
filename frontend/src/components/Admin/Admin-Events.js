@@ -55,6 +55,8 @@ const EventManager = () => {
 const [snackBarOpen, setSnackBarOpen] = useState(false);
     const [snackBarMessage, setSnackBarMessage] = useState("");
     const [snackType, setSnackType] = useState("success");
+
+    // const navigate = useNavigate();
   
     const handleCloseSnackBar = (event, reason) => {
       if (reason === "clickaway") {
@@ -334,7 +336,6 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
       }
     } catch (error) {
       console.error("Lỗi khi lưu sự kiện:", error);
-      toast.error("Đã xảy ra lỗi khi lưu sự kiện. Vui lòng thử lại!");
     } finally {
       handleCloseDialog(); // Đóng dialog sau khi thực hiện xong
     }

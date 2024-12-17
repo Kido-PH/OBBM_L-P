@@ -69,6 +69,8 @@ const MenuManager = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
 
+  // const navigate = useNavigate();
+
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -121,14 +123,14 @@ const MenuManager = () => {
       setMenus(menuRes.result?.content || []);
       setPageCount(menuRes.result?.totalPages);
       setTotalElements(menuRes.result?.totalElements);
-    } catch (error) { console.error("Lỗi khi lấy danh sách menu: ", error); toast.error("Không thể tải danh sách menu!"); }
+    } catch (error) { console.error("Lỗi khi lấy danh sách menu: ", error); }
   };
 
   const fetchCategories = async () => {
     try {
       const response = await danhMucApi.getAll({});
       setCategories(response.result?.content || []);
-    } catch (error) { console.error("Lỗi khi lấy danh sách danh mục: ", error); console.log("Selected Dishes:", selectedDishes); }
+    } catch (error) { console.error("Lỗi khi lấy danh sách danh mục: ", error); }
   };
 
   const fetchData = async () => {
@@ -212,7 +214,6 @@ const MenuManager = () => {
 
     } catch (error) {
       console.error("Lỗi khi lấy danh sách món ăn:", error);
-      toast.error("Không thể lấy danh sách món ăn! Vui lòng thử lại.");
     }
   };
 
@@ -223,7 +224,6 @@ const MenuManager = () => {
       setMenus(updatedMenus); // Cập nhật state menus
     } catch (error) {
       console.error("Lỗi khi lấy danh sách menus:", error);
-      toast.error("Không thể tải lại danh sách menus!");
     }
   };
 
@@ -268,7 +268,6 @@ const MenuManager = () => {
       await fetchMenus(); // Gọi hàm làm mới danh sách menus
     } catch (error) {
       console.error("Lỗi khi cập nhật menu:", error.response?.data || error.message);
-      toast.error("Không thể cập nhật menu! Vui lòng thử lại.");
     }
   };
 
@@ -340,7 +339,6 @@ const MenuManager = () => {
 
     } catch (error) {
       console.error("Lỗi khi thêm menu:", error.response?.data || error.message);
-      toast.error("Không thể thêm menu! Vui lòng thử lại.");
     }
   };
 

@@ -37,6 +37,8 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
   const [selectedRole, setSelectedRole] = useState(""); // Vai trò hiện tại
   const [roles, setRoles] = useState([]); // Dữ liệu vai trò từ API
 
+  // const navigate = useNavigate();
+
   useEffect(() => {
     fetchRoles();
   }, []);

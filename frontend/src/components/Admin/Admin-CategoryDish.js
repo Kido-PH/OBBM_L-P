@@ -25,6 +25,8 @@ import { toast } from "react-hot-toast";
 import { Typography } from "antd";
 import SnackBarNotification from "./SnackBarNotification";
 import Swal from "sweetalert2";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 const CategoryDish = () => {
   const [open, setOpen] = useState(false);
@@ -44,6 +46,8 @@ const CategoryDish = () => {
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
+
+  const navigate = useNavigate();
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -85,6 +89,7 @@ const CategoryDish = () => {
       console.log("res.dt = ", res.result.content);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
+      checkAccessToken(navigate);
     }
   };
 
@@ -127,7 +132,6 @@ const CategoryDish = () => {
       handleClose();
     } catch (error) {
       console.error("Lỗi khi thêm danh mục:", error);
-
       if (error.response && error.response.data) {
         const { name, description } = error.response.data;
         setNameError(name || "Tên danh mục không hợp lệ");

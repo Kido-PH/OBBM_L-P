@@ -55,6 +55,8 @@ const AccountManager = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
 
+  // const navigate = useNavigate();
+
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -178,7 +180,6 @@ const AccountManager = () => {
         setAccounts(filteredUsers);
       } catch (error) {
         console.error("Error fetching users:", error);
-        toast.error("Failed to fetch user data.");
       }
     };
 
@@ -247,7 +248,6 @@ const AccountManager = () => {
       }
     } catch (error) {
       console.error("Error adding user:", error);
-      toast.error("Có lỗi xảy ra khi thêm tài khoản!");
     }
   };
 
@@ -289,7 +289,6 @@ const AccountManager = () => {
       }
     } catch (error) {
       console.error("Error editing account:", error);
-      toast.error("Lỗi khi cập nhật thông tin.");
     }
   };
 
@@ -370,7 +369,6 @@ const AccountManager = () => {
       }
     } catch (error) {
       console.error("Lỗi khi khôi phục tài khoản:", error);
-      toast.error("Có lỗi xảy ra khi khôi phục tài khoản.");
     }
   };
   

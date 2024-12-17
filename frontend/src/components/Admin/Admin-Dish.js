@@ -65,6 +65,8 @@ const DishManager = () => {
   const [selectedDish, setSelectedDish] = useState(null); // Lưu món ăn được chọn
   const [allIngredients, setAllIngredients] = useState([]);
 
+  // const navigate = useNavigate();
+
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
@@ -341,7 +343,6 @@ const DishManager = () => {
       setDishes((prevDishes) => [response.result, ...prevDishes]);
     } catch (error) {
       console.error("Lỗi khi thêm món ăn: ", error);
-      toast.error("Có lỗi xảy ra khi thêm món ăn!");
     }
   };
 
@@ -423,10 +424,10 @@ const DishManager = () => {
       );
     } catch (error) {
       console.error("Lỗi khi cập nhật món ăn:", error);
+
       if (error.response) {
         console.log("Response error data:", error.response.data);
       }
-      toast.error("Có lỗi xảy ra khi cập nhật món ăn!");
     }
 
     // Đóng dialog sau khi cập nhật

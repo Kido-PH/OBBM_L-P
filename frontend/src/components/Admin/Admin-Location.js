@@ -65,6 +65,8 @@ const LocationManager = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
 
+  // const navigate = useNavigate();
+
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -152,7 +154,6 @@ const LocationManager = () => {
       setTotalElements(resLocation.result?.totalElements);
     } catch (error) {
       console.error("Lỗi khi nạp dữ liệu:", error);
-      toast.error("Không thể nạp dữ liệu!");
     }
   };
 
@@ -326,7 +327,6 @@ const LocationManager = () => {
       handleCloseDialog();
     } catch (error) {
       console.error("Lỗi khi thêm địa điểm:", error);
-      toast.error("Không thể thêm địa điểm. Vui lòng thử lại sau!");
     }
   };
 
@@ -399,7 +399,6 @@ const LocationManager = () => {
       if (error.response) {
         console.error("Phản hồi từ server:", error.response.data);
       }
-      toast.error("Không thể cập nhật địa điểm. Vui lòng thử lại sau!");
     }
   };
 
@@ -432,7 +431,6 @@ const LocationManager = () => {
       setLocationToDelete(null);
     } catch (error) {
       console.error("Lỗi khi xóa địa điểm:", error);
-      toast.error("Không thể xóa địa điểm. Vui lòng thử lại sau!");
     }
   };
 

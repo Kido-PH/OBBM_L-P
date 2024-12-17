@@ -13,7 +13,6 @@ import {
   DatePicker,
 } from "antd";
 import {
-  SettingOutlined,
   LogoutOutlined,
   UserOutlined,
   PhoneOutlined,
@@ -24,10 +23,8 @@ import {
 import { EmailOutlined } from "@mui/icons-material";
 import dayjs from "dayjs";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
 
 const AdminUserAvatar = () => {
-  const navigate = useNavigate(); // Khởi tạo useNavigate
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
@@ -244,38 +241,44 @@ const AdminUserAvatar = () => {
   };
 
   const handleLogout = async () => {
-    const accessToken = localStorage.getItem("accessToken");
-    const refreshToken = Cookies.get("refreshToken");
-    console.log("Access token: " + accessToken);
-    console.log("Refresh token: " + refreshToken);
-
     try {
-      // Gửi yêu cầu POST đến API logout
+      const accessToken = localStorage.getItem("accessToken");
+      const refreshToken = Cookies.get("refreshToken");
+  
+      if (!accessToken || !refreshToken) {
+        throw new Error("Token không tồn tại.");
+      }
+  
+      // Gửi request logout
       const response = await fetch("http://localhost:8080/obbm/auth/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
         },
-        body: JSON.stringify({
-          access_token: accessToken, // Truyền access_token
-          refresh_token: refreshToken, // Truyền refresh_token
-        }),
+        body: JSON.stringify({ refresh_token: refreshToken }),
       });
-
-      if (response.ok) {
-        // Xóa thông tin đăng nhập sau khi logout thành công
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("isAdmin");
-        localStorage.removeItem("userId");
-        Cookies.remove("refreshToken");
-        navigate("/login");
-      } else {
-        console.error("Logout failed:", response.status);
+  
+      if (!response.ok && response.status === 401) {
+        console.warn("Token không hợp lệ, nhưng vẫn tiến hành logout.");
       }
+  
+      // Xóa token khỏi localStorage và Cookies
+      localStorage.clear();
+      Cookies.remove("refreshToken");
+  
+      // Điều hướng về trang login
+      window.location.href = "/login";
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("Lỗi khi logout:", error);
+  
+      // Dù lỗi vẫn xóa localStorage để đảm bảo đăng xuất
+      localStorage.clear();
+      Cookies.remove("refreshToken");
+      window.location.href = "/login";
     }
   };
+  
 
   return (
     <>

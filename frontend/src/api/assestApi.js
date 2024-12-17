@@ -9,8 +9,8 @@ const assestApi = {
 
   // API lấy tất cả vai trò
   getAllRoles() {
-    const url = `/roles`;
-    return axiosClient.get(url);
+    const url = "/roles";
+    return axiosClient.get(url); // Gọi API với axiosClient
   },
 
   // API lấy tất cả nhóm quyền

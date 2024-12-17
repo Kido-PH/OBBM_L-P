@@ -38,9 +38,8 @@ import SnackBarNotification from "./SnackBarNotification";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import GetAppIcon from "@mui/icons-material/GetApp";
-import { Link, useSearchParams } from "react-router-dom"; // Import để lấy tham số URL
+import { Link,  useSearchParams } from "react-router-dom"; // Import để lấy tham số URL
 import dayjs from "dayjs";
-import poiTemplateApi from "api/poiTemplateApi";
 import PATHS from "api/poiTemplateApi";
 
 const ManageContracts = () => {
@@ -105,6 +104,8 @@ const ManageContracts = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
 
+  // const navigate = useNavigate();
+
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -145,7 +146,6 @@ const ManageContracts = () => {
       }
     } catch (error) {
       console.error("Lỗi khi gọi API:", error);
-      toast.error("Không thể lấy danh sách nguyên liệu!");
     }
   };
 
@@ -370,10 +370,6 @@ const ManageContracts = () => {
       }
     } catch (error) {
       console.error("Lỗi khi xác nhận hợp đồng:", error);
-      if (error.response) {
-        console.error("Phản hồi lỗi từ server:", error.response.data);
-      }
-      toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
     }
   };
 
@@ -406,7 +402,6 @@ const ManageContracts = () => {
       }
     } catch (error) {
       console.error("Lỗi khi hủy hợp đồng:", error);
-      toast.error("Không thể hủy hợp đồng. Vui lòng thử lại sau!");
     }
   };
 
@@ -537,10 +532,6 @@ const ManageContracts = () => {
       }
     } catch (error) {
       console.error("Lỗi khi xác nhận hợp đồng:", error);
-      if (error.response) {
-        console.error("Phản hồi lỗi từ server:", error.response.data);
-      }
-      toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
     }
   };
 

@@ -189,6 +189,18 @@ const AccessControl = () => {
   
       if (response && response.result) {
         showSuccess("Cập nhật quyền cho người dùng thành công!");
+
+        // Cập nhật quyền mới vào LocalStorage (nếu người dùng hiện tại)
+      if (selectedUserId === users.userId) {
+        localStorage.setItem("permissions", JSON.stringify(selectedPermissions));
+        localStorage.setItem("role", selectedRole);
+
+        // Thông báo quyền mới và tự động đăng xuất
+        alert("Quyền của bạn đã thay đổi. Hệ thống sẽ đăng xuất.");
+        localStorage.clear();
+        window.location.href = "/login"; // Điều hướng tới trang đăng nhập
+      }
+
       } else {
         console.error("Lỗi khi cập nhật quyền:", response);
       }

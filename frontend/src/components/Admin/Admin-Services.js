@@ -54,6 +54,8 @@ const ServiceManager = () => {
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
 
+  // const navigate = useNavigate();
+
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
       return;
@@ -314,6 +316,7 @@ const ServiceManager = () => {
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);
     setServiceToDelete(null);
+
   };
 
   const handleChangePage = (event, newPage) => {
