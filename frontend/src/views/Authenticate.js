@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import { setToken } from "../services/localStorageService.js";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import Swal from "sweetalert2";
-import axios from "axios";
 const Authenticate = () => {
   const navigate = useNavigate();
   const apiClient = axios.create({
