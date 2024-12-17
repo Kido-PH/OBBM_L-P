@@ -168,8 +168,6 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
       // Lưu userId vào state
       setUserId(data?.result?.userId);
     } catch (error) {
-   
-      checkAccessToken(navigate);
       message.error("Không tải được dữ liệu.");
     }
   };
