@@ -21,7 +21,7 @@ import ctabanner from "../assets/images/hero-banner-bg.png";
 import danhMucApi from "../api/danhMucApi";
 import eventApi from "../api/eventApi.js";
 import { useNavigate } from "react-router-dom"; // Import useNavigate
-import { getToken, setToken } from "../services/localStorageService";
+import { getToken } from "../services/localStorageService";
 import LoadingPage from "./LoadingPage";
 import { checkAccessToken } from "services/checkAccessToken";
 
@@ -136,7 +136,6 @@ const Content = () => {
   const [loading, setLoading] = React.useState(false);
   const [activeCategoryId, setActiveCategoryId] = useState(2);
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
   const [categories, setCategories] = useState([]);
   const [filteredCategories, setFilteredCategories] = useState([]);
   const [Events, setEvents] = useState([]);
@@ -179,33 +178,27 @@ const Content = () => {
   }, []);
 
   const fetchDanhMucVaEvent = async () => {
-    try {
-      const danhMucList = await danhMucApi.getAll();
-      const EventsList = await eventApi.getAll();
-      setEvents(EventsList.result.content);
-      setCategories(danhMucList.result.content);
-    } catch (error) {
-      checkAccessToken(navigate);
-    }
-  };
+  try {
+    const danhMucList = await danhMucApi.getAll();
+    const EventsList = await eventApi.getAll();
+
+    // Lọc các sự kiện có isManaged = true
+    const filteredEvents = EventsList.result.content.filter(event => event.ismanaged === true);
+
+    // Cập nhật state với dữ liệu đã lọc
+    setEvents(filteredEvents);
+    setCategories(danhMucList.result.content);
+  } catch (error) {
+    checkAccessToken(navigate);
+  }
+};
+
 
 
 
   useEffect(() => {
     fetchDanhMucVaEvent();
   }, [activeCategoryId]);
-
-  const handleScroll = (direction, categoryId) => {
-    const menuList = document.querySelector(
-      `#category-${categoryId} .food-menu-list`
-    );
-    const scrollAmount = 120; // Số pixel muốn cuộn mỗi lần
-    if (direction === "left") {
-      menuList.scrollLeft -= scrollAmount;
-    } else if (direction === "right") {
-      menuList.scrollLeft += scrollAmount;
-    }
-  };
 
   const handleFilter = (categoryId) => {
     const filtered = categories.filter(
