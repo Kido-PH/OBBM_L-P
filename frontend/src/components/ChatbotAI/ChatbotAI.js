@@ -90,7 +90,7 @@ const ChatBotContainer = () => {
   React.useEffect(() => {
     fetchEvent();
     setStep(1);
-  });
+  },[]);
 
   return (
     <div

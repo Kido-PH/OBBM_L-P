@@ -60,7 +60,7 @@ const ContractList = () => {
     import("../../assets/css/mainStyle.css");
     import("../../assets/css/contractGuestStyle.css");
     fetchContractListData(1, 6);
-  });
+  },[]);
 
   React.useEffect(() => {
     const filtered = contractList.filter(

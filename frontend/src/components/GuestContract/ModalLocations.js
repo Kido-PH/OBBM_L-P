@@ -226,7 +226,7 @@ function Example({ selectedDate, isLocationCleared }) {
   React.useEffect(() => {
     fetchLocations();
     fetchContracts();
-  });
+  },[]);
 
   return (
     <>
