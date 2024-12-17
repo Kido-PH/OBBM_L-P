@@ -163,6 +163,7 @@ const StepContext = () => {
 
       console.log("Contract ID lấy được: ", contractId);
       setInfoUrl(contractId); // Chuyển hướng URL với contractId
+      setContractData(null);
     } catch (error) {
       console.error("Lỗi khi lấy Contract ID:", error);
     }

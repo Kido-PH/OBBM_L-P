@@ -26,7 +26,7 @@ const ContractCreateStep2 = () => {
   const [isInvalid, setIsInvalid] = React.useState(true);
 
   const [currentEventInfo, setCurrentEventInfo] = React.useState({});
-
+  const [isLocationCleared, setIsLocationCleared] = React.useState(false);
   const [totalMenuCost, setTotalMenuCost] = React.useState(0);
   const [totalServicesCost, setTotalServicesCost] = React.useState(0);
 
@@ -102,6 +102,16 @@ const ContractCreateStep2 = () => {
 
   React.useEffect(() => {
     fetchEvent();
+
+    // Kiểm tra và xóa `currentLocation` nếu cần
+    if (!contractData.organizdate) {
+      localStorage.removeItem("currentLocation");
+      setIsLocationCleared(true);
+    } else {
+      setIsLocationCleared(false);
+    }
+
+    // Đánh dấu việc xóa đã hoàn tất
   }, []);
 
   React.useEffect(() => {
@@ -141,10 +151,28 @@ const ContractCreateStep2 = () => {
     }
   };
 
-  const handleGuestChange = (e) => {
-    const value = parseInt(e.target.value) || 0;
+  const filterTime = (time) => {
+    const hours = time.getHours();
+    return hours >= 8 && hours <= 18; // Chỉ cho phép từ 08:00 đến 17:59
+  };
 
-    if (value < 0) {
+  const handleGuestChange = (e) => {
+    const value = e.target.value;
+
+    // Kiểm tra nếu giá trị không phải là số nguyên hoặc để trống
+    if (!/^\d*$/.test(value)) {
+      setErrors({
+        ...errors,
+        guestCount: "Chỉ được phép nhập số nguyên dương.",
+      });
+      setIsInvalid(true);
+      return;
+    }
+
+    // Chuyển giá trị thành số
+    const numericValue = parseInt(value, 10) || 0;
+
+    if (numericValue < 0) {
       setErrors({
         ...errors,
         guestCount: "Số lượng khách không thể là số âm.",
@@ -158,7 +186,7 @@ const ContractCreateStep2 = () => {
       setMinTableCount(0);
     } else if (location) {
       const maxGuest = location.isCustom ? 5000 : location.capacity;
-      if (value > maxGuest) {
+      if (numericValue > maxGuest) {
         setErrors({
           ...errors,
           guestCount: `Sức chứa của địa điểm tối đa là: ${maxGuest}.`,
@@ -176,10 +204,10 @@ const ContractCreateStep2 = () => {
           guestCount: null,
         });
         setIsInvalid(false);
-        const tableCount = Math.ceil(value / guestPerTable);
+        const tableCount = Math.ceil(numericValue / guestPerTable);
         setContractData({
           ...contractData,
-          guest: value,
+          guest: numericValue,
           table: tableCount,
         });
         setMinTableCount(tableCount);
@@ -252,28 +280,6 @@ const ContractCreateStep2 = () => {
           <div className="row row-cols-sm-1 row-cols-md-2">
             <div className="col">
               <div className="mb-3">
-                <label className="form-label fw-bold">
-                  Địa điểm
-                  <span className="text-danger d-inline-block">*</span>
-                </label>
-                <div className="d-flex align-items-center">
-                  <ModalLocations />
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label fw-bold">
-                  Dịch vụ đi kèm
-                  <span className="text-danger d-inline-block">*</span>
-                </label>
-                <div className="d-flex align-items-center">
-                  <ModalServices onUpdateTotalCost={handleUpdateTotalCost} />
-                </div>
-              </div>
-            </div>
-
-            <div className="col">
-              <div className="mb-3">
                 <label className="form-label fw-bold" htmlFor="organizdate">
                   Ngày tổ chức
                   <span className="text-danger d-inline-block">*</span>
@@ -293,11 +299,37 @@ const ContractCreateStep2 = () => {
                     dateFormat="dd/MM/yyyy HH:mm"
                     timeFormat="HH:mm"
                     minDate={
-                      new Date(new Date().setDate(new Date().getDate() + 8))
+                      new Date(new Date().setDate(new Date().getDate() + 2))
                     }
                     required
-                    className="form-control fs-4 w-100"
+                    filterTime={filterTime}
+                    className="form-control fs-4 w-100 input-hienthi-popup"
                   />
+                </div>
+              </div>
+
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Dịch vụ đi kèm
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
+                <div className="d-flex align-items-center">
+                  <ModalServices
+                    onUpdateTotalCost={handleUpdateTotalCost}
+                    isLocationCleared={isLocationCleared}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="col">
+              <div className="mb-3">
+                <label className="form-label fw-bold">
+                  Địa điểm
+                  <span className="text-danger d-inline-block">*</span>
+                </label>
+                <div className="d-flex align-items-center">
+                  <ModalLocations selectedDate={contractData.organizdate} />
                 </div>
               </div>
 
@@ -339,7 +371,7 @@ const ContractCreateStep2 = () => {
                   <span className="text-danger d-inline-block">*</span>
                 </label>
                 <input
-                  type="number"
+                  type="text" // Đổi thành kiểu text
                   name="guest"
                   id="guest"
                   placeholder="Số lượng khách"
@@ -348,6 +380,16 @@ const ContractCreateStep2 = () => {
                   }`}
                   value={contractData.guest}
                   onChange={handleGuestChange}
+                  onBlur={(e) => {
+                    // Xử lý thêm nếu cần khi rời khỏi ô input
+                    if (!contractData.guest) {
+                      setErrors({
+                        ...errors,
+                        guestCount: "Số lượng khách không được để trống.",
+                      });
+                      setIsInvalid(true);
+                    }
+                  }}
                   required
                 />
                 {errors.guestCount && (

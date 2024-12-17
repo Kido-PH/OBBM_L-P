@@ -252,8 +252,7 @@ const ContractInfo = () => {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        {eventServicesInfo[0]?.name} -{" "}
-                        {formatCurrency(eventServicesInfo[0]?.price)} ...
+                        Tổng số lượng dịch vụ đã chọn: {eventServicesInfo.length}
                       </p>
                       <FaEye />
                     </div>
