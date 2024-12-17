@@ -32,6 +32,27 @@ const contractApi = {
     const url = `/contract/${id}`;
     return axiosClient.delete(url);
   },
+
+  getAllContractsByStatusAndDateRange(status, startDate, endDate, page, size) {
+    const url = `/contract/byStatusAndDateRange`;
+    const params = {
+      status,
+      startDate,
+      endDate,
+      page,
+      size,
+    };
+    return axiosClient.get(url, { params });
+  },
+
+  getRevenueStatistics(startDate, endDate) {
+    const url = `/contract/statistics`;
+    const params = {
+      startDate,
+      endDate,
+    };
+    return axiosClient.get(url, { params });
+  },
 };
 
 export default contractApi;

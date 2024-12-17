@@ -21,6 +21,7 @@ import {
   IconButton,
   MenuItem,
   Menu,
+  FormControl,
 } from "@mui/material";
 import axios from "axios";
 import InfoIcon from "@mui/icons-material/Info";
@@ -32,18 +33,26 @@ import { toast, Toaster } from "react-hot-toast";
 import { format, parse } from "date-fns";
 import contractApi from "../../api/contractApi";
 import ContractFilter from "./ContractFilter";
-import { Divider, Typography } from "antd";
+import { DatePicker, Divider, message, Select, Typography } from "antd";
 import SnackBarNotification from "./SnackBarNotification";
 import VisibilityIcon from "@mui/icons-material/Visibility";
-import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { useSearchParams } from "react-router-dom"; // Import để lấy tham số URL
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import GetAppIcon from "@mui/icons-material/GetApp";
+import { Link,  useSearchParams } from "react-router-dom"; // Import để lấy tham số URL
+import dayjs from "dayjs";
+import PATHS from "api/poiTemplateApi";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 const ManageContracts = () => {
+
+const navigate = useNavigate();
 
   const [contracts, setContracts] = useState([]); // Dữ liệu hợp đồng
   const [showModal, setShowModal] = useState(false); // Hiển thị modal
   const [searchTerm, setSearchTerm] = useState(""); // Trạng thái tìm kiếm
   const [showModalPDF, setShowModalPDF] = useState(false);
+
   const [selecterContract, setSelecterContract] = useState({
     name: "",
     type: "",
@@ -57,6 +66,7 @@ const ManageContracts = () => {
     custphone: "",
     description: "",
   });
+  const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth");
 
   //select button
   const [anchorEl, setAnchorEl] = useState(null);
@@ -74,10 +84,12 @@ const ManageContracts = () => {
     setSelectedContract(null);
   };
 
-
   const [searchParams] = useSearchParams(); // Lấy tham số URL
+  const status = searchParams.get("status");
+  const startDate = searchParams.get("startDate");
+  const endDate = searchParams.get("endDate");
+  const [rowsPerPage, setRowsPerPage] = useState(endDate ? 100 : 5); // Bạn có thể thay đổi số mục trên mỗi trang
   const [page, setPage] = useState(0);
-  const [rowsPerPage, setRowsPerPage] = useState(5); // Bạn có thể thay đổi số mục trên mỗi trang
   const [totalElements, setTotalElements] = useState(0);
   const [selectedContractStatus, setSelectedContractStatus] = useState("");
   const [selectedPaymentStatus, setSelectedPaymentStatus] = useState("");
@@ -88,12 +100,16 @@ const ManageContracts = () => {
   const [paymentStatuses, setPaymentStatuses] = useState([]);
 
   const [stockRequests, setStockRequests] = useState([]);
+  const [newContract, setNewContract] = useState([]);
+
   const [selectedContract, setSelectedContract] = useState(null);
   const [showStockRequestsDialog, setShowStockRequestsDialog] = useState(false);
 
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
+
+  // const navigate = useNavigate();
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -108,7 +124,6 @@ const ManageContracts = () => {
     setSnackBarMessage(message);
     setSnackBarOpen(true);
   };
-
 
   useEffect(() => {
     const status = searchParams.get("status"); // Lấy trạng thái từ URL
@@ -149,6 +164,7 @@ const ManageContracts = () => {
         console.error("API Error: ", data.message);
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Error fetching contracts: ", error);
     }
   };
@@ -156,42 +172,31 @@ const ManageContracts = () => {
 
   // Fetch xem chi tiết nguyên liệu hợp đồng
   const handleViewStockRequests = async (contractId) => {
-    try {
-      const accessToken = localStorage.getItem("accessToken");
-
-      const url = `http://localhost:8080/obbm/contract/${contractId}`;
-      const response = await fetch(url, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+    try {  
+      // Gọi API từ contractApi để lấy hợp đồng theo ID
+      const response = await contractApi.get(contractId); 
+  
+      if (response && response.result) {
+        const contractData = response.result;
+  
+        if (!contractData) {
+          toast.error("Không tìm thấy hợp đồng!");
+          return;
+        }
+  
+        const stockRequests = Array.isArray(contractData.listStockrequests)
+          ? contractData.listStockrequests
+          : [];
+  
+        setStockRequests(stockRequests);
+        setSelectedContract(contractData);
+        setShowStockRequestsDialog(true); // Hiển thị dialog
+      } else {
+        toast.error("Không thể lấy hợp đồng!");
       }
-
-      const data = await response.json();
-      console.log("Dữ liệu API trả về:", data);
-
-      const contractData = data?.result;
-
-      if (!contractData) {
-        toast.error("Không tìm thấy hợp đồng!");
-        return;
-      }
-
-      const stockRequests = Array.isArray(contractData.listStockrequests)
-        ? contractData.listStockrequests
-        : [];
-
-      setStockRequests(stockRequests);
-      setSelectedContract(contractData);
-      setShowStockRequestsDialog(true); // Hiển thị dialog
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Lỗi khi gọi API:", error);
-      toast.error("Không thể lấy danh sách nguyên liệu!");
     }
   };
 
@@ -263,12 +268,14 @@ const ManageContracts = () => {
   }, [page]);
 
   useEffect(() => {
-    fetchContractWithPaginate(page + 1, rowsPerPage);
-  }, [page, rowsPerPage]);
+    if (!endDate) {
+      fetchContractWithPaginate(page + 1, rowsPerPage);
+    }
+  }, [page, rowsPerPage, endDate]);
 
   useEffect(() => {
     filterContracts(); // Gọi hàm lọc mỗi khi giá trị lọc hoặc từ khóa tìm kiếm thay đổi
-  }, [selectedContractStatus, selectedPaymentStatus, searchTerm, contracts]);
+  }, [contracts, selectedContractStatus, selectedPaymentStatus, searchTerm]);
 
   // Hàm lấy tất cả listContract
   const fetchContractWithPaginate = async (page, rowsPerPage) => {
@@ -276,33 +283,41 @@ const ManageContracts = () => {
       const res = await contractApi.getPaginate(page, rowsPerPage);
       const newContracts = res.result?.content;
       setTotalElements(res.result?.totalElements);
-  
+
       // Cập nhật danh sách hợp đồng cục bộ
       setContracts((prevContracts) => {
         const updatedContracts = [...newContracts]; // Dữ liệu mới từ API
-        const existingIds = new Set(prevContracts.map((contract) => contract.id));
-  
+        const existingIds = new Set(
+          prevContracts.map((contract) => contract.id)
+        );
+
         // Thêm hợp đồng cũ chưa có trong danh sách mới
         prevContracts.forEach((contract) => {
           if (!existingIds.has(contract.id)) {
             updatedContracts.unshift(contract); // Thêm vào đầu
           }
         });
-  
+
         // Sắp xếp danh sách để hợp đồng mới luôn ở trên
-        return updatedContracts.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        return updatedContracts.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
       });
-  
+
       // Cập nhật danh sách phân trang hiển thị
       setFilteredContracts((prevContracts) => {
         const allContracts = [...newContracts, ...prevContracts]; // Kết hợp dữ liệu mới và cũ
         const sortedContracts = allContracts.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
         ); // Sắp xếp theo thời gian
-        return sortedContracts.slice((page - 1) * rowsPerPage, page * rowsPerPage); // Phân trang
+        return sortedContracts.slice(
+          (page - 1) * rowsPerPage,
+          page * rowsPerPage
+        ); // Phân trang
       });
-  
+
       console.log(newContracts);
+      setNewContract(newContracts);
     } catch (error) {
       console.error("Không tìm nạp được danh mục: ", error);
     }
@@ -394,10 +409,10 @@ const ManageContracts = () => {
           prevContracts.map((contractItem) =>
             contractItem.contractId === contract.contractId
               ? {
-                ...contractItem,
-                status: contract.status,
-                paymentstatus: contract.paymentstatus,
-              }
+                  ...contractItem,
+                  status: contract.status,
+                  paymentstatus: contract.paymentstatus,
+                }
               : contractItem
           )
         );
@@ -406,10 +421,6 @@ const ManageContracts = () => {
       }
     } catch (error) {
       console.error("Lỗi khi xác nhận hợp đồng:", error);
-      if (error.response) {
-        console.error("Phản hồi lỗi từ server:", error.response.data);
-      }
-      toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
     }
   };
 
@@ -442,7 +453,6 @@ const ManageContracts = () => {
       }
     } catch (error) {
       console.error("Lỗi khi hủy hợp đồng:", error);
-      toast.error("Không thể hủy hợp đồng. Vui lòng thử lại sau!");
     }
   };
 
@@ -499,44 +509,55 @@ const ManageContracts = () => {
 
       // Kiểm tra mã trạng thái trả về từ server
       if (res.code === 1000) {
-
-        // Gửi thông báo qua email
-      const message = `Kính gửi ${selecterContract.custname}, tổng chi phí hợp đồng của bạn đã được cập nhật thành ${new Intl.NumberFormat("vi-VN", {
-        style: "currency",
-        currency: "VND",
-      }).format(selecterContract.totalcost)}. Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.`;
-
-
-      const emailData = {
-        emailTo: selecterContract.custmail,
-        subject: "Cập nhật chi phí hợp đồng",
-        message: `Kính gửi ${selecterContract.custname}, tổng chi phí hợp đồng của bạn đã được cập nhật thành ${new Intl.NumberFormat("vi-VN", {
-          style: "currency",
-          currency: "VND",
-        }).format(selecterContract.totalcost)}. Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.`,
-        template: `<p>Kính gửi <strong>${selecterContract.custname}</strong>,</p>
-                   <p>Tổng chi phí hợp đồng của bạn đã được cập nhật thành: <strong>${new Intl.NumberFormat("vi-VN", {
-                     style: "currency",
-                     currency: "VND",
-                   }).format(selecterContract.totalcost)}</strong>.</p>
+        const emailData = {
+          emailTo: selecterContract.custmail,
+          subject: "Cập nhật chi phí hợp đồng",
+          message: `Kính gửi ${
+            selecterContract.custname
+          }, tổng chi phí hợp đồng của bạn đã được cập nhật thành ${new Intl.NumberFormat(
+            "vi-VN",
+            {
+              style: "currency",
+              currency: "VND",
+            }
+          ).format(
+            selecterContract.totalcost
+          )}. Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi.`,
+          template: `<p>Kính gửi <strong>${
+            selecterContract.custname
+          }</strong>,</p>
+                   <p>Tổng chi phí hợp đồng của bạn đã được cập nhật thành: <strong>${new Intl.NumberFormat(
+                     "vi-VN",
+                     {
+                       style: "currency",
+                       currency: "VND",
+                     }
+                   ).format(selecterContract.totalcost)}</strong>.</p>
                    <p>Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ với chúng tôi. Hotline: 01234567789 Công ty TNHH L&P</p>`,
-      };      
+        };
 
-      try {
-        await axios.post("http://emailserivce.somee.com/Email/sendMail", emailData);
-        showSuccess("Email thông báo cập nhật tổng chi phí được gửi thành công!");
-      } catch (emailError) {
-        console.error("Lỗi khi gửi email:", emailError);
-      
-        // Kiểm tra xem phản hồi lỗi có chi tiết từ server không
-        if (emailError.response && emailError.response.data) {
-          toast.error(
-            `Gửi email thất bại: ${emailError.response.data.message || "Lỗi không xác định"}`
+        try {
+          await axios.post(
+            "http://emailserivce.somee.com/Email/sendMail",
+            emailData
           );
-        } else {
-          toast.error("Gửi email thất bại. Vui lòng thử lại sau.");
+          showSuccess(
+            "Email thông báo cập nhật tổng chi phí được gửi thành công!"
+          );
+        } catch (emailError) {
+          console.error("Lỗi khi gửi email:", emailError);
+
+          // Kiểm tra xem phản hồi lỗi có chi tiết từ server không
+          if (emailError.response && emailError.response.data) {
+            toast.error(
+              `Gửi email thất bại: ${
+                emailError.response.data.message || "Lỗi không xác định"
+              }`
+            );
+          } else {
+            toast.error("Gửi email thất bại. Vui lòng thử lại sau.");
+          }
         }
-      }      
 
         // Cập nhật hợp đồng trong state sau khi sửa thành công
         setContracts((prevContracts) => {
@@ -562,10 +583,6 @@ const ManageContracts = () => {
       }
     } catch (error) {
       console.error("Lỗi khi xác nhận hợp đồng:", error);
-      if (error.response) {
-        console.error("Phản hồi lỗi từ server:", error.response.data);
-      }
-      toast.error("Không thể xác nhận hợp đồng. Vui lòng thử lại sau!");
     }
   };
 
@@ -574,11 +591,11 @@ const ManageContracts = () => {
     const filtered = contracts.filter((contract) => {
       const matchesSearchTerm = searchTerm
         ? contract.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.paymentstatus
-          .toLowerCase()
-          .includes(searchTerm.toLowerCase())
+          contract.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contract.status.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          contract.paymentstatus
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase())
         : true;
 
       const matchesContractStatus = selectedContractStatus
@@ -587,7 +604,7 @@ const ManageContracts = () => {
 
       const matchesPaymentStatus = selectedPaymentStatus
         ? contract.paymentstatus.toLowerCase() ===
-        selectedPaymentStatus.toLowerCase()
+          selectedPaymentStatus.toLowerCase()
         : true;
 
       // Kết hợp tất cả các điều kiện lọc
@@ -675,6 +692,252 @@ const ManageContracts = () => {
     ? parse(selecterContract.organizdate, "dd/MM/yyyy HH:mm", new Date())
     : null;
 
+  // Khai báo mảng thông điệp tooltip
+  const tooltipMessage = [
+    "Xác nhận duyệt hợp đồng", // 0 - Tương ứng với trạng thái "Pending"
+    "Đang hoạt động", // 1 - Tương ứng với trạng thái "Approved"
+    "Đã hoàn thành", // 2 - Tương ứng với trạng thái "Active"
+  ];
+
+  // Hàm ánh xạ trạng thái chỉ mục của mảng
+  const getTooltipIndex = (status) => {
+    switch (status) {
+      case "Pending":
+        return 0;
+      case "Approved":
+        return 1;
+      case "Actived":
+        return 2;
+      default:
+        return -1; // Trạng thái không hợp lệ hoặc không cần tooltip
+    }
+  };
+  useEffect(() => {
+    if (status && startDate && endDate) {
+      fetchContractsByStatus(
+        status,
+        new Date(startDate),
+        new Date(endDate),
+        page + 1,
+        rowsPerPage
+      );
+    }
+  }, [searchParams, page, rowsPerPage, endDate, startDate, status]);
+
+  // const fetchContractsByStatus = async (status, startDate, endDate, page, rowsPerPage) => {
+  //   try {
+  //     // Chuyển đổi ngày tháng nếu có
+  //     const startDateFormatted = startDate ? new Date(startDate).toISOString() : "";
+  //     const endDateFormatted = endDate ? new Date(endDate).toISOString() : "";
+  
+  //     // Gọi API mới từ contractApi
+  //     const response = await contractApi.getAllContractsByStatusAndDateRange(
+  //       status,
+  //       startDateFormatted,
+  //       endDateFormatted,
+  //       page,
+  //       rowsPerPage
+  //     );
+  
+  //     if (response && response.result) {
+  //       console.log("Hợp đồng chờ duyệt: ", response);
+  
+  //       if (response.code === 1000) {
+  //         setContracts(response.result.content);  // Cập nhật danh sách hợp đồng
+  //         setTotalElements(response.result.totalElements);  // Tổng số phần tử
+  //         setFilteredContracts(response.result.content);  // Cập nhật các hợp đồng đã lọc
+  //       } else {
+  //         console.error("API Error:", response.message);
+  //       }
+  //     } else {
+  //       console.error("Không có dữ liệu hợp đồng.");
+  //     }
+  //   } catch (error) {
+  //     console.error("Error fetching contracts:", error);
+  //   }
+  // };
+
+  const handleTimeRangeChange = (selectedValue) => {
+    console.log("Selected value:", selectedValue);
+
+    if (!selectedValue) {
+      console.error("Không thể đọc giá trị");
+      return;
+    }
+
+    setSelectedTimeRange(selectedValue);
+
+    // setEndDate(null);
+    // setStartDate(null);
+
+    // Logic xác định ngày bắt đầu và kết thúc
+    let startDate, endDate;
+    const today = new Date();
+
+    switch (selectedValue) {
+      case "today":
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate()
+        );
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
+        break;
+      case "yesterday":
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1
+        );
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 1,
+          23,
+          59,
+          59
+        );
+        break;
+      case "last7days":
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
+        startDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate() - 7
+        );
+        break;
+      case "thisMonth":
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(
+          today.getFullYear(),
+          today.getMonth(),
+          today.getDate(),
+          23,
+          59,
+          59
+        );
+        break;
+      case "lastMonth":
+        const lastMonth = new Date(today);
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        startDate = new Date(lastMonth.getFullYear(), lastMonth.getMonth(), 1);
+        endDate = new Date(
+          lastMonth.getFullYear(),
+          lastMonth.getMonth() + 1,
+          0,
+          23,
+          59,
+          59
+        );
+        break;
+      default:
+        return;
+    }
+
+    // Gọi API lấy dữ liệu theo khoảng thời gian
+    // fetchDataByDateRange(startDate, endDate);
+    fetchContractsByStatus(
+      status,
+      new Date(startDate),
+      new Date(endDate),
+      page + 1,
+      rowsPerPage
+    );
+  };
+  const handleDateChange = (field, value) => {
+    if (field === "start") {
+      // setStartDate(value);
+      if (endDate && value > endDate) {
+        message.error("Ngày bắt đầu phải trước hoặc bằng ngày kết thúc.");
+        return;
+      }
+    } else if (field === "end") {
+      // setEndDate(value);
+      if (startDate && value < startDate) {
+        message.error("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+        return;
+      }
+    }
+
+    // Gọi API khi cả startDate và endDate đều tồn tại và hợp lệ
+    const updatedStartDate = field === "start" ? value : startDate;
+    const updatedEndDate = field === "end" ? value : endDate;
+
+    if (updatedStartDate && updatedEndDate) {
+      // fetchDataByDateRange(updatedStartDate, updatedEndDate);
+      fetchContractsByStatus(
+        status,
+        new Date(updatedStartDate),
+        new Date(updatedEndDate),
+        page + 1,
+        rowsPerPage
+      );
+    }
+  };
+  const today = new Date();
+  const isValidDate = (date) => !isNaN(new Date(date).getTime());
+  const [defaultStartDate, setDefS] = useState(null);
+  const [defaultEndDate, setDefE] = useState(null);
+
+  useEffect(() => {
+    const today = new Date();
+    const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1); // Đầu tháng hiện tại
+    const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0); // Ngày cuối cùng của tháng hiện tại
+
+    setDefS(startOfMonth);
+    setDefE(endOfMonth);
+  }, []);
+
+  const [hasPermission, setHasPermission] = useState(false);
+  const [hasPermission2, setHasPermission2] = useState(false);
+  const [hasPermission3, setHasPermission3] = useState(false);
+  const [hasPermission4, setHasPermission4] = useState(false);
+  const [hasPermission5, setHasPermission5] = useState(false);
+
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
+
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền CREATE_CONTRACT khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_CONTRACT");
+    const permissionGranted2 = checkPermission("UPDATE_CONTRACT");
+    const permissionGranted3 = checkPermission("DELETE_CONTRACT");
+    const permissionGranted4 = checkPermission("READ_DETAIL_CONTRACT");
+    const permissionGranted5 = checkPermission("READ_CONTRACT_INGREDIENT");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+    setHasPermission4(permissionGranted4);
+    setHasPermission5(permissionGranted5);
+  }, []); // Chạy 1 lần khi component mount
+
+  const handleDownload = (contractId) => {
+    console.log("Handle Download ContractId:", contractId); // Kiểm tra log
+    window.location.href = `${PATHS.BASE_URL}${PATHS.REPORT_DOWNLOAD}?contractId=${contractId}`;
+  };
+
   return (
     <div>
       <Toaster position="top-center" reverseOrder={false} />
@@ -687,12 +950,14 @@ const ManageContracts = () => {
       <Box
         sx={{
           display: "flex",
-          justifyContent: "space-between",
+          justifyContent: "space-between", // Chia đều các phần tử
+          alignItems: "center", // Căn giữa theo chiều dọc
           mb: 2,
+          gap: 2, // Tạo khoảng cách giữa các thành phần
         }}
       >
         {/* Tìm kiếm */}
-        <div className="admin-group">
+        <div className="admin-group" style={{ flex: 1, marginTop: "20px" }}>
           <svg
             className="admin-icon-search"
             aria-hidden="true"
@@ -708,10 +973,84 @@ const ManageContracts = () => {
             className="admin-input-search"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            style={{
+              width: "100%",
+            }}
           />
         </div>
+
+        {/* Lọc ngày và chọn thời gian */}
+        <Box sx={{ display: "flex", gap: 2, alignItems: "center" }}>
+          {/* Ngày bắt đầu */}
+          <Box>
+            <Typography
+              variant="caption"
+              sx={{ color: "#1976d2", fontWeight: "bold", fontSize: "11px" }}
+            >
+              Từ ngày
+            </Typography>
+            <DatePicker
+              showTime
+              format="YYYY-MM-DD HH:mm:ss"
+              value={startDate ? dayjs(startDate) : null}
+              onChange={(date) => handleDateChange("start", date)}
+              style={{ width: 160, borderRadius: "5px" }}
+            />
+          </Box>
+
+          {/* Ngày kết thúc */}
+          <Box>
+            <Typography
+              variant="caption"
+              sx={{ color: "#1976d2", fontWeight: "bold", fontSize: "11px" }}
+            >
+              Đến ngày
+            </Typography>
+            <DatePicker
+              showTime
+              format="YYYY-MM-DD HH:mm:ss"
+              value={endDate && isValidDate(endDate) ? dayjs(endDate) : null}
+              onChange={(date) => handleDateChange("end", date)}
+              style={{ width: 160, borderRadius: "5px" }}
+            />
+          </Box>
+
+          {/* Combobox chọn thời gian */}
+          <FormControl
+            variant="outlined"
+            size="small"
+            sx={{ minWidth: 150, marginTop: "20px" }}
+          >
+            <Select
+              value={selectedTimeRange}
+              onChange={(event) => handleTimeRangeChange(event)}
+              displayEmpty
+              inputProps={{ "aria-label": "Chọn khoảng thời gian" }}
+              sx={{ fontSize: "1rem" }}
+            >
+              <MenuItem value="today">Hôm nay</MenuItem>
+              <MenuItem value="yesterday">Hôm qua</MenuItem>
+              <MenuItem value="last7days">7 ngày qua</MenuItem>
+              <MenuItem value="thisMonth">Tháng này</MenuItem>
+              <MenuItem value="lastMonth">Tháng trước</MenuItem>
+            </Select>
+          </FormControl>
+        </Box>
+
+        {/* Nút xem tất cả */}
+        <Box sx={{ textAlign: "right", marginTop: "20px" }}>
+          <Link to={"http://localhost:3000/admin/ManageContracts"}>
+            <Button variant="contained" color="primary">
+              Xem tất cả
+            </Button>
+          </Link>
+        </Box>
       </Box>
-      <TableContainer component={Paper} className="table-container">
+      <TableContainer
+        component={Paper}
+        className="table-container"
+        style={{ marginTop: "50px" }}
+      >
         <Table>
           <TableHead>
             <TableRow>
@@ -759,292 +1098,397 @@ const ManageContracts = () => {
           </TableHead>
           {/* Nội dung contracts */}
           <TableBody>
-            {filteredContracts.map((contract, index) => (
-              <TableRow key={contract.contractId}>
-                <TableCell>{index + 1}</TableCell>
-                <TableCell>{contract.name}</TableCell>
-                <TableCell>
-                  {new Intl.NumberFormat("vi-VN", {
-                    style: "currency",
-                    currency: "VND",
-                  }).format(contract.totalcost)}
-                </TableCell>
-                <TableCell>
-                  <span
-                    style={{
-                      color:
-                        contract.status === "Completed"
-                          ? "#28a745"
-                          : contract.status === "Pending"
+            {filteredContracts
+              ?.filter((itc) => {
+                if (endDate) {
+                  return itc.status?.toLowerCase() == status?.toLowerCase();
+                }
+                return itc;
+              })
+              .map((contract, index) => (
+                <TableRow key={contract.contractId}>
+                  <TableCell>{index + 1}</TableCell>
+                  <Tooltip
+                    title={
+                      <span style={{ fontSize: "13px", fontWeight: "bold" }}>
+                        {contract.name}
+                      </span>
+                    }
+                    arrow
+                    placement="top"
+                  >
+                    <TableCell
+                      sx={{
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        width: "250px",
+                      }}
+                    >
+                      {contract.name}
+                    </TableCell>
+                  </Tooltip>
+                  <TableCell>
+                    {new Intl.NumberFormat("vi-VN", {
+                      style: "currency",
+                      currency: "VND",
+                    }).format(contract.totalcost)}
+                  </TableCell>
+                  <TableCell>
+                    <span
+                      style={{
+                        color:
+                          contract.status === "Completed"
+                            ? "#28a745"
+                            : contract.status === "Pending"
                             ? "#ffc107"
                             : contract.status === "Actived"
-                              ? "#17a2b8"
-                              : "#dc3545",
-                      fontWeight: "bold",
-                      backgroundColor:
-                        contract.status === "Completed"
-                          ? "#28a7451a" // Màu xanh nhẹ cho "Đã hoàn thành"
-                          : contract.status === "Pending"
+                            ? "#17a2b8"
+                            : contract.status === "Approved"
+                            ? "#0066cc" // Màu xanh dương đậm cho "Đã duyệt"
+                            : "#dc3545",
+                        fontWeight: "bold",
+                        backgroundColor:
+                          contract.status === "Completed"
+                            ? "#28a7451a" // Màu xanh nhẹ cho "Đã hoàn thành"
+                            : contract.status === "Pending"
                             ? "#ffc1071a" // Màu vàng nhẹ cho "Chờ duyệt"
                             : contract.status === "Actived"
-                              ? "#17a2b81a" // Màu xanh dương nhẹ cho "Đang hoạt động"
-                              : "#dc35451a", // Màu đỏ nhẹ cho "Đã hủy"
-                      padding: "3px 8px", // Thêm padding cho các thẻ trạng thái
-                      borderRadius: "5px", // Bo tròn các góc để mềm mại
-                      display: "inline-block",
-                    }}
-                  >
-                    {translateStatus(contract.status)}{" "}
-                  </span>
-                </TableCell>
+                            ? "#17a2b81a" // Màu xanh dương nhẹ cho "Đang hoạt động"
+                            : contract.status === "Approved"
+                            ? "#28a7451a" // Màu xanh dương đậm cho "Đã duyệt"
+                            : "#dc35451a", // Màu đỏ nhẹ cho "Đã hủy"
+                        padding: "3px 8px", // Thêm padding cho các thẻ trạng thái
+                        borderRadius: "5px", // Bo tròn các góc để mềm mại
+                        display: "inline-block",
+                      }}
+                    >
+                      {translateStatus(contract.status)}{" "}
+                    </span>
+                  </TableCell>
 
-                <TableCell>
-                  <span
-                    style={{
-                      color:
-                        contract.paymentstatus === "Paid"
-                          ? "#28a745"
-                          : contract.paymentstatus === "Prepay 50%"
+                  <TableCell>
+                    <span
+                      style={{
+                        color:
+                          contract.paymentstatus === "Paid"
+                            ? "#28a745"
+                            : contract.paymentstatus === "Prepay 50%"
                             ? "#ffc107"
                             : contract.paymentstatus === "Prepay 70%"
-                              ? "#ff851b"
-                              : "#dc3545",
-                      fontWeight: "bold",
-                      backgroundColor:
-                        contract.paymentstatus === "Paid"
-                          ? "#28a7451a" // Màu xanh nhẹ cho "Đã thanh toán"
-                          : contract.paymentstatus === "Prepay 50%"
+                            ? "#ff851b"
+                            : "#dc3545",
+                        fontWeight: "bold",
+                        backgroundColor:
+                          contract.paymentstatus === "Paid"
+                            ? "#28a7451a" // Màu xanh nhẹ cho "Đã thanh toán"
+                            : contract.paymentstatus === "Prepay 50%"
                             ? "#ffc1071a" // Màu vàng nhẹ cho "Trả trước 50%"
                             : contract.paymentstatus === "Prepay 70%"
-                              ? "#ff851b1a" // Màu cam nhẹ cho "Trả trước 70%"
-                              : "#dc35451a", // Màu đỏ nhẹ cho "Chưa thanh toán"
-                      padding: "3px 8px", // Thêm padding cho các thẻ thanh toán
-                      borderRadius: "5px", // Bo tròn các góc
-                      display: "inline-block",
+                            ? "#ff851b1a" // Màu cam nhẹ cho "Trả trước 70%"
+                            : "#dc35451a", // Màu đỏ nhẹ cho "Chưa thanh toán"
+                        padding: "3px 8px", // Thêm padding cho các thẻ thanh toán
+                        borderRadius: "5px", // Bo tròn các góc
+                        display: "inline-block",
+                      }}
+                    >
+                      {translateStatus(contract.paymentstatus)}{" "}
+                    </span>
+                  </TableCell>
+
+                  <TableCell>
+                    {contract.organizdate
+                      ? formatDateForAPI(contract.organizdate)
+                      : "Không có ngày tổ chức"}
+                  </TableCell>
+
+                  <TableCell
+                    sx={{
+                      display: "flex",
+                      right: 0,
+                      backgroundColor: "white",
+                      zIndex: 1,
                     }}
                   >
-                    {translateStatus(contract.paymentstatus)}{" "}
-                  </span>
-                </TableCell>
+                    <span>
+                      {hasPermission && (
+                        <Button
+                          variant="outlined"
+                          onClick={() => handleConfirmContract(contract)}
+                          disabled={
+                            contract.status === "Completed" ||
+                            contract.status === "Cancelled"
+                          } // Disable if status is "Completed" or "Cancelled"
+                          sx={{
+                            fontSize: "1.3rem",
+                            fontWeight: "bold",
+                            color:
+                              contract.status === "Completed"
+                                ? "#28a745" // Màu xanh cho "Đã hoàn thành"
+                                : contract.status === "Pending"
+                                ? "#0066cc" // Màu vàng cho "Chờ duyệt" "#0066cc"
+                                : contract.status === "Actived"
+                                ? "#17a2b8" // Màu xanh dương cho "Đang hoạt động"
+                                : contract.status === "Approved"
+                                ? "#17a2b8" // Màu xanh dương đậm cho "Đã duyệt" "#17a2b8"
+                                : "#dc3545", // Màu đỏ cho "Đã hủy"
+                            borderRadius: "8px",
+                            transition: "all 0.3s ease-in-out",
+                            marginRight: "8px",
+                            "&:hover": {
+                              background:
+                                contract.status === "Completed"
+                                  ? "linear-gradient(45deg, #28a7451a 30%, #28a745 90%)"
+                                  : contract.status === "Pending"
+                                  ? "linear-gradient(45deg, #ffc1071a 30%, #ffc107 90%)"
+                                  : contract.status === "Actived"
+                                  ? "linear-gradient(45deg, #17a2b81a 30%, #17a2b8 90%)"
+                                  : contract.status === "Approved"
+                                  ? "linear-gradient(45deg, #0066cc1a 30%, #0066cc 90%)" // Hiệu ứng hover cho "Đã duyệt"
+                                  : "linear-gradient(45deg, #dc35451a 30%, #dc3545 90%)", // Hiệu ứng hover theo trạng thái
+                            },
+                            opacity:
+                              contract.status === "Completed" ||
+                              contract.status === "Cancelled"
+                                ? 0.5
+                                : 1, // Mờ nút khi vô hiệu hóa
+                          }}
+                        >
+                          <Tooltip
+                            title={
+                              <span style={{ fontSize: "1.25rem" }}>
+                                {tooltipMessage[
+                                  getTooltipIndex(contract.status)
+                                ] || "Không hợp lệ"}
+                              </span>
+                            }
+                            placement="top"
+                          >
+                            <CheckCircleIcon />
+                          </Tooltip>
+                        </Button>
+                      )}
+                      {/* Nút mở menu */}
+                      <Button
+                        variant="outlined"
+                        sx={{
+                          fontSize: "1.3rem",
+                          fontWeight: "bold",
+                          color: "#fff", // Màu chữ nút
+                          borderRadius: "8px",
+                          padding: "8px 10px", // Điều chỉnh kích thước nút
+                          transition: "all 0.3s ease-in-out",
+                          "&:hover": {
+                            background:
+                              "linear-gradient(45deg, #FFFFFF 30%, #66CCFF 90%)",
+                          },
+                        }}
+                        onClick={(event) => handleClick(event, contract)}
+                      >
+                        <MoreVertIcon
+                          style={{ fontSize: "1.5rem", color: "#1976d2" }}
+                        />{" "}
+                        {/* Giữ màu cho biểu tượng */}
+                      </Button>
 
-                <TableCell>
-                  {contract.organizdate
-                    ? formatDateForAPI(contract.organizdate)
-                    : "Không có ngày tổ chức"}
-                </TableCell>
+                      {/* Menu chứa các hành động */}
+                      <Menu
+                        id="contract-action-menu"
+                        anchorEl={anchorEl}
+                        open={open}
+                        onClose={handleClose}
+                        MenuListProps={{
+                          "aria-labelledby": "basic-button",
+                        }}
+                      >
+                        {/* Nút sửa hợp đồng */}
+                        {hasPermission2 && (
+                          <MenuItem
+                            onClick={() => {
+                              handleEditContract(contract);
+                              handleClose();
+                            }}
+                            disabled={
+                              contract.status === "Completed" ||
+                              contract.status === "Cancelled"
+                            }
+                          >
+                            <Button
+                              variant="outlined"
+                              sx={{
+                                fontSize: "1.3rem",
+                                fontWeight: "bold",
+                                borderColor: "#4caf50",
+                                color: "#4caf50",
+                                borderRadius: "8px",
+                                transition: "all 0.3s ease-in-out",
+                                "&:hover": {
+                                  backgroundColor: "#a3f0b4",
+                                  borderColor: "#4ec267",
+                                },
+                              }}
+                            >
+                              <Tooltip
+                                title={
+                                  <span style={{ fontSize: "1.25rem" }}>
+                                    Sửa hợp đồng
+                                  </span>
+                                }
+                                placement="top"
+                              >
+                                <EditIcon />
+                              </Tooltip>
+                            </Button>
+                          </MenuItem>
+                        )}
 
-                <TableCell
-                  sx={{
-                    display: "flex",
-                    right: 0,
-                    backgroundColor: "white",
-                    zIndex: 1,
-                  }}
-                >
-                  <span>
+                        {/* Nút hủy hợp đồng */}
+                        {hasPermission3 && (
+                          <MenuItem
+                            onClick={() => {
+                              handleCancelContract(contract);
+                              handleClose();
+                            }}
+                            disabled={
+                              contract.status === "Completed" ||
+                              contract.status === "Cancelled"
+                            }
+                          >
+                            <Button
+                              variant="outlined"
+                              sx={{
+                                fontSize: "1.3rem",
+                                fontWeight: "bold",
+                                borderColor: "#f44336",
+                                color: "#f44336",
+                                borderRadius: "8px",
+                                transition: "all 0.3s ease-in-out",
+                                "&:hover": {
+                                  backgroundColor: "#fdecea",
+                                  borderColor: "#d32f2f",
+                                },
+                              }}
+                            >
+                              <Tooltip
+                                title={
+                                  <span style={{ fontSize: "1.25rem" }}>
+                                    Hủy hợp đồng
+                                  </span>
+                                }
+                                placement="top"
+                              >
+                                <CancelIcon />
+                              </Tooltip>
+                            </Button>
+                          </MenuItem>
+                        )}
+
+                        {/* Nút xem thông tin */}
+                        {hasPermission4 && (
+                          <MenuItem
+                            onClick={() => {
+                              handleModalPDF(contract);
+                              handleClose();
+                            }}
+                          >
+                            <Button
+                              variant="outlined"
+                              sx={{
+                                fontSize: "1.3rem",
+                                fontWeight: "bold",
+                                color: "primary",
+                                borderRadius: "8px",
+                                transition: "all 0.3s ease-in-out",
+                                "&:hover": {
+                                  background:
+                                    "linear-gradient(45deg, #FFFFFF 30%, #66CCFF 90%)",
+                                },
+                              }}
+                            >
+                              <Tooltip
+                                title={
+                                  <span style={{ fontSize: "1.25rem" }}>
+                                    Xem thông tin
+                                  </span>
+                                }
+                                placement="top"
+                              >
+                                <InfoIcon />
+                              </Tooltip>
+                            </Button>
+                          </MenuItem>
+                        )}
+
+                        {/* Nút xem nguyên liệu */}
+                        {hasPermission5 && (
+                          <MenuItem
+                            onClick={() => {
+                              handleViewStockRequests(contract.contractId);
+                              handleClose();
+                            }}
+                          >
+                            {hasPermission && (
+                              <Button
+                                variant="outlined"
+                                sx={{
+                                  fontSize: "1.3rem",
+                                  fontWeight: "bold",
+                                  color: "primary",
+                                  borderRadius: "8px",
+                                  transition: "all 0.3s ease-in-out",
+                                  "&:hover": {
+                                    background:
+                                      "linear-gradient(45deg, #FFFFFF 30%, #66CCFF 90%)",
+                                  },
+                                }}
+                              >
+                                <IconButton
+                                  color="primary"
+                                  title="Xem nguyên liệu"
+                                  sx={{
+                                    padding: 0, // Để icon không bị lấn ra ngoài
+                                  }}
+                                >
+                                  <VisibilityIcon
+                                    style={{ fontSize: "1.5rem" }}
+                                  />
+                                </IconButton>
+                              </Button>
+                            )}
+                          </MenuItem>
+                        )}
+                      </Menu>
+                    </span>
                     <Button
                       variant="outlined"
-                      onClick={() => handleConfirmContract(contract)}
-                      disabled={
-                        contract.status === "Completed" ||
-                        contract.status === "Cancelled"
-                      } // Disable if status is "Completed" or "Cancelled"
+                      onClick={() => handleDownload(contract.contractId)}
                       sx={{
                         fontSize: "1.3rem",
                         fontWeight: "bold",
-                        color:
-                          contract.status === "Completed"
-                            ? "#28a745" // Màu xanh cho "Đã hoàn thành"
-                            : contract.status === "Pending"
-                              ? "#ffc107" // Màu vàng cho "Chờ duyệt"
-                              : contract.status === "Actived"
-                                ? "#17a2b8" // Màu xanh dương cho "Đang hoạt động"
-                                : "#dc3545", // Màu đỏ cho "Đã hủy"
+                        color: "primary",
                         borderRadius: "8px",
+                        marginLeft: "7px",
                         transition: "all 0.3s ease-in-out",
-                        marginRight: "8px",
                         "&:hover": {
                           background:
-                            contract.status === "Completed"
-                              ? "linear-gradient(45deg, #28a7451a 30%, #28a745 90%)"
-                              : contract.status === "Pending"
-                                ? "linear-gradient(45deg, #ffc1071a 30%, #ffc107 90%)"
-                                : contract.status === "Actived"
-                                  ? "linear-gradient(45deg, #17a2b81a 30%, #17a2b8 90%)"
-                                  : "linear-gradient(45deg, #dc35451a 30%, #dc3545 90%)", // Hiệu ứng hover theo trạng thái
-                        },
-                        opacity:
-                          contract.status === "Completed" ||
-                            contract.status === "Cancelled"
-                            ? 0.5
-                            : 1, // Mờ nút khi vô hiệu hóa
-                      }}
-                    >
-                      <Tooltip
-                        title={
-                          <span style={{ fontSize: "1.25rem" }}>
-                            Xác nhận hợp đồng
-                          </span>
-                        }
-                        placement="top"
-                      >
-                        <CheckCircleIcon />
-                      </Tooltip>
-                    </Button>
-                    {/* Nút mở menu */}
-                    <Button
-                      variant="outlined"
-                      sx={{
-                        fontSize: '1.3rem',
-                        fontWeight: 'bold',
-                        color: '#fff', // Màu chữ nút
-                        borderRadius: '8px',
-                        padding: '8px 10px', // Điều chỉnh kích thước nút
-                        transition: 'all 0.3s ease-in-out',
-                        '&:hover': {
-                          background: 'linear-gradient(45deg, #FFFFFF 30%, #66CCFF 90%)',
+                            "linear-gradient(45deg, #FFFFFF 30%, #66CCFF 90%)",
                         },
                       }}
-                      onClick={handleClick}
-                    >
-                      <MoreVertIcon style={{ fontSize: '1.5rem', color: '#1976d2' }} /> {/* Giữ màu cho biểu tượng */}
+                    >                     
+                      <IconButton
+                        color="primary"
+                        onClick={() => handleDownload(contract.contractId)}
+                        title="Xuất hợp đồng"
+                        sx={{
+                          padding: 0, // Để icon không bị lấn ra ngoài
+                        }}
+                      >
+                        <GetAppIcon style={{ fontSize: "1.5rem" }} />
+                      </IconButton>
                     </Button>
-
-                    {/* Menu chứa các hành động */}
-                    <Menu
-                      id="contract-action-menu"
-                      anchorEl={anchorEl}
-                      open={open}
-                      onClose={handleClose}
-                      MenuListProps={{
-                        'aria-labelledby': 'basic-button',
-                      }}
-                    >
-                      {/* Nút sửa hợp đồng */}
-                      <MenuItem
-                        onClick={() => {
-                          handleEditContract(contract);
-                          handleClose();
-                        }}
-                        disabled={
-                          contract.status === 'Completed' || contract.status === 'Cancelled'
-                        }
-                      >
-                        <Button
-                          variant="outlined"
-                          sx={{
-                            fontSize: '1.3rem',
-                            fontWeight: 'bold',
-                            borderColor: '#4caf50',
-                            color: '#4caf50',
-                            borderRadius: '8px',
-                            transition: 'all 0.3s ease-in-out',
-                            '&:hover': {
-                              backgroundColor: '#a3f0b4',
-                              borderColor: '#4ec267',
-                            },
-                          }}
-                        >
-                          <Tooltip title={<span style={{ fontSize: '1.25rem' }}>Sửa hợp đồng</span>} placement="top">
-                            <EditIcon />
-                          </Tooltip>
-                        </Button>
-                      </MenuItem>
-
-                      {/* Nút hủy hợp đồng */}
-                      <MenuItem
-                        onClick={() => {
-                          handleCancelContract(contract);
-                          handleClose();
-                        }}
-                        disabled={
-                          contract.status === 'Completed' || contract.status === 'Cancelled'
-                        }
-                      >
-                        <Button
-                          variant="outlined"
-                          sx={{
-                            fontSize: '1.3rem',
-                            fontWeight: 'bold',
-                            borderColor: '#f44336',
-                            color: '#f44336',
-                            borderRadius: '8px',
-                            transition: 'all 0.3s ease-in-out',
-                            '&:hover': {
-                              backgroundColor: '#fdecea',
-                              borderColor: '#d32f2f',
-                            },
-                          }}
-                        >
-                          <Tooltip title={<span style={{ fontSize: '1.25rem' }}>Hủy hợp đồng</span>} placement="top">
-                            <CancelIcon />
-                          </Tooltip>
-                        </Button>
-                      </MenuItem>
-
-                      {/* Nút xem thông tin */}
-                      <MenuItem
-                        onClick={() => {
-                          handleModalPDF(contract);
-                          handleClose();
-                        }}
-                      >
-                        <Button
-                          variant="outlined"
-                          sx={{
-                            fontSize: '1.3rem',
-                            fontWeight: 'bold',
-                            color: 'primary',
-                            borderRadius: '8px',
-                            transition: 'all 0.3s ease-in-out',
-                            '&:hover': {
-                              background: 'linear-gradient(45deg, #FFFFFF 30%, #66CCFF 90%)',
-                            },
-                          }}
-                        >
-                          <Tooltip title={<span style={{ fontSize: '1.25rem' }}>Xem thông tin</span>} placement="top">
-                            <InfoIcon />
-                          </Tooltip>
-                        </Button>
-                      </MenuItem>
-
-                      {/* Nút xem nguyên liệu */}
-                      <MenuItem
-                        onClick={() => {
-                          handleViewStockRequests(contract.contractId);
-                          handleClose();
-                        }}
-                      >
-                        <Button
-                          variant="outlined"
-                          sx={{
-                            fontSize: '1.3rem',
-                            fontWeight: 'bold',
-                            color: 'primary',
-                            borderRadius: '8px',
-                            transition: 'all 0.3s ease-in-out',
-                            '&:hover': {
-                              background: 'linear-gradient(45deg, #FFFFFF 30%, #66CCFF 90%)',
-                            },
-                          }}
-                        >
-                          <IconButton
-                            color="primary"
-                            title="Xem nguyên liệu"
-                            sx={{
-                              padding: 0, // Để icon không bị lấn ra ngoài
-                            }}
-                          >
-                            <VisibilityIcon style={{ fontSize: '1.5rem' }} />
-                          </IconButton>
-                        </Button>
-
-                      </MenuItem>
-                    </Menu>
-                  </span>
-                </TableCell>
-              </TableRow>
-            ))}
+                  </TableCell>
+                </TableRow>
+              ))}
           </TableBody>
         </Table>
 
@@ -1067,9 +1511,10 @@ const ManageContracts = () => {
             backgroundColor: "#f9f9f9",
             boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)",
             borderRadius: "8px",
-            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows": {
-              fontSize: "1.2rem",
-            },
+            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+              {
+                fontSize: "1.2rem",
+              },
             "& .MuiTablePagination-actions > button": {
               fontSize: "1.2rem",
               margin: "0 8px",
@@ -1084,7 +1529,6 @@ const ManageContracts = () => {
             },
           }}
         />
-
       </TableContainer>
       {/* Modal chỉnh sửa hợp đồng */}
       <Dialog

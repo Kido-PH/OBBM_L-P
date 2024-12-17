@@ -43,6 +43,7 @@
     letter-spacing: 0.02em; 
     white-space: nowrap; 
     overflow: hidden;
+    max-width: 250px;
     text-overflow: ellipsis; /* Thêm dấu '...' khi văn bản quá dài */
     color: #848282; 
 }

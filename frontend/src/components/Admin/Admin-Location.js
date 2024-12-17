@@ -31,10 +31,20 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import locationApi from "../../api/locationApi";
 import toast, { Toaster } from "react-hot-toast";
-import userApi from "../../api/userApi";
+// import userApi from "../../api/userApi";
 import { Typography } from "antd";
 
+import SnackBarNotification from "./SnackBarNotification";
+
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
+
+
 const LocationManager = () => {
+
+  const navigate = useNavigate();
+
   const [locations, setLocations] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentLocation, setCurrentLocation] = useState({
@@ -59,6 +69,26 @@ const LocationManager = () => {
   const [rowsPerPage, setRowsPerPage] = useState(5);
   const [errors, setErrors] = useState({});
   const [activeTab, setActiveTab] = useState(0); // 0: Admin, 1: Customer
+
+  const [snackBarOpen, setSnackBarOpen] = useState(false);
+  const [snackBarMessage, setSnackBarMessage] = useState("");
+  const [snackType, setSnackType] = useState("success");
+
+  // const navigate = useNavigate();
+
+  const handleCloseSnackBar = (event, reason) => {
+    if (reason === "clickaway") {
+      return;
+    }
+
+    setSnackBarOpen(false);
+  };
+
+  const showSuccess = (message) => {
+    setSnackType("success");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
 
   useEffect(() => {
     fetchDanhMucWithPaginate(page + 1, rowsPerPage);
@@ -126,12 +156,13 @@ const LocationManager = () => {
     try {
       const resLocation = await locationApi.getPaginate(page, rowsPerPage);
       const locations = resLocation.result?.content || [];
+
       setLocations(locations);
       console.log("Dữ liệu địa điểm: ", resLocation);
+
       setTotalElements(resLocation.result?.totalElements);
     } catch (error) {
       console.error("Lỗi khi nạp dữ liệu:", error);
-      toast.error("Không thể nạp dữ liệu!");
     }
   };
 
@@ -214,6 +245,10 @@ const LocationManager = () => {
           }));
         }
       } catch (error) {
+
+  
+        checkAccessToken(navigate);
+
         console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -235,24 +270,6 @@ const LocationManager = () => {
         }));
       }
     }
-
-    // Xóa thông báo lỗi nếu dữ liệu nhập vào hợp lệ
-    setErrors((prevErrors) => {
-      const newErrors = { ...prevErrors };
-
-      // Kiểm tra từng trường và xóa lỗi nếu dữ liệu hợp lệ
-      if (name === "name" && value.trim() !== "") {
-        delete newErrors.name;
-      }
-      if (name === "type" && value.trim() !== "") {
-        delete newErrors.type;
-      }
-      if (name === "address" && value.trim() !== "") {
-        delete newErrors.address;
-      }
-
-      return newErrors;
-    });
   };
 
   // Bắt lỗi
@@ -316,13 +333,7 @@ const LocationManager = () => {
         // Thêm địa điểm mới vào danh sách
         savedLocations.unshift(locationWithCreator);
 
-        // Lưu lại vào LocalStorage
-        localStorage.setItem("locations", JSON.stringify(savedLocations));
-
-        // Kiểm tra dữ liệu sau khi lưu
-        console.log("Dữ liệu lưu vào LocalStorage:", savedLocations);
-
-        toast.success("Địa điểm mới được thêm thành công!");
+        showSuccess("Địa điểm mới được thêm thành công!");
       } else {
         toast.error("Không nhận được phản hồi từ API.");
       }
@@ -330,7 +341,6 @@ const LocationManager = () => {
       handleCloseDialog();
     } catch (error) {
       console.error("Lỗi khi thêm địa điểm:", error);
-      toast.error("Không thể thêm địa điểm. Vui lòng thử lại sau!");
     }
   };
 
@@ -386,7 +396,7 @@ const LocationManager = () => {
       await locationApi.update(locationId, data);
 
       // Hiển thị thông báo thành công
-      toast.success("Địa điểm đã được cập nhật thành công!");
+      showSuccess("Địa điểm đã được cập nhật thành công!");
 
       // Cập nhật danh sách địa điểm trong state mà không cần tải lại trang
       setLocations((prevLocations) =>
@@ -403,7 +413,6 @@ const LocationManager = () => {
       if (error.response) {
         console.error("Phản hồi từ server:", error.response.data);
       }
-      toast.error("Không thể cập nhật địa điểm. Vui lòng thử lại sau!");
     }
   };
 
@@ -429,14 +438,13 @@ const LocationManager = () => {
         )
       );
 
-      toast.success("Địa điểm đã được xóa thành công!");
+      showSuccess("Địa điểm đã được xóa thành công!");
 
       // Đóng dialog và reset state
       setOpenConfirmDialog(false);
       setLocationToDelete(null);
     } catch (error) {
       console.error("Lỗi khi xóa địa điểm:", error);
-      toast.error("Không thể xóa địa điểm. Vui lòng thử lại sau!");
     }
   };
 
@@ -488,7 +496,12 @@ const LocationManager = () => {
           />
         </Tabs>
       </Box>
-      <Toaster position="top-center" reverseOrder={false} />
+      <SnackBarNotification
+        open={snackBarOpen}
+        handleClose={handleCloseSnackBar}
+        message={snackBarMessage}
+        snackType={snackType}
+      />
       <Box>
         <div className="admin-toolbar" style={{ marginTop: "12px" }}>
           <div className="admin-group">
@@ -555,50 +568,33 @@ const LocationManager = () => {
             {filteredLocations.map((location, index) => (
               <TableRow key={location.locationId}>
                 <TableCell>{index + 1}</TableCell>
-                <Tooltip
-                  title={
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {location.name}
-                    </span>
-                  }
-                  arrow
-                  placement="top"
-                >
-                  <TableCell
-                    sx={{
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      width: "250px",
-                    }}
-                  >
-                    {location.name}
-                  </TableCell>
-                </Tooltip>
+
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{location.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{location.name}</TableCell>
+                  </Tooltip>
                 <TableCell>
                   <img src={location.image} alt={location.name} width="70" />
                 </TableCell>
                 <TableCell>{location.type}</TableCell>
-                <Tooltip
-                  title={
-                    <span style={{ fontSize: "13px", fontWeight: "bold" }}>
-                      {location.address}
-                    </span>
-                  }
-                  arrow
-                  placement="top"
-                >
-                  <TableCell
-                    sx={{
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      width: "250px",
-                    }}
-                  >
-                    {location.address}
-                  </TableCell>
-                </Tooltip>
+
+                <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{location.address}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{location.address}</TableCell>
+                  </Tooltip>
+
                 <TableCell>
                   {location.capacity
                     ? `${location.capacity} người`
@@ -663,6 +659,7 @@ const LocationManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",

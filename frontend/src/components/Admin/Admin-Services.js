@@ -27,8 +27,14 @@ import serviceApi from "../../api/serviceApi";
 import { Typography } from "antd";
 import SnackBarNotification from "./SnackBarNotification";
 import Swal from "sweetalert2";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
 
 const ServiceManager = () => {
+
+  const navigate = useNavigate();
+
   const [services, setServices] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentService, setCurrentService] = useState({
@@ -53,6 +59,8 @@ const ServiceManager = () => {
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
   const [snackType, setSnackType] = useState("success");
+
+  // const navigate = useNavigate();
 
   const handleCloseSnackBar = (event, reason) => {
     if (reason === "clickaway") {
@@ -189,6 +197,8 @@ const ServiceManager = () => {
         }
 
       } catch (error) {
+      
+        checkAccessToken(navigate);
         console.error('Lỗi tải ảnh:', error);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -314,6 +324,7 @@ const ServiceManager = () => {
   const handleCancelDelete = () => {
     setOpenConfirmDialog(false);
     setServiceToDelete(null);
+
   };
 
   const handleChangePage = (event, newPage) => {
@@ -336,6 +347,31 @@ const ServiceManager = () => {
       // Nếu nhập ký tự, lọc theo các trường khác (ví dụ: name)
       return event.name.toLowerCase().includes(searchTerm.toLowerCase());
     });
+
+  const [hasPermission, setHasPermission] = useState(false);
+  const [hasPermission2, setHasPermission2] = useState(false);
+  const [hasPermission3, setHasPermission3] = useState(false);
+
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
+
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền SERVICES khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_SERVICES");
+    const permissionGranted2 = checkPermission("UPDATE_SERVICES");
+    const permissionGranted3 = checkPermission("DELETE_SERVICES");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+  }, []); // Chạy 1 lần khi component mount
 
   return (
     <div>
@@ -368,6 +404,7 @@ const ServiceManager = () => {
           </div>
 
           {/* Nút Add New Service */}
+          {hasPermission && (
           <Button
             sx={{
               fontSize: "10px",
@@ -389,6 +426,7 @@ const ServiceManager = () => {
             />
             Thêm dịch vụ
           </Button>
+        )}
         </div>
       </Box>
 
@@ -420,7 +458,16 @@ const ServiceManager = () => {
               .map((service, index) => (
                 <TableRow key={service.serviceId}>
                   <TableCell>{index + 1}</TableCell>
-                  <TableCell>{service.name}</TableCell>
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{service.name}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{service.name}</TableCell>
+                  </Tooltip>
                   <TableCell>{service.type}</TableCell>
                   <TableCell>
                     {new Intl.NumberFormat("vi-VN", {
@@ -436,7 +483,16 @@ const ServiceManager = () => {
                       width="70"
                     />
                   </TableCell>
-                  <TableCell>{service.description}</TableCell>
+                  <Tooltip title={<span style={{ fontSize: "13px", fontWeight: "bold" }}>{service.description}</span>} arrow placement="top">
+                    <TableCell 
+                        sx={{
+                            whiteSpace: 'nowrap',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            width: "250px",
+                          }}
+                      >{service.description}</TableCell>
+                  </Tooltip>
                   <TableCell
                     sx={{
                       position: "sticky",
@@ -445,6 +501,7 @@ const ServiceManager = () => {
                       zIndex: 1,
                     }}
                   >
+                  {hasPermission2 && (
                     <Button
                       size="large"
                       color="primary"
@@ -453,12 +510,14 @@ const ServiceManager = () => {
                       style={{ marginRight: "10px" }}
                     >
                       <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Sửa</span>}
+                        title={<span style={{ fontSize: "1.25rem" }}>Sửa dịch vụ</span>}
                         placement="top"
                       >
                         <EditIcon />
                       </Tooltip>
                     </Button>
+                  )}
+                  {hasPermission3 && (
                     <Button
                       size="large"
                       variant="outlined"
@@ -466,12 +525,13 @@ const ServiceManager = () => {
                       onClick={() => handleDeleteClick(service.serviceId)}
                     >
                       <Tooltip
-                        title={<span style={{ fontSize: "1.25rem" }}>Xóa</span>}
+                        title={<span style={{ fontSize: "1.25rem" }}>Xóa dịch vụ</span>}
                         placement="top"
                       >
                         <DeleteIcon />
                       </Tooltip>
                     </Button>
+                  )}
                   </TableCell>
                 </TableRow>
               ))}
@@ -485,6 +545,7 @@ const ServiceManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",

@@ -6,15 +6,13 @@ import "../assets/css/chatbot.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ListFood from "../components/Menu/listfood";
-import menuApi from "../api/menuApi.js";
-import axios from "axios";
-import eventApi from "../api/eventApi.js";
+
 import { Swiper, SwiperSlide } from "swiper/react";
 import "swiper/css";
 import "swiper/css/effect-coverflow";
 import "swiper/css/pagination";
 import "swiper/css/navigation";
-import { Modal, Button } from "react-bootstrap";
+import { Modal } from "react-bootstrap";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
@@ -26,19 +24,13 @@ import ChatBotContainer from "components/ChatbotAI/ChatbotAI";
 
 const Menu = ({ accessToken }) => {
   const { selectedMenuFromAI } = React.useContext(chatbotContext);
-  const prevSelectedMenuFromAI = useRef(selectedMenuFromAI);
-  const scrollableRefs = useRef([]);
-  const listRef = useRef(null);
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
   const categoriesOrder = ["Appetizers", "Main_Courses", "Desserts"];
   const [menuDishesDetails, setMenuDishesDetails] = useState([]);
-  const [latestMenuId, setLatestMenuId] = useState(0);
   const [activeTab, setActiveTab] = useState("tab1");
   const [selectedId, setSelectedId] = useState(null); // Lưu sectionId
   const [menuList, setMenuList] = useState([]);
-  const [selectedDishes, setSelectedDishes] = useState([]);
   const [selectedMenu, setSelectedMenu] = useState(null);
-  const [selectedMenuId, setSelectedMenuId] = useState([]);
   const [selectedMenuDishes, setSelectedMenuDishes] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [Events, setEvents] = useState([]);
@@ -105,18 +97,22 @@ const Menu = ({ accessToken }) => {
 
   const fetchEvent = async () => {
     try {
-      const response = await fetch(
-        "http://localhost:8080/obbm/event?page=1&size=100"
-      );
+      const response = await fetch("http://localhost:8080/obbm/event?page=1&size=100");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const data = await response.json(); // Chuyển đổi kết quả thành JSON
-      setEvents(data.result.content); // Cập nhật state
+  
+      // Lọc các sự kiện có ismanaged = true
+      const filteredEvents = data.result.content.filter(event => event.ismanaged === true);
+  
+      // Cập nhật state với danh sách sự kiện đã lọc
+      setEvents(filteredEvents); 
     } catch (error) {
       console.error("Lỗi khi gọi API:", error); // Xử lý lỗi
     }
   };
+  
 
   React.useEffect(() => {
     if (EventToMenuUrl) {
@@ -130,8 +126,6 @@ const Menu = ({ accessToken }) => {
     setShowModal(true); // Hiển thị modal
   };
   const handleCloseModal = () => setShowModal(false);
-
-  const [selectedCategoryIndex, setSelectedCategoryIndex] = useState(null);
   const handleCreateMenu = async () => {
     try {
       const userId = localStorage.getItem("userId");
@@ -648,6 +642,8 @@ const Menu = ({ accessToken }) => {
     }
   };
 
+  
+
   return (
     <div className="Menu">
       <div className="menu-container">
@@ -788,7 +784,7 @@ const Menu = ({ accessToken }) => {
                                   }, 0) / 1000
                               ) *
                                 10 *
-                                (100).toLocaleString()}{" "}
+                                (100).toLocaleString("vi-VN")}
                               VND/người
                             </p>
                           </div>
