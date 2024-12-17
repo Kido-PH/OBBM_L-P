@@ -61,7 +61,7 @@ const ContractCreateStep1 = () => {
     const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
     if (!contractData.custphone || !phoneRegex.test(contractData.custphone)) {
       newErrors.custphone =
-        "Số điện thoại phải có đúng 10 số và hợp lệ ở Việt Nam.";
+        "Số điện thoại phải hợp lệ ở Việt Nam.";
       isValid = false;
     }
 
@@ -119,6 +119,7 @@ const ContractCreateStep1 = () => {
                     type="text"
                     placeholder="Số điện thoại"
                     className="form-control fs-4 me-2"
+                    maxLength={10}
                     value={contractData.custphone || ""}
                     onChange={(e) =>
                       setContractData({
@@ -149,7 +150,7 @@ const ContractCreateStep1 = () => {
                 </div>
               </Col>
             </Row>
-            <div style={{ display: "flex", alignItems: "center" }}>
+            {/* <div style={{ display: "flex", alignItems: "center" }}>
               <p
                 className="text-danger fw-bold mb-0"
                 style={{
@@ -168,7 +169,7 @@ const ContractCreateStep1 = () => {
               <a className="fw-bold" href="/account" style={{ marginLeft: "4px" }}>
                 tại đây
               </a>
-            </div>
+            </div> */}
           </div>
 
           <div style={{ textAlign: "center" }}>

@@ -42,6 +42,7 @@ import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
 import { DatePicker, message, Select, Modal } from "antd";
 import dayjs from "dayjs";
 import { useNavigate } from "react-router-dom"; // Thêm import này ở đầu file
+import contractApi from "api/contractApi";
 // Đăng ký các thành phần của biểu đồ
 ChartJS.register(
   CategoryScale,
@@ -155,32 +156,25 @@ const AdminAnalytics = () => {
       message.error("Vui lòng chọn cả ngày bắt đầu và ngày kết thúc.");
       return;
     }
-
+  
     try {
       // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
       const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
       const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
-
-      // Gửi yêu cầu GET với query parameters
-      const response = await fetch(
-        `http://localhost:8080/obbm/contract/statistics?startDate=${startDateFormatted}&endDate=${endDateFormatted}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          },
+  
+      // Gọi API từ contractApi để lấy thống kê doanh thu
+      const response = await contractApi.getRevenueStatistics(startDateFormatted, endDateFormatted);
+  
+      if (response && response.result) {
+        console.log("Dữ liệu thống kê: ", response);
+  
+        if (response.code === 1000) {
+          setApiData(response.result); // Cập nhật state với dữ liệu trả về từ API
+        } else {
+          message.error("Không thể tải dữ liệu.");
         }
-      );
-
-      const data = await response.json();
-      console.log("Dữ liệu thống kê: ", data);
-
-      // Cập nhật state với dữ liệu trả về từ API
-      if (data.code === 1000) {
-        setApiData(data.result);
       } else {
-        message.error("Không thể tải dữ liệu.");
+        message.error("Không có dữ liệu.");
       }
     } catch (error) {
       console.error("Lỗi khi lấy dữ liệu:", error);

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../assets/css/menu.css";
 import "../assets/css/listFood.css";
 import "../assets/css/swipermenu.css";
+import "../assets/css/chatbot.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ListFood from "../components/Menu/listfood";
@@ -19,6 +20,7 @@ import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import AddButton from "../assets/images/add.png";
+import ChatContext from "components/ChatbotAI/ChatbotContext";
 
 const Menu = ({ accessToken }) => {
   const scrollableRefs = useRef([]);
@@ -336,64 +338,64 @@ const Menu = ({ accessToken }) => {
 
     // Xử lý danh sách món ăn và loại bỏ những món bị xóa
     const groupedDishes = category.listMenuDish.reduce((dishAcc, menuDish) => {
-        const categoryName = menuDish.dishes.categories.name;
+      const categoryName = menuDish.dishes.categories.name;
 
-        // Tạo nhóm món ăn theo danh mục nếu chưa tồn tại
-        if (!dishAcc[categoryName]) {
-            dishAcc[categoryName] = [];
-        }
+      // Tạo nhóm món ăn theo danh mục nếu chưa tồn tại
+      if (!dishAcc[categoryName]) {
+        dishAcc[categoryName] = [];
+      }
 
-        // Thêm món ăn vào nhóm nếu món chưa bị xóa
-        if (menuDish.dishes.deletedAt === null) {
-            dishAcc[categoryName].push(menuDish.dishes);
-        }
+      // Thêm món ăn vào nhóm nếu món chưa bị xóa
+      if (menuDish.dishes.deletedAt === null) {
+        dishAcc[categoryName].push(menuDish.dishes);
+      }
 
-        return dishAcc;
+      return dishAcc;
     }, {});
 
     // Kiểm tra món thức uống trong "Beverages" và thêm vào nhóm "Appetizers"
     category.listMenuDish.forEach((menuDish) => {
-        if (
-            menuDish.dishes.categories.name === "Beverages" &&
-            menuDish.dishes.deletedAt === null
-        ) {
-            // Đảm bảo nhóm "Appetizers" luôn tồn tại
-            if (!groupedDishes["Appetizers"]) {
-                groupedDishes["Appetizers"] = [];
-            }
-
-            // Đổ thức uống vào nhóm "Appetizers"
-            groupedDishes["Appetizers"].push(menuDish.dishes);
-
-            // Xóa món này khỏi "Beverages"
-            // Tạo nhóm "Beverages" nếu chưa tồn tại và đảm bảo nhóm không còn món thức uống
-            if (!groupedDishes["Beverages"]) {
-                groupedDishes["Beverages"] = [];
-            }
-
-            // Xóa món thức uống khỏi nhóm "Beverages"
-            groupedDishes["Beverages"] = groupedDishes["Beverages"].filter(
-                (dish) => dish.id !== menuDish.dishes.id
-            );
+      if (
+        menuDish.dishes.categories.name === "Beverages" &&
+        menuDish.dishes.deletedAt === null
+      ) {
+        // Đảm bảo nhóm "Appetizers" luôn tồn tại
+        if (!groupedDishes["Appetizers"]) {
+          groupedDishes["Appetizers"] = [];
         }
+
+        // Đổ thức uống vào nhóm "Appetizers"
+        groupedDishes["Appetizers"].push(menuDish.dishes);
+
+        // Xóa món này khỏi "Beverages"
+        // Tạo nhóm "Beverages" nếu chưa tồn tại và đảm bảo nhóm không còn món thức uống
+        if (!groupedDishes["Beverages"]) {
+          groupedDishes["Beverages"] = [];
+        }
+
+        // Xóa món thức uống khỏi nhóm "Beverages"
+        groupedDishes["Beverages"] = groupedDishes["Beverages"].filter(
+          (dish) => dish.id !== menuDish.dishes.id
+        );
+      }
     });
 
     // Giữ menu ngay cả khi không có món ăn nào trong danh mục
     acc[category.menuId] = {
-        ...category,
-        groupedDishes, // Luôn bao gồm danh mục món ăn (dù rỗng)
+      ...category,
+      groupedDishes, // Luôn bao gồm danh mục món ăn (dù rỗng)
     };
 
     return acc;
-}, {});
+  }, {});
 
-// Chuyển nhóm menu thành một mảng
-const groupedMenuArray = Object.values(groupedMenu);
+  // Chuyển nhóm menu thành một mảng
+  const groupedMenuArray = Object.values(groupedMenu);
 
-// Lặp qua mảng và in ra groupedDishes cho từng menu
-groupedMenuArray.forEach(menu => {
+  // Lặp qua mảng và in ra groupedDishes cho từng menu
+  groupedMenuArray.forEach((menu) => {
     console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
-});
+  });
 
   const toggleListFood = (categoryName) => {
     let id;
@@ -580,8 +582,6 @@ groupedMenuArray.forEach(menu => {
     }
   };
 
-  
-
   return (
     <div className="Menu">
       <div className="menu-container">
@@ -593,7 +593,7 @@ groupedMenuArray.forEach(menu => {
               }`}
               onClick={() => setActiveTab("tab1")}
             >
-              Top menu
+              Thực đơn gợi ý
             </button>
             <button
               className={`tab btn-save-form ${
@@ -601,7 +601,7 @@ groupedMenuArray.forEach(menu => {
               }`}
               onClick={() => setActiveTab("tab2")}
             >
-              Chat Suggestion
+             Hỗ trợ lên thực đơn
             </button>
           </div>
           <div className="tab-content">
@@ -854,7 +854,9 @@ groupedMenuArray.forEach(menu => {
               </div>
             )}
             {activeTab === "tab2" && (
-              <div className="tab2-content">{/* Nội dung cho tab 2 */}</div>
+              <div className="tab2-content">
+                <ChatContext />
+              </div>
             )}
           </div>
         </div>
@@ -871,7 +873,7 @@ groupedMenuArray.forEach(menu => {
         {/* Menu Right */}
 
         <div className="menu-right">
-          <h2 style={{ marginBottom: "0px" }}>Thực đơn</h2>
+          <h2 style={{ marginBottom: "10px" }}>Thực đơn của bạn</h2>
           {selectedMenu ? (
             <div>
               {/* Sắp xếp các category theo thứ tự trong categoriesOrder */}

@@ -164,6 +164,4 @@ const RootApp = () => (
 );
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-    <RootApp />
-);
+root.render(<RootApp />);

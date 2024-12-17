@@ -12,8 +12,12 @@ import FormUpdateLocation from "./FormLocationUpdate";
 import AudioRecorder from "./SpeechToTextInput";
 import { checkAccessToken } from "services/checkAccessToken";
 import { useNavigate } from "react-router-dom";
+import Swal from "sweetalert2";
+import contractApi from "api/contractApi";
+import guestContractApi from "api/guestContractApi";
+import moment from "moment";
 
-function Example() {
+function Example({ selectedDate, isLocationCleared }) {
   const { contractData, setContractData } = React.useContext(multiStepContext);
 
   const currentUserId = JSON.parse(sessionStorage.getItem("currentUserId")); // UserId có thể là chuỗi
@@ -23,7 +27,9 @@ function Example() {
 
   const [lgShow, setLgShow] = React.useState(false);
   const [locationList, setLocationList] = React.useState([]);
+  const [contractList, setContractList] = React.useState([]);
   const [searchTerm, setSearchTerm] = React.useState("");
+  const [selectedLocation, setSelectedLocation] = React.useState(null);
 
   const [userLocationShow, setUserLocationShow] = React.useState(false);
   const [showFormCreate, setShowFormCreate] = React.useState(false);
@@ -54,6 +60,17 @@ function Example() {
 
       setLocationList(List.result.content); //set state
       console.log("List fetch:", List);
+    } catch (error) {
+      checkAccessToken(navigate);
+    }
+  };
+
+  //fetch dữ liệu mặc định cho
+  const fetchContracts = async () => {
+    try {
+      const List = await guestContractApi.getAll(1, 1000);
+
+      setContractList(List.result.content); //set state
     } catch (error) {
       checkAccessToken(navigate);
     }
@@ -97,9 +114,12 @@ function Example() {
   };
 
   // Kiểm tra currentLocation trong localStorage khi component mount
-  const [selectedLocation, setSelectedLocation] = React.useState(() => {
-    const savedLocation = localStorage.getItem("currentLocation");
-    return savedLocation ? JSON.parse(savedLocation) : null;
+
+  React.useEffect(() => {
+    if (!isLocationCleared) {
+      const locationData = localStorage.getItem("currentLocation");
+      setSelectedLocation(locationData ? JSON.parse(locationData) : null);
+    }
   });
 
   const filteredLocations = locationList?.filter(
@@ -125,19 +145,62 @@ function Example() {
       setIsSearching(false); // Nếu chuỗi rỗng, quay về danh sách gốc
       return;
     }
-    const results = locationList.filter((location) =>
+    const results = locationFilteredByTime.filter((location) =>
       location.name.toLowerCase().includes(value.toLowerCase())
     );
     setSearchResults(results);
     setIsSearching(true);
   };
 
-  const locationsToDisplay = isSearching ? searchResults : locationList;
+  const locationFilteredByTime = locationList.filter((location) => {
+    if (location.isCustom) {
+      // Nếu isCustom === true thì bỏ qua phần tử này
+      return false;
+    }
+
+    const isValidContract = !location.listContract.some((contract) => {
+      // Chuyển selectedDate và organizdate sang Moment object
+      const selectedDateObj = moment(selectedDate, "DD/MM/YYYY HH:mm");
+      const organizDateObj = moment(contract.organizdate, "DD/MM/YYYY HH:mm");
+
+      // Tính khoảng cách thời gian giữa selectedDate và organizdate (theo giờ)
+      const timeDifference = Math.abs(
+        selectedDateObj.diff(organizDateObj, "hours")
+      );
+
+      return (
+        contract.paymentstatus !== "Unpaid" && // paymentstatus khác "Unpaid"
+        (contract.status === "Actived" || contract.status === "Approved") && // status là "Pending" hoặc "Actived"
+        timeDifference <= 2 // organizdate trong phạm vi 2 giờ của selectedDate
+      );
+    });
+
+    // Chỉ gán vào mảng nếu không có hợp đồng nào thỏa điều kiện
+    return isValidContract;
+  });
+
+  const locationsToDisplay = isSearching
+    ? searchResults
+    : locationFilteredByTime;
 
   const formatCurrency = (amount) => {
     return amount
       ? amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")
       : "0";
+  };
+
+  const showModalPopup = () => {
+    if (selectedDate !== undefined) {
+      setIsSearching(false);
+      setLgShow(true);
+    } else {
+      Swal.fire({
+        icon: "warning",
+        title: "Vui lòng chọn Ngày tổ chức trước",
+        timer: 3000, // Tự động đóng sau 8 giây
+        showConfirmButton: true,
+      });
+    }
   };
 
   React.useEffect(() => {
@@ -158,30 +221,64 @@ function Example() {
 
   React.useEffect(() => {
     fetchLocations();
+    fetchContracts();
   }, []);
 
   return (
     <>
       <div
         className="form-control fs-4 input-hienthi-popup"
-        onClick={() => {
-          setIsSearching(false);
-          setLgShow(true);
-        }}
+        onClick={showModalPopup}
         style={{ cursor: "pointer" }}
       >
-        <p
-          className="mb-0"
-          style={{
-            whiteSpace: "nowrap",
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-          }}
-        >
-          {selectedLocation
-            ? selectedLocation.name + " - " + selectedLocation.address
-            : "Chọn địa điểm"}
-        </p>
+        <div className="row">
+          <div className="col-5">
+            <p
+              className="mb-0"
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {selectedLocation
+                ? selectedLocation?.name + " - "
+                : "Chọn địa điểm"}
+            </p>
+          </div>
+          <div className="col-3 text-center">
+            <p
+              className="mb-0"
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {selectedLocation === null
+                ? ""
+                : selectedLocation?.capacity === null
+                ? selectedLocation?.address
+                : "Sức chứa: " + selectedLocation?.capacity}
+            </p>
+          </div>
+          <div className="col-4">
+            <p
+              className="mb-0"
+              style={{
+                whiteSpace: "nowrap",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {selectedLocation === null
+                ? ""
+                : selectedLocation?.capacity === null
+                ? ""
+                : "Địa chỉ: " + selectedLocation?.address}
+            </p>
+          </div>
+        </div>
       </div>
 
       <Modal
@@ -191,7 +288,7 @@ function Example() {
         aria-labelledby="example-modal-sizes-title-lg"
       >
         <Modal.Header closeButton>
-          <Modal.Title className="fs-1">Chọn địa điểm</Modal.Title>
+          <Modal.Title className="fs-1">Chọn sảnh có sẵn</Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Container>
@@ -223,51 +320,50 @@ function Example() {
             </Row>
 
             <Row lg={3} sm={2} xs={1}>
-              {locationsToDisplay.filter((location) => !location.isCustom)
-                .length === 0 ? (
+              {locationsToDisplay.length === 0 ? (
                 <div className="w-100 text-center py-4 fs-4">
                   Không có địa điểm bạn tìm
                 </div>
               ) : (
-                locationsToDisplay
-                  .filter((location) => !location.isCustom)
-                  .map((location, index) => (
-                    <Col key={index} className="p-2">
-                      <Card
-                        className="h-100 card-select"
-                        style={getCardStyle(location)}
-                      >
-                        <Card.Img
-                          variant="top"
-                          style={{ maxWidth: "300px", height: 150 }}
-                          src={location.image}
-                        />
-                        <Card.Body className="d-flex flex-column">
-                          <Card.Title className="fs-2">
-                            {location.name}
-                          </Card.Title>
-                          <div>
-                            <div>{location.address}</div>{" "}
-                            <div className="text-success fw-bold fs-3">
-                              {formatCurrency(location.cost)} VND
-                            </div>
-                            <div>Sức chứa: {location.capacity} người</div>
+                locationsToDisplay.map((location, index) => (
+                  <Col key={index} className="p-2">
+                    <Card
+                      className="h-100 card-select"
+                      style={getCardStyle(location)}
+                    >
+                      <Card.Img
+                        variant="top"
+                        style={{ maxWidth: "300px", height: 150 }}
+                        src={location.image}
+                      />
+                      <Card.Body className="d-flex flex-column">
+                        <Card.Title className="fs-2">
+                          {location.name}
+                        </Card.Title>
+                        <div className="my-3">
+                          <div className="fw-bold fs-3">
+                            Sức chứa: {location.capacity} người
                           </div>
+                          <div className="text-success fw-bold fs-3">
+                            {formatCurrency(location.cost)} VND
+                          </div>
+                          <div>{location.address}</div>{" "}
+                        </div>
 
-                          <Button
-                            variant="primary"
-                            onClick={() => handleSelect(location)}
-                            className="mt-auto"
-                          >
-                            {selectedLocation &&
-                            selectedLocation.locationId === location.locationId
-                              ? "Đã chọn"
-                              : "Chọn"}
-                          </Button>
-                        </Card.Body>
-                      </Card>
-                    </Col>
-                  ))
+                        <Button
+                          variant="primary"
+                          onClick={() => handleSelect(location)}
+                          className="mt-auto"
+                        >
+                          {selectedLocation &&
+                          selectedLocation.locationId === location.locationId
+                            ? "Đã chọn"
+                            : "Chọn"}
+                        </Button>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                ))
               )}
             </Row>
           </Container>
@@ -366,13 +462,6 @@ function Example() {
                         </Card.Title>
                         <Card.Text>
                           <div>Địa chỉ: {location.address}</div>
-                          <div className="d-flex">
-                            Chi phí vận chuyển:{" "}
-                            <span className="text-success fw-bold ms-2">
-                              {" "}
-                              {formatCurrency(location.cost)} VND
-                            </span>
-                          </div>
                         </Card.Text>
                       </Card.Body>
                     </Col>

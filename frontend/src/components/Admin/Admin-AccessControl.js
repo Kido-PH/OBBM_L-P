@@ -24,6 +24,7 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddUserStaff from "./Admin-AddStaff";
 import SnackBarNotification from "./SnackBarNotification";
+import assestApi from "api/assestApi";
 
 const AccessControl = () => {
   const [users, setUsers] = useState([]);
@@ -62,78 +63,55 @@ const AccessControl = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await fetch("http://localhost:8080/obbm/users", {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          Accept: "application/json",
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log("API response:", data);
-        if (data.result && Array.isArray(data.result)) {
-          const staffUsers = data?.result?.filter((user) =>
-            user.roles.some((role) => role.name.startsWith("STAFF"))
-          );
-          setUsers(staffUsers);
-        } else {
-          console.error("Dữ liệu không hợp lệ:", data);
-          setUsers([]);
-        }
+      const response = await assestApi.getAllUsers(); // Gọi API lấy tất cả người dùng
+  
+      if (response && response.result && Array.isArray(response.result)) {
+        const staffUsers = response.result.filter((user) =>
+          user.roles.some((role) => role.name.startsWith("STAFF"))
+        );
+        setUsers(staffUsers);
       } else {
-        console.error("Lỗi khi gọi API:", response.status);
+        console.error("Dữ liệu không hợp lệ:", response);
+        setUsers([]);
       }
     } catch (error) {
       console.error("Failed to fetch users:", error);
     }
   };
-
+  
   const fetchRoles = async () => {
     try {
-      const response = await fetch("http://localhost:8080/obbm/roles", {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-
+      const response = await assestApi.getAllRoles(); // Gọi API lấy tất cả vai trò
+  
+      if (response && response.result) {
         // Lọc ADMIN và các vai trò liên quan đến STAFF
-        const fillterRoles = data?.result?.filter((role) =>
+        const filteredRoles = response.result.filter((role) =>
           role.name.startsWith("STAFF")
         );
-
-        setRoles(fillterRoles); // Lưu danh sách vai trò
+        setRoles(filteredRoles); // Lưu danh sách vai trò
       } else {
-        console.error("Failed to fetch roles:", response.status);
+        console.error("Failed to fetch roles:", response);
       }
     } catch (error) {
       console.error("Error fetching roles:", error);
     }
   };
-
+  
   const fetchPergroups = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/obbm/perGroup`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-          "Content-Type": "application/json",
-        },
-      });
-      if (response.ok) {
-        const data = await response.json();
-        console.log("Nhóm quyền: ", data);
-        setPergroups(data?.result); // Lưu danh sách pergroup
+      const response = await assestApi.getAllPerGroup(); // Gọi API lấy tất cả nhóm quyền
+  
+      if (response && response.result) {
+        console.log("Nhóm quyền: ", response);
+        setPergroups(response.result); // Lưu danh sách pergroup
       } else {
-        console.error("Failed to fetch pergroup:", response.status);
+        console.error("Failed to fetch pergroup:", response);
       }
     } catch (error) {
       console.error("Error fetching pergroup:", error);
     }
   };
+  
 
   // Khi chọn vai trò
   const handleRoleSelect = (roleName) => {
@@ -193,35 +171,26 @@ const AccessControl = () => {
     console.log("User ID:", selectedUserId);
     console.log("Selected Role:", selectedRole);
     console.log("Selected Permissions:", selectedPermissions);
-
+  
     if (!selectedUserId) {
       alert("Vui lòng chọn người dùng!");
       return;
     }
-
+  
     const payload = {
       userId: selectedUserId,
       roleNames: selectedRole ? [selectedRole] : [],
       permissionNames: selectedPermissions.map((perm) => perm.name),
     };
-
+  
     try {
-      const response = await fetch(
-        "http://localhost:8080/obbm/user-role-permission",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        }
-      );
-
-      if (response.ok) {
+      // Sử dụng API đã tạo để gửi dữ liệu
+      const response = await assestApi.saveUserRolePermissions(payload);
+  
+      if (response && response.result) {
         showSuccess("Cập nhật quyền cho người dùng thành công!");
       } else {
-        console.error("Lỗi khi cập nhật quyền:", response.status);
+        console.error("Lỗi khi cập nhật quyền:", response);
       }
     } catch (error) {
       console.error("Có lỗi xảy ra:", error);
@@ -497,13 +466,13 @@ const AccessControl = () => {
                         >
                           Cập nhật quyền
                         </Button>
-                        {/* <Button
+                        <Button
                           variant="contained"
                           color="error"
                           sx={{ fontSize: "1.2rem", textTransform: "none" }}
                         >
                           Xóa người dùng
-                        </Button> */}
+                        </Button>
                       </Box>
                     </TableCell>
                   </TableRow>
