@@ -176,7 +176,7 @@ const ContractInfo = () => {
     console.log("paymentStatus hứng được:", paymentStatus);
     alertPaymentStatus();
     fetchContractInfo();
-  });
+  }, []);
 
   const formatCurrency = (amount) => {
     return amount
@@ -241,7 +241,8 @@ const ContractInfo = () => {
                           textOverflow: "ellipsis",
                         }}
                       >
-                        Tổng số lượng dịch vụ đã chọn: {eventServicesInfo.length}
+                        Tổng số lượng dịch vụ đã chọn:{" "}
+                        {eventServicesInfo.length}
                       </p>
                       <FaEye />
                     </div>
