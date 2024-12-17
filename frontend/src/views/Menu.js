@@ -149,14 +149,16 @@ const Menu = ({ accessToken }) => {
         });
         return;
       }
-
-      const profitMargin = 0.3;
-      const totalCost = Object.values(selectedMenu.groupedDishes)
-        .flat()
-        .reduce((total, dish) => {
-          const sellingPrice = dish.price / (1 - profitMargin);
-          return total + (sellingPrice || 0);
-        }, 0);
+      const totalCost = (Math.ceil(
+        Object.values(selectedMenu.groupedDishes)
+          .flat()
+          .reduce((total, dish) => {
+            const profitMargin = 0.3;
+            const sellingPrice = dish.price / (1 - profitMargin);
+            return total + (sellingPrice || 0);
+          }, 0) / 1000 ) *1000
+      );
+      
 
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
