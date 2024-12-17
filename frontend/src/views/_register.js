@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Swal from "sweetalert2";
 import { getToken, setToken } from "../services/localStorageService";
 import { AiOutlineEye, AiOutlineEyeInvisible } from "react-icons/ai";
+import userApi from "../api/userApi";
 const RegisterForm = ({ toggleForm }) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -28,6 +29,7 @@ const RegisterForm = ({ toggleForm }) => {
 
   const handleRegister = (event) => {
     event.preventDefault();
+  
     if (password !== confirmPassword) {
       setError("Mật khẩu nhập lại không khớp!");
       return;
@@ -39,17 +41,10 @@ const RegisterForm = ({ toggleForm }) => {
       email: email,
     };
   
-    fetch("http://localhost:8080/obbm/users/user", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        if (data.code === 1019) {
-          // Xử lý lỗi tên đăng nhập đã tồn tại
+    userApi
+      .register(data)
+      .then((response) => {
+        if (response.code === 1019) {
           Swal.fire({
             title: "Lỗi đăng ký",
             text: "Tên đăng nhập đã tồn tại!",
@@ -58,9 +53,8 @@ const RegisterForm = ({ toggleForm }) => {
           return;
         }
   
-        if (data.code !== 1000) throw new Error(data.message);
+        if (response.code !== 1000) throw new Error(response.message);
   
-        // Đăng ký thành công - Hiển thị SweetAlert
         Swal.fire({
           title: "Đăng ký thành công!",
           text: "Bạn muốn làm gì tiếp theo?",
@@ -80,7 +74,7 @@ const RegisterForm = ({ toggleForm }) => {
       .catch((error) => {
         Swal.fire({
           title: "Đăng ký thất bại",
-          text: error.message,
+          text: error.response?.data?.message || error.message,
           icon: "error",
         });
       });

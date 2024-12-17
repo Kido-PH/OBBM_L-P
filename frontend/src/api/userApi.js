@@ -48,5 +48,12 @@ const userApi = {
     const url = `/users/create-password`;
     return axiosClient.post(url, password);
   },
+
+  // Đăng ký người dùng
+  register(data) {
+    const url = "/users/user"; // Endpoint cho đăng ký
+    return axiosClient.post(url, data);
+  },
+  
 };
 export default userApi;
