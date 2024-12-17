@@ -148,7 +148,7 @@ const Menu = ({ accessToken }) => {
         return;
       }
 
-      const profitMargin = 0.2;
+      const profitMargin = 0.3;
       const totalCost = Object.values(selectedMenu.groupedDishes)
         .flat()
         .reduce((total, dish) => {
@@ -426,21 +426,28 @@ const Menu = ({ accessToken }) => {
       });
       return; // Kết thúc hàm nếu món ăn đã tồn tại
     }
-    
+
     // Nếu chưa tồn tại, tiến hành thêm món
     setSelectedMenu((prevMenu) => {
       const categoryName = dish.categories.name; // Lấy tên category từ dish
       const updatedGroupedDishes = { ...prevMenu.groupedDishes };
+
       // Nếu category chưa tồn tại, tạo mảng mới
       if (!updatedGroupedDishes[categoryName]) {
         updatedGroupedDishes[categoryName] = [];
       }
 
-      // Thêm món ăn vào category
-      updatedGroupedDishes[categoryName] = [
-        ...updatedGroupedDishes[categoryName],
-        dish,
-      ];
+      // Kiểm tra xem món ăn đã tồn tại trong category chưa
+      if (
+        !updatedGroupedDishes[categoryName].some(
+          (d) => d.dishId === dish.dishId
+        )
+      ) {
+        updatedGroupedDishes[categoryName] = [
+          ...updatedGroupedDishes[categoryName],
+          dish,
+        ];
+      }
 
       // Nếu category là Appetizers hoặc Beverages, xử lý
       if (categoryName === "Appetizers" || categoryName === "Beverages") {
@@ -449,42 +456,54 @@ const Menu = ({ accessToken }) => {
           updatedGroupedDishes["Appetizers"] = [];
         }
 
-        updatedGroupedDishes["Appetizers"] = [
-          ...updatedGroupedDishes["Appetizers"],
-          dish,
-        ];
+        // Kiểm tra và chỉ thêm món ăn nếu chưa tồn tại trong Appetizers
+        if (
+          !updatedGroupedDishes["Appetizers"].some(
+            (d) => d.dishId === dish.dishId
+          )
+        ) {
+          updatedGroupedDishes["Appetizers"] = [
+            ...updatedGroupedDishes["Appetizers"],
+            dish,
+          ];
+        }
 
         // Cập nhật selectedMenuDishes với món ăn mới
-        setSelectedMenuDishes((prevDishes) => [
-          ...prevDishes,
-          {
-            dishesId: dish.dishId,
-            quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
-            price: dish.price,
-            menuId: null,
-          },
-        ]);
-
-        setMenuDishesDetails((prevDetails) => {
-          const updatedDetails = [
-            ...prevDetails,
-            {
-              dishes: {
-                ...dish, // Lưu tất cả thông tin chi tiết của món ăn
-                categories: dish.categories, // Lưu thông tin categories của món ăn
-                existing: "Còn hàng", // Thêm trạng thái của món ăn
+        setSelectedMenuDishes((prevDishes) => {
+          if (!prevDishes.some((d) => d.dishesId === dish.dishId)) {
+            return [
+              ...prevDishes,
+              {
+                dishesId: dish.dishId,
+                quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
+                price: dish.price,
+                menuId: null,
               },
-              menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
-            },
-          ];
-
-          return updatedDetails;
+            ];
+          }
+          return prevDishes;
         });
 
-        console.log(menuDishesDetails);
+        // Cập nhật menuDishesDetails với thông tin món ăn mới
+        setMenuDishesDetails((prevDetails) => {
+          if (!prevDetails.some((d) => d.dishes.dishId === dish.dishId)) {
+            return [
+              ...prevDetails,
+              {
+                dishes: {
+                  ...dish, // Lưu tất cả thông tin chi tiết của món ăn
+                  categories: dish.categories, // Lưu thông tin categories của món ăn
+                  existing: "Còn hàng", // Thêm trạng thái của món ăn
+                },
+                menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
+              },
+            ];
+          }
+          return prevDetails;
+        });
       }
 
-      // Trả về đối tượng đã cập nhật, chỉ giữ Appetizers
+      // Trả về đối tượng đã cập nhật
       return {
         ...prevMenu,
         groupedDishes: updatedGroupedDishes,
@@ -721,7 +740,7 @@ const Menu = ({ accessToken }) => {
                                 Object.values(category.groupedDishes)
                                   .flat()
                                   .reduce((total, dish) => {
-                                    const profitMargin = 0.2;
+                                    const profitMargin = 0.3;
                                     const sellingPrice =
                                       dish.price / (1 - profitMargin);
                                     return total + (sellingPrice || 0);
@@ -1040,20 +1059,21 @@ const Menu = ({ accessToken }) => {
                 return null; // Nếu không phải 3 category trên, không hiển thị gì
               })}
               <div style={{ textAlign: "right", fontWeight: "bold" }}>
-  Giá tiền:{" "}
-  {Math.round(
-    Object.values(selectedMenu.groupedDishes)
-      .flat()
-      .reduce((total, dish) => {
-        const profitMargin = 0.2; // Tỷ lệ lợi nhuận
-        const sellingPrice = dish.price / (1 - profitMargin);
-        return total + (sellingPrice || 0);
-      }, 0) / 1000 // Chia giá trị cho 1000 trước khi làm tròn
-  ) * 10 * 100 // Nhân lại với 1000 sau khi làm tròn
-    .toLocaleString()}{" "}
-  VND/người
-</div>
-
+                Giá tiền:{" "}
+                {Math.round(
+                  Object.values(selectedMenu.groupedDishes)
+                    .flat()
+                    .reduce((total, dish) => {
+                      const profitMargin = 0.3; // Tỷ lệ lợi nhuận
+                      const sellingPrice = dish.price / (1 - profitMargin);
+                      return total + (sellingPrice || 0);
+                    }, 0) / 1000 // Chia giá trị cho 1000 trước khi làm tròn
+                ) *
+                  10 *
+                  (100) // Nhân lại với 1000 sau khi làm tròn
+                    .toLocaleString()}{" "}
+                VND/người
+              </div>
             </div>
           ) : (
             <div className="empty-menu">
@@ -1105,7 +1125,6 @@ const Menu = ({ accessToken }) => {
                 <FaTimes
                   style={{ color: "#341c0e", width: "12px", marginTop: "12px" }}
                 />{" "}
-                +{/* <img src={AddButton} alt="Thêm món ăn" /> */}
               </button>
               <div className="chiTietThucDon">
                 <div className="menu-view-control">
