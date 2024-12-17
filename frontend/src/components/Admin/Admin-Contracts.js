@@ -143,7 +143,7 @@ const navigate = useNavigate();
       const endDateFormatted = endDate ? new Date(endDate).toISOString() : "";
   
       // Tạo URL API với tham số truyền vào
-      const url = `http://localhost:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=${page}&size=${rowsPerPage}`;
+      const url = `http://59.153.218.244:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=${page}&size=${rowsPerPage}`;
   
       // Gửi request GET
       const response = await fetch(url, {

@@ -29,7 +29,7 @@ const Header = () => {
 
     try {
       // Gửi yêu cầu POST đến API logout
-      const response = await fetch("http://localhost:8080/obbm/auth/logout", {
+      const response = await fetch("http://59.153.218.244:8080/obbm/auth/logout", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -59,7 +59,7 @@ const Header = () => {
   // Hàm lấy thông tin người dùng từ API
   const getUserDetails = async (accessToken) => {
     try {
-      const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
+      const response = await fetch(`http://59.153.218.244:8080/obbm/users/myInfo`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,

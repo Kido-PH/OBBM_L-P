@@ -161,7 +161,7 @@ const Content = () => {
       if (accessToken) {
         const ham = async () => {
           const response = await fetch(
-            `http://localhost:8080/obbm/users/myInfo`,
+            `http://59.153.218.244:8080/obbm/users/myInfo`,
             {
               method: "GET",
               headers: {

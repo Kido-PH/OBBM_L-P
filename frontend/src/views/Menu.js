@@ -44,7 +44,7 @@ const Menu = ({ accessToken }) => {
 
   const getUserDetails = async (accessToken) => {
     try {
-      const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
+      const response = await fetch(`http://59.153.218.244:8080/obbm/users/myInfo`, {
         method: "GET",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -97,7 +97,7 @@ const Menu = ({ accessToken }) => {
 
   const fetchEvent = async () => {
     try {
-      const response = await fetch("http://localhost:8080/obbm/event?page=1&size=100");
+      const response = await fetch("http://59.153.218.244:8080/obbm/event?page=1&size=100");
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -295,7 +295,7 @@ const Menu = ({ accessToken }) => {
     const fetchMenu = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8080/obbm/menu/getAllMenuAdmin?page=1&size=10000000"
+          "http://59.153.218.244:8080/obbm/menu/getAllMenuAdmin?page=1&size=10000000"
         );
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);

@@ -25,7 +25,7 @@ CMD [ "npm", "start" ]
 FROM development AS build
 
 # Increase Node.js heap size and build the app
-RUN NODE_OPTIONS="--max-old-space-size=4096" npm run build
+RUN REACT_APP_ENV=production DISABLE_ESLINT_PLUGIN=true NODE_OPTIONS="--max-old-space-size=4096" npm run build
 
 # 2. For Nginx setup
 FROM nginx:alpine
