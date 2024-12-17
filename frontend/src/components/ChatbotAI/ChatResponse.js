@@ -193,7 +193,7 @@ const ChatResponse = ({ step, eventName, content, costNguoiDung }) => {
 
   React.useEffect(() => {
     fetchEvents();
-  });
+  },[]);
 
   React.useEffect(() => {
     console.log("response trả về: ", responseAI);
