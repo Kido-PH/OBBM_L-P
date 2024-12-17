@@ -35,8 +35,21 @@ import { Typography } from "antd";
 import ingredientApi from "api/ingredientApi";
 import SnackBarNotification from "./SnackBarNotification";
 import Swal from "sweetalert2";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
 
 const DishManager = () => {
+
+  const navigate = useNavigate();
+
+  const categoryTranslation = {
+    "Appetizers": "Món khai vị",
+    "Main_Courses": "Món chính",
+    "Desserts": "Món tráng miệng",
+    "Beverages": "Đồ uống",
+    // Thêm các danh mục khác ở đây
+  };
   const [categories, setCategories] = useState([]); // State cho danh mục
   const [dishes, setDishes] = useState([]); // State cho danh sách món ăn
   const [open, setOpen] = useState(false); // State để điều khiển Dialog
@@ -284,6 +297,8 @@ const DishManager = () => {
           }));
         }
       } catch (error) {
+
+        checkAccessToken(navigate);
         console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -653,7 +668,7 @@ const DishManager = () => {
                         key={category.categoryId}
                         value={category.categoryId}
                       >
-                        {category.name}
+                       {categoryTranslation[category.name]}
                       </MenuItem>
                     ))
                   ) : (
@@ -976,6 +991,7 @@ const DishManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",

@@ -31,11 +31,20 @@ import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import AddAPhotoIcon from "@mui/icons-material/AddAPhoto";
 import locationApi from "../../api/locationApi";
 import toast, { Toaster } from "react-hot-toast";
-import userApi from "../../api/userApi";
+// import userApi from "../../api/userApi";
 import { Typography } from "antd";
+
 import SnackBarNotification from "./SnackBarNotification";
 
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
+
+
 const LocationManager = () => {
+
+  const navigate = useNavigate();
+
   const [locations, setLocations] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentLocation, setCurrentLocation] = useState({
@@ -169,6 +178,7 @@ const LocationManager = () => {
         cost: 0,
         description: "",
         status: "",
+        image:"",
       }
     );
     setLocationId(location?.locationId || null);
@@ -235,6 +245,10 @@ const LocationManager = () => {
           }));
         }
       } catch (error) {
+
+  
+        checkAccessToken(navigate);
+
         console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -645,6 +659,7 @@ const LocationManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",

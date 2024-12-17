@@ -32,8 +32,11 @@ import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { Typography } from "antd";
 import Swal from "sweetalert2";
 import SnackBarNotification from "./SnackBarNotification";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 const AccountManager = () => {
+   const navigate = useNavigate();
   const [accounts, setAccounts] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentAccount, setCurrentAccount] = useState({
@@ -142,6 +145,7 @@ const AccountManager = () => {
           }));
         }
       } catch (error) {
+         checkAccessToken(navigate);
         console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -247,6 +251,7 @@ const AccountManager = () => {
         toast.error("Thêm tài khoản thất bại!");
       }
     } catch (error) {
+       checkAccessToken(navigate);
       console.error("Error adding user:", error);
     }
   };
@@ -288,6 +293,7 @@ const AccountManager = () => {
         toast.error("Cập nhật thông tin thất bại!");
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Error editing account:", error);
     }
   };
@@ -322,6 +328,7 @@ const AccountManager = () => {
           toast.error("Không thể xóa tài khoản. Vui lòng thử lại!");
         }
       } catch (error) {
+        checkAccessToken(navigate);
         console.error("Lỗi khi xóa tài khoản:", error);
         toast.error("Có lỗi xảy ra khi xóa tài khoản.");
       }
@@ -368,6 +375,7 @@ const AccountManager = () => {
         toast.error("Không thể khôi phục tài khoản. Vui lòng thử lại!");
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Lỗi khi khôi phục tài khoản:", error);
     }
   };
@@ -606,6 +614,7 @@ const AccountManager = () => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",

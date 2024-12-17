@@ -20,13 +20,26 @@ import {
   Select,
   MenuItem,
   InputLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  TextField,
+  DialogActions,
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import AddUserStaff from "./Admin-AddStaff";
 import SnackBarNotification from "./SnackBarNotification";
+
 import assestApi from "api/assestApi";
 
+import roleApi from "../../api/roleAdmin";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
+
 const AccessControl = () => {
+   const navigate = useNavigate();
+
   const [users, setUsers] = useState([]);
   const [expandedUser, setExpandedUser] = useState(null); // Lưu trữ người dùng đã chọn để hiển thị chi tiết
   const [selectedTab, setSelectedTab] = useState(0);
@@ -35,6 +48,15 @@ const AccessControl = () => {
   const [selectedPermissions, setSelectedPermissions] = useState([]); // Danh sách quyền
   const [selectedRole, setSelectedRole] = useState(""); // Vai trò hiện tại
   const [selectedUserId, setSelectedUserId] = useState(""); // ID người dùng được chọn
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
+
+  const [open, setOpen] = useState(false);
+  const [newRole, setNewRole] = useState({
+    name: "",
+    description: "",
+    permissions: [],
+  });
 
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
@@ -53,6 +75,77 @@ const AccessControl = () => {
     setSnackBarMessage(message);
     setSnackBarOpen(true);
   };
+
+  const showError = (message) => {
+    setSnackType("error");
+    setSnackBarMessage(message);
+    setSnackBarOpen(true);
+  };
+  
+
+
+  // Mở/Đóng Modal
+  const handleOpenModal = () => setOpen(true);
+  const handleCloseModal = () => setOpen(false);
+
+  // Xử lý input role
+  const handleRoleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewRole((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddRole = async () => {
+    // Trích xuất chỉ tên quyền từ selectedPermissions
+    const roleToCreate = {
+      name: newRole.name,
+      description: newRole.description,
+      permissions: selectedPermissions.map((permission) => permission.name), // Lấy chỉ tên quyền
+    };
+
+    try {
+      const response = await roleApi.create(roleToCreate);
+      console.log("Role data to be sent:", roleToCreate);
+      showSuccess("Thêm quyền cho người dùng thành công!");
+      handleCloseModal();
+
+      // Reload trang
+      window.location.reload();
+      // Reset hoặc đóng modal sau khi thành công
+    } catch (error) {
+      checkAccessToken(navigate);
+      console.error("Lỗi khi tạo role:", error.response ? error.response.data : error);
+      alert("Có lỗi xảy ra khi tạo vai trò. Vui lòng thử lại.");
+    }
+  };
+
+  const handleOpenConfirmDialog = () => {
+    if (!selectedRole) {
+      showError("Vui lòng chọn vai trò cần xóa!");
+      return;
+    }
+    setOpenConfirmDialog(true);
+  };
+  
+
+  const handleCloseConfirmDialog = () => {
+    setOpenConfirmDialog(false);
+  };
+
+
+  const handleConfirmDelete = async () => {
+    try {
+      await roleApi.delete(selectedRole); // Gọi API xóa
+      setRoles((prevRoles) => prevRoles.filter((role) => role.name !== selectedRole)); // Cập nhật danh sách
+      setSelectedRole(""); // Reset lựa chọn
+      setOpenConfirmDialog(false); // Đóng dialog
+      showSuccess("Vai trò đã được xóa thành công!");
+    } catch (error) {
+      checkAccessToken(navigate);
+      console.error("Lỗi khi xóa vai trò:", error);
+      alert("Xóa vai trò thất bại. Vui lòng thử lại.");
+    }
+  };
+
 
   // Gọi API để lấy danh sách người dùng
   useEffect(() => {
@@ -75,6 +168,7 @@ const AccessControl = () => {
         setUsers([]);
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Failed to fetch users:", error);
     }
   };
@@ -93,6 +187,7 @@ const AccessControl = () => {
         console.error("Failed to fetch roles:", response);
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Error fetching roles:", error);
     }
   };
@@ -108,6 +203,7 @@ const AccessControl = () => {
         console.error("Failed to fetch pergroup:", response);
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Error fetching pergroup:", error);
     }
   };
@@ -205,6 +301,7 @@ const AccessControl = () => {
         console.error("Lỗi khi cập nhật quyền:", response);
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Có lỗi xảy ra:", error);
     }
   };
@@ -215,7 +312,7 @@ const AccessControl = () => {
   };
 
   return (
-    <Box p={3} sx={{padding:"1px"}}>
+    <Box p={3} sx={{ padding: "1px" }}>
       <SnackBarNotification
         open={snackBarOpen}
         handleClose={handleCloseSnackBar}
@@ -348,17 +445,13 @@ const AccessControl = () => {
                               >
                                 <Select
                                   value={selectedRole}
-                                  onChange={(e) =>
-                                    handleRoleSelect(e.target.value)
-                                  }
+                                  onChange={(e) => handleRoleSelect(e.target.value)}
                                   displayEmpty
                                   renderValue={(selected) => {
                                     if (!selected) {
                                       return <em>Chọn vai trò</em>;
                                     }
-                                    return roles.find(
-                                      (role) => role.name === selected
-                                    )?.description;
+                                    return roles.find((role) => role.name === selected)?.description;
                                   }}
                                   sx={{
                                     fontSize: "12px",
@@ -379,22 +472,220 @@ const AccessControl = () => {
                                   </MenuItem>
                                   {/* Đổ dữ liệu từ state */}
                                   {roles
-                                    .filter((role) =>
-                                      role.name.includes("STAFF")
-                                    )
+                                    .filter((role) => role.name.includes("STAFF"))
                                     .map((role) => (
-                                      <MenuItem
-                                        key={role.name}
-                                        value={role.name}
-                                        sx={{ fontSize: "12px" }}
-                                      >
+                                      <MenuItem key={role.name} value={role.name} sx={{ fontSize: "12px" }}>
                                         {role.description}
                                       </MenuItem>
                                     ))}
                                 </Select>
+
                               </FormControl>
+                              <Button variant="contained" sx={{ ml: 2 }} onClick={handleOpenModal}>
+                                Thêm
+                              </Button>
+                              <Button
+                                variant="contained"
+                                color="error"
+                                sx={{ ml: 2 }}
+                                onClick={handleOpenConfirmDialog}
+                              >
+                                Xóa
+                              </Button>
+
                             </Box>
 
+                            {/* Dialog Thêm Role Mới */}
+                            <Dialog open={open} onClose={handleCloseModal} maxWidth="md" fullWidth>
+                              <DialogTitle>Thêm Vai Trò Mới</DialogTitle>
+                              <DialogContent>
+                                {/* Input Tên Role */}
+                                <TextField
+                                  label="Tên Vai Trò"
+                                  fullWidth
+                                  margin="normal"
+                                  name="name"
+                                  value={newRole.name}
+                                  onChange={handleRoleInputChange}
+                                  required
+                                />
+                                {/* Input Mô Tả */}
+                                <TextField
+                                  label="Mô Tả"
+                                  fullWidth
+                                  margin="normal"
+                                  name="description"
+                                  value={newRole.description}
+                                  onChange={handleRoleInputChange}
+                                  required
+                                />
+
+                                {/* Danh sách Permissions */}
+                                <Typography
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#1976d2",
+                                    mt: 2,
+                                    mb: 1,
+                                  }}
+                                >
+                                  Chọn Quyền:
+                                </Typography>
+                                <Box
+                                  display="grid"
+                                  gridTemplateColumns="repeat(5, 1fr)"  // Thiết lập 5 cột trên mỗi hàng
+                                  gap={3}
+                                >
+                                  {perGroups.map((group) => (
+                                    <Box key={group.name}>
+                                      <Typography
+                                        expandIcon={<ExpandMoreIcon />}
+                                        sx={{
+                                          backgroundColor: "#e3f2fd", // Background của Summary
+                                          borderRadius: "8px", // Border cho Summary
+                                          "&:hover": { backgroundColor: "#bbdefb" },
+                                          transition: "background-color 0.3s ease", // Hiệu ứng hover mượt mà
+                                          padding: "12px 16px", // Padding cho Summary
+                                        }}
+                                      >
+                                        <Typography
+                                          variant="h6"
+                                          sx={{
+                                            fontWeight: "bold",
+                                            color: "#1976d2", // Màu của tiêu đề
+                                            marginBottom: "0px",
+                                            textTransform: "uppercase", // Chữ in hoa cho tiêu đề
+                                          }}
+                                        >
+                                          {group.description}
+                                        </Typography>
+                                      </Typography>
+
+                                      <List dense>
+                                        {group.listPermission.map((perm) => (
+                                          <ListItem key={perm.name}>
+                                            <ListItemIcon>
+                                              <Checkbox
+                                                checked={selectedPermissions.some(
+                                                  (p) => p.name === perm.name
+                                                )}
+                                                onChange={() => handlePermissionToggle(perm.name)}
+                                                sx={{
+                                                  "& .MuiSvgIcon-root": {
+                                                    color: "#1976d2", // Màu của checkbox
+                                                  },
+                                                }}
+                                              />
+                                            </ListItemIcon>
+                                            <Typography
+                                              sx={{
+                                                fontSize: "1.2rem", // Kích thước chữ
+                                                fontWeight: "normal",
+                                                color: "#424242", // Màu chữ
+                                              }}
+                                            >
+                                              {perm.description}
+                                            </Typography>
+                                          </ListItem>
+                                        ))}
+                                      </List>
+                                    </Box>
+                                  ))}
+                                </Box>
+                              </DialogContent>
+                              <DialogActions>
+                                <Button onClick={handleCloseModal} color="secondary">
+                                  Hủy
+                                </Button>
+                                <Button
+                                  onClick={handleAddRole}
+                                  color="primary"
+                                  variant="contained"
+                                  disabled={!newRole.name || !newRole.description}
+                                >
+                                  Thêm
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
+
+                            <Dialog
+                              open={openConfirmDialog}
+                              onClose={handleCloseConfirmDialog}
+                              aria-labelledby="confirm-delete-dialog"
+                              sx={{
+                                "& .MuiDialog-paper": {
+                                  borderRadius: "12px", // Góc bo tròn
+                                  padding: "16px", // Khoảng cách bên trong
+                                  backgroundColor: "#f9f9f9", // Màu nền dialog
+                                  boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.15)", // Bóng
+                                  maxWidth: "600px", // Độ rộng tối đa
+                                  width: "100%",
+                                },
+                              }}
+                            >
+                              <DialogTitle
+                                id="confirm-delete-dialog"
+                                sx={{
+                                  fontWeight: "bold",
+                                  fontSize: "1.5rem",
+                                  textAlign: "center",
+                                  color: "#d32f2f", // Màu đỏ nổi bật
+                                }}
+                              >
+                                Xác nhận xóa
+                              </DialogTitle>
+                              <DialogContent
+                                sx={{
+                                  textAlign: "center",
+                                  fontSize: "1.2rem",
+                                  color: "#424242", // Màu chữ xám đậm
+                                  marginTop: "8px",
+                                }}
+                              >
+                                <Typography>Bạn có chắc chắn muốn xóa vai trò <b>"{selectedRole}"</b> không?</Typography>
+                              </DialogContent>
+                              <DialogActions
+                                sx={{
+                                  display: "flex",
+                                  justifyContent: "center",
+                                  gap: "16px", // Khoảng cách giữa các nút
+                                  paddingBottom: "16px",
+                                }}
+                              >
+                                <Button
+                                  onClick={handleCloseConfirmDialog}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#424242",
+                                    backgroundColor: "#e0e0e0", // Nền xám
+                                    "&:hover": {
+                                      backgroundColor: "#bdbdbd", // Nền khi hover
+                                    },
+                                    fontSize: "1rem",
+                                    padding: "8px 24px", // Kích thước nút
+                                    borderRadius: "8px",
+                                  }}
+                                >
+                                  Hủy
+                                </Button>
+                                <Button
+                                  onClick={handleConfirmDelete}
+                                  sx={{
+                                    fontWeight: "bold",
+                                    color: "#fff",
+                                    backgroundColor: "#d32f2f", // Nền đỏ
+                                    "&:hover": {
+                                      backgroundColor: "#c62828", // Nền khi hover
+                                    },
+                                    fontSize: "1rem",
+                                    padding: "8px 24px", // Kích thước nút
+                                    borderRadius: "8px",
+                                  }}
+                                >
+                                  Xóa
+                                </Button>
+                              </DialogActions>
+                            </Dialog>
                             {/* Hiển thị nhóm quyền */}
                             <Box
                               display="grid"

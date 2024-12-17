@@ -32,6 +32,7 @@ import {
   LineElement,
   PointElement,
 } from "chart.js";
+import { checkAccessToken } from "services/checkAccessToken";
 import WarningIcon from "@mui/icons-material/Warning";
 import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
 import MoveToInboxIcon from "@mui/icons-material/MoveToInbox";
@@ -55,7 +56,6 @@ ChartJS.register(
   LineElement,
   PointElement
 );
-
 const AdminAnalytics = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [selectedTimeRange, setSelectedTimeRange] = useState("thisMonth");
@@ -124,6 +124,42 @@ const AdminAnalytics = () => {
     if (updatedStartDate && updatedEndDate) {
       fetchDataByDateRange(updatedStartDate, updatedEndDate);
     }
+  };  
+  
+  // Hàm gọi API để lấy hợp đồng chờ duyệt
+  const fetchPendingContracts = async (status, startDate, endDate) => {
+    
+    try {
+      // Chuyển đổi startDate và endDate sang định dạng ISO 8601 (bao gồm thời gian)
+      const startDateFormatted = startDate.toISOString(); // Định dạng chuẩn ISO 8601
+      const endDateFormatted = endDate.toISOString(); // Định dạng chuẩn ISO 8601
+
+      // Gửi yêu cầu GET với query parameters
+      const response = await fetch(
+        `http://localhost:8080/obbm/contract/byStatusAndDateRange?status=${status}&startDate=${startDateFormatted}&endDate=${endDateFormatted}&page=1&size=10`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("accessToken")}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+      console.log("Dữ danh sách chờ duyệt: ", data);
+
+      // Cập nhật state với dữ liệu trả về từ API
+      if (data.code === 1000) {
+        setPendingContracts(data?.result?.content);
+      } else {
+        message.error("Không thể tải dữ liệu.");
+      }
+    } catch (error) {
+
+      checkAccessToken(navigate);
+      console.error("Lỗi khi lấy dữ liệu:", error);
+    }
   };
 
 
@@ -177,6 +213,7 @@ const AdminAnalytics = () => {
         message.error("Không có dữ liệu.");
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Lỗi khi lấy dữ liệu:", error);
       message.error("Có lỗi xảy ra khi lấy dữ liệu.");
     }

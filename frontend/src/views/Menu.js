@@ -149,14 +149,16 @@ const Menu = ({ accessToken }) => {
         });
         return;
       }
-
-      const profitMargin = 0.2;
-      const totalCost = Object.values(selectedMenu.groupedDishes)
-        .flat()
-        .reduce((total, dish) => {
-          const sellingPrice = dish.price / (1 - profitMargin);
-          return total + (sellingPrice || 0);
-        }, 0);
+      const totalCost = (Math.ceil(
+        Object.values(selectedMenu.groupedDishes)
+          .flat()
+          .reduce((total, dish) => {
+            const profitMargin = 0.3;
+            const sellingPrice = dish.price / (1 - profitMargin);
+            return total + (sellingPrice || 0);
+          }, 0) / 1000 ) *1000
+      );
+      
 
       const uniqueDishes = selectedMenuDishes.reduce((acc, currentDish) => {
         if (!acc.some((dish) => dish.dishesId === currentDish.dishesId)) {
@@ -226,7 +228,6 @@ const Menu = ({ accessToken }) => {
 
   const handleSelectMenu = (menu) => {
     const userId = localStorage.getItem("userId");
-    console.log(groupedMenuArray);
     // Thiết lập selectedMenu và các dữ liệu liên quan
     const menuDishesList = menu.listMenuDish.map((menuDishes) => ({
       dishesId: menuDishes?.dishes?.dishId,
@@ -235,10 +236,9 @@ const Menu = ({ accessToken }) => {
       menuId: null,
     }));
 
-    setSelectedMenu(menu); // Cập nhật menu được chọn
+    setSelectedMenu(menu);
     setSelectedMenuDishes(menuDishesList);
-    setSelectedMenuId(menu.menuId);
-    localStorage.setItem("MenuSelectedId", menu.menuId);
+    console.log(menuDishesList);
   };
 
   useEffect(() => {
@@ -436,6 +436,23 @@ const Menu = ({ accessToken }) => {
       const categoryName = dish.categories.name; // Lấy tên category từ dish
       const updatedGroupedDishes = { ...prevMenu.groupedDishes };
 
+      // Nếu category chưa tồn tại, tạo mảng mới
+      if (!updatedGroupedDishes[categoryName]) {
+        updatedGroupedDishes[categoryName] = [];
+      }
+
+      // Kiểm tra xem món ăn đã tồn tại trong category chưa
+      if (
+        !updatedGroupedDishes[categoryName].some(
+          (d) => d.dishId === dish.dishId
+        )
+      ) {
+        updatedGroupedDishes[categoryName] = [
+          ...updatedGroupedDishes[categoryName],
+          dish,
+        ];
+      }
+
       // Nếu category là Appetizers hoặc Beverages, xử lý
       if (categoryName === "Appetizers" || categoryName === "Beverages") {
         // Nếu chưa có Appetizers, tạo mới
@@ -443,42 +460,54 @@ const Menu = ({ accessToken }) => {
           updatedGroupedDishes["Appetizers"] = [];
         }
 
-        updatedGroupedDishes["Appetizers"] = [
-          ...updatedGroupedDishes["Appetizers"],
-          dish,
-        ];
+        // Kiểm tra và chỉ thêm món ăn nếu chưa tồn tại trong Appetizers
+        if (
+          !updatedGroupedDishes["Appetizers"].some(
+            (d) => d.dishId === dish.dishId
+          )
+        ) {
+          updatedGroupedDishes["Appetizers"] = [
+            ...updatedGroupedDishes["Appetizers"],
+            dish,
+          ];
+        }
 
         // Cập nhật selectedMenuDishes với món ăn mới
-        setSelectedMenuDishes((prevDishes) => [
-          ...prevDishes,
-          {
-            dishesId: dish.dishId,
-            quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
-            price: dish.price,
-            menuId: null,
-          },
-        ]);
-
-        setMenuDishesDetails((prevDetails) => {
-          const updatedDetails = [
-            ...prevDetails,
-            {
-              dishes: {
-                ...dish, // Lưu tất cả thông tin chi tiết của món ăn
-                categories: dish.categories, // Lưu thông tin categories của món ăn
-                existing: "Còn hàng", // Thêm trạng thái của món ăn
+        setSelectedMenuDishes((prevDishes) => {
+          if (!prevDishes.some((d) => d.dishesId === dish.dishId)) {
+            return [
+              ...prevDishes,
+              {
+                dishesId: dish.dishId,
+                quantity: 1, // Hoặc lấy giá trị quantity từ đâu đó nếu cần
+                price: dish.price,
+                menuId: null,
               },
-              menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
-            },
-          ];
-
-          return updatedDetails;
+            ];
+          }
+          return prevDishes;
         });
 
-        console.log(menuDishesDetails);
+        // Cập nhật menuDishesDetails với thông tin món ăn mới
+        setMenuDishesDetails((prevDetails) => {
+          if (!prevDetails.some((d) => d.dishes.dishId === dish.dishId)) {
+            return [
+              ...prevDetails,
+              {
+                dishes: {
+                  ...dish, // Lưu tất cả thông tin chi tiết của món ăn
+                  categories: dish.categories, // Lưu thông tin categories của món ăn
+                  existing: "Còn hàng", // Thêm trạng thái của món ăn
+                },
+                menudishId: Date.now(), // Hoặc ID thực đơn nếu cần
+              },
+            ];
+          }
+          return prevDetails;
+        });
       }
 
-      // Trả về đối tượng đã cập nhật, chỉ giữ Appetizers
+      // Trả về đối tượng đã cập nhật
       return {
         ...prevMenu,
         groupedDishes: updatedGroupedDishes,
@@ -601,7 +630,8 @@ const Menu = ({ accessToken }) => {
               }`}
               onClick={() => setActiveTab("tab2")}
             >
-             Hỗ trợ lên thực đơn
+              Chat gợi ý với AI
+
             </button>
           </div>
           <div className="tab-content">
@@ -711,15 +741,18 @@ const Menu = ({ accessToken }) => {
                           >
                             <p style={{ color: "rgb(66 66 66)" }}>
                               Giá tiền:{" "}
-                              {Object.values(category.groupedDishes)
-                                .flat()
-                                .reduce((total, dish) => {
-                                  const profitMargin = 0.2;
-                                  const sellingPrice =
-                                    dish.price / (1 - profitMargin);
-                                  return total + (sellingPrice || 0);
-                                }, 0)
-                                .toLocaleString()}{" "}
+                              {Math.ceil(
+                                Object.values(category.groupedDishes)
+                                  .flat()
+                                  .reduce((total, dish) => {
+                                    const profitMargin = 0.3;
+                                    const sellingPrice =
+                                      dish.price / (1 - profitMargin);
+                                    return total + (sellingPrice || 0);
+                                  }, 0) / 1000
+                              ) *
+                                10 *
+                                (100).toLocaleString()}{" "}
                               VND/người
                             </p>
                           </div>
@@ -756,7 +789,8 @@ const Menu = ({ accessToken }) => {
                       <span style={{ color: "red", display: "inline" }}>
                         *{" "}
                       </span>{" "}
-                      Lưu ý: Lưu ý!
+                      Lưu ý: Tổng số lượng thực đơn dựa trên số bàn và số người
+                      mỗi bàn!
                     </p>
                     <button
                       className="btn btn-save-form d-flex align-items-center me-5 mb-2 btn btn-hover create-menu"
@@ -853,6 +887,7 @@ const Menu = ({ accessToken }) => {
                 </Modal>
               </div>
             )}
+
             {activeTab === "tab2" && (
               <div className="tab2-content">
                 <ChatContext />
@@ -1035,14 +1070,18 @@ const Menu = ({ accessToken }) => {
               })}
               <div style={{ textAlign: "right", fontWeight: "bold" }}>
                 Giá tiền:{" "}
-                {Object.values(selectedMenu.groupedDishes)
-                  .flat()
-                  .reduce((total, dish) => {
-                    const profitMargin = 0.2; // Thay đổi theo tỷ lệ lợi nhuận mong muốn
-                    const sellingPrice = dish.price / (1 - profitMargin);
-                    return total + (sellingPrice || 0);
-                  }, 0)
-                  .toLocaleString()}{" "}
+                {Math.round(
+                  Object.values(selectedMenu.groupedDishes)
+                    .flat()
+                    .reduce((total, dish) => {
+                      const profitMargin = 0.3; // Tỷ lệ lợi nhuận
+                      const sellingPrice = dish.price / (1 - profitMargin);
+                      return total + (sellingPrice || 0);
+                    }, 0) / 1000 // Chia giá trị cho 1000 trước khi làm tròn
+                ) *
+                  10 *
+                  (100) // Nhân lại với 1000 sau khi làm tròn
+                    .toLocaleString()}{" "}
                 VND/người
               </div>
             </div>
@@ -1096,7 +1135,6 @@ const Menu = ({ accessToken }) => {
                 <FaTimes
                   style={{ color: "#341c0e", width: "12px", marginTop: "12px" }}
                 />{" "}
-                +{/* <img src={AddButton} alt="Thêm món ăn" /> */}
               </button>
               <div className="chiTietThucDon">
                 <div className="menu-view-control">
@@ -1105,12 +1143,12 @@ const Menu = ({ accessToken }) => {
                       <div key={categoryName} style={{ marginBottom: "8px" }}>
                         <h3>
                           {index === 0
-                            ? "Khai vị"
+                            ? "Khai vị và đồ uống"
                             : index === 1
                             ? "Món chính"
                             : index === 2
                             ? "Tráng miệng"
-                            : "Đồ uống"}
+                            : ""}
                         </h3>
                         <ul>
                           {selectedMenu.groupedDishes[categoryName].map(

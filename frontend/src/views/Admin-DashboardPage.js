@@ -1,5 +1,7 @@
-import React, { useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
+
 import "../assets/css/DashboardPage.css";
+import "../assets/css/404error.css";
 import {
   CustomerServiceOutlined,
   EnvironmentOutlined,
@@ -61,17 +63,13 @@ function DashboardPage() {
     ? JSON.parse(localStorage.getItem("roles")).permissions
     : [];
 
-  const hasPermission = (permissionName) => {
-    return userPermissions.some(permission => permission.name === permissionName);
-  };
-
   const menuItems = [
     {
       key: "1",
       icon: <BarChartOutlined />,
       label: "TỔNG QUAN",
       path: "/admin",
-      requiredPermission: "READ_DASHBOARD", // Example permission
+      requiredPermission: "READ_DASHBOARD",
     },
     {
       key: "2",
@@ -137,7 +135,9 @@ function DashboardPage() {
       requiredPermission: "READ_ACCOUNTS",
     },
     ...(userRole === "ADMIN"
-      ? [          
+
+      ? [
+
           {
             key: "11",
             icon: <SisternodeOutlined />,
@@ -148,8 +148,15 @@ function DashboardPage() {
         ]
       : []),
   ];
+
+  const hasPermission = (permissionName) => {
+    if (userRole === "ADMIN") {
+      return true; // ADMIN có quyền truy cập tất cả
+    }
+    return userPermissions.some(permission => permission.name === permissionName);
+  };
   
-  // Filter menu items based on permissions
+  // Lọc menu dựa trên quyền
   const filteredMenuItems = menuItems.filter(item => 
     userRole === "ADMIN" || hasPermission(item.requiredPermission)
   );
@@ -173,6 +180,18 @@ function DashboardPage() {
     return currentPath === item.path; // So sánh path chính xác
   })?.key;
   console.log(selectedKey, "selectedKey");
+
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+
+    // Check if the user has permission for the current path
+    const menuItem = menuItems.find(item => item.path === currentPath);
+    if (menuItem && !hasPermission(menuItem.requiredPermission)) {
+      // If no permission, navigate to 404 page
+      navigate("/error");
+    }
+  }, [navigate, userPermissions]);
+
 
   return (
     <Layout>
@@ -207,6 +226,7 @@ function DashboardPage() {
           selectedKeys={[selectedKey]}
         />
       </Sider>
+
       <Layout style={siteLayoutStyle}>
         {/* Header */}
         <Header
@@ -277,12 +297,13 @@ function DashboardPage() {
             background: "#f0f2f5",
             position: "fixed",
             bottom: footerVisible ? "0" : "-60px", // Chỉnh sửa vị trí của Footer
+            bottom: "0",
             width: `calc(100% - ${marginLeft + 32}px)`,
             left: marginLeft + 16,
             transition: "bottom 0.3s ease", // Thêm hiệu ứng chuyển động mượt mà khi Footer xuất hiện/ẩn
           }}
         >
-          OBBM ©{new Date().getFullYear()} Created by L&P
+          OBBM ©{new Date().getFullYear()} được tạo bởi L&P
         </Footer>
       </Layout>
     </Layout>

@@ -56,11 +56,7 @@ const MenuManager = () => {
     [filteredDishes, setFilteredDishes] = useState([]),
     [selectedDishesByCategory, setSelectedDishesByCategory] = useState({}),
     [open, setOpen] = useState(false),
-    [snackbarOpen, setSnackbarOpen] = useState(false),
-    [snackbarMessage, setSnackbarMessage] = useState(''),
-    [snackbarSeverity, setSnackbarSeverity] = useState('success'),
-    [oldMenuDishes, setOldMenuDishes] = useState([]),
-    [groupedDishes, setGroupedDishes] = useState({});
+    [snackbarOpen, setSnackbarOpen] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
   const [menuToDelete, setMenuToDelete] = useState(null);
 
@@ -76,7 +72,7 @@ const MenuManager = () => {
       return;
     }
 
-    setSnackBarOpen(false);
+    setSnackBarOpen(false);  
   };
 
   const showSuccess = (message) => {
@@ -86,7 +82,7 @@ const MenuManager = () => {
   };
   const categoryTranslation = {
     "Appetizers": "Món khai vị",
-    "Main Courses": "Món chính",
+    "Main_Courses": "Món chính",
     "Desserts": "Món tráng miệng",
     "Beverages": "Đồ uống",
     // Thêm các danh mục khác ở đây
@@ -261,7 +257,7 @@ const MenuManager = () => {
         }))
       );
 
-      showSuccess("Cập nhật menu thành công!");
+      showSuccess("Cập nhật thực đơn thành công!");
       setOpenDialog(false);
       handleClose();
       // Cập nhật bảng
@@ -313,19 +309,11 @@ const MenuManager = () => {
 
       await menudishApi.saveAllDish(menuDishPayload);
 
-      showSuccess("Thêm menu thành công!");
+      showSuccess("Thêm thực đơn thành công!");
       setOpenDialog(false);
+      fetchMenus();
       handleClose();
-      // Cập nhật bảng bằng cách thêm menu mới vào đầu danh sách
-      const newMenu = {
-        ...menuData,
-        menuId: newMenuId,
-        totalcost: totalCost,
-        eventId,
-      };
 
-      // Thêm menu mới vào đầu danh sách
-      // setMenus((prevMenus) => [newMenu, ...prevMenus]);
 
       // Reset form
       setMenuData({
@@ -353,7 +341,7 @@ const MenuManager = () => {
     const res = await menuApi.delete(menuToDelete);
     if (res.code === 1000) {
       fetchMenusWithPagination(page + 1);
-      showSuccess("Menu đã được xóa thành công !");
+      showSuccess("Thực đơn đã được xóa thành công !");
     }
     setOpenConfirmDialog(false);
     setMenuToDelete(null);
@@ -767,7 +755,7 @@ const MenuManager = () => {
             marginBottom: '16px',  // Khoảng cách dưới tiêu đề để tách khỏi các phần tử khác
           }}
         >
-          {isEdit ? "Chỉnh sửa Menu" : "Thêm Menu Mới"}
+          {isEdit ? "Chỉnh sửa thực đơn" : "Thêm thực đơn mới"}
         </DialogTitle>
         <DialogContent className="custom-input" dividers sx={{ overflowY: 'auto', maxHeight: 'calc(100vh - 150px)', position: 'relative' }}>
           {/* Nội dung của Dialog */}
@@ -780,7 +768,7 @@ const MenuManager = () => {
 
               }}
             >
-              Tên menu
+              Tên thực đơn
             </Typography>
             <TextField
               fullWidth
@@ -1010,7 +998,7 @@ const MenuManager = () => {
                   Hủy
                 </Button>
                 <Button onClick={handleAddToMenu} color="primary" sx={{ fontSize: '14px' }}>
-                  Thêm vào menu
+                  Lưu
                 </Button>
               </DialogActions>
             </Dialog>
@@ -1063,7 +1051,7 @@ const MenuManager = () => {
       <Toaster position="top-center" />
 
       <Dialog open={openDetailDialog} onClose={handleCloseDetailDialog} maxWidth="lg" fullWidth>
-        <DialogTitle>Chi tiết Menu: {selectedMenu?.name}</DialogTitle>
+        <DialogTitle>Chi tiết thực đơn: {selectedMenu?.name}</DialogTitle>
         <DialogContent>
           {/* Hiển thị thông tin chi tiết của Menu */}
           <Typography variant="h6">Mô tả: {selectedMenu?.description}</Typography>

@@ -5,6 +5,9 @@ import "../assets/css/mainStyle.css";
 import "../assets/css/account.css";
 import { FaEdit, FaSave } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import axiosClient from "config/axiosClient";
+import userApi from "api/userApi";
 import {
   Alert,
   Box,
@@ -31,7 +34,6 @@ const AccountSection = () => {
     citizenIdentity: "",
   });
   const [originalData, setOriginalData] = useState(userDetails);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [password, setPassword] = useState("");
   const [snackBarOpen, setSnackBarOpen] = useState(false);
   const [snackBarMessage, setSnackBarMessage] = useState("");
@@ -81,19 +83,16 @@ const AccountSection = () => {
     setSnackBarOpen(true);
   };
 
-  const getUserDetails = async (accessToken) => {
-    const response = await fetch(`http://localhost:8080/obbm/users/myInfo`, {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-
-    const data = await response.json();
-
-    console.log(data);
-
-    setUserDetails(data.result);
+  const getUserDetails = async () => {
+    try {
+      const userInfoFetch = await axiosClient.get(
+        "http://localhost:8080/obbm/users/myInfo"
+      );
+      console.log("Fetch thành công");
+      setUserDetails(userInfoFetch.result);
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+    }
   };
 
   const handleImageUpload = (e) => {
@@ -250,7 +249,6 @@ const AccountSection = () => {
       return;
     }
   
-    // Tiến hành gửi request nếu có thay đổi
     try {
       const response = await fetch(
         `http://localhost:8080/obbm/users/user/${userId}`,

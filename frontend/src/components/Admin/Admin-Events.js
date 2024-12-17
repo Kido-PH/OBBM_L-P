@@ -28,7 +28,13 @@ import { message, Typography } from "antd";
 import EventDetailPopup from "./EventDetailPopup";
 import serviceApi from "api/serviceApi";
 import SnackBarNotification from "./SnackBarNotification";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
 const EventManager = () => {
+
+  const navigate = useNavigate();
+
   const [events, setEvents] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
   const [currentEvent, setCurrentEvent] = useState({
@@ -162,6 +168,8 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
       // Lưu userId vào state
       setUserId(data?.result?.userId);
     } catch (error) {
+   
+      checkAccessToken(navigate);
       message.error("Không tải được dữ liệu.");
     }
   };
@@ -245,6 +253,8 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
           }));
         }
       } catch (error) {
+        
+        checkAccessToken(navigate);
         console.error("Lỗi tải ảnh:", error);
         setErrors((prevErrors) => ({
           ...prevErrors,
@@ -300,9 +310,11 @@ const [snackBarOpen, setSnackBarOpen] = useState(false);
     }
   
     try {
+     
       // Cập nhật lại totalcost trong payload sự kiện
       const eventPayload = {
         name: currentEvent.name,
+      //  totalcost: totalCost, // Tổng chi phí tính được
         description: currentEvent.description,
         image: currentEvent.image,
         userId: userId, // Đảm bảo `userId` được gửi cho cả thêm và sửa

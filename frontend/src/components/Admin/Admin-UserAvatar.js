@@ -21,11 +21,29 @@ import {
   SolutionOutlined,
 } from "@ant-design/icons";
 import { EmailOutlined } from "@mui/icons-material";
-import dayjs from "dayjs";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { checkAccessToken } from "services/checkAccessToken";
+import "react-datepicker/dist/react-datepicker.css";
+import dayjs from "dayjs";
+import "dayjs/locale/vi";
+
+// Cấu hình ngôn ngữ tiếng Việt
+dayjs.locale("vi");
 
 const AdminUserAvatar = () => {
 
+  const navigate = useNavigate();
+
+  const parseDate = (dateString) => {
+    return dateString ? dayjs(dateString, "DD-MM-YYYY").toDate() : null;
+  };
+
+  // Format ngày để hiển thị
+  const formatDate = (date) => {
+    return date ? dayjs(date).format("DD-MM-YYYY") : "";
+  };
+  // Khởi tạo useNavigate
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [userData, setUserData] = useState({
@@ -89,6 +107,7 @@ const AdminUserAvatar = () => {
         message.error("Không tải được dữ liệu.");
       }
     } catch (error) {
+      checkAccessToken(navigate);
       message.error("Không tải được dữ liệu.");
     }
   };
@@ -178,6 +197,8 @@ const AdminUserAvatar = () => {
         message.error("Không thể cập nhật thông tin.");
       }
     } catch (error) {
+
+      checkAccessToken(navigate);
       message.error("Không thể cập nhật thông tin.");
     }
   };
@@ -234,6 +255,8 @@ const AdminUserAvatar = () => {
           image: imageUrl,
         }));
       } catch (error) {
+
+        checkAccessToken(navigate);
         console.error("Lỗi upload ảnh:", error);
         message.error("Upload ảnh thất bại!");
       }
@@ -270,12 +293,18 @@ const AdminUserAvatar = () => {
       // Điều hướng về trang login
       window.location.href = "/login";
     } catch (error) {
+
       console.error("Lỗi khi logout:", error);
   
       // Dù lỗi vẫn xóa localStorage để đảm bảo đăng xuất
       localStorage.clear();
       Cookies.remove("refreshToken");
       window.location.href = "/login";
+
+
+      checkAccessToken(navigate);
+      console.error("Error logging out:", error);
+
     }
   };
   
@@ -412,23 +441,26 @@ const AdminUserAvatar = () => {
                 </span>
                 {isEditing ? (
                   <DatePicker
-                    value={
-                      editData.dob ? dayjs(editData.dob, "YYYY-MM-DD") : null
-                    }
-                    onChange={(date, dateString) =>
+                    selected={parseDate(editData.dob)} // Chuyển đổi string thành Date
+                    onChange={(date) =>
                       handleInputChange(
-                        { target: { value: dateString } },
+                        { target: { value: formatDate(date) } },
                         "dob"
                       )
                     }
-                    format="YYYY-MM-DD" // Định dạng ngày tháng
-                    style={{ marginTop: 5, width: "100%" }} // Giao diện phù hợp
+                    dateFormat="DD-MM-YYYY" // Định dạng ngày tháng năm
+                    placeholderText="Chọn ngày sinh"
+                    className="custom-datepicker"
+                    style={{ marginTop: 5, width: "100%" }}
                   />
                 ) : (
-                  <span style={{ marginLeft: 10 }}>{userData.dob}</span>
+                  <span style={{ marginLeft: 10 }}>
+                    {formatDate(userData.dob)}
+                  </span>
                 )}
               </div>
             </Col>
+
             <Col span={12}>
               <div style={{ marginBottom: 10 }}>
                 <span
@@ -468,7 +500,7 @@ const AdminUserAvatar = () => {
                     onChange={(value) =>
                       handleInputChange({ target: { value } }, "gender")
                     }
-                    style={{ marginTop: 5 }}
+                    style={{ marginTop: 5, width: "100px", }}
                   >
                     <Select.Option value={true}>Nam</Select.Option>
                     <Select.Option value={false}>Nữ</Select.Option>

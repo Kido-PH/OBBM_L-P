@@ -66,5 +66,12 @@ const userApi = {
     return axiosClient.delete(url);
   },
 
+
+  // Đăng ký người dùng
+  register(data) {
+    const url = "/users/user"; // Endpoint cho đăng ký
+    return axiosClient.post(url, data);
+  },
+
 };
 export default userApi;

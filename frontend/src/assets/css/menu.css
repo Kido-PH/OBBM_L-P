@@ -814,12 +814,14 @@ textarea {
 }
 
 .menu-view-control h3 {
+  text-align: left; /* Đặt căn trái */
+  margin-left: 15px;
   font-size: 1.8rem;
-  width: 124px;
-  text-align: center;
+  width: 100%;
   color: #341c0e;
   font-family: 'Crimson Pro', serif;
 }
+
 
 .menu-view-control ul{
   padding-top: 4px;
