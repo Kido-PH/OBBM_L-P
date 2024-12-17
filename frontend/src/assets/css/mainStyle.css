@@ -360,7 +360,7 @@ body.active { overflow: hidden; }
   --btn-color: var(--rich-black-fogra-29);
 
   position: fixed;
-  top: -88px;
+  top: -86px;
   background-color: var(--white);
   background-image: none; /* Bỏ hình nền khi có lớp active */
   box-shadow: var(--shadow-1);

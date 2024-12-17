@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../assets/css/menu.css";
 import "../assets/css/listFood.css";
 import "../assets/css/swipermenu.css";
+import "../assets/css/chatbot.css";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ListFood from "../components/Menu/listfood";
@@ -19,6 +20,7 @@ import { EffectCoverflow, Pagination, Navigation } from "swiper/modules";
 import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import AddButton from "../assets/images/add.png";
+import ChatContext from "components/ChatbotAI/ChatbotContext";
 
 const Menu = ({ accessToken }) => {
   const scrollableRefs = useRef([]);
@@ -627,6 +629,7 @@ const Menu = ({ accessToken }) => {
               onClick={() => setActiveTab("tab2")}
             >
               Chat gợi ý với AI
+
             </button>
           </div>
           <div className="tab-content">
@@ -882,7 +885,12 @@ const Menu = ({ accessToken }) => {
                 </Modal>
               </div>
             )}
-            {activeTab === "tab2" && <div className="tab2-content"></div>}
+
+            {activeTab === "tab2" && (
+              <div className="tab2-content">
+                <ChatContext />
+              </div>
+            )}
           </div>
         </div>
 
@@ -898,7 +906,7 @@ const Menu = ({ accessToken }) => {
         {/* Menu Right */}
 
         <div className="menu-right">
-          <h2 style={{ marginBottom: "0px" }}>Thực đơn</h2>
+          <h2 style={{ marginBottom: "10px" }}>Thực đơn của bạn</h2>
           {selectedMenu ? (
             <div>
               {/* Sắp xếp các category theo thứ tự trong categoriesOrder */}

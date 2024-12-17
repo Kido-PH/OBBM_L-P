@@ -10,10 +10,8 @@ const paymentApi = {
     return axiosClient.post(url, data);
   },
   fetchPaymentHistory(contractId) {
-    const url = "/paymentHistory";
-    return axiosClient.get(url, {
-      params: { contractId }, // Truyền contractId trong query string
-    });
+    const url = `/paymentHistory/${contractId}`;
+    return axiosClient.get(url);
   },
 };
 

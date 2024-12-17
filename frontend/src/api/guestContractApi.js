@@ -1,9 +1,9 @@
 import axiosClient from "../config/axiosClient";
 
 const guestContractApi = {
-  getAll(params) {
-    const url = "/contract";
-    return axiosClient.get(url, { params });
+  getAll(page, size) {
+    const url = `/contract?page=${page}&size=${size}`;
+    return axiosClient.get(url);
   },
 
   get(id) {

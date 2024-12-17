@@ -1,3 +1,4 @@
+import axios from 'axios';
 import React, { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { setToken } from "../services/localStorageService.js";
@@ -27,31 +28,43 @@ const Authenticate = () => {
   };
 
   useEffect(() => {
+    console.log(window.location.href);
     const authCodeRegex = /code=([^&]+)/;
     const isMatch = window.location.href.match(authCodeRegex);
-
+  
     if (isMatch) {
       const authCode = isMatch[1];
-      fetch(
-        `http://localhost:8080/obbm/auth/outbound/authentication?code=${authCode}`,
-        {
-          method: "POST",
-        }
-      )
-        .then((response) => response.json())
-        .then((data) => {
+  
+      axios
+        .post(
+          `http://localhost:8080/obbm/auth/outbound/authentication?code=${authCode}`
+        )
+        .then((response) => {
+          const data = response.data;
           console.log(data);
+  
           const refreshToken = data.result?.refreshToken;
           const accessToken = data.result?.accessToken;
-
+  
           if (refreshToken && accessToken) {
             document.cookie = `refreshToken=${refreshToken}; path=/; max-age=${
               7 * 24 * 60 * 60
             }; secure`;
             setToken(accessToken);
 
+  
+            // Kiểm tra nếu có currentEventId và điều hướng đến menu/eventId
+            const currentEventId = localStorage.getItem("currentEventId");
+            if (currentEventId) {
+              navigate(`/menu/${currentEventId}`);
+            } else {
+              navigate("/"); // Điều hướng về trang chủ nếu không có currentEventId
+            }
+
+
             // Lấy thông tin người dùng
             return getUserDetails(accessToken);
+
           } else {
             Swal.fire({
               icon: "error",
