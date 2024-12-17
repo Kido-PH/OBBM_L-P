@@ -44,7 +44,7 @@ function DashboardPage() {
       key: "1",
       icon: <BarChartOutlined />,
       label: "TỔNG QUAN",
-      path: "/admin/thongke",
+      path: "/admin",
       requiredPermission: "READ_DASHBOARD",
     },
     {

@@ -21,7 +21,8 @@
   border-bottom: 1px solid #ccc; /* Đường viền dưới */
   background-color: #fff;
   width: 68%;
-  z-index: 10000;
+  z-index: 1000;
+
 }
 
 .action-buttons {
@@ -191,6 +192,7 @@
   text-align: center;
   position: relative;
   animation: slideDown 0.3s forwards;
+  z-index: 1000000;
 }
 
 .close {

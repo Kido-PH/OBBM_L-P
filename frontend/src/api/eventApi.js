@@ -1,9 +1,10 @@
 import axiosClient from "../config/axiosClient";
 
 const eventApi = {
-  getAll(params) {
-    const url = "/event";
-    return axiosClient.get(url, { params });
+
+  getAll() {
+    const url = `/event`;
+    return axiosClient.get(url);
   },
 
   get(id) {
