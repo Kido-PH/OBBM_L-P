@@ -461,6 +461,32 @@ const MenuManager = () => {
     setFilteredMenus(filteredResults); // Cập nhật danh sách sau khi tìm kiếm
   };
 
+
+  const [hasPermission, setHasPermission] = useState(false);
+    const [hasPermission2, setHasPermission2] = useState(false);
+    const [hasPermission3, setHasPermission3] = useState(false);
+  
+    const userPermissions = localStorage.getItem("roles")
+      ? JSON.parse(localStorage.getItem("roles")).permissions
+      : [];
+  
+    // Hàm kiểm tra quyền
+    const checkPermission = (permissionName) => {
+      return userPermissions.some(
+        (permission) => permission.name === permissionName
+      );
+    };
+  
+    // Kiểm tra quyền CREATE_EVENT khi component mount
+    useEffect(() => {
+      const permissionGranted = checkPermission("CREATE_MENU");
+      const permissionGranted2 = checkPermission("DELETE_MENU");
+      const permissionGranted3 = checkPermission("UPDATE_MENU");
+      setHasPermission(permissionGranted);
+      setHasPermission2(permissionGranted2);
+      setHasPermission3(permissionGranted3);
+    }, []); // Chạy 1 lần khi component mount
+
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedEvent, setSelectedEvent] = useState('');
 
@@ -488,6 +514,7 @@ const MenuManager = () => {
     setSelectedEvent('');
     console.log('Đã reset bộ lọc sự kiện!');
   };
+
 
   return (
     <Box>
@@ -517,21 +544,23 @@ const MenuManager = () => {
           />
         </div>
 
+        {hasPermission && (
         <Button
-          sx={{ fontSize: "10px" }}
-          variant="contained"
-          color="primary"
-          onClick={() => handleOpenAddDialog("add", null)}
-        >
-          <AddIcon
-            sx={{
-              marginRight: "5px",
-              fontSize: "16px",
-              verticalAlign: "middle",
-            }}
-          />
-          Thêm thực đơn
-        </Button>
+        sx={{ fontSize: "10px" }}
+        variant="contained"
+        color="primary"
+        onClick={() => handleOpenAddDialog("add", null)}
+      >
+        <AddIcon
+          sx={{
+            marginRight: "5px",
+            fontSize: "16px",
+            verticalAlign: "middle",
+          }}
+        />
+        Thêm thực đơn
+      </Button>
+      )}
       </div>
 
       {/* Danh sách menu */}
@@ -611,22 +640,26 @@ const MenuManager = () => {
                 </TableCell>
                 <TableCell>{menu.events?.name}</TableCell>
                 <TableCell>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    sx={{ mr: 1 }}
-                    onClick={() => handleEditClick(menu)}
-                  >
-                    <EditIcon />
-                  </Button>
-                  <Button
-                    variant="outlined"
-                    color="error"
-                    style={{ marginLeft: "8px" }}
-                    onClick={() => handleDeleteMenu(menu.menuId)}
-                  >
-                    <DeleteIcon />
-                  </Button>
+                {hasPermission && (
+        <Button
+        variant="outlined"
+        color="primary"
+        sx={{ mr: 1 }}
+        onClick={() => handleEditClick(menu)}
+      >
+        <EditIcon />
+      </Button>
+      )}
+                  {hasPermission2 && (
+        <Button
+        variant="outlined"
+        color="error"
+        style={{ marginLeft: "8px" }}
+        onClick={() => handleDeleteMenu(menu.menuId)}
+      >
+        <DeleteIcon />
+      </Button>
+      )}
                   <Button
                     variant="outlined"
                     color="info"
@@ -1055,7 +1088,8 @@ const MenuManager = () => {
         </DialogActions>
       </Dialog>
 
-      <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
+      {hasPermission3 && (
+        <Dialog open={openConfirmDialog} onClose={handleCancelDelete}>
         <DialogTitle
           sx={{
             fontSize: "1.6rem",
@@ -1087,6 +1121,7 @@ const MenuManager = () => {
           </Button>
         </DialogActions>
       </Dialog>
+      )}
 
 
 

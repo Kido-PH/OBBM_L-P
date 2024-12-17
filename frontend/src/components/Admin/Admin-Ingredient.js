@@ -63,8 +63,8 @@ const IngredientManager = () => {
   }, [currentPage, rowsPerPage]);
 
   const handleSearchChange = (event) => {
-  setSearchTerm(event.target.value); // Cập nhật giá trị tìm kiếm trực tiếp
-};
+    setSearchTerm(event.target.value); // Cập nhật giá trị tìm kiếm trực tiếp
+  };
 
   useEffect(() => {
     if (!searchTerm) {
@@ -78,7 +78,9 @@ const IngredientManager = () => {
 
     const filtered = ingredients.filter((ingredient) => {
       if (isNumber) {
-        return ingredient.ingredientId.toString().includes(normalizedSearchTerm);
+        return ingredient.ingredientId
+          .toString()
+          .includes(normalizedSearchTerm);
       }
       const normalizedName = removeAccents(ingredient.name);
       return normalizedName.includes(normalizedSearchTerm);
@@ -87,7 +89,6 @@ const IngredientManager = () => {
     setIngredients(filtered);
     setCurrentPage(0);
   }, [searchTerm]);
-
 
   const handlePageChange = (event, newPage) => {
     setCurrentPage(newPage); // Update the current page
@@ -115,7 +116,9 @@ const IngredientManager = () => {
     }
 
     try {
-      const response = await ingredientApi.delete(currentIngredient.ingredientId);
+      const response = await ingredientApi.delete(
+        currentIngredient.ingredientId
+      );
 
       if (response.code === 1000) {
         toast.success("Xóa nguyên liệu thành công!");
@@ -136,48 +139,77 @@ const IngredientManager = () => {
   };
 
   const handleSaveIngredient = async () => {
-  if (!currentIngredient?.name || !currentIngredient?.unit) {
-    toast.error("Vui lòng điền đầy đủ thông tin!");
-    return;
-  }
-
-  try {
-    if (currentIngredient.ingredientId) {
-      // Cập nhật nguyên liệu
-      const response = await ingredientApi.update(currentIngredient.ingredientId, {
-        name: currentIngredient.name,
-        unit: currentIngredient.unit,
-        desc: currentIngredient.desc || "",
-      });
-
-      if (response.code === 1000) {
-        toast.success("Cập nhật nguyên liệu thành công!");
-        fetchIngredients(currentPage, rowsPerPage, searchTerm); // Tải lại danh sách nguyên liệu
-        closeIngredientDialog(); // Đóng popup
-      } else {
-        toast.error("Cập nhật nguyên liệu thất bại!");
-      }
-    } else {
-      // Thêm mới nguyên liệu
-      const response = await ingredientApi.add({
-        name: currentIngredient.name,
-        unit: currentIngredient.unit,
-        desc: currentIngredient.desc || "",
-      });
-
-      if (response.code === 1000) {
-        toast.success("Thêm nguyên liệu thành công!");
-        fetchIngredients(currentPage, rowsPerPage, searchTerm); // Tải lại danh sách nguyên liệu
-        closeIngredientDialog(); // Đóng popup
-      } else {
-        toast.error("Thêm nguyên liệu thất bại!");
-      }
+    if (!currentIngredient?.name || !currentIngredient?.unit) {
+      toast.error("Vui lòng điền đầy đủ thông tin!");
+      return;
     }
-  } catch (error) {
-    console.error("Error saving ingredient:", error);
-    toast.error("Có lỗi xảy ra khi lưu nguyên liệu!");
-  }
-};
+
+    try {
+      if (currentIngredient.ingredientId) {
+        // Cập nhật nguyên liệu
+        const response = await ingredientApi.update(
+          currentIngredient.ingredientId,
+          {
+            name: currentIngredient.name,
+            unit: currentIngredient.unit,
+            desc: currentIngredient.desc || "",
+          }
+        );
+
+        if (response.code === 1000) {
+          toast.success("Cập nhật nguyên liệu thành công!");
+          fetchIngredients(currentPage, rowsPerPage, searchTerm); // Tải lại danh sách nguyên liệu
+          closeIngredientDialog(); // Đóng popup
+        } else {
+          toast.error("Cập nhật nguyên liệu thất bại!");
+        }
+      } else {
+        // Thêm mới nguyên liệu
+        const response = await ingredientApi.add({
+          name: currentIngredient.name,
+          unit: currentIngredient.unit,
+          desc: currentIngredient.desc || "",
+        });
+
+        if (response.code === 1000) {
+          toast.success("Thêm nguyên liệu thành công!");
+          fetchIngredients(currentPage, rowsPerPage, searchTerm); // Tải lại danh sách nguyên liệu
+          closeIngredientDialog(); // Đóng popup
+        } else {
+          toast.error("Thêm nguyên liệu thất bại!");
+        }
+      }
+    } catch (error) {
+      console.error("Error saving ingredient:", error);
+      toast.error("Có lỗi xảy ra khi lưu nguyên liệu!");
+    }
+  };
+
+  const [hasPermission, setHasPermission] = useState(false);
+    const [hasPermission2, setHasPermission2] = useState(false);
+    const [hasPermission3, setHasPermission3] = useState(false);
+
+
+  const userPermissions = localStorage.getItem("roles")
+    ? JSON.parse(localStorage.getItem("roles")).permissions
+    : [];
+
+  // Hàm kiểm tra quyền
+  const checkPermission = (permissionName) => {
+    return userPermissions.some(
+      (permission) => permission.name === permissionName
+    );
+  };
+
+  // Kiểm tra quyền CREATE_EVENT khi component mount
+  useEffect(() => {
+    const permissionGranted = checkPermission("CREATE_INGREDIENT");
+    const permissionGranted2 = checkPermission("DELETE_INGREDIENT");
+    const permissionGranted3 = checkPermission("UPDATE_INGREDIENT");
+    setHasPermission(permissionGranted);
+    setHasPermission2(permissionGranted2);
+    setHasPermission3(permissionGranted3);
+  }, []); // Chạy 1 lần khi component mount
 
   return (
     <div>
@@ -199,23 +231,25 @@ const IngredientManager = () => {
           onChange={handleSearchChange}
         />
 
-        <Button
-          sx={{
-            fontSize: "10px",
-            display: "flex",
-            alignItems: "center",
-            padding: "6px 12px",
-          }}
-          variant="contained"
-          color="primary"
-          onClick={() => openIngredientDialog()}
-        >
-          <AddIcon sx={{ marginRight: "5px", fontSize: "16px" }} />
-          Thêm Nguyên Liệu
-        </Button>
+        {hasPermission && (
+          <Button
+            sx={{
+              fontSize: "10px",
+              display: "flex",
+              alignItems: "center",
+              padding: "6px 12px",
+            }}
+            variant="contained"
+            color="primary"
+            onClick={() => openIngredientDialog()}
+          >
+            <AddIcon sx={{ marginRight: "5px", fontSize: "16px" }} />
+            Thêm Nguyên Liệu
+          </Button>
+        )}
       </Box>
 
-      <TableContainer 
+      <TableContainer
         component={Paper}
         sx={{ mt: 1 }}
         className="table-container"
@@ -241,7 +275,10 @@ const IngredientManager = () => {
                   <TableCell>{formatDate(ingredient.createdAt)}</TableCell>
                   <TableCell>{ingredient.desc}</TableCell>
                   <TableCell>
-                    <Button
+                    
+                    
+                    {hasPermission3 && (
+                      <Button
                       onClick={() => openIngredientDialog(ingredient)}
                       variant="outlined"
                       size="small"
@@ -249,7 +286,9 @@ const IngredientManager = () => {
                     >
                       <EditIcon fontSize="small" />
                     </Button>
-                    <Button
+                    )}
+                    {hasPermission2 && (
+                      <Button
                       onClick={() => {
                         setCurrentIngredient(ingredient);
                         setOpenDeleteDialog(true);
@@ -260,6 +299,7 @@ const IngredientManager = () => {
                     >
                       <DeleteIcon fontSize="small" />
                     </Button>
+                    )}
                   </TableCell>
                 </TableRow>
               ))
@@ -283,31 +323,31 @@ const IngredientManager = () => {
         onPageChange={handlePageChange}
         onRowsPerPageChange={handleRowsPerPageChange}
         sx={{
-            display: "flex",
-            justifyContent: "center",
-            fontSize: "1.2rem",
-            padding: "16px",
-            color: "#333", // Đổi màu chữ thành màu tối hơn
-            backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
-            boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
-            borderRadius: "8px", // Thêm bo góc
-            "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
-              {
-                fontSize: "1.2rem",
-              },
-            "& .MuiTablePagination-actions > button": {
+          display: "flex",
+          justifyContent: "center",
+          fontSize: "1.2rem",
+          padding: "16px",
+          color: "#333", // Đổi màu chữ thành màu tối hơn
+          backgroundColor: "#f9f9f9", // Thêm màu nền nhạt
+          boxShadow: "0px 4px 6px rgba(0, 0, 0, 0.1)", // Thêm shadow để làm nổi bật
+          borderRadius: "8px", // Thêm bo góc
+          "& .MuiTablePagination-selectLabel, & .MuiTablePagination-displayedRows":
+            {
               fontSize: "1.2rem",
-              margin: "0 8px", // Thêm khoảng cách giữa các nút
-              backgroundColor: "#1976d2", // Màu nền của các nút
-              color: "#fff", // Màu chữ của các nút
-              borderRadius: "50%", // Nút bấm hình tròn
-              padding: "8px", // Tăng kích thước nút
-              transition: "background-color 0.3s", // Hiệu ứng hover
-              "&:hover": {
-                backgroundColor: "#1565c0", // Đổi màu khi hover
-              },
             },
-          }}
+          "& .MuiTablePagination-actions > button": {
+            fontSize: "1.2rem",
+            margin: "0 8px", // Thêm khoảng cách giữa các nút
+            backgroundColor: "#1976d2", // Màu nền của các nút
+            color: "#fff", // Màu chữ của các nút
+            borderRadius: "50%", // Nút bấm hình tròn
+            padding: "8px", // Tăng kích thước nút
+            transition: "background-color 0.3s", // Hiệu ứng hover
+            "&:hover": {
+              backgroundColor: "#1565c0", // Đổi màu khi hover
+            },
+          },
+        }}
       />
 
       {/* Dialog Thêm/Sửa Nguyên Liệu */}
@@ -326,7 +366,10 @@ const IngredientManager = () => {
             variant="outlined"
             value={currentIngredient?.name || ""}
             onChange={(e) =>
-              setCurrentIngredient({ ...currentIngredient, name: e.target.value })
+              setCurrentIngredient({
+                ...currentIngredient,
+                name: e.target.value,
+              })
             }
           />
           <TextField
@@ -338,7 +381,10 @@ const IngredientManager = () => {
             variant="outlined"
             value={currentIngredient?.unit || ""}
             onChange={(e) =>
-              setCurrentIngredient({ ...currentIngredient, unit: e.target.value })
+              setCurrentIngredient({
+                ...currentIngredient,
+                unit: e.target.value,
+              })
             }
           />
           <TextField
@@ -350,7 +396,10 @@ const IngredientManager = () => {
             variant="outlined"
             value={currentIngredient?.desc || ""}
             onChange={(e) =>
-              setCurrentIngredient({ ...currentIngredient, desc: e.target.value })
+              setCurrentIngredient({
+                ...currentIngredient,
+                desc: e.target.value,
+              })
             }
           />
         </DialogContent>
@@ -368,7 +417,8 @@ const IngredientManager = () => {
       <Dialog open={openDeleteDialog} onClose={closeDeleteDialog}>
         <DialogTitle>Xác nhận xóa nguyên liệu</DialogTitle>
         <DialogContent>
-          Bạn có chắc chắn muốn xóa nguyên liệu "{currentIngredient?.name}" không?
+          Bạn có chắc chắn muốn xóa nguyên liệu "{currentIngredient?.name}"
+          không?
         </DialogContent>
         <DialogActions>
           <Button onClick={closeDeleteDialog} color="secondary">
