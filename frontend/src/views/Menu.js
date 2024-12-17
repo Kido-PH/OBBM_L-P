@@ -21,8 +21,12 @@ import { FaMinus, FaPlus, FaTimes } from "react-icons/fa";
 import Swal from "sweetalert2";
 import AddButton from "../assets/images/add.png";
 import ChatContext from "components/ChatbotAI/ChatbotContext";
+import { chatbotContext } from "components/ChatbotAI/ChatbotContext";
+import ChatBotContainer from "components/ChatbotAI/ChatbotAI";
 
 const Menu = ({ accessToken }) => {
+  const { selectedMenuFromAI } = React.useContext(chatbotContext);
+  const prevSelectedMenuFromAI = useRef(selectedMenuFromAI);
   const scrollableRefs = useRef([]);
   const listRef = useRef(null);
   const [showListFood, setShowListFood] = useState(false); // Kiểm soát hiển thị ListFood
@@ -227,6 +231,7 @@ const Menu = ({ accessToken }) => {
   const handleSelectMenu = (menu) => {
     const userId = localStorage.getItem("userId");
     console.log(groupedMenuArray);
+    console.log("Menu truyền dô có dạng:", menu);
     // Thiết lập selectedMenu và các dữ liệu liên quan
     const menuDishesList = menu.listMenuDish.map((menuDishes) => ({
       dishesId: menuDishes?.dishes?.dishId,
@@ -236,10 +241,42 @@ const Menu = ({ accessToken }) => {
     }));
 
     setSelectedMenu(menu); // Cập nhật menu được chọn
+
     setSelectedMenuDishes(menuDishesList);
     setSelectedMenuId(menu.menuId);
     localStorage.setItem("MenuSelectedId", menu.menuId);
   };
+
+  const isMenuAISelect = () => {
+    if (selectedMenuFromAI !== null) {
+      console.log("Bắt đầu làm hành động select menu theo AI:", selectedMenuFromAI);
+      let menu =  selectedMenuFromAI;
+      
+      const menuDishesList = menu.listMenuDish.map((menuDishes) => ({
+        dishesId: menuDishes?.dishId,
+        quantity: 1,
+        price: menuDishes?.price,
+        menuId: null,
+      }));
+
+
+      setSelectedMenu(menu);
+      setSelectedMenuDishes(menuDishesList);
+    } else {
+      console.log("Không tìm thấy selectedMenuAI", selectedMenuFromAI);
+    }
+  };
+
+  useEffect(() => {
+    setTimeout(() => {
+      console.log("Set selected menu sau khi delay:", selectedMenuFromAI);
+      console.log(
+        "Set selected menu dishes sau khi delay:",
+        selectedMenuFromAI
+      );
+      isMenuAISelect();
+    }, 100); // Delay 100ms để kiểm tra
+  }, [selectedMenuFromAI]);
 
   useEffect(() => {
     const createdMenu = JSON.parse(localStorage.getItem("createdMenu"));
@@ -392,10 +429,10 @@ const Menu = ({ accessToken }) => {
   // Chuyển nhóm menu thành một mảng
   const groupedMenuArray = Object.values(groupedMenu);
 
-  // Lặp qua mảng và in ra groupedDishes cho từng menu
-  groupedMenuArray.forEach((menu) => {
-    console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
-  });
+  // // Lặp qua mảng và in ra groupedDishes cho từng menu
+  // groupedMenuArray.forEach((menu) => {
+  //   console.log(`Grouped Dishes for ${menu.name}:`, menu.groupedDishes);
+  // });
 
   const toggleListFood = (categoryName) => {
     let id;
@@ -601,7 +638,7 @@ const Menu = ({ accessToken }) => {
               }`}
               onClick={() => setActiveTab("tab2")}
             >
-             Hỗ trợ lên thực đơn
+              Hỗ trợ lên thực đơn
             </button>
           </div>
           <div className="tab-content">
@@ -855,7 +892,7 @@ const Menu = ({ accessToken }) => {
             )}
             {activeTab === "tab2" && (
               <div className="tab2-content">
-                <ChatContext />
+                  <ChatBotContainer />
               </div>
             )}
           </div>

@@ -81,13 +81,13 @@ function ModalInfoMenu({ show, onClose, menuDishes, status, totalMenu }) {
             {menuDishes &&
               status === false &&
               // Thứ tự và ánh xạ tiêu đề tiếng Việt
-              ["Appetizers", "Main Courses", "Desserts"].map(
+              ["Appetizers", "Main_Courses", "Desserts"].map(
                 (category, index) => (
                   <div key={index} style={{ marginBottom: "8px" }}>
                     <h3 className="fw-bold">
                       {category === "Appetizers"
                         ? "Khai vị"
-                        : category === "Main Courses"
+                        : category === "Main_Courses"
                         ? "Món chính"
                         : category === "Desserts"
                         ? "Tráng miệng"

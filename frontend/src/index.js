@@ -36,7 +36,7 @@ import userApi from "api/userApi";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
 import TabContractInfo from "components/GuestContract/TabContractInfo";
-
+import ChatContext from "components/ChatbotAI/ChatbotContext";
 
 const App = () => {
   const location = useLocation();
@@ -159,7 +159,9 @@ const App = () => {
 
 const RootApp = () => (
   <Router>
-    <App />
+    <ChatContext>
+      <App />
+    </ChatContext>
   </Router>
 );
 

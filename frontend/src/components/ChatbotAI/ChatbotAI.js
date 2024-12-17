@@ -10,8 +10,16 @@ import { checkAccessToken } from "services/checkAccessToken";
 
 const ChatBotContainer = () => {
   const navigate = useNavigate();
+  // const ChatBubble = styled(Box)({
+  //   maxWidth: "60%",
+  //   backgroundColor: "#fff8ec",
+  //   borderRadius: "12px",
+  //   padding: "10px 16px",
+  //   boxShadow: "0px 1px 2px rgba(0, 0, 0, 0.1)",
+  // });
 
-  const { currentStep, setStep, data } = React.useContext(chatbotContext);
+  const { currentStep, setStep, selectedMenuFromAI } =
+    React.useContext(chatbotContext);
   const [buttonsVisible, setButtonsVisible] = useState(1);
   const [nextStep, setNextStep] = useState(null); // Điều khiển bước tiếp theo của bot
   const [costNguoiDung, setCostNguoiDung] = useState(0); // Điều khiển bước tiếp theo của bot
@@ -34,7 +42,7 @@ const ChatBotContainer = () => {
       setNextStep("change_event");
     } else if (choice === "back_to_start_menu") {
       setStep(currentStep);
-      setNextStep("start_menu");
+      setNextStep("back_to_start_menu");
     } else if (choice === "start_menu") {
       setNextStep("start_menu");
     } else if (choice === "create_menu") {
@@ -72,7 +80,8 @@ const ChatBotContainer = () => {
         )}
 
         {((currentStep >= 2 && nextStep === "change_event") ||
-          (currentStep >= 3 && nextStep === "start_menu")) && (
+          (currentStep >= 3 && nextStep === "create_menu") ||
+          (currentStep >= 2 && nextStep === "back_to_start_menu")) && (
           <>
             <ChatRequest step={2} content="change_event" />
             <ChatResponse step={2} content="change_event" />
@@ -80,7 +89,8 @@ const ChatBotContainer = () => {
         )}
 
         {((currentStep >= 2 && nextStep === "start_menu") ||
-          currentStep >= 3) && (
+          (currentStep >= 3 && nextStep === "create_menu") ||
+          (currentStep >= 2 && nextStep === "back_to_start_menu")) && (
           <>
             <ChatRequest step={2} content="start_menu" />
             <ChatResponse step={2} content="start_menu" />
@@ -138,7 +148,8 @@ const ChatBotContainer = () => {
         </div>
       )}
 
-      {currentStep === 2 && nextStep === "start_menu" && (
+      {((currentStep === 2 && nextStep === "start_menu") ||
+        (currentStep === 2 && nextStep === "back_to_start_menu")) && (
         <div style={{ marginBottom: "6px" }}>
           <Button
             variant="contained"
@@ -163,6 +174,14 @@ const ChatBotContainer = () => {
             sx={{ marginLeft: "8px", fontSize: "12px" }}
           >
             180.000/người
+          </Button>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={() => handleChoice("create_menu", 180000)}
+            sx={{ marginLeft: "8px", fontSize: "12px" }}
+          >
+            220.000/người
           </Button>
         </div>
       )}
@@ -190,7 +209,7 @@ const ChatBotContainer = () => {
           color="primary"
           aria-label="send message"
           onClick={() => {
-            console.log("Dữ liệu gửi đi API: ", data);
+            console.log("Dữ liệu gửi đi API: ", selectedMenuFromAI);
           }}
         >
           <FiSend />
