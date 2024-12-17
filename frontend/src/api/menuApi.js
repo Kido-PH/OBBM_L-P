@@ -28,8 +28,12 @@ const adminMenuApi = {
         return axiosClient.put(`/menu/${menuId}`, payload);
     },
     
+    getAllMenuAdmin(params) {
+        const url = "/menu/getAllMenuAdmin"; // Endpoint tương ứng trong backend
+        return axiosClient.get(url, { params });
+    },
     
-
+    
     // Xóa menu
     delete(id) {
         const url = `/menu/${id}`; // Backend dùng DELETE /menu/{menuId} để xóa

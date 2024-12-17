@@ -1,5 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "../assets/css/DashboardPage.css";
+import "../assets/css/404error.css";
 import {
   CustomerServiceOutlined,
   EnvironmentOutlined,
@@ -17,7 +18,6 @@ import {
 } from "@ant-design/icons";
 import { Outlet, useNavigate } from "react-router-dom";
 import { Col, Layout, Menu, Row, theme } from "antd";
-import ManageContracts from "../components/Admin/Admin-Contracts";
 import AdminUserAvatar from "components/Admin/Admin-UserAvatar";
 
 const { Header, Sider, Content, Footer } = Layout;
@@ -39,17 +39,13 @@ function DashboardPage() {
     ? JSON.parse(localStorage.getItem("roles")).permissions
     : [];
 
-  const hasPermission = (permissionName) => {
-    return userPermissions.some(permission => permission.name === permissionName);
-  };
-
   const menuItems = [
     {
       key: "1",
       icon: <BarChartOutlined />,
       label: "TỔNG QUAN",
-      path: "/admin",
-      requiredPermission: "READ_DASHBOARD", // Example permission
+      path: "/admin/thongke",
+      requiredPermission: "READ_DASHBOARD",
     },
     {
       key: "2",
@@ -116,7 +112,6 @@ function DashboardPage() {
     },
     ...(userRole === "ADMIN"
       ? [
-          
           {
             key: "11",
             icon: <SisternodeOutlined />,
@@ -127,12 +122,29 @@ function DashboardPage() {
         ]
       : []),
   ];
+
+  const hasPermission = (permissionName) => {
+    if (userRole === "ADMIN") {
+      return true; // ADMIN có quyền truy cập tất cả
+    }
+    return userPermissions.some(permission => permission.name === permissionName);
+  };
   
-  // Filter menu items based on permissions
+  // Lọc menu dựa trên quyền
   const filteredMenuItems = menuItems.filter(item => 
     userRole === "ADMIN" || hasPermission(item.requiredPermission)
   );
-  
+
+  useEffect(() => {
+    const currentPath = window.location.pathname;
+
+    // Check if the user has permission for the current path
+    const menuItem = menuItems.find(item => item.path === currentPath);
+    if (menuItem && !hasPermission(menuItem.requiredPermission)) {
+      // If no permission, navigate to 404 page
+      navigate("/error");
+    }
+  }, [navigate, userPermissions]);
 
   return (
     <Layout>
@@ -166,6 +178,7 @@ function DashboardPage() {
           }))}
         />
       </Sider>
+
       <Layout style={siteLayoutStyle}>
         {/* Header */}
         <Header

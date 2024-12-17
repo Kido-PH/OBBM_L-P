@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom/client"; // Thay đổi từ 'react-dom' sang 'react-dom/client'
+import ReactDOM from "react-dom/client";
 import {
   BrowserRouter as Router,
   Routes,
@@ -31,24 +31,37 @@ import MenuManagement from "./components/Admin/Admin-Menu";
 import Authenticate from "./views/Authenticate";
 import PaymentCoordinatorPage from "views/PaymentCoordinator";
 import AdminRoute from "components/Admin/AdminRouter";
+import AdminRouteAdmin from "components/Admin/AdminRouterAdmin";
 import CreatePasswordForm from "views/_createPassword";
 import userApi from "api/userApi";
 import Cookies from "js-cookie";
 import Swal from "sweetalert2";
 import TabContractInfo from "components/GuestContract/TabContractInfo";
 
-
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isAdmin = JSON.parse(localStorage.getItem("isAdmin"));
-  const shouldShowHeaderFooter =
-    !location.pathname.startsWith("/admin") &&
-    location.pathname !== "/login" &&
-    location.pathname !== "/register" &&
-    location.pathname !== "/resetpassword" &&
-    location.pathname !== "/create-password";
+  const validPaths = [
+    "/", 
+    "/home", 
+    "/menu", 
+    "/menu/:id", 
+    "/account", 
+    "/contract", 
+    "/user/contract-list", 
+    "/contract/info/:id", 
+    "/authenticate", 
+    "/payment/cancel", 
+    "/payment/success"
+  ];
+  
+  const shouldShowHeaderFooter = validPaths.some((path) =>
+    new RegExp(`^${path.replace(/:\w+/g, "\\w+")}$`).test(location.pathname)
+  );
+  
 
+  
   function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
   }
@@ -121,6 +134,7 @@ const App = () => {
         <Route path="/payment/cancel" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/cancle" element={<PaymentCoordinatorPage />} />
         <Route path="/payment/success" element={<PaymentCoordinatorPage />} />
+        <Route path="/error" element={<AdminRouteAdmin />} />
         <Route path="/menu/:id" element={<Menu />} />
         <Route path="/menu/" element={<Menu />} />
         <Route path="/account" element={<Account />} />
@@ -129,6 +143,16 @@ const App = () => {
         <Route path="/resetpassword" element={<Login />} />
         <Route path="/create-password" element={<Login />} />
         <Route path="/authenticate" element={<Authenticate />} />
+
+        {/* Admin Routes */}
+        <Route
+          path="/admin"
+          element={
+            <AdminRoute isAdmin={isAdmin}>
+              <DashboardPage />
+            </AdminRoute>
+          }
+        />
         <Route
           path="/admin/*"
           element={
@@ -138,6 +162,14 @@ const App = () => {
           }
         >
           <Route path="ManageContracts" element={<ManageContracts />} />
+          <Route
+            path="*"
+            element={
+              <AdminRouteAdmin>
+                <DashboardPage />
+              </AdminRouteAdmin>
+            }
+          />
           <Route path="ManageCategoryDish" element={<CategoryDish />} />
           <Route path="ManageDish" element={<DishManager />} />
           <Route path="ManagerIngredient" element={<IngredientManager />} />
@@ -150,6 +182,16 @@ const App = () => {
           <Route path="AccessControl" element={<AccessControl />} />
           <Route path="login" element={<Login />} />
         </Route>
+
+        {/* Catch-all route */}
+        <Route
+          path="*"
+          element={
+            <AdminRoute isAdmin={isAdmin}>
+              <DashboardPage />
+            </AdminRoute>
+          }
+        />
       </Routes>
 
       {shouldShowHeaderFooter && <Footer />}
@@ -164,6 +206,4 @@ const RootApp = () => (
 );
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
-root.render(
-    <RootApp />
-);
+root.render(<RootApp />);
