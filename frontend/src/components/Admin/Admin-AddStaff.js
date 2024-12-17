@@ -13,6 +13,9 @@ import {
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 import { Divider, Select } from "antd";
 import toast, { Toaster } from "react-hot-toast";
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
+
 
 // Modal style
 const modalStyle = {
@@ -26,6 +29,7 @@ const modalStyle = {
 };
 
 const AddUserModal = ({ open, onClose, onSubmit }) => {
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -81,6 +85,8 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
         console.error("Failed to fetch roles:", response.status);
       }
     } catch (error) {
+
+      checkAccessToken(navigate);
       console.error("Error fetching roles:", error);
     }
   };
@@ -277,6 +283,9 @@ const AddUserModal = ({ open, onClose, onSubmit }) => {
 };
 
 const AddUserStaff = ({ onUserAdded }) => {
+
+  const navigate = useNavigate();
+ 
   const [open, setOpen] = useState(false);
 
   // Handle modal open/close
@@ -324,6 +333,7 @@ const AddUserStaff = ({ onUserAdded }) => {
       onUserAdded(responseBody?.result); // Cập nhật danh sách người dùng
       toast.success("Người dùng mới đã được thêm thành công!");
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Error adding user:", error);
       toast.error("Đã xảy ra lỗi. Vui lòng thử lại.");
     }

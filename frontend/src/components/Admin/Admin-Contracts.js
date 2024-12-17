@@ -37,8 +37,12 @@ import SnackBarNotification from "./SnackBarNotification";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useSearchParams } from "react-router-dom"; // Import để lấy tham số URL
+import { checkAccessToken } from "services/checkAccessToken";
+import { useNavigate } from "react-router-dom";
 
 const ManageContracts = () => {
+
+const navigate = useNavigate();
 
   const [contracts, setContracts] = useState([]); // Dữ liệu hợp đồng
   const [showModal, setShowModal] = useState(false); // Hiển thị modal
@@ -149,6 +153,7 @@ const ManageContracts = () => {
         console.error("API Error: ", data.message);
       }
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Error fetching contracts: ", error);
     }
   };
@@ -190,6 +195,7 @@ const ManageContracts = () => {
       setSelectedContract(contractData);
       setShowStockRequestsDialog(true); // Hiển thị dialog
     } catch (error) {
+      checkAccessToken(navigate);
       console.error("Lỗi khi gọi API:", error);
       toast.error("Không thể lấy danh sách nguyên liệu!");
     }

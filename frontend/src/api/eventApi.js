@@ -1,6 +1,7 @@
 import axiosClient from "../config/axiosClient";
 
 const eventApi = {
+
   getAll() {
     const url = `/event`;
     return axiosClient.get(url);

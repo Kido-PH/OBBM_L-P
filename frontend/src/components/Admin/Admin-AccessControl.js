@@ -34,7 +34,7 @@ import { checkAccessToken } from "services/checkAccessToken";
 import { useNavigate } from "react-router-dom";
 
 const AccessControl = () => {
-const navigate = useNavigate();
+   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
   const [expandedUser, setExpandedUser] = useState(null); // Lưu trữ người dùng đã chọn để hiển thị chi tiết

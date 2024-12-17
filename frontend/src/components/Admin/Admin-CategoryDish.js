@@ -566,6 +566,7 @@ const handleDeleteCategory = async (categoryId) => {
           page={page}
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Số dòng mỗi trang:" // Đổi chữ ở đây
           sx={{
             display: "flex",
             justifyContent: "center",
